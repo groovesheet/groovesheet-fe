@@ -4,6 +4,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
+import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import './Hero.css';
 
@@ -88,11 +89,13 @@ function Hero({ onLoginRequired }) {
   const progressTimeoutRef = useRef(null);
 
   const instruments = [
-    { value: 'vocals', label: 'Vocals', IconComponent: LiaMicrophoneAltSolid },
     { value: 'drums', label: 'Drums', IconComponent: LuDrum },
-    { value: 'bass', label: 'Bass', IconComponent: BassIcon },
+    { value: 'piano', label: 'Piano', IconComponent: Piano },
     { value: 'jazz_bass', label: 'Jazz Bass', IconComponent: LuMusic4 },
-    { value: 'other', label: 'Other', IconComponent: LuGuitar }
+    // Use non-breaking spaces so the gap shows in rendered HTML
+    { value: 'bass', label: 'Bass\u00a0\u00a0(Separation only)', IconComponent: BassIcon },
+    { value: 'vocals', label: 'Vocal\u00a0\u00a0(Separation only)', IconComponent: LiaMicrophoneAltSolid },
+    { value: 'other', label: 'Other\u00a0\u00a0(Separation only)', IconComponent: LuGuitar }
   ];
 
   // Cleanup progress simulation on unmount
@@ -145,9 +148,9 @@ function Hero({ onLoginRequired }) {
       clearTimeout(progressTimeoutRef.current);
     }
 
-    // 30 seconds for both upload and processing phases
+    // 60 seconds for both upload and processing phases (slower perceived processing)
     const numSteps = 20;
-    const totalDuration = 30000; // 30 seconds
+    const totalDuration = 60000; // 60 seconds
     const startProgress = 11; // Start at 11%
     const endProgress = 99; // End at 99% until actual completion
     const totalProgressRange = endProgress - startProgress; // 88%
@@ -341,17 +344,17 @@ function Hero({ onLoginRequired }) {
     console.log('🚀 Starting upload - setting status to uploading');
     setStatus('uploading');
     
-    // Start simulated progress for upload (30 seconds)
+    // Start simulated progress for upload (60 seconds)
     simulateProgress();
     
-    // Auto-transition to processing after 30 seconds
+    // Auto-transition to processing after 60 seconds
     setTimeout(() => {
       if (status === 'uploading') {
-        console.log('⏰ 30 seconds elapsed, switching to processing state');
+        console.log('⏰ 60 seconds elapsed, switching to processing state');
         setStatus('processing');
         simulateProgress(); // Restart progress for processing phase
       }
-    }, 30000);
+    }, 60000);
 
     try {
       // Workflow selection logic
@@ -360,6 +363,8 @@ function Hero({ onLoginRequired }) {
         workflowEndpoint = '/workflow/separate_to_drumscore';
       } else if (selectedInstrument === 'jazz_bass') {
         workflowEndpoint = '/workflow/separate_to_jazz_bass_score';
+      } else if (selectedInstrument === 'piano') {
+        workflowEndpoint = '/workflow/separate_to_piano_score';
       }
       
       const response = await authenticatedFetch(
@@ -513,6 +518,8 @@ function Hero({ onLoginRequired }) {
       fileKey = 'transcription';
     } else if (selectedInstrument === 'jazz_bass') {
       fileKey = 'jazz_bass_transcription';
+    } else if (selectedInstrument === 'piano') {
+      fileKey = 'midi';
     }
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     console.log('Fetching from:', url);
