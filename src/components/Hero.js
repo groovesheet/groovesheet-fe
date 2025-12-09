@@ -8,6 +8,37 @@ import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import './Hero.css';
 
+const SUPPORTED_MIME_TYPES = [
+  'audio/mp3',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/flac',
+  'audio/x-flac',
+  'audio/ogg',
+  'audio/x-ogg',
+  'audio/basic',
+  'audio/x-au',
+  'audio/x-nist'
+];
+
+const SUPPORTED_EXTENSIONS = ['.mp3', '.wav', '.flac', '.ogg', '.au', '.sph'];
+
+const MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024;
+
+// Use non-breaking spaces so double-spacing renders visibly in the hero helper text
+const FORMATS_HELPER_TEXT = '.mp3\u00a0\u00a0.wav\u00a0\u00a0.flac\u00a0\u00a0.ogg\u00a0\u00a0.au\u00a0\u00a0.sph\u00a0\u00a0up\u00a0\u00a0to\u00a0\u00a032MB';
+
+const isSupportedFileType = (selectedFile) => {
+  const mime = (selectedFile.type || '').toLowerCase();
+  if (mime && SUPPORTED_MIME_TYPES.includes(mime)) {
+    return true;
+  }
+
+  const name = (selectedFile.name || '').toLowerCase();
+  return SUPPORTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+};
+
 // Base URL for the new Orchestrator backend
 // Use /api in both dev and production - Vercel rewrites handle the proxy
 const API_BASE_URL = '/api';
@@ -92,8 +123,9 @@ function Hero({ onLoginRequired }) {
     { value: 'drums', label: 'Drums', IconComponent: LuDrum },
     { value: 'piano', label: 'Piano', IconComponent: Piano },
     { value: 'jazz_bass', label: 'Jazz Bass', IconComponent: LuMusic4 },
+    { value: 'bass', label: 'Bass\u00a0\u00a0(FCPE F0)', IconComponent: BassIcon },
     // Use non-breaking spaces so the gap shows in rendered HTML
-    { value: 'bass', label: 'Bass\u00a0\u00a0(Separation only)', IconComponent: BassIcon },
+    { value: 'bass_separation', label: 'Bass', IconComponent: BassIcon },
     { value: 'vocals', label: 'Vocal\u00a0\u00a0(Separation only)', IconComponent: LiaMicrophoneAltSolid },
     { value: 'other', label: 'Other\u00a0\u00a0(Separation only)', IconComponent: LuGuitar }
   ];
@@ -296,17 +328,13 @@ function Hero({ onLoginRequired }) {
   const handleFileChange = (selectedFile) => {
     if (!selectedFile) return;
 
-    // Validate file type
-    const validTypes = ['audio/mp3', 'audio/mpeg', 'audio/wav'];
-    if (!validTypes.includes(selectedFile.type)) {
-      setError('Please upload an MP3 or WAV file');
+    if (!isSupportedFileType(selectedFile)) {
+      setError('File format not supported. Accepted: .mp3, .wav, .flac, .ogg, .au, .sph');
       return;
     }
 
-    // Validate file size (100MB limit)
-    const maxSize = 100 * 1024 * 1024;
-    if (selectedFile.size > maxSize) {
-      setError('File size must be less than 100MB');
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      setError('File size too large. Max 32MB.');
       return;
     }
 
@@ -363,6 +391,8 @@ function Hero({ onLoginRequired }) {
         workflowEndpoint = '/workflow/separate_to_drumscore';
       } else if (selectedInstrument === 'jazz_bass') {
         workflowEndpoint = '/workflow/separate_to_jazz_bass_score';
+      } else if (selectedInstrument === 'bass') {
+        workflowEndpoint = '/workflow/separate_to_bass_score';
       } else if (selectedInstrument === 'piano') {
         workflowEndpoint = '/workflow/separate_to_piano_score';
       }
@@ -512,12 +542,16 @@ function Hero({ onLoginRequired }) {
   const downloadInstrumentFile = async (id) => {
     // For drums: download transcription
     // For jazz_bass: download jazz_bass_transcription
+    // For bass: download midi
+    // For piano: download midi
     // For others: download separated instrument track
     let fileKey = selectedInstrument;
     if (selectedInstrument === 'drums') {
       fileKey = 'transcription';
     } else if (selectedInstrument === 'jazz_bass') {
       fileKey = 'jazz_bass_transcription';
+    } else if (selectedInstrument === 'bass') {
+      fileKey = 'midi';
     } else if (selectedInstrument === 'piano') {
       fileKey = 'midi';
     }
@@ -534,8 +568,8 @@ function Hero({ onLoginRequired }) {
     console.log('Blob received:', blob.size, 'bytes');
     // Try to get filename from Content-Disposition header
     const cd = res.headers.get('content-disposition') || '';
-    const extension = selectedInstrument === 'drums' ? '.mid' : '.wav';
-    const suffix = selectedInstrument === 'drums' ? '_transcription' : `_${selectedInstrument}`;
+    const extension = selectedInstrument === 'drums' || selectedInstrument === 'bass' || selectedInstrument === 'piano' ? '.mid' : '.wav';
+    const suffix = selectedInstrument === 'drums' ? '_transcription' : selectedInstrument === 'bass' ? '_bass_transcription' : selectedInstrument === 'piano' ? '_piano_transcription' : `_${selectedInstrument}`;
     let filename = file?.name ? file.name.replace(/\.[^.]+$/, `${suffix}${extension}`) : `${selectedInstrument}_${id}${extension}`;
     const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
     if (match) {
@@ -646,7 +680,9 @@ function Hero({ onLoginRequired }) {
           ? 'Separating drum track from audio...' 
           : 'Separating track from audio...';
       case 'transcribing':
-        return 'Transcribing to MIDI notation...';
+        return selectedInstrument === 'bass'
+          ? 'Extracting F0 contour from bass track...'
+          : 'Transcribing to MIDI notation...';
       case 'generating_sheet':
         return 'Generating notation...';
       case 'completed':
@@ -654,11 +690,13 @@ function Hero({ onLoginRequired }) {
       case 'success':
         return selectedInstrument === 'drums'
           ? '✓ Download started! Transcription complete.'
+          : selectedInstrument === 'bass'
+          ? '✓ Download started! Bass F0 extraction complete.'
           : '✓ Download started! Separation complete.';
       case 'failed':
         return selectedInstrument === 'drums'
           ? 'Transcription failed. Please try again.'
-          : 'Separation failed. Please try again.';
+          : 'Processing failed. Please try again.';
       default:
         return '';
     }
@@ -673,7 +711,7 @@ function Hero({ onLoginRequired }) {
         </div>
         <div className="upload-text">
           <h3>Drop tracks & choose stem</h3>
-          <p>Upload up to 5 files to turn into notation</p>
+          <p>{FORMATS_HELPER_TEXT}</p>
         </div>
       </div>
 
@@ -877,7 +915,7 @@ function Hero({ onLoginRequired }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="audio/mp3,audio/mpeg,audio/wav"
+            accept=".mp3,.wav,.flac,.ogg,.au,.sph,audio/mp3,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/x-flac,audio/ogg,audio/x-ogg,audio/basic,audio/x-au,audio/x-nist"
             onChange={(e) => handleFileChange(e.target.files[0])}
             style={{ display: 'none' }}
           />
