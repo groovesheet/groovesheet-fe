@@ -759,7 +759,7 @@ function Hero({ onLoginRequired }) {
 
   const renderUploadingState = () => (
     <>
-      <div className="upload-content-top">
+      <div className="upload-content-top compact">
         <div className="upload-icon">
           <TrayArrowUpIcon />
         </div>
@@ -768,23 +768,18 @@ function Hero({ onLoginRequired }) {
         </div>
       </div>
 
-      <div className="upload-controls">
-        <div className="progress-container">
-          <div className="progress-bar-horizontal">
-            <div 
-              className="progress-bar-fill" 
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            >
-              <span className="progress-percentage">{Math.round(progress)}%</span>
-            </div>
-            <div className="progress-bar-remaining"></div>
+      <div className="upload-controls compact">
+        <div className="progress-bar-row">
+          <div
+            className="progress-bar-fill compact"
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          >
+            <span className="progress-percentage compact">{Math.round(progress)}%</span>
           </div>
+          <div className="progress-bar-remaining compact" />
         </div>
 
-        <button 
-          className="cancel-btn" 
-          onClick={resetUpload}
-        >
+        <button className="cancel-btn compact" onClick={resetUpload}>
           Cancel
         </button>
       </div>
@@ -793,7 +788,7 @@ function Hero({ onLoginRequired }) {
 
   const renderProcessingState = () => (
     <>
-      <div className="upload-content-top">
+      <div className="upload-content-top compact">
         <div className="upload-icon">
           <MagicWandIcon />
         </div>
@@ -802,23 +797,18 @@ function Hero({ onLoginRequired }) {
         </div>
       </div>
 
-      <div className="upload-controls">
-        <div className="progress-container">
-          <div className="progress-bar-horizontal">
-            <div 
-              className="progress-bar-fill" 
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            >
-              <span className="progress-percentage">{Math.round(progress)}%</span>
-            </div>
-            <div className="progress-bar-remaining"></div>
+      <div className="upload-controls compact">
+        <div className="progress-bar-row">
+          <div
+            className="progress-bar-fill compact"
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          >
+            <span className="progress-percentage compact">{Math.round(progress)}%</span>
           </div>
+          <div className="progress-bar-remaining compact" />
         </div>
 
-        <button 
-          className="cancel-btn" 
-          onClick={resetUpload}
-        >
+        <button className="cancel-btn compact" onClick={resetUpload}>
           Cancel
         </button>
       </div>
@@ -831,7 +821,7 @@ function Hero({ onLoginRequired }) {
         <CloseIcon />
       </button>
 
-      <div className="upload-content-top">
+      <div className="upload-content-top compact">
         <div className="upload-icon">
           <CheckCircleIcon />
         </div>
@@ -841,18 +831,18 @@ function Hero({ onLoginRequired }) {
         </div>
       </div>
 
-      <div className="upload-controls success-controls">
-        <button 
-          className="download-transcription-btn" 
-          onClick={handleManualDownload}
-        >
+      <div className="upload-controls success-controls compact">
+        <button className="download-transcription-btn compact" onClick={handleManualDownload}>
           Download Transcription
         </button>
-        <button 
-          className="download-stem-btn"
-        >
-          Download Stem
-        </button>
+        <div className="download-options-row">
+          <button className="download-option-btn" onClick={() => {}}>
+            Stem
+          </button>
+          <button className="download-option-btn" onClick={() => {}}>
+            MIDI
+          </button>
+        </div>
       </div>
     </>
   );
@@ -877,6 +867,13 @@ function Hero({ onLoginRequired }) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+          }}
         >
           {/* Hidden file input */}
           <input

@@ -14,7 +14,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px 0 120px 0;
+  padding: 38px 0 38px 0;
   position: relative;
 }
 
@@ -114,27 +114,63 @@
   gap: 8.527px;
   border-radius: 16px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  --mouse-x: 0px;
+  --mouse-y: 0px;
+  --corner-offset: 1rem;
+  --corner-size: 4rem;
+  transition: all 0.4s ease-in-out, translate 0.4s ease-out;
 }
 
 .upload-area::before {
   content: '';
+  display: block;
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
+  width: calc(100% + 2 * var(--corner-offset));
+  height: calc(100% + 2 * var(--corner-offset));
+  left: calc(-1 * var(--corner-offset));
+  right: calc(-1 * var(--corner-offset));
+  top: calc(-1 * var(--corner-offset));
+  bottom: calc(-1 * var(--corner-offset));
+  margin: auto;
+  box-shadow: inset 0 0 0px 0.06rem rgba(255, 255, 255, 0.15);
+  border-radius: 1.8rem;
+  pointer-events: none;
+  clip-path: polygon(
+    var(--corner-size) 0,
+    0 0,
+    0 var(--corner-size),
+    var(--corner-size) var(--corner-size),
+    var(--corner-size) calc(100% - var(--corner-size)),
+    0 calc(100% - var(--corner-size)),
+    0 100%,
+    var(--corner-size) 100%,
+    var(--corner-size) calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) 100%,
+    100% 100%,
+    100% calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) var(--corner-size),
+    100% var(--corner-size),
+    100% 0,
+    calc(100% - var(--corner-size)) 0,
+    calc(100% - var(--corner-size)) var(--corner-size),
+    var(--corner-size) var(--corner-size)
   );
-  transition: left 0.5s;
+  transition: all 0.4s ease-in-out;
+  z-index: 0;
+}
+
+.upload-area:hover {
+  translate: 0 -0.2rem;
 }
 
 .upload-area:hover::before {
-  left: 100%;
+  --corner-offset: 0.5rem;
+  --corner-size: 8rem;
+  border-radius: 1.4rem;
+  box-shadow: inset 0 0 0 0.08rem rgba(255, 255, 255, 0.15);
 }
 
 .upload-content-wrapper {
@@ -144,6 +180,8 @@
   justify-content: center;
   gap: 22.738px;
   width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .upload-drop-zone {
@@ -362,15 +400,15 @@
   gap: 12px;
 }
 
-.progress-bar-horizontal {
+.progress-bar-row {
   display: flex;
   width: 100%;
-  height: 98px;
+  height: 46px;
   border-radius: 6px;
   overflow: hidden;
 }
 
-.progress-bar-fill {
+.progress-bar-fill.compact {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -382,9 +420,9 @@
   border-radius: 6px 0 0 6px;
 }
 
-.progress-percentage {
+.progress-percentage.compact {
   color: var(--color-white);
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 400;
   line-height: 32px;
   font-family: 'Hubot Sans', sans-serif;
@@ -392,7 +430,7 @@
   text-align: center;
 }
 
-.progress-bar-remaining {
+.progress-bar-remaining.compact {
   flex: 1;
   background: var(--color-surface-muted);
   height: 100%;
@@ -400,23 +438,102 @@
 }
 
 /* Cancel Button */
-.cancel-btn {
+.cancel-btn.compact {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 98px;
-  padding: 32px 20px 0;
+  height: 46px;
+  padding: 0;
   background: transparent;
   border: none;
   border-radius: 6px;
   color: var(--color-white);
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 32px;
+  line-height: 25px;
   cursor: pointer;
   transition: background 0.2s;
   font-family: 'Hubot Sans', sans-serif;
+}
+
+/* Compact layout for upload/processing/success states (Figma spec) */
+.upload-content-top.compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.upload-controls.compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 23px;
+  width: 100%;
+  padding: 0 16px 16px;
+  box-sizing: border-box;
+}
+
+.upload-icon svg {
+  width: 64px;
+  height: 64px;
+}
+
+.upload-text h3 {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: 22.9px;
+  font-weight: 400;
+  line-height: 25.2px;
+  text-align: center;
+}
+
+.upload-text.success-text p.filename-text {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: 13.7px;
+  line-height: 25.2px;
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.download-transcription-btn.compact {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
+}
+
+.download-options-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.download-option-btn {
+  flex: 1;
+  height: 46px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-muted-foreground);
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
 }
 
 /* Drag and Drop States */

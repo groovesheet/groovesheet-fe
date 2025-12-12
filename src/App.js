@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Header from './components/layout/Header';
@@ -16,22 +16,34 @@ import Blog from './components/Blog';
 import About from './components/About';
 import Element from './components/Element';
 
+// Function to get a random dark hero background image
+const getRandomHeroBackground = () => {
+  const darkImages = ['Dark1.png', 'Dark2.png', 'Dark3.png', 'Dark4.png', 'Dark5.png', 'Dark6.png', 'Dark7.png', 'Dark8.png'];
+  const randomImage = darkImages[Math.floor(Math.random() * darkImages.length)];
+  return `${process.env.PUBLIC_URL}/images/hero-section/${randomImage}`;
+};
+
 function LandingPage({ onLoginClick }) {
+  const [heroBackground, setHeroBackground] = useState('');
+
+  useEffect(() => {
+    setHeroBackground(getRandomHeroBackground());
+  }, []);
+
   return (
     <div className="app-container">
       <div className="dot-grid"></div>
       <div
         className="hero-background"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/images/Hero_Background.png)` }}
+        style={{ backgroundImage: `url(${heroBackground})` }}
       ></div>
       <Header onLoginClick={onLoginClick} />
       <Hero onLoginRequired={onLoginClick} />
+      <div className="features-gradient" />
       <Features />
       <Pricing />
-      {/* Move the Element section directly above Testimonials */}
-      <div className="flex justify-center">
-        <Element />
-      </div>
+      {/* High-Accuracy Drum Scores section */}
+      <Element />
       <Testimonials />
       <ComparePlans />
       <FAQ />

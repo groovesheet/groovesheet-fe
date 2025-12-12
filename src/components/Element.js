@@ -1,9 +1,11 @@
 import React from "react";
 import { VariantHoverWrapper } from "./VariantHoverWrapper";
+import "./Element.css";
 
 export const Element = () => {
   return (
-    <div className="flex flex-col w-[1190px] items-center gap-[60px] px-0 py-20 relative">
+    <div className="element-section">
+      <div className="element-container">
       <div className="flex items-center justify-between relative self-stretch w-full flex-[0_0_auto]">
         <div className="max-w-[420px] w-[420px] flex flex-col items-start relative">
           <div className="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
@@ -40,6 +42,7 @@ export const Element = () => {
             <div className="absolute top-0 left-0 w-[88px] h-[88px] rounded-[188.42px] border-[2.2px] border-solid border-[#ffffff80]" />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
