@@ -34,8 +34,8 @@
 }
 
 .pricing-title {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 40px;
   font-weight: 400;
   line-height: 52px;
@@ -46,8 +46,8 @@
 .pricing-description {
   width: 100%;
   max-width: 430px;
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
@@ -56,7 +56,7 @@
 
 .pricing-tabs {
   display: flex;
-  border-bottom: 2px solid #3d3b3e;
+  border-bottom: 2px solid var(--color-border-dark);
   position: relative;
 }
 
@@ -65,8 +65,8 @@
   padding: 0 46px 4px 46px;
   background: none;
   border: none;
-  color: #8d8c8d;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
@@ -75,7 +75,7 @@
 }
 
 .pricing-tab.active {
-  color: #f4f4f4;
+  color: var(--color-foreground);
 }
 .pricing-tab-indicator {
   position: absolute;
@@ -84,7 +84,7 @@
   /* span half the tabs container (works well when there are two equally sized tabs) */
   width: 50%;
   height: 2px;
-  background: #f4f4f4;
+  background: var(--color-foreground);
   transition: left 0.3s ease;
 }
 
@@ -98,8 +98,8 @@
   gap: 4px;
   padding: 5px;
   border-radius: 12px;
-  border: 1px solid #3d3b3e;
-  background: #323033;
+  border: 1px solid var(--color-border-dark);
+  background: var(--color-panel-1);
   position: relative;
 }
 
@@ -107,8 +107,8 @@
   padding: 8px 12px;
   background: none;
   border: none;
-  color: #8d8c8d;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -120,7 +120,7 @@
 }
 
 .toggle-option.active {
-  color: #f4f4f4;
+  color: var(--color-foreground);
 }
 
 .toggle-option.active::before {
@@ -136,7 +136,7 @@
 }
 
 .toggle-option .highlight {
-  color: #012fa7;
+  color: var(--color-primary);
 }
 
 .pricing-cards {
@@ -147,7 +147,7 @@
 .pricing-card {
   flex: 1;
   border-radius: 13px;
-  background: #212121;
+  background: var(--color-panel-2);
   border: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -156,13 +156,13 @@
 .pricing-card.featured {
   padding: 11px 4px 4px 4px;
   border-radius: 16px;
-  background: #012fa7;
+  background: var(--color-primary);
   position: relative;
 }
 
 .popular-badge {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 600;
   line-height: 20.8px;
@@ -172,7 +172,7 @@
 
 .pricing-card-inner {
   border-radius: 13px;
-  background: #212121;
+  background: var(--color-panel-2);
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -184,7 +184,7 @@
   gap: 8px;
   padding: 24px;
   border-radius: 16px 16px 16px 16px;
-  background: #3d3b3e;
+  background: var(--color-border-dark);
 }
 
 .pricing-card-name {
@@ -194,8 +194,8 @@
 }
 
 .plan-name {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 500;
   line-height: 31.2px;
@@ -203,8 +203,8 @@
 }
 
 .plan-badge {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 12px;
   font-weight: 600;
   line-height: 18px;
@@ -218,16 +218,16 @@
 }
 
 .price {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 48px;
   font-weight: 300;
   line-height: 62.4px;
 }
 
 .period {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;
@@ -241,7 +241,7 @@
   gap: 8px;
   padding: 12px 24px;
   border-radius: 120px;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 14px;
   font-weight: 500;
   line-height: 18.2px;
@@ -258,7 +258,7 @@
 }
 
 .pricing-btn.outline {
-  background: #f4f4f4;
+  background: var(--color-foreground);
   color: #1b191c;
   /* ensure no visible border/edge */
   border: none !important;
@@ -271,8 +271,8 @@
 }
 
 .pricing-btn.primary {
-  background: #012fa7;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-white);
 }
 
 .pricing-btn.primary:hover {
@@ -316,8 +316,8 @@
 }
 
 .plan-subtitle {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 18px;
   font-weight: 500;
   line-height: 23.4px;
@@ -337,8 +337,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;

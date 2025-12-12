@@ -705,87 +705,54 @@ function Hero({ onLoginRequired }) {
   // Render functions for each state
   const renderIdleState = () => (
     <>
-      <div className="upload-content-top">
-        <div className="upload-icon">
-          <TrayArrowUpIcon />
-        </div>
-        <div className="upload-text">
-          <h3>Drop tracks & choose stem</h3>
-          <p>{FORMATS_HELPER_TEXT}</p>
-        </div>
+      <div className="instrument-tabs">
+        {[
+          { value: 'vocals', label: 'Vocal', icon: LiaMicrophoneAltSolid },
+          { value: 'drums', label: 'Drums', icon: LuDrum },
+          { value: 'piano', label: 'Piano', icon: Piano },
+          { value: 'jazz_bass', label: 'Guitar', icon: LuGuitar },
+          { value: 'bass', label: 'Bass', icon: BassIcon }
+        ].map((instrument) => {
+          const IconComp = instrument.icon;
+          const isSelected = selectedInstrument === instrument.value;
+          return (
+            <button
+              key={instrument.value}
+              className={`instrument-tab ${isSelected ? 'active' : ''}`}
+              onClick={() => setSelectedInstrument(instrument.value)}
+            >
+              <IconComp size={22.74} />
+              <span>{instrument.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="upload-controls">
-        <div className="instrument-selector" ref={dropdownRef}>
-          <button 
-            className="instrument-dropdown-btn"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            <span className="instrument-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              {(() => {
-                const instrument = instruments.find(i => i.value === selectedInstrument);
-                const IconComp = instrument?.IconComponent || LuGuitar;
-                return <IconComp size={20} />;
-              })()}
-              {instruments.find(i => i.value === selectedInstrument)?.label || 'Drums'}
-            </span>
-            <svg 
-              width="24" 
-              height="15" 
-              viewBox="0 0 24 15" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ transform: isDropdownOpen ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s' }}
-            >
-              <path d="M1.2 13.8L12 3L22.8 13.8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          {isDropdownOpen && ReactDOM.createPortal(
-            <div 
-              ref={dropdownMenuRef}
-              className="instrument-dropdown-menu"
-              style={{
-                position: 'fixed',
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-                width: `${dropdownPosition.width}px`,
-                zIndex: 10000
-              }}
-            >
-              {instruments.map((instrument) => {
-                const IconComp = instrument.IconComponent;
-                return (
-                  <button
-                    key={instrument.value}
-                    className={`instrument-option ${selectedInstrument === instrument.value ? 'selected' : ''}`}
-                    onClick={() => {
-                      setSelectedInstrument(instrument.value);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <IconComp size={20} />
-                      {instrument.label}
-                    </span>
-                    {selectedInstrument === instrument.value && (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </button>
-                );
-              })}
-            </div>,
-            document.body
-          )}
-        </div>
+      <div 
+        className="upload-drop-zone"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <div className="upload-content-wrapper">
+          <div className="upload-visual-group">
+            <div className="file-formats-visual">
+              <img src="/images/hero_upload_img.png" alt="Supported audio formats" />
+            </div>
+            
+            <div className="upload-text-group">
+              <p className="upload-main-text">Drag and drop an audio file</p>
+              <p className="upload-sub-text">MP3, WAV, FLAC up to 50MB</p>
+            </div>
+          </div>
 
-        <button 
-          className="browse-btn" 
-          onClick={handleBrowseClick}
-        >
-          Browse Files
-        </button>
+          <button 
+            className="browse-files-btn" 
+            onClick={handleBrowseClick}
+          >
+            Browse Files
+          </button>
+        </div>
       </div>
     </>
   );
@@ -895,9 +862,9 @@ function Hero({ onLoginRequired }) {
       <div className="hero-container">
         <div className="hero-content">
           <div className="hero-text">
-            <h1 className="hero-title">Audio In. Drum Score Out.</h1>
+            <h1 className="hero-title">Audio In. Music Notation Out.</h1>
             <p className="hero-subtitle">
-              High-quality audio separation and drum transcription with the world's #1 AI-powered technology.
+              Upload an audio. Receive accurate, editable & printable music notation in minutes.
             </p>
           </div>
           <div className="hero-disclaimer hero-disclaimer-desktop">

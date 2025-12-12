@@ -29,22 +29,22 @@
 }
 
 .testimonials-title {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 40px;
   font-weight: 400;
   line-height: 52px;
   letter-spacing: -0.8px;
-  color: #FFF;
+  color: var(--color-white);
   margin: 0;
 }
 
 .testimonials-subtitle {
   width: 430px;
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  color: #FFF;
+  color: var(--color-white);
   margin: 0;
 }
 
@@ -66,7 +66,7 @@
 .testimonial-card {
   padding: 24px;
   border-radius: 16px;
-  background: #323033;
+  background: var(--color-panel-1);
   display: flex;
   flex-direction: column;
   gap: 23px;
@@ -92,29 +92,29 @@
 }
 
 .testimonial-name {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 600;
   line-height: 20.8px;
-  color: #F4F4F4;
+  color: var(--color-foreground);
   margin: 0;
 }
 
 .testimonial-role {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 14px;
   font-weight: 400;
   line-height: 18.2px;
-  color: #8D8C8D;
+  color: var(--color-muted-foreground);
   margin: 0;
 }
 
 .testimonial-text {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;
-  color: #F4F4F4;
+  color: var(--color-foreground);
   margin: 0;
   white-space: pre-line;
 }

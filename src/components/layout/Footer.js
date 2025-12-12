@@ -21,17 +21,7 @@ function Footer() {
         <div className="footer-main">
           <div className="footer-brand">
             <div className="footer-logo">
-              <svg
-                width="153"
-                height="29"
-                viewBox="0 0 153 29"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <text x="0" y="22" fill="white" fontSize="20" fontWeight="600">
-                  DrumScore
-                </text>
-              </svg>
+              <img src="/images/Logo_White.png" alt="GrooveSheet" className="footer-logo-img" />
             </div>
             <div className="footer-social">
               <p className="social-label">Follow us</p>

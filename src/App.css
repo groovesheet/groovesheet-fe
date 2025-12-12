@@ -6,7 +6,7 @@
 
 .app-container {
   min-height: 100vh;
-  background: #171717;
+  background: var(--color-background-dark);
   color: white;
   position: relative;
   overflow-x: hidden;

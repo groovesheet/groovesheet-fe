@@ -59,6 +59,7 @@
   gap: 4px;
   padding: 3px 8px 5px 8px;
   color: #cfd3d6;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
@@ -68,7 +69,7 @@
 }
 
 .nav-item:hover {
-  color: #fff;
+  color: var(--color-white);
 }
 
 .nav-item.dropdown {
@@ -142,6 +143,7 @@
   padding: 0;
   min-width: 80px;
   color: #cfd3d6;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   text-decoration: none;
@@ -149,11 +151,10 @@
   transition: color 0.2s;
   background: transparent;
   border: none;
-  font-family: inherit;
 }
 
 .login-btn:hover {
-  color: #fff;
+  color: var(--color-white);
 }
 
 /* Hamburger Menu */
@@ -174,7 +175,7 @@
 .hamburger-menu span {
   width: 30px;
   height: 3px;
-  background: #fff;
+  background: var(--color-white);
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -209,6 +210,7 @@
   justify-content: space-between;
   padding: 12px 20px;
   color: #cfd3d6;
+  font-family: var(--font-family-sans);
   font-size: 18px;
   font-weight: 400;
   text-decoration: none;
@@ -218,12 +220,11 @@
   border: none;
   width: 100%;
   text-align: left;
-  font-family: inherit;
 }
 
 .mobile-nav-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  color: var(--color-white);
 }
 
 .mobile-menu-divider {

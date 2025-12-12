@@ -1,6 +1,6 @@
 .transcription-history-page {
   min-height: 100vh;
-  background: #1b191c;
+  background: var(--color-background-dark);
   display: flex;
   flex-direction: column;
 }
@@ -25,7 +25,7 @@
   gap: 11.52px;
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--color-white);
   cursor: pointer;
   padding: 0;
   margin-bottom: 24px;
@@ -37,7 +37,7 @@
 }
 
 .back-button span {
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 25.92px;
   line-height: normal;
 }
@@ -59,10 +59,10 @@
 }
 
 .history-title {
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 40px;
   line-height: 52px;
-  color: #ffffff;
+  color: var(--color-white);
   margin: 0;
   font-weight: normal;
 }
@@ -76,7 +76,7 @@
   font-family: 'DM Sans', sans-serif;
   font-size: 20px;
   line-height: 24px;
-  color: #ffffff;
+  color: var(--color-white);
   margin: 0;
   font-weight: 400;
 }
@@ -88,7 +88,7 @@
 }
 
 .search-bar {
-  background: #5f5e60;
+  background: var(--color-surface-muted);
   border-radius: 13px;
   padding: 12px 20px;
   display: flex;
@@ -98,7 +98,7 @@
 }
 
 .search-bar svg {
-  color: #a4a3a4;
+  color: var(--color-muted-foreground);
   flex-shrink: 0;
 }
 
@@ -107,14 +107,14 @@
   background: none;
   border: none;
   outline: none;
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   line-height: 32px;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .search-bar input::placeholder {
-  color: #a4a3a4;
+  color: var(--color-muted-foreground);
 }
 
 .history-section {
@@ -124,10 +124,10 @@
 }
 
 .section-title {
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   line-height: 32px;
-  color: #f4f4f4;
+  color: var(--color-foreground);
   margin: 0;
   font-weight: normal;
 }
@@ -140,8 +140,8 @@
 
 /* Processing card styles */
 .processing-card {
-  background: #323033;
-  border: 1px solid #3d3b3e;
+  background: var(--color-panel-1);
+  border: 1px solid var(--color-border-dark);
   border-radius: 13px;
   padding: 24px;
   display: flex;
@@ -169,14 +169,14 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;
-  color: #8d8c8d;
+  color: var(--color-muted-foreground);
   white-space: nowrap;
 }
 
 .metadata-divider {
   width: 1px;
   height: 100%;
-  background: #8d8c8d;
+  background: var(--color-muted-foreground);
 }
 
 .processing-filename {
@@ -187,10 +187,10 @@
 }
 
 .processing-filename .filename-name {
-  font-family: 'Hubot Sans', 'Noto Sans', sans-serif;
+  font-family: var(--font-family-sans), 'Noto Sans', sans-serif;
   font-size: 24px;
   line-height: 31.2px;
-  color: #ffffff;
+  color: var(--color-white);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -199,17 +199,17 @@
 }
 
 .processing-filename .filename-extension {
-  font-family: 'Hubot Sans', 'Noto Sans', sans-serif;
+  font-family: var(--font-family-sans), 'Noto Sans', sans-serif;
   font-size: 24px;
   line-height: 31.2px;
-  color: #ffffff;
+  color: var(--color-white);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .progress-bar {
   height: 36px;
-  background: #f4f4f4;
+  background: var(--color-foreground);
   border-radius: 6px;
   overflow: hidden;
   position: relative;
@@ -217,7 +217,7 @@
 
 .progress-fill {
   height: 100%;
-  background: #012fa7;
+  background: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,7 +229,7 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 /* Responsive styles */

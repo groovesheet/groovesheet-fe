@@ -12,6 +12,7 @@
 .footer-main {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 56px;
   margin-bottom: 120px;
 }
@@ -25,6 +26,11 @@
 
 .footer-logo {
   display: flex;
+}
+
+.footer-logo-img {
+  max-width: 150px;
+  height: auto;
 }
 
 .footer-social {
@@ -57,20 +63,20 @@
 
 .social-icon svg {
   /* match color of .feature-label */
-  color: #8d8c8d;
+  color: var(--color-muted-foreground);
   width: 32px;
   height: 32px;
   display: block;
 }
 
 .social-icon:hover {
-  color: #ffffff;
+  color: var(--color-white);
   opacity: 1;
   transform: translateY(-1px);
 }
 
 .social-icon:hover svg {
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .footer-links {
@@ -86,7 +92,8 @@
 }
 
 .footer-column h3 {
-  color: #fff;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
@@ -94,32 +101,35 @@
 }
 
 .footer-column a {
-  color: #8d8c8d;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
   text-decoration: none;
-  border-bottom: 1px solid #8d8c8d;
+  border-bottom: 1px solid var(--color-muted-foreground);
   transition: color 0.2s;
   display: inline-block;
   width: fit-content;
 }
 
 .footer-column a:hover {
-  color: #fff;
-  border-bottom-color: #fff;
+  color: var(--color-white);
+  border-bottom-color: var(--color-white);
 }
 
 .footer-language {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .footer-language .language-selector {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #fff;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
@@ -162,8 +172,8 @@
 }
 
 .footer-legal a:hover {
-  color: #fff;
-  border-bottom-color: #fff;
+  color: var(--color-white);
+  border-bottom-color: var(--color-white);
 }
 
 .footer-bottom-right {
@@ -186,8 +196,8 @@
 }
 
 .footer-bottom-right a:hover {
-  color: #fff;
-  border-bottom-color: #fff;
+  color: var(--color-white);
+  border-bottom-color: var(--color-white);
 }
 
 @media (max-width: 1024px) {

@@ -1,0 +1,19 @@
+:root {
+  /* Colors */
+  --color-background-dark: #171717;
+  --color-background-tinted: #151515;
+  --color-panel-1: #323033;
+  --color-panel-2: #212121;
+  --color-border-dark: #3d3b3e;
+  --color-primary: #012fa7;
+  --color-white: #ffffff;
+  --color-muted-foreground: #8d8c8d;
+  --color-foreground: #f4f4f4;
+  --color-surface-muted: #5f5e60;
+  --color-danger: #ff6b6b;
+
+  /* Typography */
+  --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-alt: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}

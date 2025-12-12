@@ -28,8 +28,8 @@
 }
 
 .features-title {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 40px;
   font-weight: 400;
   line-height: 52px;
@@ -42,8 +42,8 @@
 }
 
 .features-description {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
@@ -60,7 +60,7 @@
   flex: 1;
   padding: 16px 4px 4px 4px;
   border-radius: 16px;
-  background: #012FA7;
+  background: var(--color-primary);
 }
 
 .feature-card:nth-child(2) {
@@ -73,7 +73,7 @@
   gap: 40px;
   padding: 40px 24px 24px 24px;
   border-radius: 13px;
-  background: #323033;
+  background: var(--color-panel-1);
   height: 100%;
 }
 
@@ -122,8 +122,8 @@
 }
 
 .feature-card-title {
-  color: #fff;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 31.2px;
@@ -131,8 +131,8 @@
 }
 
 .feature-card-text {
-  color: #8D8C8D;
-  font-family: 'Hubot Sans', -apple-system, sans-serif;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;

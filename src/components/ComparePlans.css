@@ -16,11 +16,11 @@
 }
 
 .compare-title {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 40px;
   font-weight: 400;
   line-height: 44px;
-  color: #F4F4F4;
+  color: var(--color-foreground);
   text-align: center;
   margin: 0 0 60px 0;
 }
@@ -77,32 +77,32 @@
 }
 
 .plan-header-name {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: #BBBABB;
+  color: var(--color-muted-foreground);
   margin: 0;
 }
 
 .feature-label {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 18px;
   font-weight: 400;
   line-height: 24px;
-  color: #8D8C8D;
+  color: var(--color-muted-foreground);
 }
 
 .feature-value span {
-  font-family: 'Hubot Sans', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 18px;
   font-weight: 400;
   line-height: 24px;
-  color: #F4F4F4;
+  color: var(--color-foreground);
 }
 
 .feature-value .dash {
-  color: #8D8C8D;
+  color: var(--color-muted-foreground);
 }
 
 .checkmark {

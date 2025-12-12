@@ -1,7 +1,7 @@
 /* About Page Styles */
 
 .about-page {
-  background: #171717;
+  background: var(--color-background-dark);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -38,20 +38,20 @@
 }
 
 .about-label {
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: #BBBABB;
+  color: var(--color-muted-foreground);
   text-align: center;
 }
 
 .about-title {
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 64px;
   font-weight: 400;
   line-height: 78px;
-  color: #FFFFFF;
+  color: var(--color-white);
   text-align: center;
   max-width: 866px;
   margin: 0;
@@ -62,7 +62,7 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  color: #FFFFFF;
+  color: var(--color-white);
   text-align: center;
   max-width: 570px;
   margin: 0;
@@ -77,9 +77,9 @@
 .about-image-large {
   flex: 1;
   border-radius: 16px;
-  border: 1px solid #3D3B3E;
+  border: 1px solid var(--color-border-dark);
   overflow: hidden;
-  background: #323033;
+  background: var(--color-panel-1);
 }
 
 .about-image-large img {
@@ -98,7 +98,7 @@
 .about-image-small {
   flex: 1;
   border-radius: 16px;
-  border: 1px solid #3D3B3E;
+  border: 1px solid var(--color-border-dark);
   overflow: hidden;
 }
 
@@ -128,7 +128,7 @@
   font-size: 32px;
   font-weight: 400;
   line-height: 37px;
-  color: #FFFFFF;
+  color: var(--color-white);
   max-width: 879px;
   margin: 0;
   flex: 1;
@@ -155,7 +155,7 @@
   font-size: 32px;
   font-weight: 400;
   line-height: 37px;
-  color: #FFFFFF;
+  color: var(--color-white);
   text-align: center;
   max-width: 1050px;
   margin: 0;
@@ -169,8 +169,8 @@
 
 .value-card {
   flex: 1;
-  background: #323033;
-  border: 1px solid #3D3B3E;
+  background: var(--color-panel-1);
+  border: 1px solid var(--color-border-dark);
   border-radius: 13px;
   padding: 32px 24px;
   display: flex;
@@ -181,18 +181,18 @@
 }
 
 .value-icon {
-  color: #FFFFFF;
+  color: var(--color-white);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .value-title {
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 36px;
   font-weight: 400;
   line-height: 31.2px;
-  color: #FFFFFF;
+  color: var(--color-white);
   margin: 0;
 }
 
@@ -201,7 +201,7 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  color: #FFFFFF;
+  color: var(--color-white);
   margin: 0;
 }
 
@@ -228,7 +228,7 @@
   font-size: 32px;
   font-weight: 400;
   line-height: 37px;
-  color: #FFFFFF;
+  color: var(--color-white);
   margin: 0;
 }
 
@@ -247,15 +247,15 @@
 .form-input {
   width: 100%;
   height: 98px;
-  background: #5F5E60;
+  background: var(--color-surface-muted);
   border: none;
   border-radius: 6px;
   padding: 0 20px;
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: #FFFFFF;
+  color: var(--color-white);
   box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
@@ -265,7 +265,7 @@
 }
 
 .form-input::placeholder {
-  color: #A4A3A4;
+  color: var(--color-muted-foreground);
 }
 
 .form-input:focus {
@@ -276,15 +276,15 @@
 .form-textarea {
   width: 100%;
   height: 211px;
-  background: #5F5E60;
+  background: var(--color-surface-muted);
   border: none;
   border-radius: 6px;
   padding: 36px 20px;
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: #FFFFFF;
+  color: var(--color-white);
   box-sizing: border-box;
   resize: none;
   -webkit-appearance: none;
@@ -293,7 +293,7 @@
 }
 
 .form-textarea::placeholder {
-  color: #A4A3A4;
+  color: var(--color-muted-foreground);
 }
 
 .form-textarea:focus {
@@ -312,18 +312,18 @@
   flex-shrink: 0;
   width: 28px;
   height: 28px;
-  background: #5F5E60;
+  background: var(--color-surface-muted);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: var(--color-white);
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .checkbox-wrapper.checked {
-  background: #012FA7;
+  background: var(--color-primary);
 }
 
 .checkbox-wrapper:hover {
@@ -336,25 +336,25 @@
 
 .checkbox-label {
   flex: 1;
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 14px;
   font-weight: 300;
   line-height: 16px;
-  color: #FFFFFF;
+  color: var(--color-white);
   margin: 0;
 }
 
 .form-submit {
   width: 100%;
   height: 98px;
-  background: #012FA7;
+  background: var(--color-primary);
   border: none;
   border-radius: 6px;
-  font-family: 'Hubot Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: #FFFFFF;
+  color: var(--color-white);
   cursor: pointer;
   transition: background 0.3s ease;
   -webkit-appearance: none;
@@ -399,8 +399,8 @@
 
 .form-message.error {
   background: rgba(255, 107, 107, 0.1);
-  border: 1px solid #FF6B6B;
-  color: #FF6B6B;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
 }
 
 /* Responsive Design */
