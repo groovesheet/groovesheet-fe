@@ -84,7 +84,7 @@
   /* span half the tabs container (works well when there are two equally sized tabs) */
   width: 50%;
   height: 2px;
-  background: var(--color-foreground);
+  background: var(--color-muted-foreground);
   transition: left 0.3s ease;
 }
 
@@ -98,8 +98,7 @@
   gap: 4px;
   padding: 5px;
   border-radius: 12px;
-  border: 1px solid var(--color-border-dark);
-  background: var(--color-panel1);
+  background-color: var(--color-panel2);
   position: relative;
 }
 
@@ -130,7 +129,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--color-border-dark);
+  background-color: var(--color-panel3);
   border-radius: 8px;
   z-index: -1;
 }
@@ -154,23 +153,28 @@
 }
 
 .pricing-card.featured {
-  padding: 11px 4px 4px 4px;
+  padding: 0;
   border-radius: 16px;
   background: var(--color-primary);
+  border: 1px solid var(--color-primary);
   position: relative;
 }
 
 .popular-badge {
+  width: 100%;
+  background-color: var(--color-primary);
   color: var(--color-white);
   font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 600;
   line-height: 20.8px;
   text-align: center;
-  padding-bottom: 8px;
+  padding: 12px 0 8px 0;
+  border-radius: 13px 13px 0 0;
 }
 
 .pricing-card-inner {
+  margin: 12px;
   border-radius: 13px;
   background: var(--color-panel2);
   display: flex;
@@ -184,7 +188,8 @@
   gap: 8px;
   padding: 24px;
   border-radius: 16px 16px 16px 16px;
-  background: var(--color-border-dark);
+  background-color: var(--color-panel1);
+  border: 1px solid var(--color-border);
 }
 
 .pricing-card-name {
@@ -194,7 +199,7 @@
 }
 
 .plan-name {
-  color: var(--color-text);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 500;
@@ -203,7 +208,7 @@
 }
 
 .plan-badge {
-  color: var(--color-text);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans);
   font-size: 12px;
   font-weight: 600;
@@ -218,7 +223,7 @@
 }
 
 .price {
-  color: var(--color-text);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans);
   font-size: 48px;
   font-weight: 300;
@@ -226,7 +231,7 @@
 }
 
 .period {
-  color: var(--color-text);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans);
   font-size: 16px;
   font-weight: 400;
@@ -247,7 +252,7 @@
   line-height: 18.2px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: none;
+  border: 1px solid transparent;
 }
 
 /* Remove default browser focus outline (black) for these buttons. Replace with custom focus styles if accessibility
@@ -258,21 +263,62 @@
 }
 
 .pricing-btn.outline {
-  background: var(--color-foreground);
-  color: var(--color-background-dark);
-  /* ensure no visible border/edge */
-  border: none !important;
+  background-color: transparent;
+  color: var(--color-foreground);
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--color-border-light-mode) !important;
+  background-clip: padding-box;
   box-shadow: none !important;
-  outline: none !important;
+}
+
+[data-theme='dark'] .pricing-btn.outline {
+  border: 1px solid var(--color-border-lighter) !important;
 }
 
 .pricing-btn.outline:hover {
-  background: var(--color-panel1);
+  background-color: var(--color-surface-light);
 }
 
 .pricing-btn.primary {
   background: var(--color-primary);
   color: var(--color-button-light);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border-light-mode);
+  background-clip: padding-box;
+  box-shadow: none;
+}
+
+[data-theme='dark'] .pricing-btn.primary {
+  border: 1px solid transparent;
+}
+
+/* Guard rails: prevent any inherited focus rings or thick outlines on pricing buttons */
+.pricing-card .pricing-btn {
+  border-width: 1px !important;
+  border-style: solid !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-clip: padding-box;
+}
+
+[data-theme='light'] .pricing-card .pricing-btn.outline {
+  border-color: var(--color-border-light-mode) !important;
+  background-color: transparent;
+}
+
+[data-theme='dark'] .pricing-card .pricing-btn.outline {
+  border-color: var(--color-border-lighter) !important;
+  background-color: transparent;
+}
+
+[data-theme='light'] .pricing-card .pricing-btn.primary {
+  border-color: var(--color-border-light-mode) !important;
+}
+
+[data-theme='dark'] .pricing-card .pricing-btn.primary {
+  border-color: transparent !important;
 }
 
 .pricing-btn.primary:hover {
@@ -290,7 +336,6 @@
 .pricing-btn.primary {
   -webkit-appearance: none;
   appearance: none;
-  border: none;
   box-shadow: none;
 }
 
@@ -300,7 +345,6 @@
 .pricing-btn:focus-visible {
   outline: none;
   box-shadow: none;
-  border-color: transparent;
 }
 
 /* Firefox inner focus fix */
@@ -313,6 +357,9 @@
   flex-direction: column;
   gap: 16px;
   padding: 23px 24px 24px 24px;
+  background-color: var(--color-panel2);
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 13px 13px;
 }
 
 .plan-subtitle {
@@ -342,6 +389,26 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;
+}
+
+/* Muted foreground for Pro plan feature list */
+.pricing-card:nth-child(3) .feature-item {
+  color: var(--color-muted-foreground);
+}
+
+.pricing-card:nth-child(3) .feature-item svg path {
+  stroke: currentColor;
+}
+
+/* Muted foreground for Lite and Free plan feature lists */
+.pricing-card:nth-child(1) .feature-item,
+.pricing-card:nth-child(2) .feature-item {
+  color: var(--color-muted-foreground);
+}
+
+.pricing-card:nth-child(1) .feature-item svg path,
+.pricing-card:nth-child(2) .feature-item svg path {
+  stroke: currentColor;
 }
 
 .feature-item svg {
@@ -427,24 +494,12 @@
 }
 
 /* Light Mode Overrides */
-[data-theme='light'] .pricing-card {
-  border: 1px solid var(--color-border-light);
+[data-theme='light'] .pricing-card:not(.featured) {
+  background-color: var(--color-panel2);
 }
 
 [data-theme='light'] .popular-badge {
   color: var(--color-white);
-}
-
-[data-theme='light'] .pricing-btn.outline {
-  color: var(--color-button-dark);
-}
-
-[data-theme='light'] .pricing-btn.outline:hover {
-  background: var(--color-panel2);
-}
-
-[data-theme='light'] .pricing-btn.primary {
-  color: var(--color-button-dark);
 }
 
 [data-theme='light'] .pricing-btn.primary:hover {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import * as PhosphorIcons from '@phosphor-icons/react';
 import { useTheme } from '../../context/ThemeContext';
 import './Footer.css';
@@ -26,7 +27,6 @@ function Footer() {
               <img src={isDarkMode ? "/images/Logo_White.png" : "/images/Logo_Dark.png"} alt="GrooveSheet" className="footer-logo-img" />
             </div>
             <div className="footer-social">
-              <p className="social-label">Follow us</p>
               <div className="social-icons">
                 {socialIcons.map((icon, index) => {
                   const IconComponent = PhosphorIcons[icon.component];
@@ -77,7 +77,7 @@ function Footer() {
               >
                 <path
                   d="M8.53027 9.49994L1.03027 1.99994L2.08027 0.949938L8.53027 7.39994L14.9803 0.949938L16.0303 1.99994L8.53027 9.49994Z"
-                  fill="white"
+                  fill="currentColor"
                 />
               </svg>
             </div>
@@ -86,11 +86,11 @@ function Footer() {
 
         <div className="footer-bottom">
           <div className="footer-bottom-left">
-            <span className="copyright">© 2025 DrumScore</span>
+            <Link to="/business-information" className="copyright">© 2025 DrumScore</Link>
             <div className="footer-legal">
-              <a href="#terms">Terms of service</a>
-              <a href="#privacy">Privacy policy</a>
-              <a href="#refund">Refund Policy</a>
+              <Link to="/terms">Terms &amp; Conditions</Link>
+              <Link to="/privacy-policy">Privacy Policy</Link>
+              <Link to="/refund-policy">Refund Policy</Link>
             </div>
           </div>
 

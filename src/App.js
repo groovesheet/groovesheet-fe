@@ -14,6 +14,10 @@ import SSOCallback from './components/SSOCallback';
 import Blog from './components/Blog';
 import About from './components/About';
 import Element from './components/Element';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import BusinessInformation from './components/BusinessInformation';
+import TermsConditions from './components/TermsConditions';
+import RefundPolicy from './components/RefundPolicy';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 // Function to preload an image and return a promise
@@ -137,6 +141,10 @@ function App() {
           <Route path="/history" element={<TranscriptionHistory />} />
           <Route path="/blog" element={<Blog onLoginClick={openLoginModal} />} />
           <Route path="/about" element={<About onLoginClick={openLoginModal} />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
+          <Route path="/business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
+          <Route path="/terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
+          <Route path="/refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
           <Route path="/sso-callback" element={<SSOCallback />} />
         </Routes>
         <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />

@@ -337,8 +337,8 @@
 }
 
 .instrument-tab.active {
-  background: var(--color-panel1);
-  color: var(--color-white);
+  background-color: var(--color-panel2);
+  color: var(--color-foreground);
 }
 
 .instrument-tab svg {
@@ -1041,4 +1041,8 @@
 [data-theme='light'] .upload-drop-zone {
   background: var(--color-surface-lighter);
   border: 2.842px dashed var(--color-border-lighter);
+}
+
+[data-theme='light'] .instrument-tab.active {
+  color: var(--color-primary);
 }

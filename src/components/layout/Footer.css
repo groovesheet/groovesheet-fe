@@ -92,7 +92,7 @@
 }
 
 .footer-column h3 {
-  color: var(--color-white);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
@@ -128,7 +128,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-white);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
@@ -146,26 +146,27 @@
 .footer-bottom-left {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
 }
 
 .copyright {
   color: var(--color-muted-foreground);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 22px;
+  text-decoration: none;
 }
 
 .footer-legal {
   display: flex;
-  gap: 32px;
+  gap: 16px;
 }
 
 .footer-legal a {
   color: var(--color-muted-foreground);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 22px;
   text-decoration: none;
   border-bottom: 1px solid var(--color-border-dark);
   transition: color 1.2s;
@@ -180,16 +181,16 @@
   display: flex;
   gap: 4px;
   color: var(--color-muted-foreground);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 22px;
 }
 
 .footer-bottom-right a {
   color: var(--color-muted-foreground);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 22px;
   text-decoration: none;
   border-bottom: 1px solid var(--color-border-dark);
   transition: color 1.2s;
