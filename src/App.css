@@ -6,8 +6,8 @@
 
 .app-container {
   min-height: 100vh;
-  background: var(--color-background-dark);
-  color: var(--color-white);
+  background: var(--color-background);
+  color: var(--color-text);
   position: relative;
   overflow-x: hidden;
   transition: background-color 1.2s ease, color 1.2s ease;
@@ -44,22 +44,39 @@
   pointer-events: none;
   z-index: 1;
   opacity: 1;
-  transition: opacity 1.2s ease-in-out;
+  transition: opacity 0.8s ease-in-out;
 }
 
 .hero-background.fade-out {
   opacity: 0;
 }
 
-/* Features gradient: hide instantly on theme change, fade in over 1.2s */
+/* Features gradient overlay: positioned above features without taking layout space */
 .features-gradient {
-  opacity: 1;
-  transition: opacity 1.2s ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 249px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    var(--color-background-tinted) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0; /* default hidden */
+  transition: opacity 0.8s ease-in-out;
 }
 
-.features-gradient.hidden {
+.features-gradient.visible {
+  opacity: 1; /* fade in */
+}
+
+/* Force instant hide (no transition) used at the moment of toggle */
+.features-gradient.instant-hide {
   opacity: 0;
-  transition: none; /* No transition when hiding - instant */
+  transition: none;
 }
 
 .app-container > *:not(.dot-grid):not(.hero-background) {

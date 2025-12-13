@@ -148,7 +148,7 @@
   flex: 1;
   border-radius: 13px;
   background: var(--color-panel-2);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
 }
@@ -267,7 +267,7 @@
 }
 
 .pricing-btn.outline:hover {
-  background: #e8e8e8;
+  background: var(--color-panel-1);
 }
 
 .pricing-btn.primary {
@@ -276,7 +276,7 @@
 }
 
 .pricing-btn.primary:hover {
-  background: #0138c0;
+  background: rgba(1, 56, 192, 1);
 }
 
 .pricing-btn svg {
@@ -428,7 +428,11 @@
 
 /* Light Mode Overrides */
 [data-theme='light'] .pricing-card {
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border-light);
+}
+
+[data-theme='light'] .popular-badge {
+  color: var(--color-white);
 }
 
 [data-theme='light'] .pricing-btn.outline {
@@ -436,9 +440,13 @@
 }
 
 [data-theme='light'] .pricing-btn.outline:hover {
-  background: #d8d8d8;
+  background: var(--color-panel-2);
+}
+
+[data-theme='light'] .pricing-btn.primary {
+  color: var(--color-white);
 }
 
 [data-theme='light'] .pricing-btn.primary:hover {
-  background: #0052d6;
+  background: rgba(0, 82, 214, 1);
 }

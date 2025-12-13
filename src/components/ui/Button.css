@@ -18,9 +18,9 @@
 }
 
 .button--primary:hover:not(:disabled) {
-  background-color: #0139c7;
+  background-color: rgba(1, 57, 192, 1);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(1, 47, 167, 0.3);
+  box-shadow: 0 4px 8px var(--color-primary-shadow);
 }
 
 .button--secondary {
@@ -29,7 +29,7 @@
 }
 
 .button--secondary:hover:not(:disabled) {
-  background-color: #6f6e70;
+  background-color: var(--color-surface-muted);
   transform: translateY(-1px);
 }
 

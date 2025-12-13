@@ -6,7 +6,6 @@ import Hero from './components/Hero';
 import Features from './components/Features';
 import Pricing from './components/Pricing';
 import Testimonials from './components/Testimonials';
-import ComparePlans from './components/ComparePlans';
 import FAQ from './components/FAQ';
 import Footer from './components/layout/Footer';
 import { LoginModal } from './components/LoginModal';
@@ -40,13 +39,16 @@ function LandingPage({ onLoginClick }) {
   const { isDarkMode } = useTheme();
   const [heroBackground, setHeroBackground] = useState('');
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [isGradientHidden, setIsGradientHidden] = useState(false);
   const backgroundRef = useRef(null);
   const gradientRef = useRef(null);
+  const [isGradientVisible, setIsGradientVisible] = useState(false);
+  const [isGradientInstantHide, setIsGradientInstantHide] = useState(false);
 
   // Set initial background on mount
   useEffect(() => {
     setHeroBackground(getRandomHeroBackground(isDarkMode));
+    // Make gradient visible immediately on initial mount
+    setIsGradientVisible(true);
   }, []);
 
   // Smooth transition: fade out completely, swap image while invisible, fade in
@@ -55,35 +57,37 @@ function LandingPage({ onLoginClick }) {
 
     const newBackgroundUrl = getRandomHeroBackground(isDarkMode);
 
-    // Instantly hide gradient to prevent darkening during transition
-    setIsGradientHidden(true);
+    // Instantly hide gradient (no transition) to avoid any flash at toggle
+    setIsGradientInstantHide(true);
+    setIsGradientVisible(false);
 
-    // Fade out current image (1.2s)
+    // Fade out current image (0.8s)
     setIsFadingOut(true);
 
-    // Start preloading at 300ms into the fade
+    // Start preloading at ~200ms into the fade
     const preloadTimeout = setTimeout(() => {
       preloadImage(newBackgroundUrl).catch((err) => {
         console.error('Failed to preload hero background:', err);
       });
-    }, 300);
+    }, 200);
 
-    // After fade out completes (1.2s), swap image and fade in
+    // After fade out completes (0.8s), swap image and fade in
     const swapTimeout = setTimeout(() => {
       setHeroBackground(newBackgroundUrl);
-      // Remove fade-out class to trigger fade in (1.2s)
+      // Remove fade-out class to trigger fade in (0.8s)
       setIsFadingOut(false);
-    }, 1200);
+      // Remove instant hide, then fade gradient back in to match hero
+      setIsGradientInstantHide(false);
+      setIsGradientVisible(true);
+    }, 800);
 
     // After swap, fade gradient back in (1.2s)
-    const gradientTimeout = setTimeout(() => {
-      setIsGradientHidden(false);
-    }, 1200);
+    // No need to toggle gradient visibility; it stays mounted and fades via CSS
 
     return () => {
       clearTimeout(preloadTimeout);
       clearTimeout(swapTimeout);
-      clearTimeout(gradientTimeout);
+      // nothing else
     };
   }, [isDarkMode]);
 
@@ -99,14 +103,13 @@ function LandingPage({ onLoginClick }) {
       <Hero onLoginRequired={onLoginClick} />
       <div
         ref={gradientRef}
-        className={`features-gradient ${isGradientHidden ? 'hidden' : ''}`}
+        className={`features-gradient ${isGradientVisible ? 'visible' : ''} ${isGradientInstantHide ? 'instant-hide' : ''}`}
       />
       <Features />
       <Pricing />
       {/* High-Accuracy Drum Scores section */}
       <Element />
       <Testimonials />
-      <ComparePlans />
       <FAQ />
       <Footer />
     </div>

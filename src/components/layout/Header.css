@@ -61,7 +61,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 8px 5px 8px;
-  color: var(--text-secondary, #8d8c8d);
+  color: var(--color-muted-foreground);
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
@@ -72,7 +72,7 @@
 }
 
 .nav-item:hover {
-  color: var(--text-primary, #ffffff);
+  color: var(--color-foreground);
 }
 
 .nav-item.dropdown {
@@ -209,7 +209,7 @@
 }
 
 .hamburger-menu:hover span {
-  background: #cfd3d6;
+  background: var(--color-muted-foreground);
 }
 
 /* Mobile Menu Dropdown */
@@ -217,11 +217,11 @@
   position: fixed;
   top: 60px;
   right: 20px;
-  background: var(--bg-secondary, rgba(23, 23, 23, 0.98));
+  background: var(--color-background-dark);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px var(--color-shadow);
   z-index: 1000;
   min-width: 200px;
 }
@@ -237,7 +237,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  color: var(--text-secondary, #8d8c8d);
+  color: var(--color-muted-foreground);
   font-family: var(--font-family-sans);
   font-size: 18px;
   font-weight: 400;
@@ -251,13 +251,13 @@
 }
 
 .mobile-nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-light);
   color: var(--color-white);
 }
 
 .mobile-menu-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-border-light);
   margin: 8px 0;
 }
 

@@ -97,19 +97,19 @@
   max-width: 757.736px;
   min-height: 480.648px;
   padding: 8px 14px 14px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--color-border-lighter);
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.04) 50%,
-    rgba(255, 255, 255, 0.08) 100%
+    var(--color-surface-lighter) 0%,
+    var(--color-surface-lightest) 50%,
+    var(--color-surface-lighter) 100%
   );
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.37),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1);
+    0 8px 32px 0 var(--color-shadow),
+    inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
   box-sizing: border-box;
   gap: 8.527px;
   border-radius: 16px;
@@ -133,7 +133,7 @@
   top: calc(-1 * var(--corner-offset));
   bottom: calc(-1 * var(--corner-offset));
   margin: auto;
-  box-shadow: inset 0 0 0px 0.06rem rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 0px 0.06rem var(--color-inset-light);
   border-radius: 1.8rem;
   pointer-events: none;
   clip-path: polygon(
@@ -170,7 +170,7 @@
   --corner-offset: 0.5rem;
   --corner-size: 8rem;
   border-radius: 1.4rem;
-  box-shadow: inset 0 0 0 0.08rem rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 0 0.08rem var(--color-inset-light);
 }
 
 .upload-content-wrapper {
@@ -194,7 +194,7 @@
   height: 405.015px;
   padding: 0 17.053px 17.053px 17.053px;
   background: rgba(50, 48, 51, 0.5);
-  border: 2.842px dashed rgba(255, 255, 255, 0.7);
+  border: 2.842px dashed var(--color-border-light);
   border-radius: 12px;
   box-sizing: border-box;
 }
@@ -333,7 +333,7 @@
 }
 
 .instrument-tab:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-light);
 }
 
 .instrument-tab.active {
@@ -538,7 +538,7 @@
 
 /* Drag and Drop States */
 .upload-area.dragging {
-  border-color: rgba(1, 47, 167, 0.8);
+  border-color: var(--color-primary);
   background: linear-gradient(
     135deg,
     rgba(1, 47, 167, 0.15) 0%,
@@ -546,9 +546,9 @@
     rgba(1, 47, 167, 0.15) 100%
   );
   box-shadow: 
-    0 8px 32px 0 rgba(1, 47, 167, 0.4),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1);
+    0 8px 32px 0 var(--color-primary-shadow),
+    inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
 }
 
 .upload-area.processing {
@@ -565,8 +565,8 @@
   );
   box-shadow: 
     0 8px 32px 0 rgba(34, 197, 94, 0.3),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1);
+    inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
 }
 
 .close-btn {
@@ -1017,28 +1017,28 @@
 
 /* Light Mode Overrides */
 [data-theme='light'] .upload-area {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border-lighter);
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(248, 248, 248, 0.95) 50%,
-    rgba(255, 255, 255, 0.95) 100%
+    var(--color-surface-lightest) 0%,
+    var(--color-surface-lighter) 50%,
+    var(--color-surface-lightest) 100%
   );
   box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.08),
-    inset 0 1px 1px 0 rgba(0, 0, 0, 0.05),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03);
+    0 8px 32px 0 var(--color-shadow),
+    inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
 }
 
 [data-theme='light'] .upload-area::before {
-  box-shadow: inset 0 0 0px 0.06rem rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0px 0.06rem var(--color-inset-light);
 }
 
 [data-theme='light'] .upload-area:hover::before {
-  box-shadow: inset 0 0 0 0.08rem rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0 0.08rem var(--color-inset-light);
 }
 
 [data-theme='light'] .upload-drop-zone {
-  background: rgba(240, 240, 240, 0.5);
-  border: 2.842px dashed rgba(0, 0, 0, 0.2);
+  background: var(--color-surface-lighter);
+  border: 2.842px dashed var(--color-border-lighter);
 }

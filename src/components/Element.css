@@ -14,7 +14,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, #171e43 1.5px, transparent 1.5px);
+  background-image: radial-gradient(circle, var(--color-dot-pattern-dark) 1.5px, transparent 1.5px);
   background-size: 43px 43px;
   background-position: 0 0;
   opacity: 0.35;
@@ -25,7 +25,7 @@
 
 /* Light Mode Override */
 [data-theme='light'] .element-section::before {
-  background-image: radial-gradient(circle, #e0e0e0 1.5px, transparent 1.5px);
+  background-image: radial-gradient(circle, var(--color-dot-pattern-light) 1.5px, transparent 1.5px);
 }
 
 .element-container {

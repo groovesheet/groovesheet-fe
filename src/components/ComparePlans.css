@@ -48,7 +48,7 @@
   padding: 13px 0 12px 0;
   justify-content: center;
   align-items: flex-start;
-  border-top: 1px solid rgba(244, 244, 244, 0.10);
+  border-top: 1px solid var(--color-border-dark);
 }
 
 .compare-cell {
@@ -166,5 +166,5 @@
 
 /* Light Mode Overrides */
 [data-theme='light'] .compare-row {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--color-border-light);
 }
