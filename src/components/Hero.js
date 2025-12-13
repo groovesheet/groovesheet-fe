@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
+import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
@@ -100,6 +101,7 @@ const BassIcon = () => (
 function Hero({ onLoginRequired }) {
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
+  const { isDarkMode } = useTheme();
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
@@ -737,7 +739,10 @@ function Hero({ onLoginRequired }) {
         <div className="upload-content-wrapper">
           <div className="upload-visual-group">
             <div className="file-formats-visual">
-              <img src="/images/hero_upload_img.png" alt="Supported audio formats" />
+              <img 
+                src={isDarkMode ? "/images/hero_upload_img_dark.png" : "/images/hero_upload_img_light.png"} 
+                alt="Supported audio formats" 
+              />
             </div>
             
             <div className="upload-text-group">

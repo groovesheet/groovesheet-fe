@@ -1,6 +1,6 @@
 .features {
   width: 100%;
-  padding: 0px 80px;
+  padding: 0px 80px 80px 80px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -245,4 +245,13 @@
     rgba(255, 255, 255, 0) 0%,
     var(--color-background-tinted) 100%
   );
+}
+
+[data-theme='light'] .feature-icon-check,
+[data-theme='light'] .feature-icon-smile,
+[data-theme='light'] .feature-icon-hands,
+[data-theme='light'] .feature-icon-pencil,
+[data-theme='light'] .feature-icon-arrow,
+[data-theme='light'] .feature-icon-wave {
+  color: var(--color-primary);
 }

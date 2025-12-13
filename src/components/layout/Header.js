@@ -48,7 +48,7 @@ function Header({ onLoginClick }) {
         <div className="header-inner">
           <div className="header-left">
             <Link to="/" className="logo">
-              <img src="/images/Logo_White.png" alt="DrumScore Logo" className="logo-image" />
+              <img src={isDarkMode ? "/images/Logo_White.png" : "/images/Logo_Dark.png"} alt="DrumScore Logo" className="logo-image" />
             </Link>
             <nav className="nav-menu">
               <div className="nav-item dropdown">

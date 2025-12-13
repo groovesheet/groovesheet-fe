@@ -1,8 +1,10 @@
 import React from 'react';
 import * as PhosphorIcons from '@phosphor-icons/react';
+import { useTheme } from '../../context/ThemeContext';
 import './Footer.css';
 
 function Footer() {
+  const { isDarkMode } = useTheme();
   const socialIcons = [
     { name: 'Facebook', component: 'FacebookLogo', href: '#facebook' },
     { name: 'Instagram', component: 'InstagramLogo', href: '#instagram' },
@@ -21,7 +23,7 @@ function Footer() {
         <div className="footer-main">
           <div className="footer-brand">
             <div className="footer-logo">
-              <img src="/images/Logo_White.png" alt="GrooveSheet" className="footer-logo-img" />
+              <img src={isDarkMode ? "/images/Logo_White.png" : "/images/Logo_Dark.png"} alt="GrooveSheet" className="footer-logo-img" />
             </div>
             <div className="footer-social">
               <p className="social-label">Follow us</p>
