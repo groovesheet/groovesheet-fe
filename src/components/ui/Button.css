@@ -14,7 +14,7 @@
 /* Variants */
 .button--primary {
   background-color: var(--color-primary);
-  color: var(--color-white);
+  color: var(--color-button-light);
 }
 
 .button--primary:hover:not(:disabled) {
@@ -25,7 +25,7 @@
 
 .button--secondary {
   background-color: var(--color-surface-muted);
-  color: var(--color-white);
+  color: var(--color-button-light);
 }
 
 .button--secondary:hover:not(:disabled) {
@@ -41,7 +41,7 @@
 
 .button--outline:hover:not(:disabled) {
   background-color: var(--color-primary);
-  color: var(--color-white);
+  color: var(--color-button-light);
   transform: translateY(-1px);
 }
 

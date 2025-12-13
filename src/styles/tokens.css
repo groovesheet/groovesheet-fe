@@ -1,17 +1,26 @@
 :root {
   /* Dark Mode (Default) */
-  /* Colors */
-  --color-background: #171717;
-  --color-background-tinted: #151515;
-  --color-panel-1: #323033;
-  --color-panel-2: #212121;
-  --color-border: #3d3b3e;
+  /* Base Colors */
+  --color-background-dark: #171717;
+  --color-tinted-background-dark: #151515;
+  --color-panel1-dark: #323033;
+  --color-panel2-dark: #212121;
+  --color-panel3-dark: #1a1a1a;
+  --color-border-dark: #3d3b3e;
   --color-primary: #012fa7;
-  --color-text: #ffffff;
-  --color-muted-foreground: #8d8c8d;
-  --color-foreground: #f4f4f4;
-  --color-surface-muted: #5f5e60;
+  --color-text-dark: #ffffff;
+  --color-muted-foreground-dark: #8d8c8d;
+  --color-foreground-dark: #f4f4f4;
+  --color-surface-muted-dark: #5f5e60;
   --color-danger: #ff6b6b;
+
+  /* Button Colors */
+  --color-button-light: #ffffff;
+  --color-button-dark: #ffffff;
+  
+  /* Utility Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
 
   /* Semantic Opacity Colors - Dark Mode */
   --color-overlay-dark: rgba(0, 0, 0, 0.8);
@@ -23,12 +32,25 @@
   --color-surface-lightest: rgba(255, 255, 255, 0.04);
   --color-inset-light: rgba(255, 255, 255, 0.15);
   --color-inset-dark: rgba(0, 0, 0, 0.1);
-  --color-shadow: rgba(0, 0, 0, 0.37);
+  --color-shadow-dark: rgba(0, 0, 0, 0.37);
   --color-primary-shadow: rgba(1, 47, 167, 0.3);
 
   /* Pattern & Dot Colors */
   --color-dot-pattern-dark: #171e43;
   --color-dot-pattern-light: #b8d4ff;
+
+  /* Apply Dark Mode as Default */
+  --color-background: var(--color-background-dark);
+  --color-tinted-background: var(--color-tinted-background-dark);
+  --color-panel1: var(--color-panel1-dark);
+  --color-panel2: var(--color-panel2-dark);
+  --color-panel3: var(--color-panel3-dark);
+  --color-border: var(--color-border-dark);
+  --color-text: var(--color-text-dark);
+  --color-muted-foreground: var(--color-muted-foreground-dark);
+  --color-foreground: var(--color-foreground-dark);
+  --color-surface-muted: var(--color-surface-muted-dark);
+  --color-shadow: var(--color-shadow-dark);
 
   /* Typography */
   --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -38,19 +60,33 @@
 
 /* Light Mode */
 [data-theme='light'] {
-  --color-background: #ffffff;
-  --color-background-tinted: #f6f6f6;
-  --color-panel-1: #ffffff;
-  --color-panel-2: #ffffff;
-  --color-border: #e5e5e5;
-  --color-primary: #012fa7;
-  --color-text: #000000;
-  --color-muted-foreground: #666666;
-  --color-foreground: #000000;
-  --color-surface-muted: #ffffff;
-  --color-danger: #ff6b6b;
+  /* Light Mode Base Colors */
+  --color-background-light: #ffffff;
+  --color-tinted-background-light: #f6f6f6;
+  --color-panel1-light: #ffffff;
+  --color-panel2-light: #f6f6f6;
+  --color-panel3-light: #ffffff;
+  --color-border-light-mode: #e5e5e5;
+  --color-text-light: #000000;
+  --color-muted-foreground-light: #666666;
+  --color-foreground-light: #000000;
+  --color-surface-muted-light: #ffffff;
+  --color-shadow-light: rgba(0, 0, 0, 0.08);
 
-  /* Semantic Opacity Colors - Light Mode */
+  /* Apply Light Mode */
+  --color-background: var(--color-background-light);
+  --color-tinted-background: var(--color-tinted-background-light);
+  --color-panel1: var(--color-panel1-light);
+  --color-panel2: var(--color-panel2-light);
+  --color-panel3: var(--color-panel3-light);
+  --color-border: var(--color-border-light-mode);
+  --color-text: var(--color-text-light);
+  --color-muted-foreground: var(--color-muted-foreground-light);
+  --color-foreground: var(--color-foreground-light);
+  --color-surface-muted: var(--color-surface-muted-light);
+  --color-shadow: var(--color-shadow-light);
+
+  /* Semantic Opacity Colors - Light Mode Override */
   --color-overlay-dark: rgba(255, 255, 255, 0.98);
   --color-overlay-light: rgba(0, 0, 0, 0.5);
   --color-border-light: rgba(0, 0, 0, 0.08);
@@ -60,7 +96,6 @@
   --color-surface-lightest: rgba(248, 248, 248, 0.95);
   --color-inset-light: rgba(0, 0, 0, 0.05);
   --color-inset-dark: rgba(0, 0, 0, 0.03);
-  --color-shadow: rgba(0, 0, 0, 0.08);
   --color-primary-shadow: rgba(1, 47, 167, 0.3);
 }
 

@@ -61,7 +61,7 @@
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0) 0%,
-    var(--color-background-tinted) 100%
+    var(--color-tinted-background) 100%
   );
   pointer-events: none;
   z-index: 2;
