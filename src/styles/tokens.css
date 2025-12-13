@@ -1,4 +1,5 @@
 :root {
+  /* Dark Mode (Default) */
   /* Colors */
   --color-background-dark: #171717;
   --color-background-tinted: #151515;
@@ -17,3 +18,27 @@
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-family-alt: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
+/* Light Mode */
+[data-theme='light'] {
+  --color-background-dark: #ffffff;
+  --color-background-tinted: #f9f9f9;
+  --color-panel-1: #f0f0f0;
+  --color-panel-2: #e8e8e8;
+  --color-border-dark: #d0d0d0;
+  --color-primary: #0139c7;
+  --color-white: #171717;
+  --color-muted-foreground: #666666;
+  --color-foreground: #333333;
+  --color-surface-muted: #a0a0a0;
+  --color-danger: #ff6b6b;
+}
+
+/* Global Theme Transition Utility */
+/* Apply smooth 1.2s transitions to all theme-aware color properties */
+* {
+  transition-property: background-color, color, border-color, background-image;
+  transition-duration: 1.2s;
+  transition-timing-function: ease;
+}
+

@@ -70,7 +70,7 @@
   justify-content: center;
   color: var(--color-white);
   opacity: 0.7;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition: opacity 1.2s ease, color 1.2s ease;
 }
 
 .blog-title-icon:hover {

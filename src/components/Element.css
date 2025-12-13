@@ -7,6 +7,7 @@
   background-color: var(--color-background-tinted);
   position: relative;
   overflow: hidden;
+  transition: background-color 1.2s ease;
 }
 
 .element-section::before {
@@ -19,6 +20,12 @@
   opacity: 0.35;
   pointer-events: none;
   z-index: 0;
+  transition: background-image 1.2s ease;
+}
+
+/* Light Mode Override */
+[data-theme='light'] .element-section::before {
+  background-image: radial-gradient(circle, #e0e0e0 1.5px, transparent 1.5px);
 }
 
 .element-container {

@@ -319,7 +319,7 @@
   justify-content: center;
   color: var(--color-white);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 1.2s ease;
 }
 
 .checkbox-wrapper.checked {

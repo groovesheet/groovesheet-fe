@@ -7,9 +7,10 @@
 .app-container {
   min-height: 100vh;
   background: var(--color-background-dark);
-  color: white;
+  color: var(--color-white);
   position: relative;
   overflow-x: hidden;
+  transition: background-color 1.2s ease, color 1.2s ease;
 }
 
 .dot-grid {
@@ -23,6 +24,12 @@
   background-position: 0 0;
   pointer-events: none;
   z-index: 0;
+  transition: background-image 1.2s ease;
+}
+
+/* Light mode dot grid */
+[data-theme='light'] .dot-grid {
+  background-image: radial-gradient(circle, #e0e0e0 1.5px, transparent 1.5px);
 }
 
 .hero-background {
@@ -36,6 +43,23 @@
   background-repeat: no-repeat;
   pointer-events: none;
   z-index: 1;
+  opacity: 1;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.hero-background.fade-out {
+  opacity: 0;
+}
+
+/* Features gradient: hide instantly on theme change, fade in over 1.2s */
+.features-gradient {
+  opacity: 1;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.features-gradient.hidden {
+  opacity: 0;
+  transition: none; /* No transition when hiding - instant */
 }
 
 .app-container > *:not(.dot-grid):not(.hero-background) {

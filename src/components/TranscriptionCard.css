@@ -1,6 +1,6 @@
 .transcription-card {
-  background: #323033;
-  border: 1px solid #3d3b3e;
+  background: var(--color-panel-1);
+  border: 1px solid var(--color-border-dark);
   border-radius: 13px;
   padding: 24px;
   display: flex;
@@ -30,14 +30,14 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 20.8px;
-  color: #8d8c8d;
+  color: var(--color-muted-foreground);
   white-space: nowrap;
 }
 
 .metadata-divider {
   width: 1px;
   height: 100%;
-  background: #8d8c8d;
+  background: var(--color-muted-foreground);
 }
 
 .card-filename {
@@ -51,7 +51,7 @@
   font-family: 'Hubot Sans', 'Noto Sans', sans-serif;
   font-size: 24px;
   line-height: 31.2px;
-  color: #ffffff;
+  color: var(--color-white);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -83,7 +83,7 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 1.2s ease;
 }
 
 .download-button:hover {

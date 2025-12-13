@@ -5,6 +5,9 @@
   padding: 22px 0 10px 0;
   position: relative;
   z-index: 100;
+  /* Navbar should be transparent in both themes */
+  background-color: transparent;
+  transition: background-color 1.2s ease;
 }
 
 .header-container {
@@ -58,18 +61,18 @@
   align-items: center;
   gap: 4px;
   padding: 3px 8px 5px 8px;
-  color: #cfd3d6;
+  color: var(--text-secondary, #8d8c8d);
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 1.2s;
 }
 
 .nav-item:hover {
-  color: var(--color-white);
+  color: var(--text-primary, #ffffff);
 }
 
 .nav-item.dropdown {
@@ -91,13 +94,38 @@
   margin-right: 0px;
 }
 
+/* Theme Toggle Button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary, #8d8c8d);
+  transition: color 0.2s;
+  margin-right: 24px;
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary, #ffffff);
+}
+
+.theme-toggle svg {
+  width: 100%;
+  height: 100%;
+}
+
 .language-selector {
   display: flex;
   align-items: center;
   gap: 4px;
   /* tighten horizontal padding so "En" sits closer to the account button */
   padding: 0 0px;
-  color: #cfd3d6;
+  color: var(--text-secondary, #8d8c8d);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
@@ -125,12 +153,12 @@
 }
 
 .language-selector:hover {
-  color: #fff;
+  color: var(--text-primary, #ffffff);
 }
 
 /* Account label in header should match language selector sizing/color */
 .account-label {
-  color: #cfd3d6;
+  color: var(--text-secondary, #8d8c8d);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
@@ -142,7 +170,7 @@
   justify-content: center;
   padding: 0;
   min-width: 80px;
-  color: #cfd3d6;
+  color: var(--text-secondary, #8d8c8d);
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
@@ -154,7 +182,7 @@
 }
 
 .login-btn:hover {
-  color: var(--color-white);
+  color: var(--text-primary, #ffffff);
 }
 
 /* Hamburger Menu */
@@ -189,9 +217,9 @@
   position: fixed;
   top: 60px;
   right: 20px;
-  background: rgba(23, 23, 23, 0.98);
+  background: var(--bg-secondary, rgba(23, 23, 23, 0.98));
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   z-index: 1000;
@@ -209,7 +237,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  color: #cfd3d6;
+  color: var(--text-secondary, #8d8c8d);
   font-family: var(--font-family-sans);
   font-size: 18px;
   font-weight: 400;
@@ -307,7 +335,7 @@
 
   .mobile-nav-item .account-button.compact .account-label {
     font-size: 16px;
-    color: #cfd3d6;
+    color: var(--text-secondary, #8d8c8d);
     text-align: left;
     line-height: 32px;
   }

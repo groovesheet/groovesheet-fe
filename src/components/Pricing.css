@@ -71,7 +71,7 @@
   font-weight: 400;
   line-height: 32px;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color 1.2s ease;
 }
 
 .pricing-tab.active {
@@ -130,7 +130,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #5f5e60;
+  background: var(--color-border-dark);
   border-radius: 8px;
   z-index: -1;
 }
@@ -259,7 +259,7 @@
 
 .pricing-btn.outline {
   background: var(--color-foreground);
-  color: #1b191c;
+  color: var(--color-background-dark);
   /* ensure no visible border/edge */
   border: none !important;
   box-shadow: none !important;
@@ -424,4 +424,21 @@
     font-size: 40px;
     line-height: 52px;
   }
+}
+
+/* Light Mode Overrides */
+[data-theme='light'] .pricing-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .pricing-btn.outline {
+  color: var(--color-white);
+}
+
+[data-theme='light'] .pricing-btn.outline:hover {
+  background: #d8d8d8;
+}
+
+[data-theme='light'] .pricing-btn.primary:hover {
+  background: #0052d6;
 }
