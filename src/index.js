@@ -13,7 +13,17 @@ if (!PUBLISHABLE_KEY) {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignOutUrl="/"
+      // Configure token behavior for better session management
+      // Tokens will auto-refresh when they expire (default is 60 seconds before expiry)
+      tokenCache={
+        {
+          // You can customize token caching here if needed
+        }
+      }
+    >
       <App />
     </ClerkProvider>
   </React.StrictMode>
