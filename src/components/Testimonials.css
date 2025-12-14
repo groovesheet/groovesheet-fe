@@ -67,6 +67,7 @@
   padding: 24px;
   border-radius: 16px;
   background: var(--color-panel1);
+  border: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
   gap: 23px;

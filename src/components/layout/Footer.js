@@ -7,15 +7,38 @@ import './Footer.css';
 function Footer() {
   const { isDarkMode } = useTheme();
   const socialIcons = [
-    { name: 'Facebook', component: 'FacebookLogo', href: '#facebook' },
-    { name: 'Instagram', component: 'InstagramLogo', href: '#instagram' },
-    { name: 'X', component: 'XLogo', href: '#x' },
-    { name: 'YouTube', component: 'YoutubeLogo', href: '#youtube' },
-    { name: 'TikTok', component: 'TiktokLogo', href: '#tiktok' },
-    { name: 'Reddit', component: 'RedditLogo', href: '#reddit' },
-    { name: 'GitHub', component: 'GithubLogo', href: '#github' },
-    { name: 'WeChat', component: 'WechatLogo', href: '#wechat' },
-    { name: 'LinkedIn', component: 'LinkedinLogo', href: '#linkedin' },
+    {
+      name: 'Facebook',
+      component: 'FacebookLogo',
+      href: 'https://www.facebook.com/profile.php?id=61584710236945',
+    },
+    {
+      name: 'Instagram',
+      component: 'InstagramLogo',
+      href: 'https://www.instagram.com/groovesheet/',
+    },
+    { name: 'X', component: 'XLogo', href: 'https://x.com/groovesheet_' },
+    { name: 'YouTube', component: 'YoutubeLogo', href: 'https://www.youtube.com/@GrooveSheet_AI' },
+    { name: 'TikTok', component: 'TiktokLogo', href: 'https://www.tiktok.com/@groovesheet' },
+    { name: 'Reddit', component: 'RedditLogo', href: 'https://www.reddit.com/user/groovesheet/' },
+    { name: 'GitHub', component: 'GithubLogo', href: 'https://github.com/groovesheet' },
+    {
+      name: 'LinkedIn',
+      component: 'LinkedinLogo',
+      href: 'https://www.linkedin.com/in/groovesheet/',
+    },
+    { name: 'Discord', component: 'DiscordLogo', href: 'https://discord.gg/ptfn6ZYDHV' },
+    { name: 'Dev.to', component: 'DevToLogo', href: 'https://dev.to/groovesheet' },
+    { name: 'SoundCloud', component: 'SoundcloudLogo', href: 'https://soundcloud.com/groovesheet' },
+    { name: 'Medium', component: 'MediumLogo', href: 'https://medium.com/@groovesheet/about' },
+    { name: 'Threads', component: 'ThreadsLogo', href: 'https://www.threads.com/@groovesheet' },
+    { name: 'Tumblr', component: 'TumblrLogo', href: 'https://www.tumblr.com/groovesheet' },
+    { name: 'Twitch', component: 'TwitchLogo', href: 'https://www.twitch.tv/groovesheet' },
+    {
+      name: 'Pinterest',
+      component: 'PinterestLogo',
+      href: 'https://www.pinterest.com/groovesheet/',
+    },
   ];
 
   return (
@@ -24,7 +47,11 @@ function Footer() {
         <div className="footer-main">
           <div className="footer-brand">
             <div className="footer-logo">
-              <img src={isDarkMode ? "/images/Logo_White.png" : "/images/Logo_Dark.png"} alt="GrooveSheet" className="footer-logo-img" />
+              <img
+                src={isDarkMode ? '/images/Logo_White.png' : '/images/Logo_Dark.png'}
+                alt="GrooveSheet"
+                className="footer-logo-img"
+              />
             </div>
             <div className="footer-social">
               <div className="social-icons">
@@ -86,7 +113,9 @@ function Footer() {
 
         <div className="footer-bottom">
           <div className="footer-bottom-left">
-            <Link to="/business-information" className="copyright">© 2025 DrumScore</Link>
+            <Link to="/business-information" className="copyright">
+              © 2025 DrumScore
+            </Link>
             <div className="footer-legal">
               <Link to="/terms">Terms &amp; Conditions</Link>
               <Link to="/privacy-policy">Privacy Policy</Link>

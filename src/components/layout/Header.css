@@ -299,9 +299,13 @@
 .hamburger-menu span {
   width: 30px;
   height: 3px;
-  background: var(--color-white);
+  background: var(--color-muted-foreground);
   border-radius: 2px;
   transition: all 0.3s ease;
+}
+
+[data-theme='dark'] .hamburger-menu span {
+  background: var(--color-white);
 }
 
 .hamburger-menu:hover span {

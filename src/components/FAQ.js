@@ -128,9 +128,20 @@ function FAQ() {
                         <div className="faq-question-text">
                           <span>{item.question}</span>
                         </div>
-                        <div className={`faq-icon ${openQuestion === item.id ? 'open' : ''}`}>
-                          <div className="faq-icon-line line-1"></div>
-                          <div className="faq-icon-line line-2"></div>
+                        <div
+                          className={`faq-icon ${openQuestion === item.id ? 'open' : ''}`}
+                          aria-hidden="true"
+                        >
+                          <svg viewBox="0 0 24 24" className="faq-icon-svg">
+                            <path
+                              d="M6 10l6 6 6-6"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </div>
                       </button>
 
