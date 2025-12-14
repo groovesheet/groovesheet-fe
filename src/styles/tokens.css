@@ -57,6 +57,7 @@
   /* Pattern & Dot Colors */
   --color-dot-pattern-dark: #171e43;
   --color-dot-pattern-light: #b8d4ff;
+  --color-dot-pattern: var(--color-dot-pattern-dark);
 
   /* Apply Dark Mode as Default */
   --color-background: var(--color-background-dark);
@@ -122,6 +123,8 @@
   --color-inset-light: rgba(0, 0, 0, 0.05);
   --color-inset-dark: rgba(0, 0, 0, 0.03);
   --color-primary-shadow: rgba(1, 47, 167, 0.3);
+  /* Dot pattern color for light theme */
+  --color-dot-pattern: var(--color-dot-pattern-light);
 }
 
 /* Global Theme Transition Utility */

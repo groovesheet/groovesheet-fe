@@ -7,6 +7,7 @@ import './AccountIcon.css';
 
 export const AccountIcon = ({ compact = false }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const navigate = useNavigate();
@@ -37,6 +38,21 @@ export const AccountIcon = ({ compact = false }) => {
     await signOut();
   };
 
+  // Compute dropdown position relative to the trigger and clamp within viewport
+  const updateDropdownPosition = () => {
+    if (!buttonRef.current) return;
+
+    const rect = buttonRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const menuWidth = dropdownRef.current?.offsetWidth || 260; // fallback to min width + padding
+    const gutter = 12; // small padding from viewport edges
+
+    const left = Math.min(Math.max(rect.left, gutter), viewportWidth - menuWidth - gutter);
+    const top = rect.bottom + 8;
+
+    setDropdownPosition({ top, left });
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -56,6 +72,22 @@ export const AccountIcon = ({ compact = false }) => {
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  // Reposition dropdown on open and on resize/scroll to keep it attached to the trigger
+  useEffect(() => {
+    if (!isDropdownOpen) return undefined;
+
+    updateDropdownPosition();
+
+    const handleReposition = () => updateDropdownPosition();
+    window.addEventListener('resize', handleReposition);
+    window.addEventListener('scroll', handleReposition, true);
+
+    return () => {
+      window.removeEventListener('resize', handleReposition);
+      window.removeEventListener('scroll', handleReposition, true);
     };
   }, [isDropdownOpen]);
 
@@ -161,10 +193,8 @@ export const AccountIcon = ({ compact = false }) => {
               className="account-dropdown-menu desktop"
               style={{
                 position: 'fixed',
-                top: buttonRef.current
-                  ? buttonRef.current.getBoundingClientRect().bottom + 8
-                  : '70px',
-                right: '20px',
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
               }}
             >
               <button className="account-dropdown-item" onClick={handleProfile}>
