@@ -5,6 +5,7 @@ import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import TranscriptionCard from './TranscriptionCard';
+import TranscriptionCardSkeleton from './TranscriptionCardSkeleton';
 import { fetchWorkflowList, fetchWorkflowStatus, AuthError } from '../utils/api';
 import config from '../config';
 import './TranscriptionHistory.css';
@@ -228,6 +229,45 @@ export const TranscriptionHistory = () => {
     }
   };
 
+  const handleDownloadMIDI = async (workflowId) => {
+    try {
+      const token = await getToken();
+      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/midi`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Check for auth errors
+      if (response.status === 401 || response.status === 403) {
+        console.error('Authentication error during download');
+        setError('Your session has expired. Please sign in again.');
+        await signOut();
+        navigate('/');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `midi_${workflowId}.mid`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError('Failed to download MIDI');
+    }
+  };
+
   const handleBack = () => {
     navigate('/');
   };
@@ -271,7 +311,11 @@ export const TranscriptionHistory = () => {
               {/* Loading state */}
               {loading && (
                 <div className="history-section">
-                  <p>Loading workflows...</p>
+                  <h2 className="section-title">Loading</h2>
+                  <div className="cards-grid">
+                    <TranscriptionCardSkeleton />
+                    <TranscriptionCardSkeleton />
+                  </div>
                 </div>
               )}
 
@@ -349,6 +393,7 @@ export const TranscriptionHistory = () => {
                             onDownloadTranscription={() =>
                               handleDownloadTranscription(item.workflow_id)
                             }
+                            onDownloadMIDI={() => handleDownloadMIDI(item.workflow_id)}
                           />
                         );
                       })}

@@ -2,7 +2,7 @@
 
 .blog-page {
   min-height: 100vh;
-  background-color: var(--color-background-dark);
+  background-color: var(--color-background);
   display: flex;
   flex-direction: column;
 }
@@ -41,7 +41,7 @@
   font-size: 48px;
   font-weight: 400;
   line-height: normal;
-  color: var(--color-white);
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -50,7 +50,7 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  color: var(--color-white);
+  color: var(--color-text);
   margin: 0;
   opacity: 0.9;
 }
@@ -68,7 +68,7 @@
   height: 40px;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
+  color: var(--color-text);
   opacity: 0.7;
   transition: opacity 1.2s ease, color 1.2s ease;
 }
@@ -92,7 +92,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #000000;
+  background: var(--color-panel1);
 }
 
 /* Featured posts (large) - overlay style */
@@ -101,7 +101,7 @@
   flex: 0 0 850px;
   width: 850px;
   height: 371px;
-  border: 1px solid var(--color-border-dark);
+  border: 1px solid var(--color-border);
   border-radius: 13px;
   overflow: hidden;
 }
@@ -140,7 +140,7 @@
   position: relative;
   height: 227px;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.9) 100%);
-  border: 1px solid var(--color-border-dark);
+  border: 1px solid var(--color-border);
   border-radius: 13px;
   flex-shrink: 0;
 }
@@ -207,7 +207,7 @@
   font-size: 36px;
   line-height: 48px;
   font-weight: 400;
-  color: var(--color-white);
+  color: var(--color-foreground);
   text-align: center;
   margin: 0;
 }
@@ -220,7 +220,7 @@
   font-size: 28px;
   line-height: normal;
   font-weight: 400;
-  color: var(--color-white);
+  color: var(--color-foreground);
   text-align: left;
   margin: 0;
 }

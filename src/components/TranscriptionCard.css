@@ -1,6 +1,6 @@
 .transcription-card {
   background: var(--color-panel1);
-  border: 1px solid var(--color-border-dark);
+  border: 1px solid var(--color-border);
   border-radius: 13px;
   padding: 24px;
   display: flex;
@@ -51,7 +51,7 @@
   font-family: 'Hubot Sans', 'Noto Sans', sans-serif;
   font-size: 24px;
   line-height: 31.2px;
-  color: var(--color-white);
+  color: var(--color-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -63,19 +63,19 @@
   font-family: 'Hubot Sans', 'Noto Sans', sans-serif;
   font-size: 24px;
   line-height: 31.2px;
-  color: var(--color-white);
+  color: var(--color-foreground);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .card-downloads {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
 }
 
 .download-button {
-  background: var(--color-surface-muted);
+  background: var(--color-panel2);
   border: none;
   border-radius: 13px;
   padding: 12px 16px;
@@ -84,21 +84,23 @@
   justify-content: space-between;
   cursor: pointer;
   transition: background 1.2s ease;
+  flex: 1;
+  min-width: 0;
 }
 
 .download-button:hover {
-  background: var(--color-surface-muted);
+  background: var(--color-panel2);
 }
 
 .download-button:active {
-  background: rgba(79, 78, 80, 1);
+  background: var(--color-panel3);
 }
 
 .download-button span {
   font-family: 'Hubot Sans', sans-serif;
   font-size: 20px;
   line-height: 31.2px;
-  color: var(--color-white);
+  color: var(--color-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -106,5 +108,5 @@
 
 .download-button svg {
   flex-shrink: 0;
-  color: var(--color-white);
+  color: var(--color-muted-foreground);
 }

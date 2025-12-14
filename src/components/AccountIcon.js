@@ -129,7 +129,7 @@ export const AccountIcon = ({ compact = false }) => {
           className="flex items-center justify-center account-icon"
           style={{ width: 32, height: 32 }}
         >
-          <User size={28} weight="regular" className="text-[#cfd3d6]" />
+          <User size={28} weight="regular" style={{ color: 'var(--color-muted-foreground)' }} />
         </div>
 
         <div

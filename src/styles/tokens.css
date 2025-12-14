@@ -1,4 +1,23 @@
 :root {
+  /* Progress Bar Token */
+  --color-progress-bar-dark: #3b82f6;
+  --color-progress-bar-light: #2563eb;
+  --color-progress-bar: var(--color-progress-bar-dark);
+  /* Input Field Tokens */
+  --color-input-bg-dark: #232226;
+  --color-input-bg-light: #f6f6f6;
+  --color-input-border-dark: #3d3b3e;
+  --color-input-border-light: #e5e5e5;
+  --color-input-placeholder-dark: #8d8c8d;
+  --color-input-placeholder-light: #b0b0b0;
+  --color-input-text-dark: #ffffff;
+  --color-input-text-light: #000000;
+
+  /* Default to dark mode */
+  --color-input-bg: var(--color-input-bg-dark);
+  --color-input-border: var(--color-input-border-dark);
+  --color-input-placeholder: var(--color-input-placeholder-dark);
+  --color-input-text: var(--color-input-text-dark);
   /* Dark Mode (Default) */
   /* Base Colors */
   --color-background-dark: #171717;
@@ -17,7 +36,7 @@
   /* Button Colors */
   --color-button-light: #ffffff;
   --color-button-dark: #ffffff;
-  
+
   /* Utility Colors */
   --color-white: #ffffff;
   --color-black: #000000;
@@ -53,13 +72,19 @@
   --color-shadow: var(--color-shadow-dark);
 
   /* Typography */
-  --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-family-alt: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Light Mode */
 [data-theme='light'] {
+  --color-progress-bar: var(--color-progress-bar-light);
+  /* Input Field Tokens */
+  --color-input-bg: var(--color-input-bg-light);
+  --color-input-border: var(--color-input-border-light);
+  --color-input-placeholder: var(--color-input-placeholder-light);
+  --color-input-text: var(--color-input-text-light);
   /* Light Mode Base Colors */
   --color-background-light: #ffffff;
   --color-tinted-background-light: #f6f6f6;
@@ -106,4 +131,3 @@
   transition-duration: 1.2s;
   transition-timing-function: ease;
 }
-

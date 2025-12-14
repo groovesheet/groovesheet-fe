@@ -7,7 +7,7 @@
   z-index: 100;
   /* Navbar should be transparent in both themes */
   background-color: transparent;
-  transition: background-color 1.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .header-container {
@@ -68,7 +68,13 @@
   line-height: 32px;
   text-decoration: none;
   cursor: pointer;
-  transition: color 1.2s;
+  transition: color 0.2s !important;
+}
+
+/* Override global 1.2s transition-duration from tokens.css for navbar children */
+.nav-item,
+.nav-item * {
+  transition-duration: 0.2s !important;
 }
 
 .nav-item:hover {
@@ -77,6 +83,20 @@
 
 .nav-item.dropdown {
   gap: 8px;
+}
+
+/* Ensure dropdown arrows use muted foreground color */
+.nav-item.dropdown svg,
+.nav-item.dropdown svg *,
+.nav-item.dropdown svg path,
+.nav-item.dropdown svg polygon,
+.nav-item.dropdown svg circle,
+.nav-item.dropdown svg line,
+.nav-item.dropdown svg polyline {
+  color: var(--color-muted-foreground);
+  fill: var(--color-muted-foreground);
+  stroke: var(--color-muted-foreground);
+  transition: color 0.2s, fill 0.2s, stroke 0.2s;
 }
 
 .header-right {
@@ -106,8 +126,13 @@
   border: none;
   cursor: pointer;
   color: var(--text-secondary, #8d8c8d);
-  transition: color 0.2s;
+  transition: color 0.2s !important;
   margin-right: 24px;
+}
+
+.theme-toggle,
+.theme-toggle * {
+  transition-duration: 0.2s !important;
 }
 
 .theme-toggle:hover {
@@ -122,15 +147,63 @@
 .language-selector {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   /* tighten horizontal padding so "En" sits closer to the account button */
   padding: 0 0px;
-  color: var(--text-secondary, #8d8c8d);
+  color: var(--color-muted-foreground);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s !important;
+}
+
+.language-selector,
+.language-selector * {
+  transition-duration: 0.2s !important;
+}
+
+/* Language selector chevron arrow color */
+.language-selector svg,
+.language-selector svg *,
+.language-selector svg path,
+.language-selector svg polygon,
+.language-selector svg circle,
+.language-selector svg line,
+.language-selector svg polyline {
+  color: currentColor;
+  fill: currentColor;
+  stroke: currentColor;
+  transition: color 0.2s !important, fill 0.2s !important, stroke 0.2s !important;
+}
+
+/* Grouped hover effect: En + arrow respond together */
+.language-selector:hover {
+  color: var(--color-foreground);
+}
+
+.language-selector:hover svg,
+.language-selector:hover svg *,
+.language-selector:hover svg path,
+.language-selector:hover svg polygon,
+.language-selector:hover svg circle,
+.language-selector:hover svg line,
+.language-selector:hover svg polyline {
+  color: var(--color-foreground);
+  fill: var(--color-foreground);
+  stroke: var(--color-foreground);
+}
+
+/* Nav item dropdown hover for Pricing + arrow */
+.nav-item.dropdown:hover svg *,
+.nav-item.dropdown:hover svg path,
+.nav-item.dropdown:hover svg polygon,
+.nav-item.dropdown:hover svg circle,
+.nav-item.dropdown:hover svg line,
+.nav-item.dropdown:hover svg polyline {
+  color: var(--color-foreground);
+  fill: var(--color-foreground);
+  stroke: var(--color-foreground);
 }
 
 /* Add explicit spacing between the language selector and the account area on desktop
@@ -152,8 +225,31 @@
   transform: translateY(1px);
 }
 
-.language-selector:hover {
-  color: var(--text-primary, #ffffff);
+/* Light mode: language selector and account button hover effects turn primary blue */
+[data-theme='light'] .language-selector:hover {
+  color: var(--color-primary);
+}
+
+[data-theme='light'] .language-selector:hover svg,
+[data-theme='light'] .language-selector:hover svg *,
+[data-theme='light'] .language-selector:hover svg path,
+[data-theme='light'] .language-selector:hover svg polygon,
+[data-theme='light'] .language-selector:hover svg circle,
+[data-theme='light'] .language-selector:hover svg line,
+[data-theme='light'] .language-selector:hover svg polyline {
+  color: var(--color-primary);
+  fill: var(--color-primary);
+  stroke: var(--color-primary);
+}
+
+[data-theme='light'] .account-button button:hover .account-icon,
+[data-theme='light'] .account-button button:hover .account-label {
+  color: var(--color-primary);
+}
+
+[data-theme='light'] .account-button button:hover .account-icon svg,
+[data-theme='light'] .account-button button:hover .account-icon svg * {
+  color: var(--color-primary);
 }
 
 /* Account label in header should match language selector sizing/color */

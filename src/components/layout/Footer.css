@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: center;
   opacity: 0.9;
-  transition: color 1.2s ease, opacity 0.18s ease, transform 0.12s ease;
+  transition: color 0.2s ease, opacity 0.18s ease, transform 0.12s ease;
 }
 
 .social-icon svg {
@@ -108,7 +108,7 @@
   line-height: 32px;
   text-decoration: none;
   border-bottom: 1px solid var(--color-muted-foreground);
-  transition: color 1.2s;
+  transition: color 0.2s;
   display: inline-block;
   width: fit-content;
 }
@@ -169,7 +169,7 @@
   line-height: 22px;
   text-decoration: none;
   border-bottom: 1px solid var(--color-border-dark);
-  transition: color 1.2s;
+  transition: color 0.2s;
 }
 
 .footer-legal a:hover {
@@ -193,12 +193,38 @@
   line-height: 22px;
   text-decoration: none;
   border-bottom: 1px solid var(--color-border-dark);
-  transition: color 1.2s;
+  transition: color 0.2s;
 }
 
 .footer-bottom-right a:hover {
   color: var(--color-white);
   border-bottom-color: var(--color-white);
+}
+
+/* Light mode overrides for footer links */
+[data-theme='light'] .social-icon:hover {
+  color: var(--color-primary);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+[data-theme='light'] .social-icon:hover svg {
+  color: var(--color-primary);
+}
+
+[data-theme='light'] .footer-column a:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+[data-theme='light'] .footer-legal a:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+[data-theme='light'] .footer-bottom-right a:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 @media (max-width: 1024px) {

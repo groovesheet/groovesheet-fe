@@ -2,13 +2,14 @@ import React from 'react';
 import { ArrowDown } from '@phosphor-icons/react';
 import './TranscriptionCard.css';
 
-export const TranscriptionCard = ({ 
-  date, 
-  time, 
+export const TranscriptionCard = ({
+  date,
+  time,
   fileName,
   instrument = 'drums',
-  onDownloadInstrument, 
-  onDownloadTranscription 
+  onDownloadInstrument,
+  onDownloadTranscription,
+  onDownloadMIDI,
 }) => {
   // Split filename into name and extension
   const getFileNameParts = (fullName) => {
@@ -18,12 +19,12 @@ export const TranscriptionCard = ({
     }
     return {
       name: fullName.substring(0, lastDotIndex),
-      extension: fullName.substring(lastDotIndex)
+      extension: fullName.substring(lastDotIndex),
     };
   };
 
   const { name, extension } = getFileNameParts(fileName);
-  
+
   // Capitalize first letter of instrument
   const instrumentLabel = instrument.charAt(0).toUpperCase() + instrument.slice(1);
 
@@ -40,23 +41,28 @@ export const TranscriptionCard = ({
           <span className="filename-extension">{extension}</span>
         </div>
       </div>
-      
+
       <div className="card-downloads">
-        <button 
-          className="download-button" 
+        <button
+          className="download-button"
           onClick={onDownloadInstrument}
           aria-label={`Download ${instrumentLabel} track`}
         >
           <span>{instrumentLabel} Track</span>
           <ArrowDown size={28} weight="regular" />
         </button>
-        
-        <button 
-          className="download-button" 
+
+        <button
+          className="download-button"
           onClick={onDownloadTranscription}
           aria-label="Download transcription"
         >
           <span>Transcription</span>
+          <ArrowDown size={28} weight="regular" />
+        </button>
+
+        <button className="download-button" onClick={onDownloadMIDI} aria-label="Download MIDI">
+          <span>MIDI</span>
           <ArrowDown size={28} weight="regular" />
         </button>
       </div>

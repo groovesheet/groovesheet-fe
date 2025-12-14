@@ -1,7 +1,7 @@
 /* About Page Styles */
 
 .about-page {
-  background: var(--color-background-dark);
+  background: var(--color-background);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -51,7 +51,7 @@
   font-size: 64px;
   font-weight: 400;
   line-height: 78px;
-  color: var(--color-white);
+  color: var(--color-text);
   text-align: center;
   max-width: 866px;
   margin: 0;
@@ -62,7 +62,7 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  color: var(--color-white);
+  color: var(--color-text);
   text-align: center;
   max-width: 570px;
   margin: 0;
@@ -77,7 +77,7 @@
 .about-image-large {
   flex: 1;
   border-radius: 16px;
-  border: 1px solid var(--color-border-dark);
+  border: 1px solid var(--color-border);
   overflow: hidden;
   background: var(--color-panel1);
 }
@@ -98,7 +98,7 @@
 .about-image-small {
   flex: 1;
   border-radius: 16px;
-  border: 1px solid var(--color-border-dark);
+  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -128,7 +128,7 @@
   font-size: 32px;
   font-weight: 400;
   line-height: 37px;
-  color: var(--color-white);
+  color: var(--color-text);
   max-width: 879px;
   margin: 0;
   flex: 1;
@@ -155,7 +155,7 @@
   font-size: 32px;
   font-weight: 400;
   line-height: 37px;
-  color: var(--color-white);
+  color: var(--color-text);
   text-align: center;
   max-width: 1050px;
   margin: 0;
@@ -170,7 +170,7 @@
 .value-card {
   flex: 1;
   background: var(--color-panel1);
-  border: 1px solid var(--color-border-dark);
+  border: 1px solid var(--color-border);
   border-radius: 13px;
   padding: 32px 24px;
   display: flex;
@@ -181,7 +181,7 @@
 }
 
 .value-icon {
-  color: var(--color-white);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +192,7 @@
   font-size: 36px;
   font-weight: 400;
   line-height: 31.2px;
-  color: var(--color-white);
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -201,7 +201,7 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 24px;
-  color: var(--color-white);
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -228,7 +228,7 @@
   font-size: 32px;
   font-weight: 400;
   line-height: 37px;
-  color: var(--color-white);
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -247,58 +247,62 @@
 .form-input {
   width: 100%;
   height: 98px;
-  background: var(--color-surface-muted);
-  border: none;
+  background: var(--color-input-bg);
+  border: 1.5px solid var(--color-input-border);
   border-radius: 6px;
   padding: 0 20px;
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: var(--color-white);
+  color: var(--color-input-text);
   box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
   outline: none;
   display: flex;
   align-items: center;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .form-input::placeholder {
-  color: var(--color-muted-foreground);
+  color: var(--color-input-placeholder);
 }
 
 .form-input:focus {
   outline: none;
-  box-shadow: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(1, 47, 167, 0.08);
 }
 
 .form-textarea {
   width: 100%;
   height: 211px;
-  background: var(--color-surface-muted);
-  border: none;
+  background: var(--color-input-bg);
+  border: 1.5px solid var(--color-input-border);
   border-radius: 6px;
   padding: 36px 20px;
   font-family: var(--font-family-sans);
   font-size: 24px;
   font-weight: 400;
   line-height: 32px;
-  color: var(--color-white);
+  color: var(--color-input-text);
   box-sizing: border-box;
   resize: none;
   -webkit-appearance: none;
   appearance: none;
   outline: none;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .form-textarea::placeholder {
-  color: var(--color-muted-foreground);
+  color: var(--color-input-placeholder);
 }
 
 .form-textarea:focus {
   outline: none;
-  box-shadow: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(1, 47, 167, 0.08);
 }
 
 .form-checkbox {
@@ -327,11 +331,11 @@
 }
 
 .checkbox-wrapper:hover {
-  background: #4F4E50;
+  background: #4f4e50;
 }
 
 .checkbox-wrapper.checked:hover {
-  background: #0139C7;
+  background: #0139c7;
 }
 
 .checkbox-label {
@@ -366,7 +370,7 @@
 }
 
 .form-submit:hover {
-  background: #0139C7;
+  background: #0139c7;
 }
 
 .form-submit:focus {
@@ -393,8 +397,8 @@
 
 .form-message.success {
   background: rgba(34, 197, 94, 0.1);
-  border: 1px solid #22C55E;
-  color: #22C55E;
+  border: 1px solid #22c55e;
+  color: #22c55e;
 }
 
 .form-message.error {

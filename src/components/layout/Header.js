@@ -48,7 +48,11 @@ function Header({ onLoginClick }) {
         <div className="header-inner">
           <div className="header-left">
             <Link to="/" className="logo">
-              <img src={isDarkMode ? "/images/Logo_White.png" : "/images/Logo_Dark.png"} alt="DrumScore Logo" className="logo-image" />
+              <img
+                src={isDarkMode ? '/images/Logo_White.png' : '/images/Logo_Dark.png'}
+                alt="DrumScore Logo"
+                className="logo-image"
+              />
             </Link>
             <nav className="nav-menu">
               <div className="nav-item dropdown">
@@ -62,7 +66,7 @@ function Header({ onLoginClick }) {
                 >
                   <path
                     d="M8.10986 9.49994L0.609863 1.99994L1.65986 0.949938L8.10986 7.39994L14.5599 0.949938L15.6099 1.99994L8.10986 9.49994Z"
-                    fill="white"
+                    fill="currentColor"
                   />
                 </svg>
               </div>
@@ -78,27 +82,103 @@ function Header({ onLoginClick }) {
             </nav>
           </div>
           <div className="header-right">
-            <button 
-              className="theme-toggle" 
+            <button
+              className="theme-toggle"
               onClick={toggleTheme}
               aria-label="Toggle dark/light mode"
-              title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDarkMode ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="5" fill="currentColor"/>
-                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="12" cy="12" r="5" fill="currentColor" />
+                  <line
+                    x1="12"
+                    y1="1"
+                    x2="12"
+                    y2="3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="12"
+                    y1="21"
+                    x2="12"
+                    y2="23"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="4.22"
+                    y1="4.22"
+                    x2="5.64"
+                    y2="5.64"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="18.36"
+                    y1="18.36"
+                    x2="19.78"
+                    y2="19.78"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="1"
+                    y1="12"
+                    x2="3"
+                    y2="12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="21"
+                    y1="12"
+                    x2="23"
+                    y2="12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="4.22"
+                    y1="19.78"
+                    x2="5.64"
+                    y2="18.36"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1="18.36"
+                    y1="5.64"
+                    x2="19.78"
+                    y2="4.22"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor" />
                 </svg>
               )}
             </button>
@@ -113,7 +193,7 @@ function Header({ onLoginClick }) {
               >
                 <path
                   d="M8.60986 9.49994L1.10986 1.99994L2.15986 0.949938L8.60986 7.39994L15.0599 0.949938L16.1099 1.99994L8.60986 9.49994Z"
-                  fill="white"
+                  fill="currentColor"
                 />
               </svg>
             </div>
@@ -198,7 +278,10 @@ function Header({ onLoginClick }) {
                   </button>
                 </SignedOut>
                 <SignedIn>
-                  <div className="mobile-nav-item" style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <div
+                    className="mobile-nav-item"
+                    style={{ display: 'flex', justifyContent: 'flex-start' }}
+                  >
                     {/* Use compact AccountIcon to render a simple label (keeps Clerk overlay) */}
                     <AccountIcon compact />
                   </div>
