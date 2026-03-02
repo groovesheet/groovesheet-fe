@@ -130,11 +130,16 @@ function About({ onLoginClick }) {
                 <img src="/images/about-office.png" alt="Office workspace" />
               </div>
               <div className="about-image-group">
-                <div className="about-image-small">
-                  <img src="/images/about-meeting.png" alt="Team meeting" />
+                <div className="about-image-row">
+                  <div className="about-image-small">
+                    <img src="/images/about-meeting.png" alt="Team meeting" />
+                  </div>
+                  <div className="about-image-small">
+                    <img src="/images/about-workspace.png" alt="Workspace" />
+                  </div>
                 </div>
-                <div className="about-image-small">
-                  <img src="/images/about-workspace.png" alt="Workspace desk" />
+                <div className="about-image-bottom">
+                  <img src="/images/about-desk.png" alt="Workspace desk" />
                 </div>
               </div>
             </div>

@@ -13,6 +13,8 @@ import TranscriptionHistory from './components/TranscriptionHistory';
 import SSOCallback from './components/SSOCallback';
 import Blog from './components/Blog';
 import About from './components/About';
+import StemSplitter from './components/StemSplitter';
+import MidiConverter from './components/MidiConverter';
 import Element from './components/Element';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import BusinessInformation from './components/BusinessInformation';
@@ -141,6 +143,8 @@ function App() {
           <Route path="/history" element={<TranscriptionHistory />} />
           <Route path="/blog" element={<Blog onLoginClick={openLoginModal} />} />
           <Route path="/about" element={<About onLoginClick={openLoginModal} />} />
+          <Route path="/stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
+          <Route path="/midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
           <Route path="/business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
           <Route path="/terms" element={<TermsConditions onLoginClick={openLoginModal} />} />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
 import './Header.css';
@@ -8,6 +8,11 @@ import { useTheme } from '../../context/ThemeContext';
 
 function Header({ onLoginClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
+  const [productsRect, setProductsRect] = useState(null);
+  const productsRef = useRef(null);
+  const closeTimeoutRef = useRef(null);
   const { isDarkMode, toggleTheme } = useTheme();
 
   const toggleMobileMenu = () => {
@@ -16,6 +21,18 @@ function Header({ onLoginClick }) {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const handleProductsEnter = () => {
+    clearTimeout(closeTimeoutRef.current);
+    if (productsRef.current) {
+      setProductsRect(productsRef.current.getBoundingClientRect());
+    }
+    setIsProductsOpen(true);
+  };
+
+  const handleProductsLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => setIsProductsOpen(false), 80);
   };
 
   const openLoginModal = (e) => {
@@ -55,9 +72,15 @@ function Header({ onLoginClick }) {
               />
             </Link>
             <nav className="nav-menu">
-              <div className="nav-item dropdown">
-                <span>Pricing</span>
+              <div
+                ref={productsRef}
+                className={`nav-item dropdown nav-products${isProductsOpen ? ' open' : ''}`}
+                onMouseEnter={handleProductsEnter}
+                onMouseLeave={handleProductsLeave}
+              >
+                <span>Products</span>
                 <svg
+                  className="dropdown-arrow"
                   width="16"
                   height="10"
                   viewBox="0 0 17 10"
@@ -70,6 +93,9 @@ function Header({ onLoginClick }) {
                   />
                 </svg>
               </div>
+              <a href="/pricing" className="nav-item">
+                Pricing
+              </a>
               <a href="#help" className="nav-item">
                 Help
               </a>
@@ -218,6 +244,26 @@ function Header({ onLoginClick }) {
         </div>
       </div>
 
+      {/* Products Dropdown - Rendered using Portal to escape stacking contexts */}
+      {isProductsOpen && productsRect && ReactDOM.createPortal(
+        <div
+          className="products-dropdown"
+          style={{
+            position: 'fixed',
+            top: productsRect.bottom + 6,
+            left: productsRect.left,
+            zIndex: 2147483647,
+          }}
+          onMouseEnter={handleProductsEnter}
+          onMouseLeave={handleProductsLeave}
+        >
+          <a href="/" className="products-dropdown-item">Music Transcription</a>
+          <a href="/stem-splitter" className="products-dropdown-item">Stem Splitter</a>
+          <a href="/midi-converter" className="products-dropdown-item">MIDI Converter</a>
+        </div>,
+        document.body
+      )}
+
       {/* Mobile Menu Dropdown - Rendered using Portal */}
       {isMobileMenuOpen &&
         ReactDOM.createPortal(
@@ -244,9 +290,41 @@ function Header({ onLoginClick }) {
               }}
             >
               <div className="mobile-menu-content">
-                <div className="mobile-nav-item">
-                  <span>Pricing</span>
+                <div
+                  className="mobile-nav-item"
+                  onClick={() => setIsMobileProductsOpen(!isMobileProductsOpen)}
+                >
+                  <span>Products</span>
+                  <svg
+                    className={`dropdown-arrow${isMobileProductsOpen ? ' open' : ''}`}
+                    width="14"
+                    height="9"
+                    viewBox="0 0 17 10"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M8.10986 9.49994L0.609863 1.99994L1.65986 0.949938L8.10986 7.39994L14.5599 0.949938L15.6099 1.99994L8.10986 9.49994Z"
+                      fill="currentColor"
+                    />
+                  </svg>
                 </div>
+                {isMobileProductsOpen && (
+                  <>
+                    <a href="/" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
+                      Music Transcription
+                    </a>
+                    <a href="/stem-splitter" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
+                      Stem Splitter
+                    </a>
+                    <a href="/midi-converter" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
+                      MIDI Converter
+                    </a>
+                  </>
+                )}
+                <a href="/pricing" className="mobile-nav-item" onClick={closeMobileMenu}>
+                  Pricing
+                </a>
                 <a href="#help" className="mobile-nav-item" onClick={closeMobileMenu}>
                   Help
                 </a>
