@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
@@ -26,9 +25,6 @@ const SUPPORTED_MIME_TYPES = [
 const SUPPORTED_EXTENSIONS = ['.mp3', '.wav', '.flac', '.ogg', '.au', '.sph'];
 
 const MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024;
-
-// Use non-breaking spaces so double-spacing renders visibly in the hero helper text
-const FORMATS_HELPER_TEXT = '.mp3\u00a0\u00a0.wav\u00a0\u00a0.flac\u00a0\u00a0.ogg\u00a0\u00a0.au\u00a0\u00a0.sph\u00a0\u00a0up\u00a0\u00a0to\u00a0\u00a032MB';
 
 const isSupportedFileType = (selectedFile) => {
   const mime = (selectedFile.type || '').toLowerCase();
@@ -114,14 +110,14 @@ function Hero({ onLoginRequired }) {
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('drums');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const dropdownMenuRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
 
-  const instruments = [
+  const _instruments = [
     { value: 'drums', label: 'Drums', IconComponent: LuDrum },
     { value: 'piano', label: 'Piano', IconComponent: Piano },
     { value: 'jazz_bass', label: 'Jazz Bass', IconComponent: LuMusic4 },

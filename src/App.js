@@ -55,7 +55,7 @@ function LandingPage({ onLoginClick }) {
     setHeroBackground(getRandomHeroBackground(isDarkMode));
     // Make gradient visible immediately on initial mount
     setIsGradientVisible(true);
-  }, []);
+  }, [isDarkMode]);
 
   // Smooth transition: fade out completely, swap image while invisible, fade in
   useEffect(() => {

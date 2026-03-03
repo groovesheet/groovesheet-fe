@@ -6,7 +6,7 @@ import Header from './layout/Header';
 import Footer from './layout/Footer';
 import TranscriptionCard from './TranscriptionCard';
 import TranscriptionCardSkeleton from './TranscriptionCardSkeleton';
-import { fetchWorkflowList, fetchWorkflowStatus, AuthError } from '../utils/api';
+import { fetchWorkflowList, fetchWorkflowStatus } from '../utils/api';
 import config from '../config';
 import './TranscriptionHistory.css';
 

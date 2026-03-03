@@ -9,7 +9,7 @@ module.exports = function(app) {
       pathRewrite: {
         '^/api': '', // remove /api prefix when forwarding
       },
-      onProxyReq: function(proxyReq, req, res) {
+      onProxyReq: function(proxyReq, req, _res) {
         console.log('Proxying:', req.method, req.path, '->', proxyReq.path);
         // Forward Authorization header if present
         if (req.headers.authorization) {
