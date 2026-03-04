@@ -626,6 +626,62 @@ function Hero({ onLoginRequired }) {
     }
   };
 
+  // Generic file download helper for secondary download buttons
+  const downloadGenericFile = async (id, fileKey, defaultExtension, labelForFilename) => {
+    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
+    try {
+      const res = await authenticatedFetch(url, {}, getToken);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setError('File not available for download.');
+          return;
+        }
+        throw new Error(`Download failed ${res.status}`);
+      }
+      const blob = await res.blob();
+      const cd = res.headers.get('content-disposition') || '';
+      let filename = file?.name
+        ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
+        : `${labelForFilename}_${id}${defaultExtension}`;
+      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+      if (match) filename = decodeURIComponent(match[1] || match[2]);
+
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.message || 'Failed to download file.');
+    }
+  };
+
+  // Download stem WAV
+  const handleDownloadStem = () => {
+    if (!jobId) return;
+    const stemKey = selectedInstrument === 'bass_separation' ? 'bass' : selectedInstrument;
+    downloadGenericFile(jobId, stemKey, '.wav', `${stemKey}_stem`);
+  };
+
+  // Download MIDI
+  const handleDownloadMidi = () => {
+    if (!jobId) return;
+    let midiKey = 'midi';
+    if (selectedInstrument === 'drums') midiKey = 'transcription';
+    else if (selectedInstrument === 'jazz_bass') midiKey = 'jazz_bass_transcription';
+    downloadGenericFile(jobId, midiKey, '.mid', 'midi');
+  };
+
+  // Download BD audio (drums only)
+  const handleDownloadBdAudio = () => {
+    if (!jobId) return;
+    downloadGenericFile(jobId, 'bd_audio', '.wav', 'bd_audio');
+  };
+
   // Handle browse button click
   const handleBrowseClick = () => {
     if (!isLoaded) return;
@@ -820,37 +876,49 @@ function Hero({ onLoginRequired }) {
     </>
   );
 
-  const renderSuccessState = () => (
-    <>
-      <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
-        <CloseIcon />
-      </button>
+  const renderSuccessState = () => {
+    const isTranscriptionInstrument = ['drums', 'piano', 'jazz_bass', 'bass'].includes(selectedInstrument);
+    const isDrums = selectedInstrument === 'drums';
 
-      <div className="upload-content-top compact">
-        <div className="upload-icon">
-          <CheckCircleIcon />
-        </div>
-        <div className="upload-text success-text">
-          <h3>Transcription Succussed!</h3>
-          <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
-        </div>
-      </div>
-
-      <div className="upload-controls success-controls compact">
-        <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-          Download Transcription
+    return (
+      <>
+        <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
+          <CloseIcon />
         </button>
-        <div className="download-options-row">
-          <button className="download-option-btn" onClick={() => {}}>
-            Stem
-          </button>
-          <button className="download-option-btn" onClick={() => {}}>
-            MIDI
-          </button>
+
+        <div className="upload-content-top compact">
+          <div className="upload-icon">
+            <CheckCircleIcon />
+          </div>
+          <div className="upload-text success-text">
+            <h3>Transcription Succussed!</h3>
+            <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
+          </div>
         </div>
-      </div>
-    </>
-  );
+
+        <div className="upload-controls success-controls compact">
+          <button className="download-transcription-btn compact" onClick={handleManualDownload}>
+            Download Transcription
+          </button>
+          <div className="download-options-row">
+            <button className="download-option-btn" onClick={handleDownloadStem}>
+              Stem
+            </button>
+            {isTranscriptionInstrument && (
+              <button className="download-option-btn" onClick={handleDownloadMidi}>
+                MIDI
+              </button>
+            )}
+            {isDrums && (
+              <button className="download-option-btn" onClick={handleDownloadBdAudio}>
+                BD Audio
+              </button>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  };
 
   return (
     <section className="hero">
