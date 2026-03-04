@@ -6,6 +6,14 @@
  */
 
 /**
+ * Sanitize a filename to be safe for HTTP headers (ASCII-only).
+ * Normalizes Unicode (e.g. combining accents) and replaces non-ASCII chars.
+ */
+function sanitizeFilename(name) {
+  return name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+}
+
+/**
  * Custom error class for authentication-related errors
  */
 export class AuthError extends Error {
@@ -113,7 +121,9 @@ export async function uploadFileAuthenticated(
   signOut = null
 ) {
   const formData = new FormData();
-  formData.append('file', file);
+  const safeName = sanitizeFilename(file.name);
+  const safeFile = safeName !== file.name ? new File([file], safeName, { type: file.type }) : file;
+  formData.append('file', safeFile);
 
   const response = await authenticatedFetch(
     `${baseUrl}${endpoint}`,

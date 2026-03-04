@@ -377,7 +377,9 @@ function Hero({ onLoginRequired }) {
     }
 
     const formData = new FormData();
-    formData.append('file', fileToUpload);  // Changed from 'audio_file' to 'file'
+    const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+    const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
+    formData.append('file', safeFile);
     // Add metadata with selected instrument
     formData.append('metadata', JSON.stringify({ 
       instrument: selectedInstrument 

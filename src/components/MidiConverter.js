@@ -222,7 +222,9 @@ function MidiConverter({ onLoginClick }) {
     }
 
     const formData = new FormData();
-    formData.append('file', fileToUpload);
+    const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+    const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
+    formData.append('file', safeFile);
     formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
 
     setError(null);
