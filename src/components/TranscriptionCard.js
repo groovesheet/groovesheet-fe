@@ -10,6 +10,7 @@ export const TranscriptionCard = ({
   onDownloadInstrument,
   onDownloadTranscription,
   onDownloadMIDI,
+  onDownloadScore,
 }) => {
   // Split filename into name and extension
   const getFileNameParts = (fullName) => {
@@ -65,6 +66,13 @@ export const TranscriptionCard = ({
           <span>MIDI</span>
           <ArrowDown size={28} weight="regular" />
         </button>
+
+        {onDownloadScore && (
+          <button className="download-button" onClick={onDownloadScore} aria-label="Download Score">
+            <span>Score</span>
+            <ArrowDown size={28} weight="regular" />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -455,8 +455,13 @@
   font-weight: 400;
   line-height: 25px;
   cursor: pointer;
-  transition: background 1.2s;
+  transition: color 0.2s, text-decoration-color 0.2s;
   font-family: 'Hubot Sans', sans-serif;
+}
+
+.cancel-btn.compact:hover {
+  color: #e53e3e;
+  text-decoration: underline;
 }
 
 /* Compact layout for upload/processing/success states (Figma spec) */
@@ -527,6 +532,8 @@
 .download-option-btn {
   flex: 1;
   height: 46px;
+  min-height: 46px;
+  padding: 0;
   border: none;
   border-radius: 6px;
   background: var(--color-muted-foreground);
@@ -534,11 +541,22 @@
   font-family: var(--font-family-sans);
   font-size: 17px;
   font-weight: 400;
-  line-height: 32px;
+  line-height: 46px;
+  box-sizing: border-box;
   cursor: pointer;
 }
 
+.download-option-btn.full-width {
+  width: 100%;
+}
+
 /* Drag and Drop States */
+.upload-area.state-uploading,
+.upload-area.state-processing,
+.upload-area.state-success {
+  justify-content: center;
+}
+
 .upload-area.dragging {
   border-color: var(--color-primary);
   background: linear-gradient(
@@ -940,8 +958,8 @@
   opacity: 1;
 }
 
-.success-controls {
-  gap: 12px;
+.success-controls.compact {
+  gap: 8px;
   width: 100%;
 }
 
@@ -1039,4 +1057,51 @@
 
 [data-theme='light'] .instrument-tab.active {
   color: var(--color-primary);
+}
+
+/* Cold Start State */
+.upload-area.state-cold_starting {
+  justify-content: center;
+}
+
+.cold-start-pulse {
+  animation: cold-start-pulse-anim 2s ease-in-out infinite;
+}
+
+@keyframes cold-start-pulse-anim {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.cold-start-message {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-white);
+  margin: 0;
+}
+
+.cold-start-sub {
+  font-size: 14px;
+  color: var(--color-muted-foreground);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.cold-start-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-primary) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: cold-start-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes cold-start-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }

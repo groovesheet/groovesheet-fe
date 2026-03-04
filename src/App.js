@@ -111,7 +111,9 @@ function LandingPage({ onLoginClick }) {
         ref={gradientRef}
         className={`features-gradient ${isGradientVisible ? 'visible' : ''} ${isGradientInstantHide ? 'instant-hide' : ''}`}
       />
-      <Features />
+      <div style={{ paddingTop: '120px' }}>
+        <Features />
+      </div>
       <Pricing />
       {/* High-Accuracy Drum Scores section */}
       <Element />

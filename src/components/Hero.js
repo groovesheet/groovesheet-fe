@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
+import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
@@ -81,6 +82,17 @@ const CloseIcon = () => (
   </svg>
 );
 
+const ServerIcon = () => (
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="12" y="8" width="40" height="16" rx="3" stroke="white" strokeWidth="3"/>
+    <rect x="12" y="28" width="40" height="16" rx="3" stroke="white" strokeWidth="3"/>
+    <circle cx="20" cy="16" r="2.5" fill="white"/>
+    <circle cx="20" cy="36" r="2.5" fill="white"/>
+    <path d="M32 48V56" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+    <path d="M22 56H42" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+  </svg>
+);
+
 const BassIcon = () => (
   <svg className="fill-none stroke-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
     <title>bass-svg</title>
@@ -149,9 +161,14 @@ function Hero({ onLoginRequired }) {
       return 'uploading';
     }
     
-    if (status === 'pending' || status === 'running' || status === 'processing' || 
+    if (status === 'started') {
+      console.log('🧊 UI State: COLD_STARTING');
+      return 'cold_starting';
+    }
+
+    if (status === 'pending' || status === 'running' || status === 'processing' ||
         status === 'separating' || status === 'transcribing' || status === 'generating_sheet' ||
-        status === 'started') { // Add 'started' status
+        status === 'worker_processing') {
       console.log('⚙️ UI State: PROCESSING');
       return 'processing';
     }
@@ -386,13 +403,13 @@ function Hero({ onLoginRequired }) {
       // Workflow selection logic
       let workflowEndpoint = '/workflow/demucs_separate';
       if (selectedInstrument === 'drums') {
-        workflowEndpoint = '/workflow/separate_to_drumscore';
+        workflowEndpoint = '/workflow/separate_to_drumscore_full';
       } else if (selectedInstrument === 'jazz_bass') {
-        workflowEndpoint = '/workflow/separate_to_jazz_bass_score';
+        workflowEndpoint = '/workflow/separate_to_jazz_bass_score_full';
       } else if (selectedInstrument === 'bass') {
-        workflowEndpoint = '/workflow/separate_to_bass_score';
+        workflowEndpoint = '/workflow/separate_to_bass_score_full';
       } else if (selectedInstrument === 'piano') {
-        workflowEndpoint = '/workflow/separate_to_piano_score';
+        workflowEndpoint = '/workflow/separate_to_piano_score_full';
       }
       
       const response = await authenticatedFetch(
@@ -493,6 +510,7 @@ function Hero({ onLoginRequired }) {
               clearTimeout(progressTimeoutRef.current);
             }
             console.log('Workflow completed, downloading transcription output');
+            sendNotification('GrooveSheet', { body: 'Your transcription is ready!' });
             stopped = true;
             // Download first, then batch all state updates together
             try {
@@ -512,6 +530,18 @@ function Hero({ onLoginRequired }) {
             setError(data.message || 'Processing failed.');
             stopped = true;
             return;
+          }
+          // Handle cold-start → processing transition
+          if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
+            console.log('🔥 Worker woke up! Restarting progress simulation.');
+            simulateProgress();
+            sendNotification('GrooveSheet', { body: 'Server is ready! Processing your audio now.' });
+          }
+          // Pause progress sim during cold start
+          if (newStatus === 'started') {
+            stopProgressSimulation();
+            setProgress(0);
+            requestNotificationPermission();
           }
           // Only update status (progress is handled by simulation)
           console.log('💾 Setting status to:', newStatus);
@@ -543,15 +573,10 @@ function Hero({ onLoginRequired }) {
     // For bass: download midi
     // For piano: download midi
     // For others: download separated instrument track
+    // For transcription instruments, download the MusicXML output from the full pipeline
     let fileKey = selectedInstrument;
-    if (selectedInstrument === 'drums') {
-      fileKey = 'transcription';
-    } else if (selectedInstrument === 'jazz_bass') {
-      fileKey = 'jazz_bass_transcription';
-    } else if (selectedInstrument === 'bass') {
-      fileKey = 'midi';
-    } else if (selectedInstrument === 'piano') {
-      fileKey = 'midi';
+    if (['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument)) {
+      fileKey = 'musicxml';
     }
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     console.log('Fetching from:', url);
@@ -566,7 +591,7 @@ function Hero({ onLoginRequired }) {
     console.log('Blob received:', blob.size, 'bytes');
     // Try to get filename from Content-Disposition header
     const cd = res.headers.get('content-disposition') || '';
-    const extension = selectedInstrument === 'drums' || selectedInstrument === 'bass' || selectedInstrument === 'piano' ? '.mid' : '.wav';
+    const extension = ['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument) ? '.musicxml' : '.wav';
     const suffix = selectedInstrument === 'drums' ? '_transcription' : selectedInstrument === 'bass' ? '_bass_transcription' : selectedInstrument === 'piano' ? '_piano_transcription' : `_${selectedInstrument}`;
     let filename = file?.name ? file.name.replace(/\.[^.]+$/, `${suffix}${extension}`) : `${selectedInstrument}_${id}${extension}`;
     const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
@@ -775,7 +800,7 @@ function Hero({ onLoginRequired }) {
             className="progress-bar-fill compact"
             style={{ width: `${Math.min(progress, 100)}%` }}
           >
-            <span className="progress-percentage compact">{Math.round(progress)}%</span>
+            {progress >= 10 && <span className="progress-percentage compact">{Math.round(progress)}%</span>}
           </div>
           <div className="progress-bar-remaining compact" />
         </div>
@@ -804,11 +829,31 @@ function Hero({ onLoginRequired }) {
             className="progress-bar-fill compact"
             style={{ width: `${Math.min(progress, 100)}%` }}
           >
-            <span className="progress-percentage compact">{Math.round(progress)}%</span>
+            {progress >= 10 && <span className="progress-percentage compact">{Math.round(progress)}%</span>}
           </div>
           <div className="progress-bar-remaining compact" />
         </div>
 
+        <button className="cancel-btn compact" onClick={resetUpload}>
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+
+  const renderColdStartState = () => (
+    <>
+      <div className="upload-content-top compact">
+        <div className="upload-icon cold-start-pulse">
+          <ServerIcon />
+        </div>
+        <div className="upload-text">
+          <h3 className="cold-start-message">Waking up our servers...</h3>
+          <p className="cold-start-sub">We're in early access! This may take ~5-10 min. We'll notify you when ready.</p>
+        </div>
+      </div>
+
+      <div className="upload-controls compact">
         <button className="cancel-btn compact" onClick={resetUpload}>
           Cancel
         </button>
@@ -888,6 +933,7 @@ function Hero({ onLoginRequired }) {
           {/* Render based on UI state */}
           {uiState === 'idle' && renderIdleState()}
           {uiState === 'uploading' && renderUploadingState()}
+          {uiState === 'cold_starting' && renderColdStartState()}
           {uiState === 'processing' && renderProcessingState()}
           {uiState === 'success' && renderSuccessState()}
 
