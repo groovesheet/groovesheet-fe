@@ -338,7 +338,9 @@ function StemSplitter({ onLoginClick }) {
 
   // Download the separated stem audio file (.wav)
   const downloadStemFile = async (id) => {
-    const fileKey = selectedInstrument; // vocals, drums, piano, guitar, bass
+    // Demucs outputs: drums, bass, vocals, other (piano/guitar go into "other")
+    const stemKeyMap = { vocals: 'vocals', drums: 'drums', bass: 'bass', piano: 'other', guitar: 'other' };
+    const fileKey = stemKeyMap[selectedInstrument] || selectedInstrument;
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     const res = await authenticatedFetch(url, {}, getToken);
     if (!res.ok) {
