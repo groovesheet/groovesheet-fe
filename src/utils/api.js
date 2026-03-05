@@ -177,6 +177,30 @@ export async function fetchWorkflowList(baseUrl, getToken, signOut = null) {
 }
 
 /**
+ * Download a workflow output file
+ * @param {string} baseUrl - Base URL for the API (e.g., '/api')
+ * @param {string} workflowId - The workflow/job ID
+ * @param {string} fileKey - The file key (e.g., 'drums', 'midi', 'transcription')
+ * @param {Function} getToken - Clerk's getToken function from useAuth hook
+ * @returns {Promise<{blob: Blob, filename: string | null} | null>}
+ *   Returns null if file not found (404), otherwise returns { blob, filename }
+ * @throws {Error} - For non-404 download failures
+ */
+export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToken) {
+  const url = `${baseUrl}/workflow/download/${workflowId}/${fileKey}`;
+  const res = await authenticatedFetch(url, {}, getToken);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Download failed: ${res.status}`);
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get('content-disposition') || '';
+  const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+  const filename = match ? decodeURIComponent(match[1] || match[2]) : null;
+  return { blob, filename };
+}
+
+/**
  * Fetch detailed status for a specific workflow
  * @param {string} baseUrl - Base URL for the API
  * @param {string} workflowId - The workflow ID

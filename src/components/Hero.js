@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
@@ -650,26 +650,19 @@ function Hero({ onLoginRequired }) {
   };
 
   // Generic file download helper for secondary download buttons
-  const downloadGenericFile = async (id, fileKey, defaultExtension, labelForFilename) => {
-    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
+  const handleDownloadFile = async (fileKey, defaultExtension, labelForFilename) => {
+    if (!jobId) return;
     try {
-      const res = await authenticatedFetch(url, {}, getToken);
-      if (!res.ok) {
-        if (res.status === 404) {
-          setError('File not available for download.');
-          return;
-        }
-        throw new Error(`Download failed ${res.status}`);
+      const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+      if (!result) {
+        setError('File not available for download.');
+        return;
       }
-      const blob = await res.blob();
-      const cd = res.headers.get('content-disposition') || '';
-      let filename = file?.name
+      const fallback = file?.name
         ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
-        : `${labelForFilename}_${id}${defaultExtension}`;
-      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
-      if (match) filename = decodeURIComponent(match[1] || match[2]);
-
-      const objectUrl = URL.createObjectURL(blob);
+        : `${labelForFilename}_${jobId}${defaultExtension}`;
+      const filename = result.filename || fallback;
+      const objectUrl = URL.createObjectURL(result.blob);
       const a = document.createElement('a');
       a.href = objectUrl;
       a.download = filename;
@@ -685,24 +678,16 @@ function Hero({ onLoginRequired }) {
 
   // Download stem WAV
   const handleDownloadStem = () => {
-    if (!jobId) return;
     const stemKey = selectedInstrument === 'bass_separation' ? 'bass' : selectedInstrument;
-    downloadGenericFile(jobId, stemKey, '.wav', `${stemKey}_stem`);
+    handleDownloadFile(stemKey, '.wav', `${stemKey}_stem`);
   };
 
-  // Download MIDI
+  // Download MIDI (only for transcription instruments)
   const handleDownloadMidi = () => {
-    if (!jobId) return;
     let midiKey = 'midi';
     if (selectedInstrument === 'drums') midiKey = 'transcription';
     else if (selectedInstrument === 'jazz_bass') midiKey = 'jazz_bass_transcription';
-    downloadGenericFile(jobId, midiKey, '.mid', 'midi');
-  };
-
-  // Download BD audio (drums only)
-  const handleDownloadBdAudio = () => {
-    if (!jobId) return;
-    downloadGenericFile(jobId, 'bd_audio', '.wav', 'bd_audio');
+    handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
   // Handle browse button click
@@ -901,7 +886,6 @@ function Hero({ onLoginRequired }) {
 
   const renderSuccessState = () => {
     const isTranscriptionInstrument = ['drums', 'piano', 'jazz_bass', 'bass'].includes(selectedInstrument);
-    const isDrums = selectedInstrument === 'drums';
 
     return (
       <>
@@ -930,11 +914,6 @@ function Hero({ onLoginRequired }) {
             {isTranscriptionInstrument && (
               <button className="download-option-btn" onClick={handleDownloadMidi}>
                 MIDI
-              </button>
-            )}
-            {isDrums && (
-              <button className="download-option-btn" onClick={handleDownloadBdAudio}>
-                BD Audio
               </button>
             )}
           </div>
