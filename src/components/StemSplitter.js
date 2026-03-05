@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
@@ -366,52 +366,10 @@ function StemSplitter({ onLoginClick }) {
     }
   };
 
-  // Generic file download helper for secondary download buttons
-  const downloadGenericFile = async (id, fileKey, defaultExtension, labelForFilename) => {
-    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
-    try {
-      const res = await authenticatedFetch(url, {}, getToken);
-      if (!res.ok) {
-        if (res.status === 404) {
-          setError('File not available for download.');
-          return;
-        }
-        throw new Error(`Download failed ${res.status}`);
-      }
-      const blob = await res.blob();
-      const cd = res.headers.get('content-disposition') || '';
-      let filename = file?.name
-        ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
-        : `${labelForFilename}_${id}${defaultExtension}`;
-      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
-      if (match) filename = decodeURIComponent(match[1] || match[2]);
-
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objectUrl);
-    } catch (err) {
-      console.error('Download error:', err);
-      setError(err.message || 'Failed to download file.');
-    }
-  };
-
-  // Download MIDI (only available for transcription instruments)
-  const handleDownloadMidi = () => {
-    if (!jobId) return;
-    let midiKey = 'midi';
-    if (selectedInstrument === 'drums') midiKey = 'transcription';
-    downloadGenericFile(jobId, midiKey, '.mid', 'midi');
-  };
-
   // Download BD audio (drums only)
   const handleDownloadBdAudio = () => {
     if (!jobId) return;
-    downloadGenericFile(jobId, 'bd_audio', '.wav', 'bd_audio');
+    downloadWorkflowFile(API_BASE_URL, jobId, 'bd_audio', '.wav', 'bd_audio', getToken, file, setError);
   };
 
   const handleBrowseClick = () => {
@@ -522,7 +480,6 @@ function StemSplitter({ onLoginClick }) {
 
   const renderSuccessState = () => {
     const isDrums = selectedInstrument === 'drums';
-    const hasTranscription = ['drums', 'piano', 'bass'].includes(selectedInstrument);
 
     return (
       <>
@@ -540,14 +497,11 @@ function StemSplitter({ onLoginClick }) {
           <button className="download-transcription-btn compact" onClick={handleManualDownload}>
             Download Stem
           </button>
-          <div className="download-options-row">
-            {hasTranscription && (
-              <button className="download-option-btn" onClick={handleDownloadMidi}>MIDI</button>
-            )}
-            {isDrums && (
+          {isDrums && (
+            <div className="download-options-row">
               <button className="download-option-btn" onClick={handleDownloadBdAudio}>BD Audio</button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </>
     );

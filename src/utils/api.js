@@ -167,6 +167,59 @@ export async function fetchWorkflowList(baseUrl, getToken, signOut = null) {
 }
 
 /**
+ * Download a workflow output file and trigger a browser save dialog
+ * @param {string} baseUrl - Base URL for the API (default: '/api')
+ * @param {string} id - The workflow ID
+ * @param {string} fileKey - The file key (e.g. 'transcription', 'midi', 'bd_audio')
+ * @param {string} defaultExtension - Fallback file extension (e.g. '.wav', '.mid')
+ * @param {string} labelForFilename - Label used to construct the fallback filename
+ * @param {Function} getToken - Clerk's getToken function from useAuth hook
+ * @param {File|null} file - The original uploaded file (used to derive a friendly filename)
+ * @param {Function|null} setError - Callback to surface errors to the component UI
+ */
+export async function downloadWorkflowFile(
+  baseUrl = '/api',
+  id,
+  fileKey,
+  defaultExtension,
+  labelForFilename,
+  getToken,
+  file = null,
+  setError = null
+) {
+  const url = `${baseUrl}/workflow/download/${id}/${fileKey}`;
+  try {
+    const res = await authenticatedFetch(url, {}, getToken);
+    if (!res.ok) {
+      if (res.status === 404) {
+        if (setError) setError('File not available for download.');
+        return;
+      }
+      throw new Error(`Download failed ${res.status}`);
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    let filename = file?.name
+      ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
+      : `${labelForFilename}_${id}${defaultExtension}`;
+    const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+    if (match) filename = decodeURIComponent(match[1] || match[2]);
+
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+  } catch (err) {
+    console.error('Download error:', err);
+    if (setError) setError(err.message || 'Failed to download file.');
+  }
+}
+
+/**
  * Fetch detailed status for a specific workflow
  * @param {string} baseUrl - Base URL for the API
  * @param {string} workflowId - The workflow ID
