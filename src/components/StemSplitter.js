@@ -515,25 +515,27 @@ function StemSplitter({ onLoginClick }) {
     </>
   );
 
-  const renderSuccessState = () => (
-    <>
-      <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
-        <CloseIcon />
-      </button>
-      <div className="upload-content-top compact">
-        <div className="upload-icon"><CheckCircleIcon /></div>
-        <div className="upload-text success-text">
-          <h3>Separation Succeeded!</h3>
-          <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
-        </div>
-      </div>
-      <div className="upload-controls success-controls compact">
-        <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-          Download Stem
+  const renderSuccessState = () => {
+    return (
+      <>
+        <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
+          <CloseIcon />
         </button>
-      </div>
-    </>
-  );
+        <div className="upload-content-top compact">
+          <div className="upload-icon"><CheckCircleIcon /></div>
+          <div className="upload-text success-text">
+            <h3>Separation Succeeded!</h3>
+            <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
+          </div>
+        </div>
+        <div className="upload-controls success-controls compact">
+          <button className="download-transcription-btn compact" onClick={handleManualDownload}>
+            Download Stem
+          </button>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-background)' }}>

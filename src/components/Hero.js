@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
@@ -649,6 +649,47 @@ function Hero({ onLoginRequired }) {
     }
   };
 
+  // Generic file download helper for secondary download buttons
+  const handleDownloadFile = async (fileKey, defaultExtension, labelForFilename) => {
+    if (!jobId) return;
+    try {
+      const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+      if (!result) {
+        setError('File not available for download.');
+        return;
+      }
+      const fallback = file?.name
+        ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
+        : `${labelForFilename}_${jobId}${defaultExtension}`;
+      const filename = result.filename || fallback;
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.message || 'Failed to download file.');
+    }
+  };
+
+  // Download stem WAV
+  const handleDownloadStem = () => {
+    const stemKey = selectedInstrument === 'bass_separation' ? 'bass' : selectedInstrument;
+    handleDownloadFile(stemKey, '.wav', `${stemKey}_stem`);
+  };
+
+  // Download MIDI (only for transcription instruments)
+  const handleDownloadMidi = () => {
+    let midiKey = 'midi';
+    if (selectedInstrument === 'drums') midiKey = 'transcription';
+    else if (selectedInstrument === 'jazz_bass') midiKey = 'jazz_bass_transcription';
+    handleDownloadFile(midiKey, '.mid', 'midi');
+  };
+
   // Handle browse button click
   const handleBrowseClick = () => {
     if (!isLoaded) return;
@@ -843,57 +884,43 @@ function Hero({ onLoginRequired }) {
     </>
   );
 
-  const renderColdStartState = () => (
-    <>
-      <div className="upload-content-top compact">
-        <div className="upload-icon cold-start-pulse">
-          <ServerIcon />
-        </div>
-        <div className="upload-text">
-          <h3 className="cold-start-message">Waking up our servers...</h3>
-          <p className="cold-start-sub">We're in early access! This may take ~5-10 min. We'll notify you when ready.</p>
-        </div>
-      </div>
+  const renderSuccessState = () => {
+    const isTranscriptionInstrument = ['drums', 'piano', 'jazz_bass', 'bass'].includes(selectedInstrument);
 
-      <div className="upload-controls compact">
-        <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+    return (
+      <>
+        <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
+          <CloseIcon />
         </button>
-      </div>
-    </>
-  );
 
-  const renderSuccessState = () => (
-    <>
-      <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
-        <CloseIcon />
-      </button>
-
-      <div className="upload-content-top compact">
-        <div className="upload-icon">
-          <CheckCircleIcon />
+        <div className="upload-content-top compact">
+          <div className="upload-icon">
+            <CheckCircleIcon />
+          </div>
+          <div className="upload-text success-text">
+            <h3>Transcription Succussed!</h3>
+            <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
+          </div>
         </div>
-        <div className="upload-text success-text">
-          <h3>Transcription Succussed!</h3>
-          <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
-        </div>
-      </div>
 
-      <div className="upload-controls success-controls compact">
-        <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-          Download Transcription
-        </button>
-        <div className="download-options-row">
-          <button className="download-option-btn" onClick={() => {}}>
-            Stem
+        <div className="upload-controls success-controls compact">
+          <button className="download-transcription-btn compact" onClick={handleManualDownload}>
+            Download Transcription
           </button>
-          <button className="download-option-btn" onClick={() => {}}>
-            MIDI
-          </button>
+          <div className="download-options-row">
+            <button className="download-option-btn" onClick={handleDownloadStem}>
+              Stem
+            </button>
+            {isTranscriptionInstrument && (
+              <button className="download-option-btn" onClick={handleDownloadMidi}>
+                MIDI
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    );
+  };
 
   return (
     <section className="hero">
