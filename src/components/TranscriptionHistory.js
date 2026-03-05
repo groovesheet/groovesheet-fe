@@ -154,7 +154,13 @@ export const TranscriptionHistory = () => {
   const handleDownloadInstrument = async (workflowId, instrument) => {
     try {
       const token = await getToken();
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${instrument}`;
+      const stemKeyMap = {
+        drums: 'demucs_drums_stem', bass_separation: 'demucs_bass_stem',
+        jazz_bass: 'demucs_bass_stem', piano: 'demucs_other_stem',
+        vocals: 'demucs_vocals_stem', other: 'demucs_other_stem'
+      };
+      const fileKey = stemKeyMap[instrument] || instrument;
+      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
 
       const response = await fetch(url, {
         headers: {
@@ -190,10 +196,13 @@ export const TranscriptionHistory = () => {
     }
   };
 
-  const handleDownloadTranscription = async (workflowId) => {
+  const handleDownloadTranscription = async (workflowId, instrument = 'drums') => {
     try {
       const token = await getToken();
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/transcription`;
+      const midiKeyMap = { drums: 'adtof_drums_midi', jazz_bass: 'bassunet_jazz_bass_midi',
+        bass: 'fcpe_bass_midi', piano: 'transkun_v2_piano_midi' };
+      const fileKey = midiKeyMap[instrument] || 'adtof_drums_midi';
+      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
 
       const response = await fetch(url, {
         headers: {
@@ -229,10 +238,13 @@ export const TranscriptionHistory = () => {
     }
   };
 
-  const handleDownloadMIDI = async (workflowId) => {
+  const handleDownloadMIDI = async (workflowId, instrument = 'drums') => {
     try {
       const token = await getToken();
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/midi`;
+      const midiKeyMap = { drums: 'adtof_drums_midi', jazz_bass: 'bassunet_jazz_bass_midi',
+        bass: 'fcpe_bass_midi', piano: 'transkun_v2_piano_midi' };
+      const fileKey = midiKeyMap[instrument] || 'adtof_drums_midi';
+      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
 
       const response = await fetch(url, {
         headers: {
@@ -268,10 +280,13 @@ export const TranscriptionHistory = () => {
     }
   };
 
-  const handleDownloadScore = async (workflowId) => {
+  const handleDownloadScore = async (workflowId, instrument = 'drums') => {
     try {
       const token = await getToken();
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/musicxml`;
+      const scoreKeyMap = { drums: 'midi2score_drums_musicxml', jazz_bass: 'midi2score_jazz_bass_musicxml',
+        bass: 'midi2score_bass_musicxml', piano: 'midi2score_piano_musicxml' };
+      const fileKey = scoreKeyMap[instrument] || 'midi2score_drums_musicxml';
+      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
 
       const response = await fetch(url, {
         headers: {
@@ -431,12 +446,12 @@ export const TranscriptionHistory = () => {
                               handleDownloadInstrument(item.workflow_id, instrument)
                             }
                             onDownloadTranscription={() =>
-                              handleDownloadTranscription(item.workflow_id)
+                              handleDownloadTranscription(item.workflow_id, instrument)
                             }
-                            onDownloadMIDI={() => handleDownloadMIDI(item.workflow_id)}
+                            onDownloadMIDI={() => handleDownloadMIDI(item.workflow_id, instrument)}
                             onDownloadScore={
                               isFullWorkflow
-                                ? () => handleDownloadScore(item.workflow_id)
+                                ? () => handleDownloadScore(item.workflow_id, instrument)
                                 : undefined
                             }
                           />

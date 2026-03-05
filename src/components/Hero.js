@@ -601,10 +601,16 @@ function Hero({ onLoginRequired }) {
     // For piano: download midi
     // For others: download separated instrument track
     // For transcription instruments, download the MusicXML output from the full pipeline
-    let fileKey = selectedInstrument;
-    if (['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument)) {
-      fileKey = 'musicxml';
-    }
+    const primaryKeyMap = {
+      drums: 'midi2score_drums_musicxml',
+      jazz_bass: 'midi2score_jazz_bass_musicxml',
+      bass: 'midi2score_bass_musicxml',
+      piano: 'midi2score_piano_musicxml',
+      bass_separation: 'demucs_bass_stem',
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem'
+    };
+    const fileKey = primaryKeyMap[selectedInstrument] || selectedInstrument;
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     console.log('Fetching from:', url);
     const res = await authenticatedFetch(url, {}, getToken);
@@ -704,16 +710,24 @@ function Hero({ onLoginRequired }) {
   };
 
   // Download stem WAV
+  // Demucs outputs: drums, bass, vocals, other
   const handleDownloadStem = () => {
-    const stemKey = selectedInstrument === 'bass_separation' ? 'bass' : selectedInstrument;
-    handleDownloadFile(stemKey, '.wav', `${stemKey}_stem`);
+    const stemKeyMap = {
+      drums: 'demucs_drums_stem', bass_separation: 'demucs_bass_stem',
+      jazz_bass: 'demucs_bass_stem', piano: 'demucs_other_stem',
+      vocals: 'demucs_vocals_stem', other: 'demucs_other_stem'
+    };
+    const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
+    handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
   };
 
   // Download MIDI (only for transcription instruments)
   const handleDownloadMidi = () => {
-    let midiKey = 'midi';
-    if (selectedInstrument === 'drums') midiKey = 'transcription';
-    else if (selectedInstrument === 'jazz_bass') midiKey = 'jazz_bass_transcription';
+    const midiKeyMap = {
+      drums: 'adtof_drums_midi', jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi', piano: 'transkun_v2_piano_midi'
+    };
+    const midiKey = midiKeyMap[selectedInstrument] || selectedInstrument;
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
