@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
+import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
@@ -79,6 +80,17 @@ const CloseIcon = () => (
   </svg>
 );
 
+const ServerIcon = () => (
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="12" y="8" width="40" height="16" rx="3" stroke="white" strokeWidth="3"/>
+    <rect x="12" y="28" width="40" height="16" rx="3" stroke="white" strokeWidth="3"/>
+    <circle cx="20" cy="16" r="2.5" fill="white"/>
+    <circle cx="20" cy="36" r="2.5" fill="white"/>
+    <path d="M32 48V56" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+    <path d="M22 56H42" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+  </svg>
+);
+
 const BassIcon = () => (
   <svg className="fill-none stroke-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
     <title>bass-svg</title>
@@ -120,9 +132,10 @@ function MidiConverter({ onLoginClick }) {
 
   const getUIState = () => {
     if (status === 'uploading') return 'uploading';
+    if (status === 'started') return 'cold_starting';
     if (status === 'pending' || status === 'running' || status === 'processing' ||
         status === 'separating' || status === 'transcribing' || status === 'generating_sheet' ||
-        status === 'started') return 'processing';
+        status === 'worker_processing') return 'processing';
     if (status === 'completed' || status === 'succeeded' || status === 'success') return 'success';
     return 'idle';
   };
@@ -209,7 +222,9 @@ function MidiConverter({ onLoginClick }) {
     }
 
     const formData = new FormData();
-    formData.append('file', fileToUpload);
+    const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+    const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
+    formData.append('file', safeFile);
     formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
 
     setError(null);
@@ -291,6 +306,7 @@ function MidiConverter({ onLoginClick }) {
           if (newStatus === 'completed' || newStatus === 'succeeded' || newStatus === 'success') {
             if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
             if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
+            sendNotification('GrooveSheet', { body: 'Your MIDI conversion is ready!' });
             stopped = true;
             try {
               const { objectUrl, filename } = await downloadInstrumentFile(id);
@@ -307,6 +323,16 @@ function MidiConverter({ onLoginClick }) {
             setError(data.message || 'Processing failed.');
             stopped = true;
             return;
+          }
+          // Handle cold-start → processing transition
+          if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
+            simulateProgress();
+            sendNotification('GrooveSheet', { body: 'Server is ready! Converting your audio now.' });
+          }
+          if (newStatus === 'started') {
+            stopProgressSimulation();
+            setProgress(0);
+            requestNotificationPermission();
           }
           setStatus(newStatus);
         }
@@ -356,6 +382,45 @@ function MidiConverter({ onLoginClick }) {
     document.body.removeChild(a);
 
     return { objectUrl, filename };
+  };
+
+  // Download the separated stem (.wav) for the selected instrument
+  const handleDownloadStem = async () => {
+    if (!jobId) return;
+    try {
+      // Map instrument to the demucs output file key
+      // Demucs outputs: drums, bass, vocals, other (piano/keys/guitar go into "other")
+      let stemKey = selectedInstrument;
+      if (selectedInstrument === 'jazz_bass') {
+        stemKey = 'bass';
+      } else if (selectedInstrument === 'piano') {
+        stemKey = 'other';
+      }
+      const url = `${API_BASE_URL}/workflow/download/${jobId}/${stemKey}`;
+      const res = await authenticatedFetch(url, {}, getToken);
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(`Download failed ${res.status}: ${txt}`);
+      }
+      const blob = await res.blob();
+      const cd = res.headers.get('content-disposition') || '';
+      let filename = file?.name
+        ? file.name.replace(/\.[^.]+$/, `_${selectedInstrument}_stem.wav`)
+        : `${selectedInstrument}_stem_${jobId}.wav`;
+      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+      if (match) filename = decodeURIComponent(match[1] || match[2]);
+
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error('Stem download error:', err);
+    }
   };
 
   const resetUpload = () => {
@@ -516,10 +581,25 @@ function MidiConverter({ onLoginClick }) {
       <div className="upload-controls compact">
         <div className="progress-bar-row">
           <div className="progress-bar-fill compact" style={{ width: `${Math.min(progress, 100)}%` }}>
-            <span className="progress-percentage compact">{Math.round(progress)}%</span>
+            {progress >= 10 && <span className="progress-percentage compact">{Math.round(progress)}%</span>}
           </div>
           <div className="progress-bar-remaining compact" />
         </div>
+        <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
+      </div>
+    </>
+  );
+
+  const renderColdStartState = () => (
+    <>
+      <div className="upload-content-top compact">
+        <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
+        <div className="upload-text">
+          <h3 className="cold-start-message">Waking up our servers...</h3>
+          <p className="cold-start-sub">We're in early access! This may take ~5-10 min. We'll notify you when ready.</p>
+        </div>
+      </div>
+      <div className="upload-controls compact">
         <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
       </div>
     </>
@@ -534,7 +614,7 @@ function MidiConverter({ onLoginClick }) {
       <div className="upload-controls compact">
         <div className="progress-bar-row">
           <div className="progress-bar-fill compact" style={{ width: `${Math.min(progress, 100)}%` }}>
-            <span className="progress-percentage compact">{Math.round(progress)}%</span>
+            {progress >= 10 && <span className="progress-percentage compact">{Math.round(progress)}%</span>}
           </div>
           <div className="progress-bar-remaining compact" />
         </div>
@@ -575,9 +655,10 @@ function MidiConverter({ onLoginClick }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-background)' }}>
+    <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-background)' }}>
+      <div className="dot-grid"></div>
       <Header onLoginClick={onLoginClick} />
-      <section className="hero" style={{ flex: 1 }}>
+      <section className="hero" style={{ flex: 1, position: 'relative', zIndex: 10 }}>
         <div className="hero-container">
           <div className="hero-content">
             <div className="hero-text">
@@ -611,6 +692,7 @@ function MidiConverter({ onLoginClick }) {
             />
             {uiState === 'idle' && renderIdleState()}
             {uiState === 'uploading' && renderUploadingState()}
+            {uiState === 'cold_starting' && renderColdStartState()}
             {uiState === 'processing' && renderProcessingState()}
             {uiState === 'success' && renderSuccessState()}
             {error && uiState !== 'success' && (
@@ -625,7 +707,18 @@ function MidiConverter({ onLoginClick }) {
           </div>
         </div>
       </section>
-      <Features />
+      <div style={{ marginTop: '120px', position: 'relative' }}>
+        <div style={{
+          position: 'absolute',
+          top: '-249px',
+          left: 0,
+          width: '100%',
+          height: '249px',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--color-tinted-background) 100%)',
+          pointerEvents: 'none',
+        }} />
+        <Features />
+      </div>
       <Pricing />
       <FAQ />
       <Footer />

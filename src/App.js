@@ -55,7 +55,7 @@ function LandingPage({ onLoginClick }) {
     setHeroBackground(getRandomHeroBackground(isDarkMode));
     // Make gradient visible immediately on initial mount
     setIsGradientVisible(true);
-  }, []);
+  }, [isDarkMode]);
 
   // Smooth transition: fade out completely, swap image while invisible, fade in
   useEffect(() => {
@@ -111,7 +111,9 @@ function LandingPage({ onLoginClick }) {
         ref={gradientRef}
         className={`features-gradient ${isGradientVisible ? 'visible' : ''} ${isGradientInstantHide ? 'instant-hide' : ''}`}
       />
-      <Features />
+      <div style={{ paddingTop: '120px' }}>
+        <Features />
+      </div>
       <Pricing />
       {/* High-Accuracy Drum Scores section */}
       <Element />
