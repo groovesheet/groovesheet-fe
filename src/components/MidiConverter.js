@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import confetti from 'canvas-confetti';
-import { authenticatedFetch } from '../utils/api';
+import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
@@ -387,40 +387,15 @@ function MidiConverter({ onLoginClick }) {
   // Download the separated stem (.wav) for the selected instrument
   const handleDownloadStem = async () => {
     if (!jobId) return;
-    try {
-      // Map instrument to the demucs output file key
-      // Demucs outputs: drums, bass, vocals, other (piano/keys/guitar go into "other")
-      let stemKey = selectedInstrument;
-      if (selectedInstrument === 'jazz_bass') {
-        stemKey = 'bass';
-      } else if (selectedInstrument === 'piano') {
-        stemKey = 'other';
-      }
-      const url = `${API_BASE_URL}/workflow/download/${jobId}/${stemKey}`;
-      const res = await authenticatedFetch(url, {}, getToken);
-      if (!res.ok) {
-        const txt = await res.text().catch(() => '');
-        throw new Error(`Download failed ${res.status}: ${txt}`);
-      }
-      const blob = await res.blob();
-      const cd = res.headers.get('content-disposition') || '';
-      let filename = file?.name
-        ? file.name.replace(/\.[^.]+$/, `_${selectedInstrument}_stem.wav`)
-        : `${selectedInstrument}_stem_${jobId}.wav`;
-      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
-      if (match) filename = decodeURIComponent(match[1] || match[2]);
-
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objectUrl);
-    } catch (err) {
-      console.error('Stem download error:', err);
+    // Map instrument to the demucs output file key
+    // Demucs outputs: drums, bass, vocals, other (piano/keys/guitar go into "other")
+    let stemKey = selectedInstrument;
+    if (selectedInstrument === 'jazz_bass') {
+      stemKey = 'bass';
+    } else if (selectedInstrument === 'piano') {
+      stemKey = 'other';
     }
+    await handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
   };
 
   const resetUpload = () => {
@@ -448,26 +423,19 @@ function MidiConverter({ onLoginClick }) {
   };
 
   // Generic file download helper for secondary download buttons
-  const downloadGenericFile = async (id, fileKey, defaultExtension, labelForFilename) => {
-    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
+  const handleDownloadFile = async (fileKey, defaultExtension, labelForFilename) => {
+    if (!jobId) return;
     try {
-      const res = await authenticatedFetch(url, {}, getToken);
-      if (!res.ok) {
-        if (res.status === 404) {
-          setError('File not available for download.');
-          return;
-        }
-        throw new Error(`Download failed ${res.status}`);
+      const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+      if (!result) {
+        setError('File not available for download.');
+        return;
       }
-      const blob = await res.blob();
-      const cd = res.headers.get('content-disposition') || '';
-      let filename = file?.name
+      const fallback = file?.name
         ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
-        : `${labelForFilename}_${id}${defaultExtension}`;
-      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
-      if (match) filename = decodeURIComponent(match[1] || match[2]);
-
-      const objectUrl = URL.createObjectURL(blob);
+        : `${labelForFilename}_${jobId}${defaultExtension}`;
+      const filename = result.filename || fallback;
+      const objectUrl = URL.createObjectURL(result.blob);
       const a = document.createElement('a');
       a.href = objectUrl;
       a.download = filename;
@@ -481,25 +449,12 @@ function MidiConverter({ onLoginClick }) {
     }
   };
 
-  // Download stem WAV
-  const handleDownloadStem = () => {
-    if (!jobId) return;
-    downloadGenericFile(jobId, selectedInstrument, '.wav', `${selectedInstrument}_stem`);
-  };
-
-  // Download MIDI
+  // Download MIDI (only for transcription instruments)
   const handleDownloadMidi = () => {
-    if (!jobId) return;
     let midiKey = 'midi';
     if (selectedInstrument === 'drums') midiKey = 'transcription';
     else if (selectedInstrument === 'jazz_bass') midiKey = 'jazz_bass_transcription';
-    downloadGenericFile(jobId, midiKey, '.mid', 'midi');
-  };
-
-  // Download BD audio (drums only)
-  const handleDownloadBdAudio = () => {
-    if (!jobId) return;
-    downloadGenericFile(jobId, 'bd_audio', '.wav', 'bd_audio');
+    handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
   const handleBrowseClick = () => {
@@ -624,7 +579,7 @@ function MidiConverter({ onLoginClick }) {
   );
 
   const renderSuccessState = () => {
-    const isDrums = selectedInstrument === 'drums';
+    const isTranscriptionInstrument = ['drums', 'piano', 'jazz_bass', 'bass'].includes(selectedInstrument);
 
     return (
       <>
@@ -644,9 +599,8 @@ function MidiConverter({ onLoginClick }) {
           </button>
           <div className="download-options-row">
             <button className="download-option-btn" onClick={handleDownloadStem}>Stem</button>
-            <button className="download-option-btn" onClick={handleDownloadMidi}>MIDI</button>
-            {isDrums && (
-              <button className="download-option-btn" onClick={handleDownloadBdAudio}>BD Audio</button>
+            {isTranscriptionInstrument && (
+              <button className="download-option-btn" onClick={handleDownloadMidi}>MIDI</button>
             )}
           </div>
         </div>
