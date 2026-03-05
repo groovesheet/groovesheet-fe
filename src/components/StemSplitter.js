@@ -111,8 +111,8 @@ function StemSplitter({ onLoginClick }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
-  const [jobId, setJobId] = useState(null);
-  const [status, setStatus] = useState(null);
+  const [jobId, setJobId] = useState(() => sessionStorage.getItem('gs_stem_jobId'));
+  const [status, setStatus] = useState(() => sessionStorage.getItem('gs_stem_status'));
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -122,6 +122,31 @@ function StemSplitter({ onLoginClick }) {
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
+
+  // Persist jobId and status to sessionStorage
+  useEffect(() => {
+    if (jobId) sessionStorage.setItem('gs_stem_jobId', jobId);
+    else sessionStorage.removeItem('gs_stem_jobId');
+  }, [jobId]);
+
+  useEffect(() => {
+    if (status) sessionStorage.setItem('gs_stem_status', status);
+    else sessionStorage.removeItem('gs_stem_status');
+  }, [status]);
+
+  // Resume polling on mount if there's an active job
+  const hasResumedRef = useRef(false);
+  useEffect(() => {
+    if (hasResumedRef.current) return;
+    const savedJobId = sessionStorage.getItem('gs_stem_jobId');
+    const savedStatus = sessionStorage.getItem('gs_stem_status');
+    if (savedJobId && savedStatus && savedStatus !== 'completed' && savedStatus !== 'succeeded' && savedStatus !== 'success') {
+      hasResumedRef.current = true;
+      simulateProgress();
+      pollStatus(savedJobId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -380,6 +405,8 @@ function StemSplitter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    sessionStorage.removeItem('gs_stem_jobId');
+    sessionStorage.removeItem('gs_stem_status');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
