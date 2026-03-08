@@ -41,6 +41,10 @@ const isSupportedFileType = (selectedFile) => {
 // Use /api in both dev and production - Vercel rewrites handle the proxy
 const API_BASE_URL = '/api';
 
+// NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
+// Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
+// When changing download logic here, update those files too.
+
 // SVG Icons as components
 const TrayArrowUpIcon = () => (
   <svg width="64" height="65" viewBox="0 0 64 65" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -117,6 +121,7 @@ function Hero({ onLoginRequired }) {
   const [status, setStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
+  const [downloadError, setDownloadError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
@@ -656,10 +661,11 @@ function Hero({ onLoginRequired }) {
   // Generic file download helper for secondary download buttons
   const handleDownloadFile = async (fileKey, defaultExtension, labelForFilename) => {
     if (!jobId) return;
+    setDownloadError(null);
     try {
       const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
       if (!result) {
-        setError('File not available for download.');
+        setDownloadError(`"${fileKey}" not found — this file may not have been generated yet.`);
         return;
       }
       const fallback = file?.name
@@ -676,7 +682,7 @@ function Hero({ onLoginRequired }) {
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
       console.error('Download error:', err);
-      setError(err.message || 'Failed to download file.');
+      setDownloadError(err.message || 'Failed to download file.');
     }
   };
 
@@ -873,6 +879,30 @@ function Hero({ onLoginRequired }) {
     </>
   );
 
+  const renderColdStartState = () => (
+    <>
+      <div className="upload-content-top compact">
+        <div className="upload-icon">
+          <ServerIcon />
+        </div>
+        <div className="upload-text">
+          <h3>Starting server...</h3>
+        </div>
+      </div>
+
+      <div className="upload-controls compact">
+        <div className="progress-bar-row">
+          <div className="progress-bar-fill compact" style={{ width: '0%' }} />
+          <div className="progress-bar-remaining compact" />
+        </div>
+
+        <button className="cancel-btn compact" onClick={resetUpload}>
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+
   const renderProcessingState = () => (
     <>
       <div className="upload-content-top compact">
@@ -935,6 +965,11 @@ function Hero({ onLoginRequired }) {
               </button>
             )}
           </div>
+          {downloadError && (
+            <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '8px', textAlign: 'center' }}>
+              {downloadError}
+            </p>
+          )}
         </div>
       </>
     );

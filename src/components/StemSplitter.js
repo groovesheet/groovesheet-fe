@@ -40,6 +40,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = '/api';
 
+// NOTE: Download key maps (stemKeyMap) and download handlers are shared across
+// Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
+// When changing download logic here, update those files too.
+
 const TrayArrowUpIcon = () => (
   <svg width="64" height="65" viewBox="0 0 64 65" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_tray_ss)">
@@ -341,8 +345,14 @@ function StemSplitter({ onLoginClick }) {
   // Download the separated stem audio file (.wav)
   const downloadStemFile = async (id) => {
     // Demucs outputs: drums, bass, vocals, other (piano/guitar go into "other")
-    const stemKeyMap = { vocals: 'vocals', drums: 'drums', bass: 'bass', piano: 'other', guitar: 'other' };
-    const fileKey = stemKeyMap[selectedInstrument] || selectedInstrument;
+    const stemKeyMap = {
+      vocals: 'demucs_vocals_stem',
+      drums: 'demucs_drums_stem',
+      bass: 'demucs_bass_stem',
+      piano: 'demucs_other_stem',
+      guitar: 'demucs_other_stem',
+    };
+    const fileKey = stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     const res = await authenticatedFetch(url, {}, getToken);
     if (!res.ok) {
