@@ -570,15 +570,19 @@ function Hero({ onLoginRequired }) {
 
   // Download transcription for drums, separated track for other instruments
   const downloadInstrumentFile = async (id) => {
-    // For drums: download transcription
-    // For jazz_bass: download jazz_bass_transcription
-    // For bass: download midi
-    // For piano: download midi
-    // For others: download separated instrument track
-    // For transcription instruments, download the MusicXML output from the full pipeline
-    let fileKey = selectedInstrument;
+    // For transcription instruments (full pipeline): download MusicXML score
+    // For separation-only instruments: download the separated WAV stem using backend descriptive key
+    let fileKey;
     if (['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument)) {
       fileKey = 'musicxml';
+    } else if (selectedInstrument === 'vocals') {
+      fileKey = 'demucs_vocals_stem';
+    } else if (selectedInstrument === 'other') {
+      fileKey = 'demucs_other_stem';
+    } else if (selectedInstrument === 'bass_separation') {
+      fileKey = 'demucs_bass_stem';
+    } else {
+      fileKey = selectedInstrument;
     }
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     console.log('Fetching from:', url);
@@ -676,17 +680,31 @@ function Hero({ onLoginRequired }) {
     }
   };
 
-  // Download stem WAV
+  // Download stem WAV using backend descriptive demucs keys
   const handleDownloadStem = () => {
-    const stemKey = selectedInstrument === 'bass_separation' ? 'bass' : selectedInstrument;
-    handleDownloadFile(stemKey, '.wav', `${stemKey}_stem`);
+    const stemKeyMap = {
+      drums: 'demucs_drums_stem',
+      piano: 'demucs_other_stem',
+      bass: 'demucs_bass_stem',
+      jazz_bass: 'demucs_bass_stem',
+      bass_separation: 'demucs_bass_stem',
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem',
+    };
+    const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
+    handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
   };
 
-  // Download MIDI (only for transcription instruments)
+  // Download MIDI using backend descriptive keys
   const handleDownloadMidi = () => {
-    let midiKey = 'midi';
-    if (selectedInstrument === 'drums') midiKey = 'transcription';
-    else if (selectedInstrument === 'jazz_bass') midiKey = 'jazz_bass_transcription';
+    const midiKeyMap = {
+      drums: 'adtof_drums_midi',
+      jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi',
+      piano: 'transkun_v2_piano_midi',
+    };
+    const midiKey = midiKeyMap[selectedInstrument];
+    if (!midiKey) return;
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
