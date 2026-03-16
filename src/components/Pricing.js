@@ -1,9 +1,41 @@
 import React, { useState } from 'react';
+import { useUser, useAuth } from '@clerk/clerk-react';
+import { authenticatedFetch } from '../utils/api';
 import './Pricing.css';
 
-function Pricing() {
+function Pricing({ onLoginClick }) {
+  const { isSignedIn } = useUser();
+  const { getToken } = useAuth();
+  const [loading, setLoading] = useState(null);
   const [activeTab, setActiveTab] = useState('plans');
   const [billingMode, setBillingMode] = useState('annual');
+
+  const handlePlanClick = async (plan) => {
+    if (!isSignedIn) {
+      if (onLoginClick) onLoginClick();
+      return;
+    }
+    setLoading(plan);
+    try {
+      const response = await authenticatedFetch(
+        '/api/user/assign-plan',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan }),
+        },
+        getToken
+      );
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('Failed to assign plan:', err.detail || response.statusText);
+      }
+    } catch (error) {
+      console.error('Error assigning plan:', error);
+    } finally {
+      setLoading(null);
+    }
+  };
 
   return (
     <section className="pricing">
@@ -48,8 +80,8 @@ function Pricing() {
                   <span className="price">$0</span>
                   <span className="period">/month</span>
                 </div>
-                <button className="pricing-btn outline">
-                  Get Free
+                <button className="pricing-btn outline" onClick={() => handlePlanClick('free')} disabled={loading === 'free'}>
+                  {loading === 'free' ? 'Processing...' : 'Get Free'}
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6.0835 3.27991L10.4585 7.65491L6.0835 12.0299" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -98,8 +130,8 @@ function Pricing() {
                     <span className="price">{billingMode === 'monthly' ? '$10' : '$7.5'}</span>
                     <span className="period">/month</span>
                   </div>
-                  <button className="pricing-btn primary">
-                    Subscribe
+                  <button className="pricing-btn primary" onClick={() => handlePlanClick('tier2')} disabled={loading === 'tier2'}>
+                    {loading === 'tier2' ? 'Processing...' : 'Subscribe'}
                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5.75 2.88501L10.125 7.26001L5.75 11.635" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -153,8 +185,8 @@ function Pricing() {
                   <span className="price">{billingMode === 'monthly' ? '$18' : '$15'}</span>
                   <span className="period">user/month</span>
                 </div>
-                <button className="pricing-btn outline">
-                  Subscribe
+                <button className="pricing-btn outline" onClick={() => handlePlanClick('tier3')} disabled={loading === 'tier3'}>
+                  {loading === 'tier3' ? 'Processing...' : 'Subscribe'}
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6.0835 3.27991L10.4585 7.65491L6.0835 12.0299" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -203,8 +235,8 @@ function Pricing() {
                   <span className="price">$4</span>
                   <span className="period">one-time</span>
                 </div>
-                <button className="pricing-btn outline">
-                  Buy
+                <button className="pricing-btn outline" onClick={() => handlePlanClick('topup-30')} disabled={loading === 'topup-30'}>
+                  {loading === 'topup-30' ? 'Processing...' : 'Buy'}
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6.0835 3.27991L10.4585 7.65491L6.0835 12.0299" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -253,8 +285,8 @@ function Pricing() {
                     <span className="price">$7</span>
                     <span className="period">one-time</span>
                   </div>
-                  <button className="pricing-btn primary">
-                    Buy
+                  <button className="pricing-btn primary" onClick={() => handlePlanClick('topup-60')} disabled={loading === 'topup-60'}>
+                    {loading === 'topup-60' ? 'Processing...' : 'Buy'}
                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5.75 2.88501L10.125 7.26001L5.75 11.635" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -302,8 +334,8 @@ function Pricing() {
                   <span className="price">$12</span>
                   <span className="period">one-time</span>
                 </div>
-                <button className="pricing-btn outline">
-                  Buy
+                <button className="pricing-btn outline" onClick={() => handlePlanClick('topup-120')} disabled={loading === 'topup-120'}>
+                  {loading === 'topup-120' ? 'Processing...' : 'Buy'}
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6.0835 3.27991L10.4585 7.65491L6.0835 12.0299" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
