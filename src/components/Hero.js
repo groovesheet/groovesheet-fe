@@ -41,6 +41,10 @@ const isSupportedFileType = (selectedFile) => {
 // Use /api in both dev and production - Vercel rewrites handle the proxy
 const API_BASE_URL = '/api';
 
+// NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
+// Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
+// When changing download logic here, update those files too.
+
 // SVG Icons as components
 const TrayArrowUpIcon = () => (
   <svg width="64" height="65" viewBox="0 0 64 65" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -113,10 +117,11 @@ function Hero({ onLoginRequired }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
-  const [jobId, setJobId] = useState(() => sessionStorage.getItem('gs_jobId'));
-  const [status, setStatus] = useState(() => sessionStorage.getItem('gs_status'));
+  const [jobId, setJobId] = useState(null);
+  const [status, setStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
+  const [downloadError, setDownloadError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
@@ -139,31 +144,6 @@ function Hero({ onLoginRequired }) {
     { value: 'vocals', label: 'Vocal\u00a0\u00a0(Separation only)', IconComponent: LiaMicrophoneAltSolid },
     { value: 'other', label: 'Other\u00a0\u00a0(Separation only)', IconComponent: LuGuitar }
   ];
-
-  // Persist jobId and status to sessionStorage
-  useEffect(() => {
-    if (jobId) sessionStorage.setItem('gs_jobId', jobId);
-    else sessionStorage.removeItem('gs_jobId');
-  }, [jobId]);
-
-  useEffect(() => {
-    if (status) sessionStorage.setItem('gs_status', status);
-    else sessionStorage.removeItem('gs_status');
-  }, [status]);
-
-  // Resume polling on mount if there's an active job
-  const hasResumedRef = useRef(false);
-  useEffect(() => {
-    if (hasResumedRef.current) return;
-    const savedJobId = sessionStorage.getItem('gs_jobId');
-    const savedStatus = sessionStorage.getItem('gs_status');
-    if (savedJobId && savedStatus && savedStatus !== 'completed' && savedStatus !== 'succeeded' && savedStatus !== 'success') {
-      hasResumedRef.current = true;
-      simulateProgress();
-      pollStatus(savedJobId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Cleanup progress simulation on unmount
   useEffect(() => {
@@ -595,22 +575,20 @@ function Hero({ onLoginRequired }) {
 
   // Download transcription for drums, separated track for other instruments
   const downloadInstrumentFile = async (id) => {
-    // For drums: download transcription
-    // For jazz_bass: download jazz_bass_transcription
-    // For bass: download midi
-    // For piano: download midi
-    // For others: download separated instrument track
-    // For transcription instruments, download the MusicXML output from the full pipeline
-    const primaryKeyMap = {
-      drums: 'midi2score_drums_musicxml',
-      jazz_bass: 'midi2score_jazz_bass_musicxml',
-      bass: 'midi2score_bass_musicxml',
-      piano: 'midi2score_piano_musicxml',
-      bass_separation: 'demucs_bass_stem',
-      vocals: 'demucs_vocals_stem',
-      other: 'demucs_other_stem'
-    };
-    const fileKey = primaryKeyMap[selectedInstrument] || selectedInstrument;
+    // For transcription instruments (full pipeline): download MusicXML score
+    // For separation-only instruments: download the separated WAV stem using backend descriptive key
+    let fileKey;
+    if (['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument)) {
+      fileKey = 'musicxml';
+    } else if (selectedInstrument === 'vocals') {
+      fileKey = 'demucs_vocals_stem';
+    } else if (selectedInstrument === 'other') {
+      fileKey = 'demucs_other_stem';
+    } else if (selectedInstrument === 'bass_separation') {
+      fileKey = 'demucs_bass_stem';
+    } else {
+      fileKey = selectedInstrument;
+    }
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     console.log('Fetching from:', url);
     const res = await authenticatedFetch(url, {}, getToken);
@@ -652,7 +630,7 @@ function Hero({ onLoginRequired }) {
   const resetUpload = () => {
     // Stop any ongoing progress simulation
     stopProgressSimulation();
-
+    
     if (downloadUrl) {
       URL.revokeObjectURL(downloadUrl);
     }
@@ -663,8 +641,6 @@ function Hero({ onLoginRequired }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
-    sessionStorage.removeItem('gs_jobId');
-    sessionStorage.removeItem('gs_status');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -685,10 +661,11 @@ function Hero({ onLoginRequired }) {
   // Generic file download helper for secondary download buttons
   const handleDownloadFile = async (fileKey, defaultExtension, labelForFilename) => {
     if (!jobId) return;
+    setDownloadError(null);
     try {
       const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
       if (!result) {
-        setError('File not available for download.');
+        setDownloadError(`"${fileKey}" not found — this file may not have been generated yet.`);
         return;
       }
       const fallback = file?.name
@@ -705,29 +682,35 @@ function Hero({ onLoginRequired }) {
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
       console.error('Download error:', err);
-      setError(err.message || 'Failed to download file.');
+      setDownloadError(err.message || 'Failed to download file.');
     }
   };
 
-  // Download stem WAV
-  // Demucs outputs: drums, bass, vocals, other
+  // Download stem WAV using backend descriptive demucs keys
   const handleDownloadStem = () => {
     const stemKeyMap = {
-      drums: 'demucs_drums_stem', bass_separation: 'demucs_bass_stem',
-      jazz_bass: 'demucs_bass_stem', piano: 'demucs_other_stem',
-      vocals: 'demucs_vocals_stem', other: 'demucs_other_stem'
+      drums: 'demucs_drums_stem',
+      piano: 'demucs_other_stem',
+      bass: 'demucs_bass_stem',
+      jazz_bass: 'demucs_bass_stem',
+      bass_separation: 'demucs_bass_stem',
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem',
     };
     const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
     handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
   };
 
-  // Download MIDI (only for transcription instruments)
+  // Download MIDI using backend descriptive keys
   const handleDownloadMidi = () => {
     const midiKeyMap = {
-      drums: 'adtof_drums_midi', jazz_bass: 'bassunet_jazz_bass_midi',
-      bass: 'fcpe_bass_midi', piano: 'transkun_v2_piano_midi'
+      drums: 'adtof_drums_midi',
+      jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi',
+      piano: 'transkun_v2_piano_midi',
     };
-    const midiKey = midiKeyMap[selectedInstrument] || selectedInstrument;
+    const midiKey = midiKeyMap[selectedInstrument];
+    if (!midiKey) return;
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
@@ -899,14 +882,23 @@ function Hero({ onLoginRequired }) {
   const renderColdStartState = () => (
     <>
       <div className="upload-content-top compact">
-        <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
+        <div className="upload-icon">
+          <ServerIcon />
+        </div>
         <div className="upload-text">
-          <h3 className="cold-start-message">Waking up our servers...</h3>
-          <p className="cold-start-sub">We're in early access! This may take ~5-10 min. We'll notify you when ready.</p>
+          <h3>Starting server...</h3>
         </div>
       </div>
+
       <div className="upload-controls compact">
-        <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
+        <div className="progress-bar-row">
+          <div className="progress-bar-fill compact" style={{ width: '0%' }} />
+          <div className="progress-bar-remaining compact" />
+        </div>
+
+        <button className="cancel-btn compact" onClick={resetUpload}>
+          Cancel
+        </button>
       </div>
     </>
   );
@@ -973,6 +965,11 @@ function Hero({ onLoginRequired }) {
               </button>
             )}
           </div>
+          {downloadError && (
+            <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '8px', textAlign: 'center' }}>
+              {downloadError}
+            </p>
+          )}
         </div>
       </>
     );

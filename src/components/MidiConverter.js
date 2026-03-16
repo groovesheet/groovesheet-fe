@@ -40,6 +40,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = '/api';
 
+// NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
+// Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
+// When changing download logic here, update those files too.
+
 const TrayArrowUpIcon = () => (
   <svg width="64" height="65" viewBox="0 0 64 65" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_tray_mc)">
@@ -111,8 +115,8 @@ function MidiConverter({ onLoginClick }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
-  const [jobId, setJobId] = useState(() => sessionStorage.getItem('gs_midi_jobId'));
-  const [status, setStatus] = useState(() => sessionStorage.getItem('gs_midi_status'));
+  const [jobId, setJobId] = useState(null);
+  const [status, setStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -122,31 +126,6 @@ function MidiConverter({ onLoginClick }) {
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
-
-  // Persist jobId and status to sessionStorage
-  useEffect(() => {
-    if (jobId) sessionStorage.setItem('gs_midi_jobId', jobId);
-    else sessionStorage.removeItem('gs_midi_jobId');
-  }, [jobId]);
-
-  useEffect(() => {
-    if (status) sessionStorage.setItem('gs_midi_status', status);
-    else sessionStorage.removeItem('gs_midi_status');
-  }, [status]);
-
-  // Resume polling on mount if there's an active job
-  const hasResumedRef = useRef(false);
-  useEffect(() => {
-    if (hasResumedRef.current) return;
-    const savedJobId = sessionStorage.getItem('gs_midi_jobId');
-    const savedStatus = sessionStorage.getItem('gs_midi_status');
-    if (savedJobId && savedStatus && savedStatus !== 'completed' && savedStatus !== 'succeeded' && savedStatus !== 'success') {
-      hasResumedRef.current = true;
-      simulateProgress();
-      pollStatus(savedJobId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -349,7 +328,7 @@ function MidiConverter({ onLoginClick }) {
             stopped = true;
             return;
           }
-          // Handle cold-start â†’ processing transition
+          // Handle cold-start â†?processing transition
           if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
             simulateProgress();
             sendNotification('GrooveSheet', { body: 'Server is ready! Converting your audio now.' });
@@ -375,10 +354,16 @@ function MidiConverter({ onLoginClick }) {
   // Same download logic as home page Hero
   const downloadInstrumentFile = async (id) => {
     const midiKeyMap = {
-      drums: 'adtof_drums_midi', jazz_bass: 'bassunet_jazz_bass_midi',
-      bass: 'fcpe_bass_midi', piano: 'transkun_v2_piano_midi'
+      drums: 'adtof_drums_midi',
+      jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi',
+      piano: 'transkun_v2_piano_midi',
     };
-    const fileKey = midiKeyMap[selectedInstrument] || selectedInstrument;
+    const stemKeyMap = {
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem',
+    };
+    let fileKey = midiKeyMap[selectedInstrument] || stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     const res = await authenticatedFetch(url, {}, getToken);
     if (!res.ok) {
@@ -407,12 +392,13 @@ function MidiConverter({ onLoginClick }) {
   // Download the separated stem (.wav) for the selected instrument
   const handleDownloadStem = async () => {
     if (!jobId) return;
-    // Map instrument to the demucs output file key
-    // Demucs outputs: drums, bass, vocals, other (piano/keys/guitar go into "other")
     const stemKeyMap = {
-      drums: 'demucs_drums_stem', bass_separation: 'demucs_bass_stem',
-      jazz_bass: 'demucs_bass_stem', piano: 'demucs_other_stem',
-      vocals: 'demucs_vocals_stem', other: 'demucs_other_stem'
+      drums: 'demucs_drums_stem',
+      piano: 'demucs_other_stem',
+      bass: 'demucs_bass_stem',
+      jazz_bass: 'demucs_bass_stem',
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem',
     };
     const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
     await handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
@@ -428,8 +414,6 @@ function MidiConverter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
-    sessionStorage.removeItem('gs_midi_jobId');
-    sessionStorage.removeItem('gs_midi_status');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -474,10 +458,13 @@ function MidiConverter({ onLoginClick }) {
   // Download MIDI (only for transcription instruments)
   const handleDownloadMidi = () => {
     const midiKeyMap = {
-      drums: 'adtof_drums_midi', jazz_bass: 'bassunet_jazz_bass_midi',
-      bass: 'fcpe_bass_midi', piano: 'transkun_v2_piano_midi'
+      drums: 'adtof_drums_midi',
+      jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi',
+      piano: 'transkun_v2_piano_midi',
     };
-    const midiKey = midiKeyMap[selectedInstrument] || selectedInstrument;
+    const midiKey = midiKeyMap[selectedInstrument];
+    if (!midiKey) return;
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
@@ -705,3 +692,4 @@ function MidiConverter({ onLoginClick }) {
 }
 
 export default MidiConverter;
+

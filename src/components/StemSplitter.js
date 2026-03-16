@@ -40,6 +40,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = '/api';
 
+// NOTE: Download key maps (stemKeyMap) and download handlers are shared across
+// Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
+// When changing download logic here, update those files too.
+
 const TrayArrowUpIcon = () => (
   <svg width="64" height="65" viewBox="0 0 64 65" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_tray_ss)">
@@ -111,8 +115,8 @@ function StemSplitter({ onLoginClick }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
-  const [jobId, setJobId] = useState(() => sessionStorage.getItem('gs_stem_jobId'));
-  const [status, setStatus] = useState(() => sessionStorage.getItem('gs_stem_status'));
+  const [jobId, setJobId] = useState(null);
+  const [status, setStatus] = useState(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -122,31 +126,6 @@ function StemSplitter({ onLoginClick }) {
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
-
-  // Persist jobId and status to sessionStorage
-  useEffect(() => {
-    if (jobId) sessionStorage.setItem('gs_stem_jobId', jobId);
-    else sessionStorage.removeItem('gs_stem_jobId');
-  }, [jobId]);
-
-  useEffect(() => {
-    if (status) sessionStorage.setItem('gs_stem_status', status);
-    else sessionStorage.removeItem('gs_stem_status');
-  }, [status]);
-
-  // Resume polling on mount if there's an active job
-  const hasResumedRef = useRef(false);
-  useEffect(() => {
-    if (hasResumedRef.current) return;
-    const savedJobId = sessionStorage.getItem('gs_stem_jobId');
-    const savedStatus = sessionStorage.getItem('gs_stem_status');
-    if (savedJobId && savedStatus && savedStatus !== 'completed' && savedStatus !== 'succeeded' && savedStatus !== 'success') {
-      hasResumedRef.current = true;
-      simulateProgress();
-      pollStatus(savedJobId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -367,10 +346,13 @@ function StemSplitter({ onLoginClick }) {
   const downloadStemFile = async (id) => {
     // Demucs outputs: drums, bass, vocals, other (piano/guitar go into "other")
     const stemKeyMap = {
-      vocals: 'demucs_vocals_stem', drums: 'demucs_drums_stem',
-      bass: 'demucs_bass_stem', piano: 'demucs_other_stem', guitar: 'demucs_other_stem'
+      vocals: 'demucs_vocals_stem',
+      drums: 'demucs_drums_stem',
+      bass: 'demucs_bass_stem',
+      piano: 'demucs_other_stem',
+      guitar: 'demucs_other_stem',
     };
-    const fileKey = stemKeyMap[selectedInstrument] || selectedInstrument;
+    const fileKey = stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
     const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
     const res = await authenticatedFetch(url, {}, getToken);
     if (!res.ok) {
@@ -408,8 +390,6 @@ function StemSplitter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
-    sessionStorage.removeItem('gs_stem_jobId');
-    sessionStorage.removeItem('gs_stem_status');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -632,7 +612,7 @@ function StemSplitter({ onLoginClick }) {
         }} />
         <Features />
       </div>
-      <Pricing onLoginClick={onLoginClick} />
+      <Pricing />
       <FAQ />
       <Footer />
     </div>
