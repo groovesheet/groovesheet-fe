@@ -3,13 +3,16 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { authenticatedFetch } from '../utils/api';
 import './Pricing.css';
 
-function Pricing() {
+function Pricing({ onLoginClick }) {
   const { isSignedIn } = useUser();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(null);
 
   const handlePlanClick = async (plan) => {
-    if (!isSignedIn) return;
+    if (!isSignedIn) {
+      if (onLoginClick) onLoginClick();
+      return;
+    }
     setLoading(plan);
     try {
       const response = await authenticatedFetch(

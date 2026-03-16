@@ -114,7 +114,7 @@ function LandingPage({ onLoginClick }) {
       <div style={{ paddingTop: '120px' }}>
         <Features />
       </div>
-      <Pricing />
+      <Pricing onLoginClick={onLoginClick} />
       {/* High-Accuracy Drum Scores section */}
       <Element />
       <Testimonials />
