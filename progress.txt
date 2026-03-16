@@ -1,0 +1,27 @@
+## Codebase Patterns
+- Auth: Use `useUser()` for `isSignedIn` check, `useAuth()` for `getToken`, both from `@clerk/clerk-react`
+- API calls: Use `authenticatedFetch` from `src/utils/api.js` with `getToken` from `useAuth()`
+- Login gate: Components receive `onLoginClick` prop from parent (App.js manages LoginModal state)
+- API proxy: `/api` prefix is proxied to backend orchestrator via setupProxy.js
+- Pricing component is used in LandingPage, MidiConverter, and StemSplitter
+
+## 2026-03-16 - US-001
+- Wired pricing card buttons to POST /api/user/assign-plan with correct plan mappings (free, tier2, tier3)
+- Added useUser/useAuth from Clerk and authenticatedFetch from utils/api
+- Added loading state and disabled buttons during API call
+- Files changed: src/components/Pricing.js
+- **Learnings for future iterations:**
+  - Pricing.js is a plain function component with no props currently
+  - The `/api` prefix is proxied to the backend, so use `/api/user/assign-plan` directly
+  - Pricing is rendered in 3 places: LandingPage (App.js), MidiConverter, StemSplitter
+  - None of these currently pass `onLoginClick` to Pricing - US-002 will need to thread this prop through
+---
+
+## 2026-03-16 - US-002
+- Added login gate: unauthenticated users see LoginModal instead of API call
+- Threaded `onLoginClick` prop from LandingPage, MidiConverter, and StemSplitter to Pricing
+- Files changed: src/components/Pricing.js, src/App.js, src/components/MidiConverter.js, src/components/StemSplitter.js
+- **Learnings for future iterations:**
+  - MidiConverter and StemSplitter already receive `onLoginClick` prop, just need to pass it through
+  - The `onLoginClick` prop pattern is well-established across the codebase for login gating
+---
