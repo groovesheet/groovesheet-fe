@@ -1,0 +1,44 @@
+{
+  "project": "groovesheet-fe",
+  "branchName": "fix/pipeline-1773645709752",
+  "description": "Wire pricing card buttons to assign token credits with login gate for unauthenticated users",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Wire pricing buttons to POST /api/user/assign-plan",
+      "description": "Add click handlers to the Get Free, Lite Subscribe, and Pro Subscribe buttons in Pricing.js that call POST /api/user/assign-plan with the correct plan mapping: Get Free=free, Lite Subscribe=tier2, Pro Subscribe=tier3. Use authenticatedFetch from src/utils/api.js and getToken from useAuth().",
+      "acceptanceCriteria": [
+        "Clicking 'Get Free' button calls POST /api/user/assign-plan with plan=free",
+        "Clicking 'Lite Subscribe' button calls POST /api/user/assign-plan with plan=tier2",
+        "Clicking 'Pro Subscribe' button calls POST /api/user/assign-plan with plan=tier3",
+        "Requests use authenticatedFetch from src/utils/api.js",
+        "getToken is obtained from useAuth() hook",
+        "Typecheck passes"
+      ],
+      "scopeFiles": [
+        "src/components/Pricing.js",
+        "src/utils/api.js"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Open LoginModal if user is unauthenticated when clicking a pricing button",
+      "description": "Before calling assign-plan, check if the user is signed in using useUser/useAuth from Clerk. If not authenticated, open the LoginModal instead of making the API call.",
+      "acceptanceCriteria": [
+        "Unauthenticated user clicking any pricing button sees LoginModal instead of API call",
+        "Authenticated user clicking any pricing button proceeds to POST /api/user/assign-plan",
+        "Uses useAuth or useUser from @clerk/clerk-react to check auth state",
+        "Typecheck passes"
+      ],
+      "scopeFiles": [
+        "src/components/Pricing.js"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}

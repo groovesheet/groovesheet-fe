@@ -331,7 +331,7 @@ function MidiConverter({ onLoginClick }) {
             stopped = true;
             return;
           }
-          // Handle cold-start â†’ processing transition
+          // Handle cold-start â†?processing transition
           if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
             simulateProgress();
             sendNotification('GrooveSheet', { body: 'Server is ready! Converting your audio now.' });
@@ -726,7 +726,7 @@ function MidiConverter({ onLoginClick }) {
         }} />
         <Features />
       </div>
-      <Pricing />
+      <Pricing onLoginClick={onLoginClick} />
       <FAQ />
       <Footer />
     </div>
@@ -734,3 +734,4 @@ function MidiConverter({ onLoginClick }) {
 }
 
 export default MidiConverter;
+
