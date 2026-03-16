@@ -133,6 +133,7 @@ function Hero({ onLoginRequired }) {
   const dropdownMenuRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
+  const prefetchedFilesRef = useRef({});
 
   const _instruments = [
     { value: 'drums', label: 'Drums', IconComponent: LuDrum },
@@ -527,6 +528,8 @@ function Hero({ onLoginRequired }) {
               setDownloadFilename(filename);
               setStatus('completed');
               setProgress(100); // Only set to 100% after download completes
+              // Pre-fetch secondary files (stem, MIDI) in background for instant downloads
+              prefetchSecondaryFiles(id);
             } catch (err) {
               console.error('Download error:', err);
               setError(`Download failed: ${err.message}`);
@@ -571,6 +574,43 @@ function Hero({ onLoginRequired }) {
       }
     };
     poll();
+  };
+
+  // Pre-fetch secondary download files (stem, MIDI) in the background after job completes
+  const prefetchSecondaryFiles = async (id) => {
+    const stemKeyMap = {
+      drums: 'demucs_drums_stem',
+      piano: 'demucs_other_stem',
+      bass: 'demucs_bass_stem',
+      jazz_bass: 'demucs_bass_stem',
+      bass_separation: 'demucs_bass_stem',
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem',
+    };
+    const midiKeyMap = {
+      drums: 'adtof_drums_midi',
+      jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi',
+      piano: 'transkun_v2_piano_midi',
+    };
+    const fetches = [];
+    const stemKey = stemKeyMap[selectedInstrument];
+    if (stemKey) {
+      fetches.push(
+        downloadWorkflowFile(API_BASE_URL, id, stemKey, getToken)
+          .then(result => { if (result) prefetchedFilesRef.current[stemKey] = result; })
+          .catch(() => {})
+      );
+    }
+    const midiKey = midiKeyMap[selectedInstrument];
+    if (midiKey) {
+      fetches.push(
+        downloadWorkflowFile(API_BASE_URL, id, midiKey, getToken)
+          .then(result => { if (result) prefetchedFilesRef.current[midiKey] = result; })
+          .catch(() => {})
+      );
+    }
+    await Promise.allSettled(fetches);
   };
 
   // Download transcription for drums, separated track for other instruments
@@ -630,10 +670,11 @@ function Hero({ onLoginRequired }) {
   const resetUpload = () => {
     // Stop any ongoing progress simulation
     stopProgressSimulation();
-    
+
     if (downloadUrl) {
       URL.revokeObjectURL(downloadUrl);
     }
+    prefetchedFilesRef.current = {};
     setFile(null);
     setJobId(null);
     setStatus(null);
@@ -663,7 +704,9 @@ function Hero({ onLoginRequired }) {
     if (!jobId) return;
     setDownloadError(null);
     try {
-      const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+      // Use pre-fetched data if available, otherwise fetch on demand
+      const result = prefetchedFilesRef.current[fileKey]
+        || await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
       if (!result) {
         setDownloadError(`"${fileKey}" not found — this file may not have been generated yet.`);
         return;

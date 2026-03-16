@@ -126,6 +126,7 @@ function MidiConverter({ onLoginClick }) {
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
+  const prefetchedFilesRef = useRef({});
 
   useEffect(() => {
     return () => {
@@ -318,6 +319,8 @@ function MidiConverter({ onLoginClick }) {
               setDownloadFilename(filename);
               setStatus('completed');
               setProgress(100);
+              // Pre-fetch secondary files (stem, MIDI) in background for instant downloads
+              prefetchSecondaryFiles(id);
             } catch (err) {
               setError(`Download failed: ${err.message}`);
             }
@@ -349,6 +352,42 @@ function MidiConverter({ onLoginClick }) {
       }
     };
     poll();
+  };
+
+  // Pre-fetch secondary download files (stem, MIDI) in the background after job completes
+  const prefetchSecondaryFiles = async (id) => {
+    const stemKeyMap = {
+      drums: 'demucs_drums_stem',
+      piano: 'demucs_other_stem',
+      bass: 'demucs_bass_stem',
+      jazz_bass: 'demucs_bass_stem',
+      vocals: 'demucs_vocals_stem',
+      other: 'demucs_other_stem',
+    };
+    const midiKeyMap = {
+      drums: 'adtof_drums_midi',
+      jazz_bass: 'bassunet_jazz_bass_midi',
+      bass: 'fcpe_bass_midi',
+      piano: 'transkun_v2_piano_midi',
+    };
+    const fetches = [];
+    const stemKey = stemKeyMap[selectedInstrument];
+    if (stemKey) {
+      fetches.push(
+        downloadWorkflowFile(API_BASE_URL, id, stemKey, getToken)
+          .then(result => { if (result) prefetchedFilesRef.current[stemKey] = result; })
+          .catch(() => {})
+      );
+    }
+    const midiKey = midiKeyMap[selectedInstrument];
+    if (midiKey) {
+      fetches.push(
+        downloadWorkflowFile(API_BASE_URL, id, midiKey, getToken)
+          .then(result => { if (result) prefetchedFilesRef.current[midiKey] = result; })
+          .catch(() => {})
+      );
+    }
+    await Promise.allSettled(fetches);
   };
 
   // Same download logic as home page Hero
@@ -407,6 +446,7 @@ function MidiConverter({ onLoginClick }) {
   const resetUpload = () => {
     stopProgressSimulation();
     if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    prefetchedFilesRef.current = {};
     setFile(null);
     setJobId(null);
     setStatus(null);
@@ -432,7 +472,9 @@ function MidiConverter({ onLoginClick }) {
   const handleDownloadFile = async (fileKey, defaultExtension, labelForFilename) => {
     if (!jobId) return;
     try {
-      const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+      // Use pre-fetched data if available, otherwise fetch on demand
+      const result = prefetchedFilesRef.current[fileKey]
+        || await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
       if (!result) {
         setError('File not available for download.');
         return;
