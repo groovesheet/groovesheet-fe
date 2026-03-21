@@ -11,7 +11,7 @@ const config = {
   appUrl: process.env.REACT_APP_URL || 'http://localhost:3000',
 
   // API Configuration
-  apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'https://api-orchestrator-test-700212390421.asia-southeast1.run.app',
+  apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'https://api.groovesheet.net',
 
   // Feature Flags
   enableAnalytics: process.env.REACT_APP_ENABLE_ANALYTICS === 'true',
