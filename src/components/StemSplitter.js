@@ -13,6 +13,7 @@ import Features from './Features';
 import Pricing from './Pricing';
 import FAQ from './FAQ';
 import './Hero.css';
+import config from '../config';
 
 const SUPPORTED_MIME_TYPES = [
   'audio/mp3',
@@ -38,7 +39,7 @@ const isSupportedFileType = (selectedFile) => {
   return SUPPORTED_EXTENSIONS.some((ext) => name.endsWith(ext));
 };
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = config.apiBaseUrl;
 
 // NOTE: Download key maps (stemKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
