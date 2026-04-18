@@ -8,6 +8,7 @@ import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import './Hero.css';
+import config from '../config';
 
 const SUPPORTED_MIME_TYPES = [
   'audio/mp3',
@@ -37,9 +38,7 @@ const isSupportedFileType = (selectedFile) => {
   return SUPPORTED_EXTENSIONS.some((ext) => name.endsWith(ext));
 };
 
-// Base URL for the new Orchestrator backend
-// Use /api in both dev and production - Vercel rewrites handle the proxy
-const API_BASE_URL = '/api';
+const API_BASE_URL = config.apiBaseUrl;
 
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
