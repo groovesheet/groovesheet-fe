@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api-orchestrator-test-700212390421.asia-southeast1.run.app/:path*"
+      "destination": "https://api.groovesheet.net/:path*"
     }
   ],
   "headers": [
