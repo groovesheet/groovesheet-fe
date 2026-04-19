@@ -13,6 +13,7 @@ import Features from './Features';
 import Pricing from './Pricing';
 import FAQ from './FAQ';
 import './Hero.css';
+import config from '../config';
 
 const SUPPORTED_MIME_TYPES = [
   'audio/mp3',
@@ -38,7 +39,7 @@ const isSupportedFileType = (selectedFile) => {
   return SUPPORTED_EXTENSIONS.some((ext) => name.endsWith(ext));
 };
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = config.apiBaseUrl;
 
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
@@ -331,7 +332,7 @@ function MidiConverter({ onLoginClick }) {
             stopped = true;
             return;
           }
-          // Handle cold-start �?processing transition
+          // Handle cold-start â?processing transition
           if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
             simulateProgress();
             sendNotification('GrooveSheet', { body: 'Server is ready! Converting your audio now.' });
