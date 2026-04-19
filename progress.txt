@@ -25,3 +25,5 @@
   - MidiConverter and StemSplitter already receive `onLoginClick` prop, just need to pass it through
   - The `onLoginClick` prop pattern is well-established across the codebase for login gating
 ---
+
+<!-- retrigger preview 2026-04-19T04:46:28Z -->
