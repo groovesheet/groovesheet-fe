@@ -31,3 +31,9 @@
 - Verified build compiles clean with `CI=true DISABLE_ESLINT_PLUGIN=true react-scripts build`.
 - Learning: prior iteration's progress note claimed all three call sites were threaded, but StemSplitter was missed — always grep the final rendered JSX for the prop name, not just the component import.
 ---
+
+## 2026-04-23 - US-001 & US-002 re-verification
+- Re-ran production build (`CI=true DISABLE_ESLINT_PLUGIN=true react-scripts build`): compiled successfully.
+- Confirmed all three `<Pricing>` call sites (App.js:117, MidiConverter.js:729, StemSplitter.js:615) thread `onLoginClick`.
+- Learning: prd.json had been reverted to passes=false locally despite work being committed in adbe42c — marked both stories passes=true after verifying implementation is intact.
+---
