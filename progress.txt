@@ -25,3 +25,9 @@
   - MidiConverter and StemSplitter already receive `onLoginClick` prop, just need to pass it through
   - The `onLoginClick` prop pattern is well-established across the codebase for login gating
 ---
+
+## 2026-04-22 - US-002 completion
+- StemSplitter was still rendering `<Pricing />` without `onLoginClick`; threaded it through to match MidiConverter/LandingPage.
+- Verified build compiles clean with `CI=true DISABLE_ESLINT_PLUGIN=true react-scripts build`.
+- Learning: prior iteration's progress note claimed all three call sites were threaded, but StemSplitter was missed — always grep the final rendered JSX for the prop name, not just the component import.
+---

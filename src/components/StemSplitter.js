@@ -612,7 +612,7 @@ function StemSplitter({ onLoginClick }) {
         }} />
         <Features />
       </div>
-      <Pricing />
+      <Pricing onLoginClick={onLoginClick} />
       <FAQ />
       <Footer />
     </div>

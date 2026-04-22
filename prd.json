@@ -1,44 +1,34 @@
-{
-  "project": "groovesheet-fe",
-  "branchName": "fix/pipeline-1773645709752",
-  "description": "Wire pricing card buttons to assign token credits with login gate for unauthenticated users",
+﻿{
+  "title": "GrooveSheet pricing credits flow repair",
+  "repo": "EdwardZehuaZhang/groovesheet-fe",
+  "branchName": "main",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Wire pricing buttons to POST /api/user/assign-plan",
-      "description": "Add click handlers to the Get Free, Lite Subscribe, and Pro Subscribe buttons in Pricing.js that call POST /api/user/assign-plan with the correct plan mapping: Get Free=free, Lite Subscribe=tier2, Pro Subscribe=tier3. Use authenticatedFetch from src/utils/api.js and getToken from useAuth().",
-      "acceptanceCriteria": [
-        "Clicking 'Get Free' button calls POST /api/user/assign-plan with plan=free",
-        "Clicking 'Lite Subscribe' button calls POST /api/user/assign-plan with plan=tier2",
-        "Clicking 'Pro Subscribe' button calls POST /api/user/assign-plan with plan=tier3",
-        "Requests use authenticatedFetch from src/utils/api.js",
-        "getToken is obtained from useAuth() hook",
-        "Typecheck passes"
-      ],
-      "scopeFiles": [
-        "src/components/Pricing.js",
-        "src/utils/api.js"
-      ],
-      "priority": 1,
       "passes": true,
-      "notes": ""
+      "title": "Audit pricing CTA wiring in frontend",
+      "description": "Inspect the current pricing card/button flow in groovesheet-fe. Verify where Pricing.js is rendered, whether /pricing exists, how login gating works, and what endpoint or action pricing buttons currently call. Append concise findings to progress.txt before making changes.",
+      "scope": [
+        "src/components/Pricing.js",
+        "src/App.js",
+        "src/components/MidiConverter.js",
+        "src/components/StemSplitter.js"
+      ]
     },
     {
       "id": "US-002",
-      "title": "Open LoginModal if user is unauthenticated when clicking a pricing button",
-      "description": "Before calling assign-plan, check if the user is signed in using useUser/useAuth from Clerk. If not authenticated, open the LoginModal instead of making the API call.",
-      "acceptanceCriteria": [
-        "Unauthenticated user clicking any pricing button sees LoginModal instead of API call",
-        "Authenticated user clicking any pricing button proceeds to POST /api/user/assign-plan",
-        "Uses useAuth or useUser from @clerk/clerk-react to check auth state",
-        "Typecheck passes"
-      ],
-      "scopeFiles": [
-        "src/components/Pricing.js"
-      ],
-      "priority": 2,
       "passes": true,
-      "notes": ""
+      "title": "Implement logged-in pricing button flow",
+      "description": "Make pricing buttons behave correctly for authenticated users in groovesheet-fe. If backend purchase/credit fulfillment already exists, wire pricing CTAs to that flow. If frontend-only fixes are possible, implement them. If backend work is required beyond this repo, document the exact blocker and safest frontend-side changes in progress.txt.",
+      "scope": [
+        "src/components/Pricing.js",
+        "src/App.js",
+        "src/components/MidiConverter.js",
+        "src/components/StemSplitter.js",
+        "src/utils/api.js"
+      ]
     }
-  ]
+  ],
+  "version": "1.0"
 }
+
