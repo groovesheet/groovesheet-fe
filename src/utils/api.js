@@ -201,6 +201,146 @@ export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToke
 }
 
 /**
+ * Extract the filename portion from a value that may be a full file path.
+ * Returns the original value if it doesn't look like a path.
+ */
+function extractBasename(value) {
+  if (!value || typeof value !== 'string') return value;
+  // Strip any leading path (Unix or Windows-style)
+  const base = value.split('/').pop().split('\\').pop();
+  return base || value;
+}
+
+/**
+ * Resolve the best user-facing display name from a workflow status object.
+ *
+ * Checks every field the backend is known to populate, including
+ * underscore variants (file_name) and path-bearing fields (input_file).
+ * Falls back to workflow_id only as a true last resort.
+ */
+export function resolveDisplayName(workflow) {
+  if (!workflow) return 'Unknown';
+
+  const meta = workflow.metadata || {};
+
+  // Ordered list of candidate values – first truthy string wins
+  const candidates = [
+    workflow.original_filename,
+    workflow.filename,
+    workflow.file_name,
+    meta.original_filename,
+    meta.filename,
+    meta.file_name,
+    workflow.input_filename,
+    meta.input_filename,
+    workflow.name,
+    meta.name,
+    // Path-bearing fields: extract just the basename
+    extractBasename(workflow.input_file),
+    extractBasename(meta.input_file),
+    extractBasename(workflow.source_filename),
+    extractBasename(meta.source_filename),
+    extractBasename(workflow.source_file),
+    extractBasename(meta.source_file),
+    // True last resort
+    workflow.workflow_id,
+  ];
+
+  for (const c of candidates) {
+    if (c && typeof c === 'string' && c.trim()) return c.trim();
+  }
+
+  return 'Unknown';
+}
+
+// Maps instrument to the file keys for each output type
+const STEM_KEYS = {
+  drums: 'demucs_drums_stem',
+  piano: 'demucs_other_stem',
+  bass: 'demucs_bass_stem',
+  jazz_bass: 'demucs_bass_stem',
+  vocals: 'demucs_vocals_stem',
+  other: 'demucs_other_stem',
+};
+
+const MIDI_KEYS = {
+  drums: 'adtof_drums_midi',
+  piano: 'transkun_v2_piano_midi',
+  bass: 'fcpe_bass_midi',
+  jazz_bass: 'bassunet_jazz_bass_midi',
+};
+
+const TRANSCRIPTION_KEYS = {
+  drums: 'adtof_drums_musicxml',
+  piano: 'transkun_v2_piano_musicxml',
+  bass: 'fcpe_bass_musicxml',
+  jazz_bass: 'bassunet_jazz_bass_musicxml',
+};
+
+const SCORE_KEYS = {
+  drums: 'midi2score_drums_musicxml',
+  piano: 'midi2score_piano_musicxml',
+  bass: 'midi2score_bass_musicxml',
+  jazz_bass: 'midi2score_jazz_bass_musicxml',
+};
+
+/**
+ * Derive which download buttons should be shown for a workflow.
+ *
+ * If the workflow status payload includes an `outputs` object (keyed by file key),
+ * availability is determined by checking whether the relevant key exists there.
+ * Otherwise, we fall back to inference from workflow_name + instrument.
+ *
+ * Returns: { instrument, transcription, midi, score }
+ *   Each is either { available: true, fileKey } or { available: false }.
+ */
+export function resolveAvailableOutputs(workflow) {
+  const instrument = workflow.metadata?.instrument || 'drums';
+  const outputs = workflow.outputs || workflow.files || null;
+
+  const stemKey = STEM_KEYS[instrument] || STEM_KEYS.drums;
+  const midiKey = MIDI_KEYS[instrument] || MIDI_KEYS.drums;
+  const transcriptionKey = TRANSCRIPTION_KEYS[instrument] || TRANSCRIPTION_KEYS.drums;
+  const scoreKey = SCORE_KEYS[instrument] || SCORE_KEYS.drums;
+
+  if (outputs && typeof outputs === 'object') {
+    // Backend explicitly lists available output keys
+    return {
+      instrument: outputs[stemKey]
+        ? { available: true, fileKey: stemKey }
+        : { available: false },
+      transcription: outputs[transcriptionKey]
+        ? { available: true, fileKey: transcriptionKey }
+        : { available: false },
+      midi: outputs[midiKey]
+        ? { available: true, fileKey: midiKey }
+        : { available: false },
+      score: outputs[scoreKey]
+        ? { available: true, fileKey: scoreKey }
+        : { available: false },
+    };
+  }
+
+  // Fallback: infer from workflow_name when no explicit outputs metadata
+  const workflowName = workflow.workflow_name || '';
+  const isSeparationOnly = workflowName.includes('separate') && !workflowName.includes('full');
+  const isFullWorkflow = workflowName.includes('_full');
+
+  return {
+    instrument: { available: true, fileKey: stemKey },
+    transcription: isSeparationOnly
+      ? { available: false }
+      : { available: true, fileKey: transcriptionKey },
+    midi: isSeparationOnly
+      ? { available: false }
+      : { available: true, fileKey: midiKey },
+    score: isFullWorkflow
+      ? { available: true, fileKey: scoreKey }
+      : { available: false },
+  };
+}
+
+/**
  * Fetch detailed status for a specific workflow
  * @param {string} baseUrl - Base URL for the API
  * @param {string} workflowId - The workflow ID

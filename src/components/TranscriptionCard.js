@@ -44,28 +44,34 @@ export const TranscriptionCard = ({
       </div>
 
       <div className="card-downloads">
-        <button
-          className="download-button"
-          onClick={onDownloadInstrument}
-          aria-label={`Download ${instrumentLabel} track`}
-        >
-          <span>{instrumentLabel} Track</span>
-          <ArrowDown size={28} weight="regular" />
-        </button>
+        {onDownloadInstrument && (
+          <button
+            className="download-button"
+            onClick={onDownloadInstrument}
+            aria-label={`Download ${instrumentLabel} track`}
+          >
+            <span>{instrumentLabel} Track</span>
+            <ArrowDown size={28} weight="regular" />
+          </button>
+        )}
 
-        <button
-          className="download-button"
-          onClick={onDownloadTranscription}
-          aria-label="Download transcription"
-        >
-          <span>Transcription</span>
-          <ArrowDown size={28} weight="regular" />
-        </button>
+        {onDownloadTranscription && (
+          <button
+            className="download-button"
+            onClick={onDownloadTranscription}
+            aria-label="Download transcription"
+          >
+            <span>Transcription</span>
+            <ArrowDown size={28} weight="regular" />
+          </button>
+        )}
 
-        <button className="download-button" onClick={onDownloadMIDI} aria-label="Download MIDI">
-          <span>MIDI</span>
-          <ArrowDown size={28} weight="regular" />
-        </button>
+        {onDownloadMIDI && (
+          <button className="download-button" onClick={onDownloadMIDI} aria-label="Download MIDI">
+            <span>MIDI</span>
+            <ArrowDown size={28} weight="regular" />
+          </button>
+        )}
 
         {onDownloadScore && (
           <button className="download-button" onClick={onDownloadScore} aria-label="Download Score">
