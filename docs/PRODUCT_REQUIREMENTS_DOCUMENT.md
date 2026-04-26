@@ -1,5 +1,32 @@
 # GrooveSheet Product Requirements Document (PRD)
 
+## 2026-04-26 Update — Account Page / Billing & Usage
+
+A dedicated signed-in account page is now a recommended product requirement.
+
+Intent:
+- give users a clear post-login control center
+- make remaining minutes visible immediately
+- support recharge / upgrade flows
+- provide basic profile and security management
+
+Recommended core modules:
+- account header with profile image, display name, email, and current plan
+- minutes balance card with renewal/expiry context
+- recharge / top-up actions
+- plan management / subscription management
+- recent usage summary
+- profile settings
+- security actions such as password reset/change
+- lightweight preferences and support links
+
+Recommended route:
+- `/account`
+
+Primary source PRD for this feature:
+- `TASK390_groovesheet_account_page_PRD.md`
+
+
 **Version:** 1.0  
 **Last Updated:** November 18, 2025  
 **Product Name:** GrooveSheet (formerly DrumScore)  
