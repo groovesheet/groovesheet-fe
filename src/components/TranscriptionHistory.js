@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useClerk } from '@clerk/clerk-react';
+import { useAuth, useClerk } from '../auth';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';

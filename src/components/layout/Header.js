@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
 import './Header.css';
-import { SignedIn, SignedOut } from '@clerk/clerk-react';
+import { SignedIn, SignedOut } from '../../auth';
 import AccountIcon from '../AccountIcon';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -360,7 +360,7 @@ function Header({ onLoginClick }) {
                     className="mobile-nav-item"
                     style={{ display: 'flex', justifyContent: 'flex-start' }}
                   >
-                    {/* Use compact AccountIcon to render a simple label (keeps Clerk overlay) */}
+                    {/* Use compact AccountIcon to render a simple label (keeps account menu) */}
                     <AccountIcon compact />
                   </div>
                 </SignedIn>

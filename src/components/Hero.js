@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';

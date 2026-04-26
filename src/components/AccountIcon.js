@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useClerk } from '@clerk/clerk-react';
+import { useClerk } from '../auth';
 import { User } from '@phosphor-icons/react';
 import './AccountIcon.css';
 
@@ -22,7 +22,7 @@ export const AccountIcon = ({ compact = false }) => {
   };
 
   const handleProfile = () => {
-    // Navigate to profile or open Clerk user profile
+    // Navigate to profile or open account profile
     closeDropdown();
     // You can implement profile page navigation here
     console.log('Navigate to profile');

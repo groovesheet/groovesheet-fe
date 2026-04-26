@@ -10,7 +10,7 @@ import {
   EnvelopeSimple,
   ArrowLeft,
 } from '@phosphor-icons/react';
-import { useSignIn, useSignUp, useClerk } from '@clerk/clerk-react';
+import { useSignIn, useSignUp, useClerk } from '../auth';
 
 export const LoginModal = ({ isOpen, onClose }) => {
   const { signIn } = useSignIn();
@@ -142,7 +142,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
       console.error('Error details:', {
         message: err.message,
         status: err.status,
-        clerkError: err.clerkError,
+        authError: err.authError,
         errors: err.errors,
       });
 
@@ -225,7 +225,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
           );
 
           // Try to complete the sign-up without additional fields
-          // Clerk might just need us to call update() to finalize
+          // Auth provider may require a finalize step
           try {
             const completeResult = await signUp.update({});
             console.log('Update result:', completeResult);
@@ -266,7 +266,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
         if (!isSignUp && result.createdSessionId) {
           await setActive({ session: result.createdSessionId });
         }
-        // Close the modal and let Clerk handle the session
+        // Close the modal and let auth session settle
         onClose();
         window.location.reload(); // Refresh to update the UI
       } else {
@@ -279,7 +279,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
       console.error('Error details:', {
         message: err.message,
         status: err.status,
-        clerkError: err.clerkError,
+        authError: err.authError,
         errors: err.errors,
       });
 

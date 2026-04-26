@@ -1,8 +1,8 @@
 /**
- * API Utility - Authenticated API calls with Clerk JWT tokens
+ * API Utility - Authenticated API calls with Supabase JWT tokens
  *
  * This utility provides helper functions for making authenticated API calls
- * to the backend with Bearer tokens from Clerk.
+ * to the backend with Bearer tokens from Supabase.
  */
 
 /**
@@ -26,24 +26,19 @@ export class AuthError extends Error {
 }
 
 /**
- * Make an authenticated fetch request with Clerk JWT token
+ * Make an authenticated fetch request with Supabase JWT token
  * This function automatically handles token refresh and auth errors
  *
  * @param {string} url - The API endpoint URL
  * @param {Object} options - Fetch options (method, body, headers, etc.)
- * @param {Function} getToken - Clerk's getToken function from useAuth hook
- * @param {Function} signOut - Optional Clerk's signOut function for auto-logout on auth errors
+ * @param {Function} getToken - auth getToken function from the app auth hook
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
  * @returns {Promise<Response>} - The fetch response
  * @throws {AuthError} - Throws AuthError for 401/403 responses
  */
 export async function authenticatedFetch(url, options = {}, getToken, signOut = null) {
-  // Get a fresh JWT token from Clerk (this automatically refreshes if needed)
-  const token = await getToken({
-    // Skip cache to always get a fresh token
-    skipCache: false,
-    // Template can be specified if using custom JWT templates
-    // template: 'default'
-  });
+  // Get a fresh JWT token from Supabase session
+  const token = await getToken();
 
   console.log('Token obtained:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
 
@@ -107,9 +102,9 @@ export async function authenticatedFetch(url, options = {}, getToken, signOut = 
  * Upload a file to the backend with authentication
  * @param {File} file - The file to upload
  * @param {string} endpoint - The API endpoint (e.g., '/workflow/demucs_separate')
- * @param {Function} getToken - Clerk's getToken function from useAuth hook
+ * @param {Function} getToken - auth getToken function from the app auth hook
  * @param {string} baseUrl - Base URL for the API (default: '/api')
- * @param {Function} signOut - Optional Clerk's signOut function for auto-logout on auth errors
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
  * @returns {Promise<Object>} - The JSON response from the server
  * @throws {AuthError} - Throws AuthError for 401/403 responses
  */
@@ -146,8 +141,8 @@ export async function uploadFileAuthenticated(
 /**
  * Fetch the list of user workflows from the backend
  * @param {string} baseUrl - Base URL for the API
- * @param {Function} getToken - Clerk's getToken function from useAuth hook
- * @param {Function} signOut - Optional Clerk's signOut function for auto-logout on auth errors
+ * @param {Function} getToken - auth getToken function from the app auth hook
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
  * @returns {Promise<Array>} - Array of workflow objects
  * @throws {AuthError} - Throws AuthError for 401/403 responses
  */
@@ -181,7 +176,7 @@ export async function fetchWorkflowList(baseUrl, getToken, signOut = null) {
  * @param {string} baseUrl - Base URL for the API (e.g., '/api')
  * @param {string} workflowId - The workflow/job ID
  * @param {string} fileKey - The file key (e.g., 'drums', 'midi', 'transcription')
- * @param {Function} getToken - Clerk's getToken function from useAuth hook
+ * @param {Function} getToken - auth getToken function from the app auth hook
  * @returns {Promise<{blob: Blob, filename: string | null} | null>}
  *   Returns null if file not found (404), otherwise returns { blob, filename }
  * @throws {Error} - For non-404 download failures
@@ -344,8 +339,8 @@ export function resolveAvailableOutputs(workflow) {
  * Fetch detailed status for a specific workflow
  * @param {string} baseUrl - Base URL for the API
  * @param {string} workflowId - The workflow ID
- * @param {Function} getToken - Clerk's getToken function from useAuth hook
- * @param {Function} signOut - Optional Clerk's signOut function for auto-logout on auth errors
+ * @param {Function} getToken - auth getToken function from the app auth hook
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
  * @returns {Promise<Object>} - Workflow status object
  * @throws {AuthError} - Throws AuthError for 401/403 responses
  */
