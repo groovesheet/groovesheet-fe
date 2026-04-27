@@ -217,6 +217,7 @@ export function resolveDisplayName(workflow) {
   if (!workflow) return 'Unknown';
 
   const meta = workflow.metadata || {};
+  const outputsMeta = workflow.outputs?.metadata || workflow.files?.metadata || {};
 
   // Ordered list of candidate values – first truthy string wins
   const candidates = [
@@ -226,17 +227,25 @@ export function resolveDisplayName(workflow) {
     meta.original_filename,
     meta.filename,
     meta.file_name,
+    outputsMeta.original_filename,
+    outputsMeta.filename,
+    outputsMeta.file_name,
     workflow.input_filename,
     meta.input_filename,
+    outputsMeta.input_filename,
     workflow.name,
     meta.name,
+    outputsMeta.name,
     // Path-bearing fields: extract just the basename
     extractBasename(workflow.input_file),
     extractBasename(meta.input_file),
+    extractBasename(outputsMeta.input_file),
     extractBasename(workflow.source_filename),
     extractBasename(meta.source_filename),
+    extractBasename(outputsMeta.source_filename),
     extractBasename(workflow.source_file),
     extractBasename(meta.source_file),
+    extractBasename(outputsMeta.source_file),
     // True last resort
     workflow.workflow_id,
   ];
