@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@clerk/clerk-react": "^5.53.8",
     "@phosphor-icons/react": "^2.1.10",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.469.0",
@@ -12,7 +11,8 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.6",
     "react-scripts": "5.0.1",
-    "tailwindcss": "^3.4.18"
+    "tailwindcss": "^3.4.18",
+    "@supabase/supabase-js": "^2.57.4"
   },
   "scripts": {
     "start": "react-scripts start",

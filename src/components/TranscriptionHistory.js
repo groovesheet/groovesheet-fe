@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useClerk } from '@clerk/clerk-react';
+import { useAuth, useClerk } from '../auth';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import TranscriptionCard from './TranscriptionCard';
 import TranscriptionCardSkeleton from './TranscriptionCardSkeleton';
-import { fetchWorkflowList, fetchWorkflowStatus } from '../utils/api';
+import { fetchWorkflowList, fetchWorkflowStatus, resolveDisplayName, resolveAvailableOutputs } from '../utils/api';
 import config from '../config';
 import './TranscriptionHistory.css';
 
@@ -119,11 +119,11 @@ export const TranscriptionHistory = () => {
     });
   };
 
-  // Filter workflows by search query
+  // Filter workflows by search query (uses the same resolved display name shown on cards)
   const filteredWorkflows = Array.isArray(workflows)
     ? workflows.filter((workflow) => {
-        const filename = workflow.filename || workflow.workflow_id || '';
-        return filename.toLowerCase().includes(searchQuery.toLowerCase());
+        const displayName = resolveDisplayName(workflow);
+        return displayName.toLowerCase().includes(searchQuery.toLowerCase());
       })
     : [];
 
@@ -151,26 +151,9 @@ export const TranscriptionHistory = () => {
   // Sort years in descending order
   const sortedYears = Object.keys(workflowsByYear).sort((a, b) => b - a);
 
-  const stemKeyMap = {
-    drums: 'demucs_drums_stem',
-    piano: 'demucs_other_stem',
-    bass: 'demucs_bass_stem',
-    jazz_bass: 'demucs_bass_stem',
-    vocals: 'demucs_vocals_stem',
-    other: 'demucs_other_stem',
-  };
-
-  const midiKeyMap = {
-    drums: 'adtof_drums_midi',
-    jazz_bass: 'bassunet_jazz_bass_midi',
-    bass: 'fcpe_bass_midi',
-    piano: 'transkun_v2_piano_midi',
-  };
-
-  const handleDownloadInstrument = async (workflowId, instrument) => {
+  const handleDownloadFile = async (workflowId, fileKey, downloadFilename) => {
     try {
       const token = await getToken();
-      const fileKey = stemKeyMap[instrument] || instrument;
       const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
 
       const response = await fetch(url, {
@@ -179,7 +162,6 @@ export const TranscriptionHistory = () => {
         },
       });
 
-      // Check for auth errors
       if (response.status === 401 || response.status === 403) {
         console.error('Authentication error during download');
         setError('Your session has expired. Please sign in again.');
@@ -196,7 +178,7 @@ export const TranscriptionHistory = () => {
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `${instrument}_${workflowId}.wav`;
+      a.download = downloadFilename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -204,125 +186,6 @@ export const TranscriptionHistory = () => {
     } catch (err) {
       console.error('Download error:', err);
       setError('Failed to download file');
-    }
-  };
-
-  const handleDownloadTranscription = async (workflowId, instrument) => {
-    try {
-      const token = await getToken();
-      const fileKey = midiKeyMap[instrument] || 'adtof_drums_midi';
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Check for auth errors
-      if (response.status === 401 || response.status === 403) {
-        console.error('Authentication error during download');
-        setError('Your session has expired. Please sign in again.');
-        await signOut();
-        navigate('/');
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `transcription_${workflowId}.mid`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
-      console.error('Download error:', err);
-      setError('Failed to download transcription');
-    }
-  };
-
-  const handleDownloadMIDI = async (workflowId, instrument) => {
-    try {
-      const token = await getToken();
-      const fileKey = midiKeyMap[instrument] || 'adtof_drums_midi';
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`;
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Check for auth errors
-      if (response.status === 401 || response.status === 403) {
-        console.error('Authentication error during download');
-        setError('Your session has expired. Please sign in again.');
-        await signOut();
-        navigate('/');
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `midi_${workflowId}.mid`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
-      console.error('Download error:', err);
-      setError('Failed to download MIDI');
-    }
-  };
-
-  const handleDownloadScore = async (workflowId) => {
-    try {
-      const token = await getToken();
-      const url = `${config.apiBaseUrl}/workflow/download/${workflowId}/musicxml`;
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Check for auth errors
-      if (response.status === 401 || response.status === 403) {
-        console.error('Authentication error during download');
-        setError('Your session has expired. Please sign in again.');
-        await signOut();
-        navigate('/');
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `score_${workflowId}.musicxml`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
-      console.error('Download error:', err);
-      setError('Failed to download score');
     }
   };
 
@@ -396,7 +259,7 @@ export const TranscriptionHistory = () => {
                 <div className="history-section">
                   <h2 className="section-title">Processing</h2>
                   {processingItems.map((item) => {
-                    const filename = item.filename || item.workflow_id || 'Unknown';
+                    const filename = resolveDisplayName(item);
                     const { name, extension } = getFileNameParts(filename);
                     const progress = item.progress || 0;
                     const dateStr =
@@ -435,10 +298,9 @@ export const TranscriptionHistory = () => {
                       {workflowsByYear[year].map((item) => {
                         const dateStr =
                           item.created_at || item.completed_at || new Date().toISOString();
-                        const filename = item.filename || item.workflow_id || 'Unknown';
-                        // Get instrument from metadata, default to 'drums'
+                        const filename = resolveDisplayName(item);
                         const instrument = item.metadata?.instrument || 'drums';
-                        const isFullWorkflow = (item.workflow_name || '').includes('_full');
+                        const avail = resolveAvailableOutputs(item);
                         return (
                           <TranscriptionCard
                             key={item.workflow_id}
@@ -446,16 +308,24 @@ export const TranscriptionHistory = () => {
                             time={formatTime(dateStr)}
                             fileName={filename}
                             instrument={instrument}
-                            onDownloadInstrument={() =>
-                              handleDownloadInstrument(item.workflow_id, instrument)
+                            onDownloadInstrument={
+                              avail.instrument.available
+                                ? () => handleDownloadFile(item.workflow_id, avail.instrument.fileKey, `${instrument}_${item.workflow_id}.wav`)
+                                : undefined
                             }
-                            onDownloadTranscription={() =>
-                              handleDownloadTranscription(item.workflow_id, instrument)
+                            onDownloadTranscription={
+                              avail.transcription.available
+                                ? () => handleDownloadFile(item.workflow_id, avail.transcription.fileKey, `transcription_${item.workflow_id}.musicxml`)
+                                : undefined
                             }
-                            onDownloadMIDI={() => handleDownloadMIDI(item.workflow_id, instrument)}
+                            onDownloadMIDI={
+                              avail.midi.available
+                                ? () => handleDownloadFile(item.workflow_id, avail.midi.fileKey, `midi_${item.workflow_id}.mid`)
+                                : undefined
+                            }
                             onDownloadScore={
-                              isFullWorkflow
-                                ? () => handleDownloadScore(item.workflow_id)
+                              avail.score.available
+                                ? () => handleDownloadFile(item.workflow_id, avail.score.fileKey, `score_${item.workflow_id}.musicxml`)
                                 : undefined
                             }
                           />

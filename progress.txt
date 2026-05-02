@@ -37,3 +37,5 @@
 - Confirmed all three `<Pricing>` call sites (App.js:117, MidiConverter.js:729, StemSplitter.js:615) thread `onLoginClick`.
 - Learning: prd.json had been reverted to passes=false locally despite work being committed in adbe42c — marked both stories passes=true after verifying implementation is intact.
 ---
+
+<!-- retrigger preview 2026-04-19T04:46:28Z -->

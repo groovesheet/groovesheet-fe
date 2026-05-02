@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '../auth';
 import { authenticatedFetch } from '../utils/api';
 import './Pricing.css';
 

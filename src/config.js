@@ -11,7 +11,10 @@ const config = {
   appUrl: process.env.REACT_APP_URL || 'http://localhost:3000',
 
   // API Configuration
-  apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'https://api.groovesheet.net',
+  apiBaseUrl:
+    process.env.REACT_APP_API_BASE_URL ||
+    process.env.REACT_APP_API_URL ||
+    'https://api.groovesheet.net',
 
   // Feature Flags
   enableAnalytics: process.env.REACT_APP_ENABLE_ANALYTICS === 'true',
