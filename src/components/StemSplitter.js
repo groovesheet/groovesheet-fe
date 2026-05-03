@@ -2,6 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
+import {
+  previewFetch,
+  startPreview,
+  upgradeToFull,
+  setPendingPreviewId,
+} from '../utils/previewApi';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
@@ -124,9 +130,16 @@ function StemSplitter({ onLoginClick }) {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('vocals');
+  // M1: signed-in only "Try a 10s preview" mode. Routes the upload through
+  // /preview/{workflow} instead of /workflow/{workflow}; status + download
+  // endpoints are inferred from the returned ID prefix (PRV* vs WF*).
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewSelection, setPreviewSelection] = useState(null);
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
+
+  const apiPrefixForId = (id) => (id && id.startsWith('PRV') ? '/preview' : '/workflow');
 
   useEffect(() => {
     return () => {
@@ -221,50 +234,85 @@ function StemSplitter({ onLoginClick }) {
 
   const handleUpload = async (fileToUpload) => {
     if (!isLoaded) { setError('Loading user data...'); return; }
-    if (!isSignedIn) {
-      if (onLoginClick) onLoginClick();
-      return;
-    }
 
-    const formData = new FormData();
-    const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
-    const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
-    formData.append('file', safeFile);
-    formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+    // Anonymous users always go through preview. Signed-in users go through
+    // preview only if they explicitly toggled the option.
+    const usePreview = !isSignedIn || previewMode;
 
     setError(null);
     setStatus('uploading');
     simulateProgress();
 
     try {
-      // Stem Splitter always uses demucs_separate — no transcription or MIDI workflows
-      const workflowEndpoint = '/workflow/demucs_separate';
+      let data;
+      let workflowId;
 
-      const response = await authenticatedFetch(
-        `${API_BASE_URL}${workflowEndpoint}`,
-        { method: 'POST', body: formData },
-        getToken
-      );
+      if (usePreview) {
+        data = await startPreview(
+          API_BASE_URL,
+          'demucs_separate',
+          fileToUpload,
+          { instrument: selectedInstrument },
+          getToken
+        );
+        workflowId = data.workflow_id || data.preview_id;
+        if (data.selection) setPreviewSelection(data.selection);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+        // Stash for post-signup claim. Cleared on success after claim.
+        if (!isSignedIn && workflowId) setPendingPreviewId(workflowId);
+
+        // Cache hit — already completed.
+        if (data.cached || data.status === 'completed') {
+          setJobId(workflowId);
+          setStatus('completed');
+          setProgress(100);
+          stopProgressSimulation();
+          try {
+            const { objectUrl, filename } = await downloadStemFile(workflowId);
+            setDownloadUrl(objectUrl);
+            setDownloadFilename(filename);
+          } catch (dlErr) {
+            setError(`Download failed: ${dlErr.message}`);
+          }
+          return;
+        }
+      } else {
+        const formData = new FormData();
+        const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+        const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
+        formData.append('file', safeFile);
+        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+
+        const response = await authenticatedFetch(
+          `${API_BASE_URL}/workflow/demucs_separate`,
+          { method: 'POST', body: formData },
+          getToken
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+        }
+
+        data = await response.json();
+        workflowId = data.workflow_id || data.job_id;
       }
 
-      const data = await response.json();
-      const workflowId = data.workflow_id || data.job_id;
       if (!workflowId) throw new Error('No workflow_id returned from server');
       setJobId(workflowId);
       setStatus(data.status || 'pending');
 
       setTimeout(() => pollStatus(workflowId), 1000);
     } catch (err) {
-      if (err.message.includes('fetch') || err.name === 'TypeError') {
+      if (err.status === 429) {
+        setError(err.message || `Rate limit exceeded. Try again in ${err.retryAfterSeconds || 60}s.`);
+      } else if (err.message && (err.message.includes('fetch') || err.name === 'TypeError')) {
         setError('Unable to connect to server. Please check the console for details.');
       } else {
         setError(err.message || 'Failed to upload file. Please try again.');
       }
       setStatus(null);
+      stopProgressSimulation();
     }
   };
 
@@ -277,9 +325,13 @@ function StemSplitter({ onLoginClick }) {
     const poll = async () => {
       if (stopped) return;
       try {
-        const response = await authenticatedFetch(
-          `${API_BASE_URL}/workflow/status/${id}`,
-          { mode: 'cors', credentials: 'omit', cache: 'no-store' },
+        const isPreview = id && id.startsWith('PRV');
+        const fetchFn = isPreview ? previewFetch : authenticatedFetch;
+        const response = await fetchFn(
+          `${API_BASE_URL}${apiPrefixForId(id)}/status/${id}`,
+          isPreview
+            ? { method: 'GET', cache: 'no-store' }
+            : { mode: 'cors', credentials: 'omit', cache: 'no-store' },
           getToken
         );
         if (response.status === 404) {
@@ -354,8 +406,10 @@ function StemSplitter({ onLoginClick }) {
       guitar: 'demucs_other_stem',
     };
     const fileKey = stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
-    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
-    const res = await authenticatedFetch(url, {}, getToken);
+    const url = `${API_BASE_URL}${apiPrefixForId(id)}/download/${id}/${fileKey}`;
+    const isPreview = id && id.startsWith('PRV');
+    const fetchFn = isPreview ? previewFetch : authenticatedFetch;
+    const res = await fetchFn(url, {}, getToken);
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
       throw new Error(`Download failed ${res.status}: ${txt}`);
@@ -391,7 +445,16 @@ function StemSplitter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    setPreviewSelection(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const formatTimestamp = (sec) => {
+    if (sec == null) return '';
+    const total = Math.max(0, Math.round(sec));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   const handleManualDownload = () => {
@@ -407,11 +470,35 @@ function StemSplitter({ onLoginClick }) {
 
   const handleBrowseClick = () => {
     if (!isLoaded) return;
-    if (!isSignedIn) {
-      if (onLoginClick) onLoginClick();
-      return;
-    }
     fileInputRef.current?.click();
+  };
+
+  // Triggered from the success-state CTA when a *signed-in* user wants to
+  // promote their preview to a full run (no re-upload).
+  const handleUpgradeToFull = async () => {
+    if (!jobId || !jobId.startsWith('PRV')) return;
+    try {
+      const result = await upgradeToFull(API_BASE_URL, jobId, getToken);
+      if (result && result.workflow_id) {
+        // Replace the preview view with the new full workflow polling.
+        setJobId(result.workflow_id);
+        setStatus('processing');
+        setProgress(0);
+        setDownloadUrl(null);
+        setDownloadFilename(null);
+        setPreviewSelection(null);
+        simulateProgress();
+        setTimeout(() => pollStatus(result.workflow_id), 1000);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to start full song processing.');
+    }
+  };
+
+  const handleSignUpToUnlock = () => {
+    // preview_id was already stashed in localStorage at upload time; the
+    // LoginModal post-signup hook will call /preview/{id}/claim.
+    if (onLoginClick) onLoginClick();
   };
 
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -447,6 +534,35 @@ function StemSplitter({ onLoginClick }) {
           );
         })}
       </div>
+
+      {isSignedIn && (
+        <label
+          className="preview-mode-toggle"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            margin: '12px 0',
+            fontSize: '13px',
+            color: 'var(--color-text-secondary, #cccccc)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={previewMode}
+            onChange={(e) => setPreviewMode(e.target.checked)}
+            style={{ cursor: 'pointer' }}
+          />
+          <span>Try a 10-second preview first</span>
+          {previewMode && (
+            <span style={{ opacity: 0.7, fontSize: '12px' }}>
+              · Returns the most representative 10s of the chosen instrument
+            </span>
+          )}
+        </label>
+      )}
 
       <div
         className="upload-drop-zone"
@@ -527,6 +643,7 @@ function StemSplitter({ onLoginClick }) {
   );
 
   const renderSuccessState = () => {
+    const isPreviewResult = jobId && jobId.startsWith('PRV');
     return (
       <>
         <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
@@ -535,14 +652,37 @@ function StemSplitter({ onLoginClick }) {
         <div className="upload-content-top compact">
           <div className="upload-icon"><CheckCircleIcon /></div>
           <div className="upload-text success-text">
-            <h3>Separation Succeeded!</h3>
+            <h3>{isPreviewResult ? '10-Second Preview Ready!' : 'Separation Succeeded!'}</h3>
             <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
+            {isPreviewResult && previewSelection && (
+              <p className="filename-text" style={{ opacity: 0.75, fontSize: '13px', marginTop: '4px' }}>
+                Previewing {formatTimestamp(previewSelection.start_sec)} – {formatTimestamp(previewSelection.end_sec)} of your song
+              </p>
+            )}
           </div>
         </div>
         <div className="upload-controls success-controls compact">
           <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-            Download Stem
+            {isPreviewResult ? 'Download 10s Preview' : 'Download Stem'}
           </button>
+          {isPreviewResult && !isSignedIn && (
+            <button
+              className="download-transcription-btn compact"
+              style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
+              onClick={handleSignUpToUnlock}
+            >
+              Sign up — 10 free minutes will unlock the full song
+            </button>
+          )}
+          {isPreviewResult && isSignedIn && (
+            <button
+              className="download-transcription-btn compact"
+              style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
+              onClick={handleUpgradeToFull}
+            >
+              Process the full song now
+            </button>
+          )}
         </div>
       </>
     );
