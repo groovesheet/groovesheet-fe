@@ -2,6 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
+import {
+  previewFetch,
+  startPreview,
+  upgradeToFull,
+  setPendingPreviewId,
+} from '../utils/previewApi';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
@@ -124,10 +130,15 @@ function MidiConverter({ onLoginClick }) {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('drums');
+  // M1: signed-in only "Try a 10s preview" mode. Routes through /preview/{name}.
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewSelection, setPreviewSelection] = useState(null);
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
   const prefetchedFilesRef = useRef({});
+
+  const apiPrefixForId = (id) => (id && id.startsWith('PRV') ? '/preview' : '/workflow');
 
   useEffect(() => {
     return () => {
@@ -220,61 +231,98 @@ function MidiConverter({ onLoginClick }) {
     handleUpload(selectedFile);
   };
 
+  // Map the user's selected instrument to a workflow name (without /workflow
+  // or /preview prefix — the upload helper picks based on auth state).
+  const workflowNameFor = (instrument) => {
+    switch (instrument) {
+      case 'drums': return 'separate_to_drumscore';
+      case 'jazz_bass': return 'separate_to_jazz_bass_score';
+      case 'bass': return 'separate_to_bass_score';
+      case 'piano': return 'separate_to_piano_score';
+      default: return 'demucs_separate';
+    }
+  };
+
   const handleUpload = async (fileToUpload) => {
     if (!isLoaded) { setError('Loading user data...'); return; }
-    if (!isSignedIn) {
-      if (onLoginClick) onLoginClick();
-      return;
-    }
 
-    const formData = new FormData();
-    const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
-    const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
-    formData.append('file', safeFile);
-    formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+    // Anonymous → always preview. Signed-in → preview only when toggled.
+    const usePreview = !isSignedIn || previewMode;
+    const workflowName = workflowNameFor(selectedInstrument);
 
     setError(null);
     setStatus('uploading');
     simulateProgress();
 
     try {
-      // Same workflow selection as home page
-      let workflowEndpoint = '/workflow/demucs_separate';
-      if (selectedInstrument === 'drums') {
-        workflowEndpoint = '/workflow/separate_to_drumscore';
-      } else if (selectedInstrument === 'jazz_bass') {
-        workflowEndpoint = '/workflow/separate_to_jazz_bass_score';
-      } else if (selectedInstrument === 'bass') {
-        workflowEndpoint = '/workflow/separate_to_bass_score';
-      } else if (selectedInstrument === 'piano') {
-        workflowEndpoint = '/workflow/separate_to_piano_score';
+      let data;
+      let workflowId;
+
+      if (usePreview) {
+        data = await startPreview(
+          API_BASE_URL,
+          workflowName,
+          fileToUpload,
+          { instrument: selectedInstrument },
+          getToken
+        );
+        workflowId = data.workflow_id || data.preview_id;
+        if (data.selection) setPreviewSelection(data.selection);
+
+        if (!isSignedIn && workflowId) setPendingPreviewId(workflowId);
+
+        if (data.cached || data.status === 'completed') {
+          setJobId(workflowId);
+          setStatus('completed');
+          setProgress(100);
+          stopProgressSimulation();
+          try {
+            const { objectUrl, filename } = await downloadInstrumentFile(workflowId);
+            setDownloadUrl(objectUrl);
+            setDownloadFilename(filename);
+            prefetchSecondaryFiles(workflowId);
+          } catch (dlErr) {
+            setError(`Download failed: ${dlErr.message}`);
+          }
+          return;
+        }
+      } else {
+        const formData = new FormData();
+        const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+        const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
+        formData.append('file', safeFile);
+        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+
+        const response = await authenticatedFetch(
+          `${API_BASE_URL}/workflow/${workflowName}`,
+          { method: 'POST', body: formData },
+          getToken
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+        }
+
+        data = await response.json();
+        workflowId = data.workflow_id || data.job_id;
       }
 
-      const response = await authenticatedFetch(
-        `${API_BASE_URL}${workflowEndpoint}`,
-        { method: 'POST', body: formData },
-        getToken
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const workflowId = data.workflow_id || data.job_id;
       if (!workflowId) throw new Error('No workflow_id returned from server');
       setJobId(workflowId);
       setStatus(data.status || 'pending');
 
       setTimeout(() => pollStatus(workflowId), 1000);
     } catch (err) {
-      if (err.message.includes('fetch') || err.name === 'TypeError') {
+      if (err.status === 429) {
+        setError(err.message || `Rate limit exceeded. Try again in ${err.retryAfterSeconds || 60}s.`);
+      } else if (err.message && (err.message.includes('fetch') || err.name === 'TypeError')) {
         setError('Unable to connect to server. Please check the console for details.');
       } else {
         setError(err.message || 'Failed to upload file. Please try again.');
       }
       setStatus(null);
+      stopProgressSimulation();
     }
   };
 
@@ -287,9 +335,13 @@ function MidiConverter({ onLoginClick }) {
     const poll = async () => {
       if (stopped) return;
       try {
-        const response = await authenticatedFetch(
-          `${API_BASE_URL}/workflow/status/${id}`,
-          { mode: 'cors', credentials: 'omit', cache: 'no-store' },
+        const isPreview = id && id.startsWith('PRV');
+        const fetchFn = isPreview ? previewFetch : authenticatedFetch;
+        const response = await fetchFn(
+          `${API_BASE_URL}${apiPrefixForId(id)}/status/${id}`,
+          isPreview
+            ? { method: 'GET', cache: 'no-store' }
+            : { mode: 'cors', credentials: 'omit', cache: 'no-store' },
           getToken
         );
         if (response.status === 404) {
@@ -404,8 +456,10 @@ function MidiConverter({ onLoginClick }) {
       other: 'demucs_other_stem',
     };
     let fileKey = midiKeyMap[selectedInstrument] || stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
-    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
-    const res = await authenticatedFetch(url, {}, getToken);
+    const url = `${API_BASE_URL}${apiPrefixForId(id)}/download/${id}/${fileKey}`;
+    const isPreview = id && id.startsWith('PRV');
+    const fetchFn = isPreview ? previewFetch : authenticatedFetch;
+    const res = await fetchFn(url, {}, getToken);
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
       throw new Error(`Download failed ${res.status}: ${txt}`);
@@ -455,7 +509,16 @@ function MidiConverter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    setPreviewSelection(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const formatTimestamp = (sec) => {
+    if (sec == null) return '';
+    const total = Math.max(0, Math.round(sec));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   const handleManualDownload = () => {
@@ -513,11 +576,31 @@ function MidiConverter({ onLoginClick }) {
 
   const handleBrowseClick = () => {
     if (!isLoaded) return;
-    if (!isSignedIn) {
-      if (onLoginClick) onLoginClick();
-      return;
-    }
     fileInputRef.current?.click();
+  };
+
+  const handleUpgradeToFull = async () => {
+    if (!jobId || !jobId.startsWith('PRV')) return;
+    try {
+      const result = await upgradeToFull(API_BASE_URL, jobId, getToken);
+      if (result && result.workflow_id) {
+        setJobId(result.workflow_id);
+        setStatus('processing');
+        setProgress(0);
+        setDownloadUrl(null);
+        setDownloadFilename(null);
+        setPreviewSelection(null);
+        prefetchedFilesRef.current = {};
+        simulateProgress();
+        setTimeout(() => pollStatus(result.workflow_id), 1000);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to start full song processing.');
+    }
+  };
+
+  const handleSignUpToUnlock = () => {
+    if (onLoginClick) onLoginClick();
   };
 
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -553,6 +636,35 @@ function MidiConverter({ onLoginClick }) {
           );
         })}
       </div>
+
+      {isSignedIn && (
+        <label
+          className="preview-mode-toggle"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            margin: '12px 0',
+            fontSize: '13px',
+            color: 'var(--color-text-secondary, #cccccc)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={previewMode}
+            onChange={(e) => setPreviewMode(e.target.checked)}
+            style={{ cursor: 'pointer' }}
+          />
+          <span>Try a 10-second preview first</span>
+          {previewMode && (
+            <span style={{ opacity: 0.7, fontSize: '12px' }}>
+              · Returns the most representative 10s of the chosen instrument
+            </span>
+          )}
+        </label>
+      )}
 
       <div
         className="upload-drop-zone"
@@ -634,6 +746,7 @@ function MidiConverter({ onLoginClick }) {
 
   const renderSuccessState = () => {
     const isTranscriptionInstrument = ['drums', 'piano', 'jazz_bass', 'bass'].includes(selectedInstrument);
+    const isPreviewResult = jobId && jobId.startsWith('PRV');
 
     return (
       <>
@@ -643,13 +756,18 @@ function MidiConverter({ onLoginClick }) {
         <div className="upload-content-top compact">
           <div className="upload-icon"><CheckCircleIcon /></div>
           <div className="upload-text success-text">
-            <h3>Conversion Succeeded!</h3>
+            <h3>{isPreviewResult ? '10-Second Preview Ready!' : 'Conversion Succeeded!'}</h3>
             <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
+            {isPreviewResult && previewSelection && (
+              <p className="filename-text" style={{ opacity: 0.75, fontSize: '13px', marginTop: '4px' }}>
+                Previewing {formatTimestamp(previewSelection.start_sec)} – {formatTimestamp(previewSelection.end_sec)} of your song
+              </p>
+            )}
           </div>
         </div>
         <div className="upload-controls success-controls compact">
           <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-            Download MIDI
+            {isPreviewResult ? 'Download 10s Preview MIDI' : 'Download MIDI'}
           </button>
           <div className="download-options-row">
             <button className="download-option-btn" onClick={handleDownloadStem}>Stem</button>
@@ -657,6 +775,24 @@ function MidiConverter({ onLoginClick }) {
               <button className="download-option-btn" onClick={handleDownloadMidi}>MIDI</button>
             )}
           </div>
+          {isPreviewResult && !isSignedIn && (
+            <button
+              className="download-transcription-btn compact"
+              style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
+              onClick={handleSignUpToUnlock}
+            >
+              Sign up — 10 free minutes will unlock the full song
+            </button>
+          )}
+          {isPreviewResult && isSignedIn && (
+            <button
+              className="download-transcription-btn compact"
+              style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
+              onClick={handleUpgradeToFull}
+            >
+              Process the full song now
+            </button>
+          )}
         </div>
       </>
     );

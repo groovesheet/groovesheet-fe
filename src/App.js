@@ -21,6 +21,9 @@ import BusinessInformation from './components/BusinessInformation';
 import TermsConditions from './components/TermsConditions';
 import RefundPolicy from './components/RefundPolicy';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { useUser, useAuth } from './auth';
+import { claimPendingPreviewIfAny } from './utils/previewApi';
+import config from './config';
 
 // Function to preload an image and return a promise
 const preloadImage = (src) => {
@@ -124,6 +127,32 @@ function LandingPage({ onLoginClick }) {
   );
 }
 
+// When a previously-anonymous user signs in, claim any pending preview they
+// uploaded before signing up, and grant the one-time signup-bonus credits.
+// Mounted once at the App root; safe no-op when nothing is pending.
+function PendingPreviewClaimRunner() {
+  const { isSignedIn, isLoaded } = useUser();
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const result = await claimPendingPreviewIfAny(config.apiBaseUrl, getToken);
+        if (!cancelled && result) {
+          console.info('Pending preview claimed:', result);
+        }
+      } catch (err) {
+        console.warn('Pending preview claim failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isSignedIn, isLoaded, getToken]);
+
+  return null;
+}
+
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -140,6 +169,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
+        <PendingPreviewClaimRunner />
         <Routes>
           <Route path="/" element={<LandingPage onLoginClick={openLoginModal} />} />
           <Route path="/history" element={<TranscriptionHistory />} />

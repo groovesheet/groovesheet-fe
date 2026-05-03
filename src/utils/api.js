@@ -182,7 +182,9 @@ export async function fetchWorkflowList(baseUrl, getToken, signOut = null) {
  * @throws {Error} - For non-404 download failures
  */
 export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToken) {
-  const url = `${baseUrl}/workflow/download/${workflowId}/${fileKey}`;
+  // Preview previews carry IDs prefixed with `PRV` and live under /preview/...
+  const prefix = workflowId && workflowId.startsWith('PRV') ? '/preview' : '/workflow';
+  const url = `${baseUrl}${prefix}/download/${workflowId}/${fileKey}`;
   const res = await authenticatedFetch(url, {}, getToken);
   if (!res.ok) {
     if (res.status === 404) return null;
