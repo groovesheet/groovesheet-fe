@@ -2,11 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
+import { previewFetch, startPreview, setPendingPreviewId } from '../utils/previewApi';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
+import { useWorkflowPersistence } from '../hooks/useWorkflowPersistence';
+import VisualizationPanel from './visualization/VisualizationPanel';
 import './Hero.css';
 import config from '../config';
 
@@ -109,7 +112,7 @@ const BassIcon = () => (
   </svg>
 );
 
-function Hero({ onLoginRequired }) {
+function Hero({ onLoginRequired: _onLoginRequired }) {
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
@@ -133,6 +136,39 @@ function Hero({ onLoginRequired }) {
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
   const prefetchedFilesRef = useRef({});
+  const { persist, recover, clear: clearPersistence } = useWorkflowPersistence();
+  const recoveredRef = useRef(false);
+
+  // Recover persisted workflow state on mount
+  useEffect(() => {
+    if (recoveredRef.current) return;
+    recoveredRef.current = true;
+
+    const saved = recover();
+    if (!saved || !saved.jobId) return;
+
+    // Restore state from localStorage
+    setJobId(saved.jobId);
+    setStatus(saved.status);
+    setProgress(saved.progress || 0);
+    setSelectedInstrument(saved.instrument || 'drums');
+    if (saved.fileName) {
+      // Create a minimal file-like object with just the name
+      setFile({ name: saved.fileName });
+    }
+
+    // If the job was still in progress, resume polling
+    const terminalStatuses = ['completed', 'succeeded', 'success', 'failed', 'error'];
+    if (!terminalStatuses.includes(saved.status)) {
+      // Resume progress simulation for non-cold-start states
+      if (saved.status !== 'started') {
+        simulateProgress();
+      }
+      // Resume polling to get real-time status
+      setTimeout(() => pollStatus(saved.jobId), 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const _instruments = [
     { value: 'drums', label: 'Drums', IconComponent: LuDrum },
@@ -365,38 +401,23 @@ function Hero({ onLoginRequired }) {
     handleUpload(selectedFile);
   };
 
-  // Handle upload -> start demucs_separate workflow
+  // Handle upload -> start workflow (authenticated) or preview (anonymous/free)
   const handleUpload = async (fileToUpload) => {
-    // Check if user is logged in
     if (!isLoaded) {
       setError('Loading user data...');
       return;
     }
 
-    if (!isSignedIn) {
-      // Trigger login modal
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
-      return;
-    }
-
-    const formData = new FormData();
-    const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
-    const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
-    formData.append('file', safeFile);
-    // Add metadata with selected instrument
-    formData.append('metadata', JSON.stringify({ 
-      instrument: selectedInstrument 
-    }));
+    // Determine whether to use preview (anonymous/free) or full workflow
+    const usePreview = !isSignedIn;
 
     setError(null);
-    console.log('🚀 Starting upload - setting status to uploading');
+    console.log('🚀 Starting upload - setting status to uploading, preview:', usePreview);
     setStatus('uploading');
-    
+
     // Start simulated progress for upload (60 seconds)
     simulateProgress();
-    
+
     // Auto-transition to processing after 60 seconds
     setTimeout(() => {
       if (status === 'uploading') {
@@ -407,45 +428,69 @@ function Hero({ onLoginRequired }) {
     }, 60000);
 
     try {
-      // Workflow selection logic
-      let workflowEndpoint = '/workflow/demucs_separate';
+      // Workflow name selection
+      let workflowName = 'demucs_separate';
       if (selectedInstrument === 'drums') {
-        workflowEndpoint = '/workflow/separate_to_drumscore_full';
+        workflowName = 'separate_to_drumscore_full';
       } else if (selectedInstrument === 'jazz_bass') {
-        workflowEndpoint = '/workflow/separate_to_jazz_bass_score_full';
+        workflowName = 'separate_to_jazz_bass_score_full';
       } else if (selectedInstrument === 'bass') {
-        workflowEndpoint = '/workflow/separate_to_bass_score_full';
+        workflowName = 'separate_to_bass_score_full';
       } else if (selectedInstrument === 'piano') {
-        workflowEndpoint = '/workflow/separate_to_piano_score_full';
-      }
-      
-      const response = await authenticatedFetch(
-        `${API_BASE_URL}${workflowEndpoint}`,
-        {
-          method: 'POST',
-          body: formData
-        },
-        getToken
-      );
-
-      console.log('Upload response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Upload failed:', errorData);
-        throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+        workflowName = 'separate_to_piano_score_full';
       }
 
-      const data = await response.json();
+      let data;
+      if (usePreview) {
+        // Anonymous/free user: use preview API (no auth required)
+        data = await startPreview(
+          API_BASE_URL,
+          workflowName,
+          fileToUpload,
+          { instrument: selectedInstrument },
+          getToken
+        );
+      } else {
+        // Authenticated user: use full workflow API
+        const formData = new FormData();
+        const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
+        const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
+        formData.append('file', safeFile);
+        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+
+        const response = await authenticatedFetch(
+          `${API_BASE_URL}/workflow/${workflowName}`,
+          { method: 'POST', body: formData },
+          getToken
+        );
+
+        console.log('Upload response status:', response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Upload failed:', errorData);
+          throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+        }
+
+        data = await response.json();
+      }
+
       console.log('✨ Workflow started:', data);
-      const workflowId = data.workflow_id || data.job_id; // fallback if backend returns job_id
+      const workflowId = data.workflow_id || data.preview_id || data.job_id;
       if (!workflowId) {
         throw new Error('No workflow_id returned from server');
       }
+
+      // Stash preview ID for post-signup claim if anonymous
+      if (usePreview && workflowId.startsWith('PRV')) {
+        setPendingPreviewId(workflowId);
+      }
+
       setJobId(workflowId);
       const initialStatus = data.status || 'pending';
       console.log('📝 Setting initial status after upload:', initialStatus);
       setStatus(initialStatus);
+      persist({ jobId: workflowId, status: initialStatus, progress, instrument: selectedInstrument, fileName: fileToUpload.name });
       
       // Give backend a moment to save job data before polling
       // This helps avoid race conditions with Cloud Run scaling
@@ -479,9 +524,13 @@ function Hero({ onLoginRequired }) {
       attempts++;
       console.log(`Poll attempt ${attempts} (interval=${intervalMs}ms)`);
       try {
-        const response = await authenticatedFetch(
-          `${API_BASE_URL}/workflow/status/${id}`,
-          { mode: 'cors', credentials: 'omit', cache: 'no-store' },
+        // Use preview or authenticated fetch based on job ID prefix
+        const isPreview = id && id.startsWith('PRV');
+        const fetchFn = isPreview ? previewFetch : authenticatedFetch;
+        const statusPrefix = isPreview ? '/preview' : '/workflow';
+        const response = await fetchFn(
+          `${API_BASE_URL}${statusPrefix}/status/${id}`,
+          { mode: 'cors', cache: 'no-store' },
           getToken
         );
         if (response.status === 404) {
@@ -527,6 +576,7 @@ function Hero({ onLoginRequired }) {
               setDownloadFilename(filename);
               setStatus('completed');
               setProgress(100); // Only set to 100% after download completes
+              persist({ jobId: id, status: 'completed', progress: 100, instrument: selectedInstrument, fileName: file?.name });
               // Pre-fetch secondary files (stem, MIDI) in background for instant downloads
               prefetchSecondaryFiles(id);
             } catch (err) {
@@ -555,6 +605,7 @@ function Hero({ onLoginRequired }) {
           // Only update status (progress is handled by simulation)
           console.log('💾 Setting status to:', newStatus);
           setStatus(newStatus);
+          persist({ jobId: id, status: newStatus, progress, instrument: selectedInstrument, fileName: file?.name });
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -628,9 +679,12 @@ function Hero({ onLoginRequired }) {
     } else {
       fileKey = selectedInstrument;
     }
-    const url = `${API_BASE_URL}/workflow/download/${id}/${fileKey}`;
+    const isPreview = id && id.startsWith('PRV');
+    const dlPrefix = isPreview ? '/preview' : '/workflow';
+    const url = `${API_BASE_URL}${dlPrefix}/download/${id}/${fileKey}`;
     console.log('Fetching from:', url);
-    const res = await authenticatedFetch(url, {}, getToken);
+    const fetchFn = isPreview ? previewFetch : authenticatedFetch;
+    const res = await fetchFn(url, {}, getToken);
     console.log('Download response:', res.status, res.statusText);
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
@@ -681,6 +735,7 @@ function Hero({ onLoginRequired }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    clearPersistence();
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -756,18 +811,9 @@ function Hero({ onLoginRequired }) {
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
-  // Handle browse button click
+  // Handle browse button click — allow anonymous uploads for preview
   const handleBrowseClick = () => {
     if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      // Trigger login modal
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
-      return;
-    }
-
     fileInputRef.current?.click();
   };
 
@@ -974,48 +1020,26 @@ function Hero({ onLoginRequired }) {
     </>
   );
 
-  const renderSuccessState = () => {
-    const isTranscriptionInstrument = ['drums', 'piano', 'jazz_bass', 'bass'].includes(selectedInstrument);
-
+  // Success state: render full-width VisualizationPanel instead of normal hero layout
+  if (uiState === 'success') {
     return (
-      <>
-        <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
-          <CloseIcon />
-        </button>
-
-        <div className="upload-content-top compact">
-          <div className="upload-icon">
-            <CheckCircleIcon />
-          </div>
-          <div className="upload-text success-text">
-            <h3>Transcription Succussed!</h3>
-            <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
-          </div>
+      <section className="hero">
+        <div className="hero-container hero-container-success">
+          <VisualizationPanel
+            jobId={jobId}
+            selectedInstrument={selectedInstrument}
+            fileName={file?.name}
+            getToken={getToken}
+            onDownloadTranscription={handleManualDownload}
+            onDownloadStem={handleDownloadStem}
+            onDownloadMidi={handleDownloadMidi}
+            onReset={resetUpload}
+            downloadError={downloadError}
+          />
         </div>
-
-        <div className="upload-controls success-controls compact">
-          <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-            Download Transcription
-          </button>
-          <div className="download-options-row">
-            <button className="download-option-btn" onClick={handleDownloadStem}>
-              Stem
-            </button>
-            {isTranscriptionInstrument && (
-              <button className="download-option-btn" onClick={handleDownloadMidi}>
-                MIDI
-              </button>
-            )}
-          </div>
-          {downloadError && (
-            <p style={{ color: '#ff6b6b', fontSize: '0.75rem', marginTop: '8px', textAlign: 'center' }}>
-              {downloadError}
-            </p>
-          )}
-        </div>
-      </>
+      </section>
     );
-  };
+  }
 
   return (
     <section className="hero">
@@ -1032,7 +1056,7 @@ function Hero({ onLoginRequired }) {
             <a href="#terms">Terms of Service</a>
           </div>
         </div>
-        <div 
+        <div
           className={`upload-area state-${uiState} ${isDragging ? 'dragging' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -1059,10 +1083,9 @@ function Hero({ onLoginRequired }) {
           {uiState === 'uploading' && renderUploadingState()}
           {uiState === 'cold_starting' && renderColdStartState()}
           {uiState === 'processing' && renderProcessingState()}
-          {uiState === 'success' && renderSuccessState()}
 
           {/* Error message overlay */}
-          {error && uiState !== 'success' && (
+          {error && (
             <div className="error-overlay">
               <p className="error-message">{error}</p>
             </div>

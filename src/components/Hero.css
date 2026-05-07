@@ -939,6 +939,13 @@
   }
 }
 
+/* Full-width success layout — VisualizationPanel takes over */
+.hero-container-success {
+  flex-direction: column;
+  max-width: 100%;
+  gap: 0;
+}
+
 /* Success State Specific Styles */
 .success-text {
   display: flex;

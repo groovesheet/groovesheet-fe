@@ -4,15 +4,17 @@
   "private": true,
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "@supabase/supabase-js": "^2.57.4",
+    "@tonejs/midi": "^2.0.28",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.469.0",
+    "opensheetmusicdisplay": "github:EdwardZehuaZhang/osmd-extended",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.6",
     "react-scripts": "5.0.1",
-    "tailwindcss": "^3.4.18",
-    "@supabase/supabase-js": "^2.57.4"
+    "tailwindcss": "^3.4.18"
   },
   "scripts": {
     "start": "react-scripts start",
