@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Badges</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  .plan-badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; background: rgba(255,255,255,0.05); color: var(--color-text); }
+  .plan-badge.pro { background: var(--color-primary); color: #fff; }
+
+  .ribbon { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 4px; background: var(--color-primary); color: #fff; font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  .status { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 10px; border-radius: 120px; font-size: 12px; font-weight: 600; }
+  .status .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-running { background: #012FA7; color: #fff; }
+  .status-running .dot { background: #fff; animation: pulse 1.5s ease-in-out infinite; }
+  .status-done { background: #22c55e; color: #0b2417; }
+  .status-done .dot { background: #0b2417; }
+  .status-failed { background: #ff6b6b; color: #1b191c; }
+  .status-failed .dot { background: #1b191c; }
+  .status-queued { background: #5f5e60; color: #fff; }
+  .status-queued .dot { background: #fff; }
+  @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
+
+  .chip { padding: 6px 12px; border-radius: 6px; font-size: 13px; background: var(--color-surface-light); color: var(--color-text); border: 1px solid var(--color-border-light); }
+  .chip.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Badges &amp; tags</h1>
+    <p class="card-sub">Tiny labels carry the most caps in the system. Used for plan tiers, the popular ribbon, and async job status — never for headings.</p>
+
+    <div class="group">
+      <h3>Plan badges</h3>
+      <div class="row">
+        <span class="plan-badge">Hobbyist</span>
+        <span class="plan-badge">Professional</span>
+        <span class="plan-badge">Enterprise</span>
+        <span class="plan-badge pro">Pro · Active</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Most popular ribbon</h3>
+      <div class="row">
+        <span class="ribbon">★ Most Popular</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Job status</h3>
+      <div class="row">
+        <span class="status status-queued"><span class="dot"></span>Queued</span>
+        <span class="status status-running"><span class="dot"></span>Transcribing · 42%</span>
+        <span class="status status-done"><span class="dot"></span>Complete</span>
+        <span class="status status-failed"><span class="dot"></span>Failed</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Filter chips</h3>
+      <div class="row">
+        <span class="chip active">All</span>
+        <span class="chip">Drums</span>
+        <span class="chip">Bass</span>
+        <span class="chip">Piano</span>
+        <span class="chip">Vocals</span>
+        <span class="chip">Multi-instrument</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

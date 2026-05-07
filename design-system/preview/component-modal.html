@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Modal</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 14px; font-weight: 500; }
+
+  .stage { position: relative; height: 360px; border-radius: 8px; overflow: hidden; background: var(--color-background); border: 1px solid rgba(255,255,255,0.06); }
+  .stage::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px); background-size: 32px 32px; opacity: 0.35; }
+  .stage::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
+
+  .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: var(--color-panel1); border-radius: 13px; box-shadow: 0 24px 64px rgba(0,0,0,0.6); z-index: 10; padding: 24px; max-width: 92%; }
+  .modal h4 { font-size: 18px; font-weight: 500; margin: 0 0 6px; }
+  .modal p { font-size: 13px; color: var(--color-muted-foreground); line-height: 1.5; margin: 0 0 16px; }
+  .modal .actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal button { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 0; font-family: inherit; }
+  .modal .btn-primary { background: var(--color-primary); color: #fff; }
+  .modal .btn-secondary { background: transparent; color: #f4f4f4; border: 1px solid rgba(255,255,255,0.18); }
+  .modal .btn-danger { background: #ff6b6b; color: #1b191c; }
+  .modal .x { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%; background: transparent; border: 0; color: var(--color-muted-foreground); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .modal .x:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .modal .x svg { width: 14px; height: 14px; }
+
+  .modal.confirm { width: 380px; }
+  .modal.share { width: 440px; }
+  .modal.share input { width: 100%; height: 36px; padding: 0 12px; background: var(--color-input-bg); border: 1px solid var(--color-input-border); border-radius: 6px; color: var(--color-text); font-family: var(--font-family-mono); font-size: 12px; }
+
+  .auth-modal { background: var(--color-panel1); border-radius: 13px; padding: 28px; width: 360px; max-width: 92%; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 10; box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
+  .auth-modal h4 { font-size: 22px; font-weight: 400; margin: 0 0 6px; text-align: center; letter-spacing: -0.4px; }
+  .auth-modal p { font-size: 13px; color: var(--color-muted-foreground); margin: 0 0 20px; text-align: center; }
+  .auth-modal .provider { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; cursor: pointer; font-size: 14px; }
+  .auth-modal .provider:hover { background: rgba(255,255,255,0.08); }
+  .auth-modal .provider .lo { width: 20px; height: 20px; border-radius: 4px; background: #fff; color: #000; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+  .auth-modal .provider.apple .lo { background: #000; color: #fff; }
+  .auth-modal .provider.google .lo { background: linear-gradient(135deg,#4285f4,#34a853); color: #fff; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Modal &amp; dialog</h1>
+    <p class="card-sub">Centered card on a 70% black overlay. Three sizes — confirm (380), default (440), wide (560). Always reserves a top-right close. <strong>Z-index: 2147483647</strong> to win against any embed.</p>
+
+    <div class="grid">
+      <div class="group">
+        <h3>Confirm (destructive)</h3>
+        <div class="stage">
+          <div class="modal confirm">
+            <button class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <h4>Delete this transcription?</h4>
+            <p>"Triplet Fill 16-bar.wav" will be removed and cannot be restored. Exports already downloaded are not affected.</p>
+            <div class="actions">
+              <button class="btn-secondary">Cancel</button>
+              <button class="btn-danger">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Share</h3>
+        <div class="stage">
+          <div class="modal share">
+            <button class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <h4>Share Triplet Fill</h4>
+            <p>Anyone with the link can view the score and download the MusicXML. Link expires in 30 days.</p>
+            <div style="display:flex;gap:8px;margin-bottom:16px"><input value="https://groovesheet.app/s/4F7K-9XQ2" readonly /></div>
+            <div class="actions">
+              <button class="btn-secondary">Close</button>
+              <button class="btn-primary">Copy link</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Auth</h3>
+        <div class="stage">
+          <div class="auth-modal">
+            <h4>Sign In to GrooveSheet</h4>
+            <p>Pick up where you left off.</p>
+            <div class="provider google"><span class="lo">G</span> Continue with Google</div>
+            <div class="provider apple"><span class="lo">⌘</span> Continue with Apple</div>
+            <div class="provider"><span class="lo">@</span> Continue with email</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Specs</h3>
+        <div style="padding: 16px 18px; border-radius:8px; background: rgba(255,255,255,0.03); font-size:13px; line-height: 1.7;">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px">
+            <span class="spec">Overlay</span><span>rgba(0,0,0,0.7)</span>
+            <span class="spec">Card radius</span><span>13px</span>
+            <span class="spec">Card padding</span><span>24–28px</span>
+            <span class="spec">Shadow</span><span>0 24px 64px rgba(0,0,0,0.6)</span>
+            <span class="spec">Z-index</span><span>2147483647</span>
+            <span class="spec">Close button</span><span>28px circle, top-right</span>
+            <span class="spec">Trap focus</span><span>Required</span>
+            <span class="spec">Esc to close</span><span>Required (except destructive confirm)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

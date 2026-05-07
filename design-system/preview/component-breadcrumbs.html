@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Breadcrumbs</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .crumbs a {
+    color: var(--color-muted-foreground);
+    text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .crumbs a:hover { color: var(--color-text); background: rgba(255,255,255,0.04); }
+  .crumbs .sep {
+    color: var(--color-muted-foreground);
+    opacity: 0.5;
+    font-size: 12px;
+    user-select: none;
+  }
+  .crumbs .current {
+    color: var(--color-text);
+    padding: 6px 8px;
+    font-weight: 500;
+  }
+  .crumbs.compact { font-size: 13px; }
+  .crumbs.compact a, .crumbs.compact .current { padding: 4px 6px; }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame .crumbs a { color: #666; }
+  .light-frame .crumbs a:hover { color: #000; background: rgba(0,0,0,0.04); }
+  .light-frame .crumbs .current { color: #000; }
+  .light-frame .crumbs .sep { color: #999; }
+
+  .with-icon a, .with-icon .current { display: inline-flex; align-items: center; gap: 6px; }
+  .with-icon svg { width: 14px; height: 14px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Breadcrumbs</h1>
+    <p class="card-sub">Hierarchy trail for the account and project surfaces. Inactive crumbs are muted; the current page sits at full text color. Separator is a slim chevron, never a slash.</p>
+
+    <div class="group">
+      <h3>Default</h3>
+      <nav class="crumbs">
+        <a href="#">Account</a>
+        <span class="sep">›</span>
+        <a href="#">Billing</a>
+        <span class="sep">›</span>
+        <a href="#">Plan</a>
+        <span class="sep">›</span>
+        <span class="current">Change to Professional</span>
+      </nav>
+    </div>
+
+    <div class="group">
+      <h3>With home icon</h3>
+      <nav class="crumbs with-icon">
+        <a href="#" aria-label="Home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12 12 4l9 8M5 10v10h14V10"/></svg>
+        </a>
+        <span class="sep">›</span>
+        <a href="#">Projects</a>
+        <span class="sep">›</span>
+        <a href="#">Live takes</a>
+        <span class="sep">›</span>
+        <span class="current">Triplet Fill 16-bar.wav</span>
+      </nav>
+    </div>
+
+    <div class="group">
+      <h3>Compact (dense surfaces)</h3>
+      <nav class="crumbs compact">
+        <a href="#">Settings</a>
+        <span class="sep">›</span>
+        <a href="#">Workspace</a>
+        <span class="sep">›</span>
+        <span class="current">Members</span>
+      </nav>
+    </div>
+
+    <div class="group light-frame" data-theme="light">
+      <h3>Light</h3>
+      <nav class="crumbs">
+        <a href="#">Account</a>
+        <span class="sep">›</span>
+        <a href="#">Billing</a>
+        <span class="sep">›</span>
+        <span class="current">Invoices</span>
+      </nav>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Text size</dt><dd>14px / 400</dd></div>
+      <div><dt>Separator</dt><dd>› chevron · 50% opacity</dd></div>
+      <div><dt>Hover</dt><dd>surface-light bg</dd></div>
+      <div><dt>Current</dt><dd>full text · weight 500</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Select &amp; Dropdown</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+
+  .field-label { font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); margin: 0 0 6px; }
+
+  .gs-select { position: relative; width: 100%; }
+  .gs-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 14px; background: var(--color-input-bg); border: 1px solid var(--color-input-border); border-radius: 6px; color: var(--color-text); font-size: 14px; cursor: pointer; }
+  .gs-select-trigger .placeholder { color: var(--color-input-placeholder); }
+  .gs-select-trigger svg { width: 14px; height: 14px; color: var(--color-muted-foreground); }
+
+  .gs-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--color-panel1); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.37); z-index: 10; }
+  .gs-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-size: 14px; color: var(--color-text); border-radius: 4px; cursor: pointer; }
+  .gs-menu-item:hover { background: rgba(255,255,255,0.05); }
+  .gs-menu-item.selected { color: #93b4ff; }
+  .gs-menu-item.selected svg { color: #93b4ff; }
+  .gs-menu-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 4px 2px; }
+  .gs-menu-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted-foreground); padding: 8px 12px 4px; }
+
+  /* Avatar trigger */
+  .gs-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--color-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; cursor: pointer; }
+
+  .demo-stage { position: relative; min-height: 240px; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Select &amp; dropdown menu</h1>
+    <p class="card-sub">Same visual chrome — same trigger, same menu surface, same divider. The select is for choosing a value; the menu is for choosing an action.</p>
+
+    <div class="grid">
+      <div class="group">
+        <h3>Closed select</h3>
+        <p class="field-label">EXPORT FORMAT</p>
+        <div class="gs-select">
+          <div class="gs-select-trigger">
+            <span>MusicXML</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+        <p class="field-label">TIME SIGNATURE</p>
+        <div class="gs-select">
+          <div class="gs-select-trigger">
+            <span class="placeholder">Auto-detect</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="group demo-stage">
+        <h3>Open select</h3>
+        <p class="field-label">EXPORT FORMAT</p>
+        <div class="gs-select">
+          <div class="gs-select-trigger" style="border-color: var(--color-primary)">
+            <span>MusicXML</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+          </div>
+          <div class="gs-menu">
+            <div class="gs-menu-item">PDF (sheet music)</div>
+            <div class="gs-menu-item selected">MusicXML
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="gs-menu-item">MIDI</div>
+            <div class="gs-menu-item">All three (zip)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group demo-stage">
+        <h3>Avatar dropdown menu</h3>
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px"><span class="gs-avatar">EM</span></div>
+        <div class="gs-select" style="margin-left:auto;max-width:240px">
+          <div class="gs-menu" style="position:relative">
+            <div style="padding:10px 12px 6px">
+              <p style="margin:0;font-size:14px;font-weight:500">Eli M.</p>
+              <p style="margin:0;font-size:12px;color:var(--color-muted-foreground)">eli@band.fm · Pro</p>
+            </div>
+            <div class="gs-menu-divider"></div>
+            <div class="gs-menu-item">Account settings</div>
+            <div class="gs-menu-item">Billing &amp; invoices</div>
+            <div class="gs-menu-item">API keys</div>
+            <div class="gs-menu-divider"></div>
+            <div class="gs-menu-item" style="color:#ff9b9b">Sign out</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Action menu (more)</h3>
+        <div class="gs-select" style="max-width:200px">
+          <div class="gs-menu" style="position:relative">
+            <div class="gs-menu-label">File</div>
+            <div class="gs-menu-item">Rename</div>
+            <div class="gs-menu-item">Duplicate</div>
+            <div class="gs-menu-item">Download <span style="font-family:var(--font-family-mono);font-size:11px;color:var(--color-muted-foreground)">⌘D</span></div>
+            <div class="gs-menu-divider"></div>
+            <div class="gs-menu-item" style="color:#ff9b9b">Delete</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

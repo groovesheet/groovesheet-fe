@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Avatar</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .section { margin-top: 32px; }
+  .section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 12px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 24px; background: var(--color-panel2); border-radius: 13px; }
+
+  .av {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #012FA7;
+    color: #fff;
+    font-family: var(--font-family-sans);
+    font-weight: 500;
+    border-radius: 50%;
+    overflow: hidden;
+    user-select: none;
+    flex: none;
+  }
+  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .av-xs { width: 20px; height: 20px; font-size: 9px; }
+  .av-sm { width: 28px; height: 28px; font-size: 11px; }
+  .av-md { width: 40px; height: 40px; font-size: 14px; }
+  .av-lg { width: 56px; height: 56px; font-size: 18px; }
+  .av-xl { width: 80px; height: 80px; font-size: 26px; }
+
+  /* Tonal variants — same brand hue, varied lightness */
+  .av-tone-1 { background: #012FA7; }
+  .av-tone-2 { background: #0139C7; color: #fff; }
+  .av-tone-3 { background: #5f5e60; color: #fff; }
+  .av-tone-4 { background: #323033; color: #f4f4f4; border: 1px solid rgba(255,255,255,0.18); }
+  .av-tone-5 { background: rgba(255,255,255,0.08); color: #f4f4f4; border: 1px solid rgba(255,255,255,0.18); }
+
+  .stack { display: inline-flex; }
+  .stack .av { box-shadow: 0 0 0 2px var(--color-panel2); }
+  .stack .av + .av { margin-left: -10px; }
+  .stack-md .av + .av { margin-left: -12px; }
+
+  .av-status { position: relative; }
+  .av-status::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 2px var(--color-panel2);
+  }
+  .av-status.offline::after { background: #5f5e60; }
+  .av-status.busy::after { background: #ff6b6b; }
+
+  .id-row { display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; min-width: 0; }
+  .id-row > div { min-width: 0; }
+  .id-row .name { font-size: 14px; color: var(--color-text); font-weight: 500; white-space: nowrap; }
+  .id-row .meta { font-size: 12px; color: var(--color-muted-foreground); margin-top: 2px; white-space: nowrap; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Avatars</h1>
+    <p class="card-sub">Round, monogrammed, brand blue first. Photographs work; on the dark canvas the default is a flat blue circle with the user's initials in white. Status dots ride the bottom-right corner with a 2px panel-colored ring.</p>
+
+    <div class="section">
+      <h3>Sizes</h3>
+      <div class="row">
+        <span class="av av-xs av-tone-1">JL</span>
+        <span class="av av-sm av-tone-1">JL</span>
+        <span class="av av-md av-tone-1">JL</span>
+        <span class="av av-lg av-tone-1">JL</span>
+        <span class="av av-xl av-tone-1">JL</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Tonal variants</h3>
+      <div class="row">
+        <span class="av av-md av-tone-1">JL</span>
+        <span class="av av-md av-tone-2">MA</span>
+        <span class="av av-md av-tone-3">RS</span>
+        <span class="av av-md av-tone-4">DH</span>
+        <span class="av av-md av-tone-5">PK</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>With photo</h3>
+      <div class="row">
+        <span class="av av-md" style="background:linear-gradient(135deg,#3a4ea8 0%,#0a1530 100%);">
+          <svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="15" r="7" fill="#e8d4b6"/><path d="M5 40 Q20 22 35 40 Z" fill="#e8d4b6"/></svg>
+        </span>
+        <span class="av av-md" style="background:linear-gradient(135deg,#7a4a2e 0%,#2a1a10 100%);">
+          <svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="15" r="7" fill="#a06b40"/><path d="M5 40 Q20 22 35 40 Z" fill="#5a3520"/></svg>
+        </span>
+        <span class="av av-md" style="background:linear-gradient(135deg,#a86a4a 0%,#3a2010 100%);">
+          <svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="15" r="7" fill="#d4a878"/><path d="M5 40 Q20 22 35 40 Z" fill="#7a4828"/></svg>
+        </span>
+        <span class="av av-md" style="background:linear-gradient(135deg,#5a6b8a 0%,#1a2030 100%);">
+          <svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="15" r="7" fill="#e0c0a0"/><path d="M5 40 Q20 22 35 40 Z" fill="#3a4a6a"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Status</h3>
+      <div class="row">
+        <span class="av av-md av-tone-1 av-status">JL</span>
+        <span class="av av-md av-tone-3 av-status offline">RS</span>
+        <span class="av av-md av-tone-2 av-status busy">MA</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Group stack</h3>
+      <div class="row">
+        <div class="stack stack-md">
+          <span class="av av-md av-tone-1">JL</span>
+          <span class="av av-md av-tone-2">MA</span>
+          <span class="av av-md av-tone-3">RS</span>
+          <span class="av av-md av-tone-4">+4</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>With identity</h3>
+      <div class="row">
+        <div class="id-row">
+          <span class="av av-md av-tone-1">JL</span>
+          <div>
+            <div class="name">Jamie Liu</div>
+            <div class="meta">Pro · 84 transcriptions</div>
+          </div>
+        </div>
+        <div class="id-row" style="margin-left:24px;">
+          <span class="av av-lg av-tone-2">MA</span>
+          <div>
+            <div class="name">Marco Alvarez</div>
+            <div class="meta">jamie@studio.co</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Specs</h3>
+      <dl class="legend">
+        <div><dt>Sizes</dt><dd>20 / 28 / 40 / 56 / 80</dd></div>
+        <div><dt>Radius</dt><dd>50%</dd></div>
+        <div><dt>Default fill</dt><dd>#012FA7</dd></div>
+        <div><dt>Initials</dt><dd>500 weight</dd></div>
+        <div><dt>Status ring</dt><dd>2px panel</dd></div>
+      </dl>
+    </div>
+  </div>
+</body>
+</html>

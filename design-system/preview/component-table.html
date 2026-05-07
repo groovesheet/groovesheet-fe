@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Table</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .stage { background: var(--color-panel2); border-radius: 13px; padding: 4px; margin-top: 8px; }
+  .stage h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 18px 22px 12px; font-weight: 500; }
+
+  .tbl-wrap { padding: 0 4px 4px; }
+  .tbl {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--color-panel1);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: var(--font-family-sans);
+    font-size: 14px;
+    color: var(--color-text);
+  }
+  .tbl thead th {
+    text-align: left;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-muted-foreground);
+    white-space: nowrap;
+  }
+  .tbl thead th .sort {
+    display: inline-flex; align-items: center; gap: 4px;
+    cursor: pointer;
+  }
+  .tbl thead th .sort svg { width: 10px; height: 10px; color: #fff; }
+  .tbl tbody tr { transition: background 0.15s ease; }
+  .tbl tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .tbl tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    vertical-align: middle;
+  }
+  .tbl tbody tr:last-child td { border-bottom: 0; }
+
+  .tbl-title { display: flex; align-items: center; gap: 12px; }
+  .file-icon {
+    width: 32px; height: 32px;
+    flex: none;
+    border-radius: 6px;
+    background: rgba(1,47,167,0.18);
+    color: #4d8aff;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .file-icon svg { width: 16px; height: 16px; }
+  .tbl-title .name { font-weight: 500; color: #fff; line-height: 1.2; }
+  .tbl-title .sub { font-size: 12px; color: var(--color-muted-foreground); margin-top: 2px; font-family: var(--font-family-mono); }
+
+  .mono { font-family: var(--font-family-mono); font-size: 12px; color: var(--color-muted-foreground); }
+  .num { font-family: var(--font-family-mono); font-variant-numeric: tabular-nums; text-align: right; color: #fff; }
+
+  .status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 120px; font-size: 11px; font-weight: 600; }
+  .status .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .st-done { background: #22c55e; color: #0b2417; }
+  .st-done .dot { background: #0b2417; }
+  .st-running { background: #012FA7; color: #fff; }
+  .st-running .dot { background: #fff; }
+  .st-failed { background: #ff6b6b; color: #1b191c; }
+  .st-failed .dot { background: #1b191c; }
+  .st-queued { background: #5f5e60; color: #fff; }
+  .st-queued .dot { background: #fff; }
+
+  .actions { display: inline-flex; gap: 4px; }
+  .icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  .ck-cell { width: 32px; }
+  .ck-mini {
+    width: 16px; height: 16px;
+    border: 1.5px solid rgba(255,255,255,0.32);
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ck-mini.is-checked { background: #012FA7; border-color: #012FA7; }
+  .ck-mini.is-checked svg { width: 10px; height: 10px; color: #fff; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .toolbar .left { display: flex; align-items: center; gap: 10px; }
+  .toolbar .selected { font-size: 13px; color: var(--color-muted-foreground); }
+  .toolbar .selected strong { color: #fff; font-weight: 500; }
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 12px;
+    border-radius: 120px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: transparent;
+    color: #f4f4f4;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+  .pill-btn:hover { background: rgba(255,255,255,0.05); }
+
+  /* Footer */
+  .tbl-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px;
+    color: var(--color-muted-foreground);
+    font-size: 13px;
+  }
+  .tbl-foot strong { color: #fff; font-weight: 500; }
+  .pager-mini { display: inline-flex; gap: 2px; }
+  .pager-mini button {
+    width: 28px; height: 28px;
+    border-radius: 6px; border: 0; background: transparent; color: #f4f4f4; cursor: pointer;
+  }
+  .pager-mini button:hover { background: rgba(255,255,255,0.06); }
+
+  .legend { margin-top: 16px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Tables</h1>
+    <p class="card-sub">Used for transcription history and admin lists. Header row is uppercased, monospace-feeling caps at white 60%; body rows are 48px tall with hairline dividers. Rows light up to white 3% on hover. Numbers are tabular-nums and right-aligned.</p>
+
+    <div class="stage">
+      <h3>Transcription history</h3>
+      <div class="tbl-wrap">
+        <div class="tbl" style="display:block;">
+          <div class="toolbar">
+            <div class="left">
+              <span class="ck-mini is-checked"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span>
+              <span class="selected"><strong>2</strong> selected</span>
+              <button class="pill-btn">
+                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h10M5 4V2.5h4V4M4 4l1 8h4l1-8"/></svg>
+                Delete
+              </button>
+              <button class="pill-btn">
+                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 2v8M3 6l4 4 4-4M2 12h10"/></svg>
+                Download
+              </button>
+            </div>
+            <button class="pill-btn">
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h10M4 7h6M6 10h2"/></svg>
+              Filter
+            </button>
+          </div>
+
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th class="ck-cell"></th>
+                <th><span class="sort">Title <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4l2-2 2 2M3 6l2 2 2-2"/></svg></span></th>
+                <th>Instruments</th>
+                <th><span class="sort">Duration <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4l2-2 2 2M3 6l2 2 2-2"/></svg></span></th>
+                <th><span class="sort">Created <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6l2 2 2-2" stroke="#fff"/></svg></span></th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ck-mini is-checked"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span></td>
+                <td>
+                  <div class="tbl-title">
+                    <span class="file-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg></span>
+                    <div>
+                      <div class="name">Mountains At Dawn — final mix</div>
+                      <div class="sub">mountains_dawn_v3.wav · 28.4 MB</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="mono">drums, bass, piano</td>
+                <td class="num">3:42</td>
+                <td class="mono">Apr 30, 14:21</td>
+                <td><span class="status st-done"><span class="dot"></span>Complete</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 2v8M3 6l4 4 4-4M2 12h10"/></svg></button>
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="ck-mini is-checked"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span></td>
+                <td>
+                  <div class="tbl-title">
+                    <span class="file-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg></span>
+                    <div>
+                      <div class="name">Coffee Shop Improv</div>
+                      <div class="sub">improv_2026_04_29.mp3 · 6.1 MB</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="mono">piano</td>
+                <td class="num">2:08</td>
+                <td class="mono">Apr 29, 09:54</td>
+                <td><span class="status st-done"><span class="dot"></span>Complete</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 2v8M3 6l4 4 4-4M2 12h10"/></svg></button>
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="ck-mini"></span></td>
+                <td>
+                  <div class="tbl-title">
+                    <span class="file-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg></span>
+                    <div>
+                      <div class="name">Triplet Fill Practice</div>
+                      <div class="sub">drums_only.flac · 14.2 MB</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="mono">drums</td>
+                <td class="num">1:24</td>
+                <td class="mono">Apr 29, 08:12</td>
+                <td><span class="status st-running"><span class="dot"></span>Transcribing 42%</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1"/></svg></button>
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="ck-mini"></span></td>
+                <td>
+                  <div class="tbl-title">
+                    <span class="file-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg></span>
+                    <div>
+                      <div class="name">Live Jam — basement, take 4</div>
+                      <div class="sub">basement_take4.ogg · 31.8 MB</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="mono">drums, bass, piano, vocals</td>
+                <td class="num">5:17</td>
+                <td class="mono">Apr 28, 22:08</td>
+                <td><span class="status st-failed"><span class="dot"></span>Failed</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7c0-2.2 1.8-4 4-4 1.5 0 2.8.8 3.5 2M11 4v3h-3M11 7c0 2.2-1.8 4-4 4-1.5 0-2.8-.8-3.5-2M3 10V7h3"/></svg></button>
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="ck-mini"></span></td>
+                <td>
+                  <div class="tbl-title">
+                    <span class="file-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg></span>
+                    <div>
+                      <div class="name">Studio Session — bridge idea</div>
+                      <div class="sub">bridge_idea_v1.wav · 8.7 MB</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="mono">bass</td>
+                <td class="num">0:48</td>
+                <td class="mono">Apr 28, 17:30</td>
+                <td><span class="status st-queued"><span class="dot"></span>Queued</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="icon-btn"><svg viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="tbl-foot">
+            <span>Showing <strong>1 – 5</strong> of <strong>540</strong></span>
+            <div class="pager-mini">
+              <button><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3L5 7l4 4"/></svg></button>
+              <button><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l4 4-4 4"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Row height</dt><dd>~ 56px</dd></div>
+      <div><dt>Hover</dt><dd>white 3%</dd></div>
+      <div><dt>Header</dt><dd>11px caps</dd></div>
+      <div><dt>Numbers</dt><dd>tabular mono</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

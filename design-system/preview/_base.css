@@ -1,0 +1,70 @@
+/* Preview card base — used by all design system tab cards */
+@import url('../colors_and_type.css');
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
+  padding: 40px;
+}
+
+body.dotted::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card-frame {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card-eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  margin: 0 0 8px 0;
+}
+
+.card-title {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+}
+
+.card-sub {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+  margin: 0 0 32px 0;
+  max-width: 640px;
+}
+
+.spec {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+  letter-spacing: 0.02em;
+}

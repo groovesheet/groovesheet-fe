@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Audio player</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+
+  /* Full transport — used in editor + preview overlays */
+  .player {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 18px;
+    background: var(--color-panel1);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 13px;
+  }
+  .controls { display: inline-flex; align-items: center; gap: 6px; }
+  .ctrl {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 0; cursor: pointer;
+    color: var(--color-foreground); border-radius: 8px;
+  }
+  .ctrl:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .ctrl svg { width: 16px; height: 16px; }
+  .ctrl.play {
+    width: 40px; height: 40px;
+    background: var(--color-primary); color: #fff; border-radius: 50%;
+  }
+  .ctrl.play:hover { background: #0139C7; }
+  .ctrl.play svg { width: 14px; height: 14px; margin-left: 1px; }
+
+  /* Scrubber + waveform-ish track */
+  .scrub { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .track {
+    position: relative; height: 28px;
+    display: flex; align-items: center; gap: 1.5px;
+  }
+  .bar {
+    flex: 1;
+    background: rgba(255,255,255,0.18);
+    border-radius: 1px;
+  }
+  .track .bar.played { background: var(--color-primary); }
+  .track .head {
+    position: absolute; top: 0; bottom: 0;
+    width: 2px; background: #fff;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+    border-radius: 2px;
+  }
+  .times {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    color: var(--color-muted-foreground);
+    letter-spacing: 0.04em;
+  }
+
+  /* Right cluster — speed + volume */
+  .right { display: inline-flex; align-items: center; gap: 8px; }
+  .speed {
+    font-family: var(--font-family-mono);
+    font-size: 12px; font-weight: 500;
+    background: rgba(255,255,255,0.05);
+    padding: 5px 10px; border-radius: 6px;
+    color: var(--color-foreground); cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .speed:hover { background: rgba(255,255,255,0.10); }
+
+  /* Mini player — for list rows / toasts */
+  .mini {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 6px 12px 6px 6px;
+    background: var(--color-panel1);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 120px;
+  }
+  .mini .ctrl.play { width: 28px; height: 28px; }
+  .mini .ctrl.play svg { width: 10px; height: 10px; }
+  .mini .label {
+    font-size: 13px; font-weight: 500; color: var(--color-foreground);
+  }
+  .mini .label small { color: var(--color-muted-foreground); font-weight: 400; margin-left: 6px; font-family: var(--font-family-mono); font-size: 11px; }
+  .mini .pulse {
+    width: 4px; height: 14px; background: var(--color-primary);
+    border-radius: 2px; animation: pulse 1.2s ease-in-out infinite;
+  }
+  .mini .pulse:nth-child(2) { animation-delay: 0.15s; }
+  .mini .pulse:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes pulse {
+    0%, 100% { transform: scaleY(0.4); }
+    50%      { transform: scaleY(1); }
+  }
+  .bars-wrap { display: inline-flex; gap: 2px; align-items: center; height: 14px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Audio player</h1>
+    <p class="card-sub">Transport for previewing the source track alongside transcribed notation. Cobalt fills the played portion of the waveform, a 2px white head marks current position, mono numerals for time. Mini variant lives inline in list rows and toasts.</p>
+
+    <div class="group">
+      <h3>Full transport</h3>
+      <div class="player">
+        <div class="controls">
+          <button class="ctrl" title="Skip back 5s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+          <button class="ctrl play" title="Pause"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
+          <button class="ctrl" title="Skip forward 5s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+        </div>
+        <div class="scrub">
+          <div class="track" id="track">
+            <!-- waveform bars generated below -->
+          </div>
+          <div class="times"><span>1:24</span><span>3:48</span></div>
+        </div>
+        <div class="right">
+          <button class="speed">1.0×</button>
+          <button class="ctrl" title="Volume"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Mini — inline</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <div class="mini">
+          <button class="ctrl play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+          <span class="label">Triplet Fill 16-bar.wav<small>0:42 / 3:48</small></span>
+        </div>
+        <div class="mini">
+          <button class="ctrl play" style="background: #0138C0;"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
+          <span class="bars-wrap"><span class="pulse"></span><span class="pulse"></span><span class="pulse"></span></span>
+          <span class="label">Bass Walk Demo.flac<small>playing · 1:12</small></span>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Play</dt><dd>40px circle · cobalt</dd></div>
+      <div><dt>Track</dt><dd>White 18% / Cobalt</dd></div>
+      <div><dt>Head</dt><dd>2px white + halo</dd></div>
+      <div><dt>Times</dt><dd>11px mono</dd></div>
+    </dl>
+  </div>
+
+  <script>
+    // Generate a fake waveform inside .track — heights pseudo-random but stable.
+    const track = document.getElementById('track');
+    const N = 96, played = 38;
+    let html = '';
+    for (let i = 0; i < N; i++) {
+      const h = 6 + Math.round(20 * Math.abs(Math.sin(i * 0.42) * Math.cos(i * 0.13) + 0.3 * Math.sin(i * 1.7)));
+      html += `<div class="bar ${i < played ? 'played' : ''}" style="height: ${Math.min(h, 26)}px"></div>`;
+    }
+    html += `<div class="head" style="left: ${(played / N) * 100}%"></div>`;
+    track.innerHTML = html;
+  </script>
+</body>
+</html>

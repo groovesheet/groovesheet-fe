@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Toast &amp; Banner</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; margin-bottom: 16px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+
+  /* Toast */
+  .toast { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 14px; border-radius: 10px; background: var(--color-panel1); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 32px rgba(0,0,0,0.5); max-width: 420px; font-size: 14px; }
+  .toast .icon { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .toast .body { flex: 1; line-height: 1.4; }
+  .toast .body strong { font-weight: 500; display: block; }
+  .toast .body small { font-size: 12px; color: var(--color-muted-foreground); }
+  .toast .x { background: transparent; border: 0; color: var(--color-muted-foreground); cursor: pointer; padding: 4px; }
+  .toast .x svg { width: 14px; height: 14px; }
+
+  .toast.success .icon { background: rgba(34,197,94,0.18); color: #22c55e; }
+  .toast.error .icon { background: rgba(255,107,107,0.18); color: #ff6b6b; }
+  .toast.info .icon { background: rgba(1,47,167,0.3); color: #93b4ff; }
+  .toast.neutral .icon { background: rgba(255,255,255,0.08); color: #fff; }
+
+  /* Banner */
+  .banner { display: flex; align-items: flex-start; gap: 14px; padding: 14px 18px; border-radius: 10px; font-size: 14px; line-height: 1.45; border: 1px solid; }
+  .banner .icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+  .banner strong { display: block; font-weight: 500; }
+  .banner .body { flex: 1; }
+  .banner a { color: inherit; text-decoration: underline; font-weight: 500; }
+  .banner .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .banner button { padding: 6px 12px; border-radius: 6px; border: 0; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+
+  .banner.warn { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.3); color: #ffb020; }
+  .banner.warn .body p { color: #f4f4f4; margin: 4px 0 0; }
+  .banner.error { background: rgba(255,107,107,0.08); border-color: rgba(255,107,107,0.3); color: #ff6b6b; }
+  .banner.error .body p { color: #f4f4f4; margin: 4px 0 0; }
+  .banner.info { background: rgba(1,47,167,0.18); border-color: rgba(1,47,167,0.5); color: #93b4ff; }
+  .banner.info .body p { color: #f4f4f4; margin: 4px 0 0; }
+
+  .check { font-weight: 700; font-size: 14px; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Toast &amp; banner</h1>
+    <p class="card-sub">Toast for transient confirmations — autodismiss in ~5s. Banner for persistent messages that need a decision (quota, billing, system status).</p>
+
+    <div class="group">
+      <h3>Toast</h3>
+      <div class="stack">
+        <div class="toast success">
+          <span class="icon"><span class="check">✓</span></span>
+          <div class="body"><strong>Transcription complete</strong><small>Triplet Fill 16-bar.wav · 3 exports ready</small></div>
+          <button class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="toast info">
+          <span class="icon"><strong>i</strong></span>
+          <div class="body"><strong>MusicXML copied to clipboard</strong></div>
+          <button class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="toast error">
+          <span class="icon"><strong>!</strong></span>
+          <div class="body"><strong>Upload failed</strong><small>File exceeds 32 MB limit</small></div>
+          <button class="x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Banner</h3>
+      <div class="stack">
+        <div class="banner warn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+          <div class="body">
+            <strong>You're at 95% of your monthly quota</strong>
+            <p>114 of 120 minutes used. Quota resets in 12 days, or top up now.</p>
+            <div class="actions">
+              <button style="background:#ffb020;color:#1b191c">Top up</button>
+              <button style="background:transparent;color:#ffb020;border:1px solid rgba(255,176,32,0.4)">View usage</button>
+            </div>
+          </div>
+        </div>
+        <div class="banner error">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="body">
+            <strong>Payment method expired</strong>
+            <p>Your card ending in 4242 expired in April. <a href="#">Update billing</a> to keep your Pro plan active.</p>
+          </div>
+        </div>
+        <div class="banner info">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <div class="body">
+            <strong>New: batch upload (Pro)</strong>
+            <p>Drop up to 25 tracks at once. <a href="#">See what's new</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

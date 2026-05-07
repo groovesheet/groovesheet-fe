@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Brand — Logo</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .tile { border-radius: 13px; padding: 40px; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; border: 1px solid var(--color-border-light); }
+  .tile img { max-height: 80px; max-width: 80%; object-fit: contain; }
+  .tile svg.mark { height: 80px; width: auto; display: block; }
+  .tile .label { font-family: var(--font-family-mono); font-size: 11px; color: inherit; opacity: 0.6; }
+  .tile.dark { background: #171717; color: #fff; }
+  .tile.blue { background: #012FA7; color: #fff; }
+  .tile.light { background: #fff; color: #000; border-color: #e5e5e5; }
+  .tile.gray { background: #f6f6f6; color: #000; border-color: #e5e5e5; }
+  /* Mark fills — recolor the SVG per surface */
+  .tile.blue svg.mark path { fill: #ffffff; }
+  .tile.dark svg.mark path { fill: #012FA7; }
+  .tile.gray svg.mark path { fill: #012FA7; }
+  .clear { margin-top: 24px; padding: 24px; background: var(--color-panel2); border-radius: 13px; display: flex; gap: 18px; align-items: center; font-size: 13px; color: var(--color-muted-foreground); line-height: 1.5; }
+  .clear b { color: var(--color-text); }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Brand</p>
+    <h1 class="card-title">Logo &amp; mark</h1>
+    <p class="card-sub">Square mark for app icons and avatars; full wordmark for headers and footers. Always pair light variants with dark surfaces and vice versa.</p>
+
+    <div class="grid">
+      <div class="tile dark"><img src="../assets/logos/groovesheet-wordmark-darkmode.svg" alt="GrooveSheet wordmark" /><div class="label">wordmark · on canvas</div></div>
+      <div class="tile light"><img src="../assets/logos/groovesheet-wordmark-black.png" alt="GrooveSheet wordmark" /><div class="label">wordmark · on light</div></div>
+      <div class="tile blue">
+        <svg class="mark" viewBox="0 0 465 418" xmlns="http://www.w3.org/2000/svg" aria-label="GrooveSheet mark"><path d="M319.959,189.826L319.959,400.084C293.04,405.883 263.382,409.095 232.236,409.095C201.089,409.095 171.432,405.883 144.513,400.084L144.513,189.968C170.509,195.067 200.267,197.963 231.876,197.963C263.779,197.963 293.797,195.013 319.959,189.826ZM412.049,10.923C421.607,6.217 433.187,10.156 437.893,19.714C442.599,29.272 438.66,40.853 429.101,45.559L403.447,58.19C435.226,74.419 454.327,95.23 454.327,117.911L454.327,298.056C454.327,335.825 416.528,369.216 358.832,389.278L358.832,179.523C393.987,167.368 415.909,150.22 415.909,131.23C415.909,111.643 392.586,94.016 355.48,81.806L258.42,129.593C256.489,146.395 242.202,159.459 224.887,159.459C206.258,159.459 191.133,144.334 191.133,125.705C191.133,107.075 206.258,91.95 224.887,91.95C230.362,91.95 235.535,93.256 240.112,95.575L412.049,10.923ZM207.223,65.093C117.291,69.467 47.843,97.431 47.843,131.23C47.843,150.349 70.064,167.601 105.64,179.771L105.64,389.278C47.943,369.216 10.145,335.825 10.145,298.056L10.145,117.911C10.145,66.141 109.66,24.111 232.236,24.111C249.029,24.111 265.389,24.9 281.124,26.395L207.223,65.093Z"></path></svg>
+        <div class="label">mark · on brand blue</div>
+      </div>
+      <div class="tile gray">
+        <svg class="mark" viewBox="0 0 465 418" xmlns="http://www.w3.org/2000/svg" aria-label="GrooveSheet mark"><path d="M319.959,189.826L319.959,400.084C293.04,405.883 263.382,409.095 232.236,409.095C201.089,409.095 171.432,405.883 144.513,400.084L144.513,189.968C170.509,195.067 200.267,197.963 231.876,197.963C263.779,197.963 293.797,195.013 319.959,189.826ZM412.049,10.923C421.607,6.217 433.187,10.156 437.893,19.714C442.599,29.272 438.66,40.853 429.101,45.559L403.447,58.19C435.226,74.419 454.327,95.23 454.327,117.911L454.327,298.056C454.327,335.825 416.528,369.216 358.832,389.278L358.832,179.523C393.987,167.368 415.909,150.22 415.909,131.23C415.909,111.643 392.586,94.016 355.48,81.806L258.42,129.593C256.489,146.395 242.202,159.459 224.887,159.459C206.258,159.459 191.133,144.334 191.133,125.705C191.133,107.075 206.258,91.95 224.887,91.95C230.362,91.95 235.535,93.256 240.112,95.575L412.049,10.923ZM207.223,65.093C117.291,69.467 47.843,97.431 47.843,131.23C47.843,150.349 70.064,167.601 105.64,179.771L105.64,389.278C47.943,369.216 10.145,335.825 10.145,298.056L10.145,117.911C10.145,66.141 109.66,24.111 232.236,24.111C249.029,24.111 265.389,24.9 281.124,26.395L207.223,65.093Z"></path></svg>
+        <div class="label">mark · default</div>
+      </div>
+    </div>
+
+    <div class="clear">
+      <div><b>Clear space:</b> reserve at least the width of the "G" around the mark on every side. Don't tint the mark, don't outline it, don't drop a shadow on it.</div>
+    </div>
+  </div>
+</body>
+</html>

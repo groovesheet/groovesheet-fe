@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Upload Card</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  /* Lifted from src/components/Hero.css — .upload-area + .upload-drop-zone */
+  .stage { padding: 48px; background: #171717; border-radius: 16px; position: relative; overflow: hidden; }
+  .stage::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, #171E43 1.5px, transparent 1.5px); background-size: 43px 43px; opacity: 0.5; pointer-events: none; }
+
+  .upload-area {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+    width: 100%; max-width: 640px; margin: 0 auto;
+    min-height: 480px;
+    padding: 8px 14px 14px 14px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.08) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37), inset 0 1px 1px 0 rgba(255,255,255,0.15), inset 0 -1px 1px 0 rgba(0,0,0,0.10);
+    box-sizing: border-box;
+    gap: 8.527px;
+    border-radius: 16px;
+  }
+
+  /* Inner dashed drop zone */
+  .upload-drop-zone {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 17.053px;
+    width: 100%; flex: 1;
+    padding: 32px 17.053px 17.053px;
+    background: rgba(50, 48, 51, 0.5);
+    border: 2.842px dashed rgba(255,255,255,0.10);
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+  .upload-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22.738px; width: 100%; }
+  .upload-visual-group { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .file-formats-visual { width: 182px; height: 150.3px; display: flex; align-items: center; justify-content: center; }
+  .file-formats-visual img { width: 100%; height: 100%; object-fit: contain; }
+  .upload-text-group { display: flex; flex-direction: column; align-items: center; gap: 6.869px; text-align: center; }
+  .upload-main-text { color: #f4f4f4; font-family: var(--font-family-sans); font-size: 22.898px; font-weight: 400; line-height: 25.187px; margin: 0; }
+  .upload-sub-text { color: var(--color-muted-foreground); font-family: var(--font-family-sans); font-size: 13.739px; font-weight: 400; line-height: 25.187px; margin: 0; }
+
+  .browse-files-btn {
+    display: flex; justify-content: center; align-items: center; gap: 8.527px;
+    width: 152.769px; height: 46.186px;
+    border-radius: 4px; background: #012FA7; border: none;
+    color: #fff; font-family: var(--font-family-sans);
+    font-size: 17.053px; font-weight: 400; line-height: 22.738px;
+    cursor: pointer;
+  }
+
+  .anatomy { margin-top: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .anatomy .panel { background: var(--color-panel2); border-radius: 13px; padding: 22px; }
+  .anatomy h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 12px; font-weight: 500; }
+  .anatomy ul { margin: 0; padding-left: 18px; color: var(--color-foreground); font-size: 13px; line-height: 1.7; }
+  .anatomy code { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-primary); background: rgba(1,47,167,0.1); padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Upload card</h1>
+    <p class="card-sub">The product's center of gravity. Outer glass shell with a 1px white-18% border holds an inner dashed drop-zone. Lifted directly from Hero.css — supported-formats illustration, dual-line copy, and a 152px Browse Files button.</p>
+
+    <div class="stage">
+      <div class="upload-area">
+        <div class="upload-drop-zone">
+          <div class="upload-content-wrapper">
+            <div class="upload-visual-group">
+              <div class="file-formats-visual">
+                <img src="../assets/images/hero_upload_img_dark.png" alt="Supported audio formats" />
+              </div>
+              <div class="upload-text-group">
+                <p class="upload-main-text">Drag and drop an audio file</p>
+                <p class="upload-sub-text">MP3, WAV, FLAC up to 50MB</p>
+              </div>
+            </div>
+            <button class="browse-files-btn">Browse Files</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anatomy">
+      <div class="panel">
+        <h4>Anatomy</h4>
+        <ul>
+          <li>Outer <code>upload-area</code> · padding <code>8 14 14 14px</code> · radius <code>16px</code></li>
+          <li>Glass: linear-gradient white-08 → 04 → 08 + <code>backdrop-filter: blur(20px) saturate(180%)</code></li>
+          <li>Inner <code>upload-drop-zone</code> · <code>2.842px dashed</code> · radius <code>12px</code> · bg <code>rgba(50,48,51,0.5)</code></li>
+          <li>Format glyph 182×150 · main text 22.9px · sub 13.7px</li>
+          <li>Button <code>152.77 × 46.19px</code> · 17px text · 4px radius</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>States</h4>
+        <ul>
+          <li><b>Idle:</b> dashed white-10% inner border</li>
+          <li><b>Drag-over:</b> outer border switches to <code>#012FA7</code> + blue-tinted gradient</li>
+          <li><b>Uploading:</b> drop zone replaced by 46px progress row + Cancel</li>
+          <li><b>Complete:</b> outer border green, two stacked download buttons (98px tall)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

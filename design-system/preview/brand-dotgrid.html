@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Brand — Dot grid</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .tile { border-radius: 13px; padding: 32px; min-height: 260px; position: relative; overflow: hidden; }
+  .tile h3 { margin: 0; font-size: 20px; font-weight: 500; position: relative; z-index: 1; }
+  .tile p { margin: 6px 0 0; font-size: 13px; line-height: 1.55; position: relative; z-index: 1; max-width: 320px; }
+  .tile.dark { background: #171717; color: #fff; }
+  .tile.dark::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, #171E43 1.5px, transparent 1.5px); background-size: 43px 43px; opacity: 0.5; }
+  .tile.dark p { color: rgba(255,255,255,0.6); }
+  .tile.light { background: #fff; color: #000; border: 1px solid #e5e5e5; }
+  .tile.light::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, #B8D4FF 1.5px, transparent 1.5px); background-size: 43px 43px; opacity: 0.7; }
+  .tile.light p { color: #666; }
+
+  .specs { margin-top: 24px; padding: 24px; background: var(--color-panel2); border-radius: 13px; }
+  .specs h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 14px; font-weight: 500; }
+  .specs pre { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-foreground); margin: 0; line-height: 1.7; white-space: pre-wrap; }
+  .specs pre b { color: var(--color-primary); }
+</style>
+</head>
+<body>
+  <div class="card-frame">
+    <p class="card-eyebrow">Brand</p>
+    <h1 class="card-title">Dot grid</h1>
+    <p class="card-sub">The brand's signature texture. Runs across every dark surface like compressed staff paper — so subtle most users won't consciously register it, but it's what makes the canvas feel like GrooveSheet's canvas.</p>
+
+    <div class="grid">
+      <div class="tile dark"><h3>Dark canvas</h3><p>#171E43 dots at 35–50% opacity, 43px spacing, fixed to viewport so it doesn't scroll.</p></div>
+      <div class="tile light"><h3>Light canvas</h3><p>#B8D4FF dots, otherwise identical pattern. The only token that swaps with theme.</p></div>
+    </div>
+
+    <div class="specs">
+      <h4>The CSS</h4>
+<pre>background-image: <b>radial-gradient(circle,</b> var(--color-dot-pattern) <b>1.5px,</b> transparent 1.5px<b>)</b>;
+background-size: <b>43px 43px</b>;
+background-attachment: <b>fixed</b>;
+opacity: <b>0.35</b>;</pre>
+    </div>
+  </div>
+</body>
+</html>

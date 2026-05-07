@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Chips</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row + .row { margin-top: 12px; }
+
+  /* Chip — pill, 28px tall, sits on white-3% with white-10% border. Selected state is solid cobalt. */
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 12px;
+    border-radius: 120px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: var(--color-foreground);
+    font-family: var(--font-family-sans);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+  }
+  .chip:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+  .chip .x {
+    width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: rgba(255,255,255,0.5);
+    margin-right: -4px;
+  }
+  .chip .x:hover { color: #fff; }
+  .chip .x svg { width: 10px; height: 10px; }
+
+  /* Selected — cobalt fill */
+  .chip.on {
+    background: var(--color-primary); border-color: var(--color-primary); color: #fff;
+  }
+  .chip.on:hover { background: #0139C7; }
+  .chip.on .x { color: rgba(255,255,255,0.7); }
+
+  /* Leading dot for instrument chips */
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+  .chip.on .dot { background: #fff; opacity: 1; }
+
+  /* Counter chip — used in filter bar */
+  .chip .count {
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    background: rgba(255,255,255,0.08);
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-right: -4px;
+  }
+  .chip.on .count { background: rgba(255,255,255,0.18); }
+
+  /* Field-style filter bar — chips embedded in a tinted strip */
+  .filter-bar {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    padding: 12px 14px;
+    background: var(--color-panel1);
+    border-radius: 13px;
+  }
+  .filter-bar .lab {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--color-muted-foreground); margin-right: 4px;
+  }
+  .filter-bar .clear {
+    margin-left: auto;
+    font-size: 12px; font-weight: 500;
+    color: var(--color-muted-foreground);
+    background: none; border: 0; cursor: pointer;
+    padding: 4px 8px; border-radius: 6px;
+  }
+  .filter-bar .clear:hover { color: var(--color-text); }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Chips</h1>
+    <p class="card-sub">Pill-shaped, 28px tall, two states: idle (faint outline) and selected (solid cobalt). Used for instrument filters, tag rails, and removable applied filters. Counter affixes on the right when count matters.</p>
+
+    <div class="group">
+      <h3>Filter chips — instrument selector</h3>
+      <div class="row">
+        <button class="chip on"><span class="dot"></span>All</button>
+        <button class="chip"><span class="dot"></span>Drums</button>
+        <button class="chip"><span class="dot"></span>Bass</button>
+        <button class="chip"><span class="dot"></span>Piano</button>
+        <button class="chip"><span class="dot"></span>Vocals</button>
+        <button class="chip"><span class="dot"></span>Guitar</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Tag chips — removable</h3>
+      <div class="row">
+        <span class="chip">120 BPM <span class="x" role="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>
+        <span class="chip">4/4 <span class="x" role="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>
+        <span class="chip">Last 7 days <span class="x" role="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>
+        <span class="chip on">Complete only <span class="x" role="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Filter bar with counters</h3>
+      <div class="filter-bar">
+        <span class="lab">Filter</span>
+        <button class="chip on">All <span class="count">128</span></button>
+        <button class="chip">Drums <span class="count">42</span></button>
+        <button class="chip">Bass <span class="count">31</span></button>
+        <button class="chip">Piano <span class="count">28</span></button>
+        <button class="chip">Vocals <span class="count">19</span></button>
+        <button class="chip">Guitar <span class="count">8</span></button>
+        <button class="clear">Clear</button>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Height</dt><dd>28px</dd></div>
+      <div><dt>Radius</dt><dd>120px (pill)</dd></div>
+      <div><dt>Text</dt><dd>13px / 500</dd></div>
+      <div><dt>Selected</dt><dd>Cobalt fill</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

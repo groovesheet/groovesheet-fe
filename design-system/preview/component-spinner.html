@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Spinner &amp; loaders</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 32px; align-items: center; }
+
+  /* Brand circular spinner — cobalt arc on a faint ring */
+  .gs-spin {
+    display: inline-block;
+    border-radius: 50%;
+    border-style: solid;
+    border-color: rgba(255,255,255,0.08);
+    border-top-color: var(--color-primary);
+    animation: gs-spin 0.9s linear infinite;
+  }
+  .gs-spin.s12 { width: 12px; height: 12px; border-width: 2px; }
+  .gs-spin.s16 { width: 16px; height: 16px; border-width: 2px; }
+  .gs-spin.s24 { width: 24px; height: 24px; border-width: 2.5px; }
+  .gs-spin.s40 { width: 40px; height: 40px; border-width: 3px; }
+  .gs-spin.s64 { width: 64px; height: 64px; border-width: 4px; }
+  @keyframes gs-spin { to { transform: rotate(360deg); } }
+
+  /* Inline loader — text + small spinner, used in buttons and rows */
+  .inline-load {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--color-foreground);
+  }
+
+  /* Loading button — spinner replaces icon, text dims */
+  .gs-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; padding: 0 20px;
+    border: 1px solid transparent; border-radius: 8px;
+    font-family: var(--font-family-sans); font-size: 14px; font-weight: 500;
+    line-height: 1; cursor: pointer; outline: none;
+    background: var(--color-primary); color: #fff;
+  }
+  .gs-btn.loading { background: #0138C0; cursor: wait; }
+  .gs-btn .gs-spin { border-top-color: #fff; border-color: rgba(255,255,255,0.32); border-top-color: #fff; }
+
+  /* Indeterminate bar — for unknown-duration tasks */
+  .bar {
+    position: relative; height: 4px; width: 320px;
+    border-radius: 120px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .bar::after {
+    content: ''; position: absolute; inset: 0;
+    width: 35%;
+    background: linear-gradient(90deg, #012FA7, #0139C7);
+    border-radius: inherit;
+    animation: gs-bar 1.4s cubic-bezier(.4,0,.2,1) infinite;
+  }
+  @keyframes gs-bar {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(370%); }
+  }
+
+  /* Dot pulse — for "thinking" or live-update states */
+  .dots { display: inline-flex; gap: 4px; align-items: center; }
+  .dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--color-primary);
+    animation: gs-dots 1.2s ease-in-out infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.15s; }
+  .dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes gs-dots {
+    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-3px); }
+  }
+
+  /* Big "transcribing" loader — used on the upload card while a job runs */
+  .hero-load {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    padding: 36px 24px;
+    background: var(--color-panel1); border-radius: 13px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .hero-load .label {
+    font-size: 16px; font-weight: 500; color: var(--color-text);
+    letter-spacing: -0.1px;
+  }
+  .hero-load .spec {
+    font-size: 12px;
+  }
+
+  .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted-foreground); margin-top: 8px; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Spinner &amp; loaders</h1>
+    <p class="card-sub">A single circular spinner pattern at five sizes — cobalt arc on a faint ring, 0.9s linear. Plus three companions: an indeterminate progress bar, a dot pulse for "thinking," and a hero loader for the upload card while a job runs.</p>
+
+    <div class="group">
+      <h3>Spinner sizes</h3>
+      <div class="row">
+        <div class="col"><span class="gs-spin s12"></span><span class="lbl">12</span></div>
+        <div class="col"><span class="gs-spin s16"></span><span class="lbl">16</span></div>
+        <div class="col"><span class="gs-spin s24"></span><span class="lbl">24</span></div>
+        <div class="col"><span class="gs-spin s40"></span><span class="lbl">40</span></div>
+        <div class="col"><span class="gs-spin s64"></span><span class="lbl">64</span></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>In context</h3>
+      <div class="row">
+        <button class="gs-btn loading"><span class="gs-spin s16"></span>Transcribing…</button>
+        <span class="inline-load"><span class="gs-spin s16"></span>Loading history</span>
+        <span class="dots" aria-label="thinking"><span></span><span></span><span></span></span>
+        <div class="bar"></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Hero loader</h3>
+      <div class="hero-load">
+        <span class="gs-spin s64"></span>
+        <span class="label">Detecting tempo &amp; time signature</span>
+        <span class="spec">Triplet Fill 16-bar.wav · 0:42</span>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Arc</dt><dd>Cobalt #012FA7</dd></div>
+      <div><dt>Track</dt><dd>White 8%</dd></div>
+      <div><dt>Speed</dt><dd>0.9s linear</dd></div>
+      <div><dt>Bar</dt><dd>1.4s indeterminate</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Colors — Brand</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .hero-swatch { background: var(--color-primary); border-radius: 16px; padding: 60px; display: flex; align-items: flex-end; justify-content: space-between; min-height: 280px; box-shadow: 0 8px 32px rgba(1,47,167,0.3); }
+  .hero-swatch h2 { font-size: 56px; font-weight: 400; color: #fff; margin: 0; letter-spacing: -1px; }
+  .hero-swatch .vals { font-family: var(--font-family-mono); font-size: 12px; color: rgba(255,255,255,0.7); text-align: right; line-height: 1.8; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .swatch { padding: 24px; border-radius: 12px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; }
+  .swatch .name { font-size: 14px; font-weight: 500; }
+  .swatch .hex { font-family: var(--font-family-mono); font-size: 11px; opacity: 0.7; }
+  .s-primary { background: var(--color-primary); color: #fff; }
+  .s-hover { background: var(--color-primary-hover); color: #fff; }
+  .s-press { background: var(--color-primary-press); color: #fff; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Colors</p>
+    <h1 class="card-title">Brand blue</h1>
+    <p class="card-sub">A single saturated cobalt is the entire brand palette. It appears at full strength on every CTA, the popular-plan ribbon, and feature-card chrome. No tinted variants in marketing — only interaction states.</p>
+
+    <div class="hero-swatch">
+      <h2>#012FA7</h2>
+      <div class="vals">RGB 1 · 47 · 167<br/>HSL 222° · 99% · 33%<br/>OKLCH 33% · 0.18 · 268</div>
+    </div>
+
+    <div class="row">
+      <div class="swatch s-primary"><div class="name">Primary</div><div class="hex">#012FA7</div></div>
+      <div class="swatch s-hover"><div class="name">Hover</div><div class="hex">#0139C7</div></div>
+      <div class="swatch s-press"><div class="name">Press</div><div class="hex">#0138C0</div></div>
+    </div>
+  </div>
+</body>
+</html>

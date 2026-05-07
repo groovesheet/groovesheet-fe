@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Stat tiles</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid.three { grid-template-columns: repeat(3, 1fr); }
+
+  .tile {
+    background: var(--color-panel1);
+    border-radius: 13px;
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .tile .label {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--color-muted-foreground);
+    margin: 0;
+    text-transform: none;
+  }
+  .tile .value {
+    font-size: 40px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: var(--color-text);
+    margin: 0;
+  }
+  .tile .value .unit {
+    font-size: 14px; font-weight: 400; color: var(--color-muted-foreground);
+    letter-spacing: 0; margin-left: 4px;
+  }
+  .tile .delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 500;
+    padding: 2px 8px; border-radius: 4px;
+    width: fit-content;
+  }
+  .delta.up { background: rgba(34,197,94,0.16); color: #22c55e; }
+  .delta.down { background: rgba(255,107,107,0.16); color: #ff6b6b; }
+  .delta.flat { background: rgba(255,255,255,0.06); color: var(--color-muted-foreground); }
+  .delta svg { width: 10px; height: 10px; }
+
+  /* Tile w/ inline meter (minutes used) */
+  .tile.meter .meter-bar {
+    height: 6px; border-radius: 3px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden; position: relative;
+  }
+  .tile.meter .meter-bar > span {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, #012FA7, #0139C7);
+    border-radius: 3px;
+  }
+  .tile.meter .meter-meta {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-family-mono);
+    font-size: 11px; color: var(--color-muted-foreground);
+  }
+
+  /* Tile w/ sparkline */
+  .tile.spark { gap: 8px; }
+  .tile.spark svg { width: 100%; height: 38px; display: block; }
+
+  /* Brand-frame variant — for the headline metric */
+  .tile.frame {
+    background: var(--color-primary);
+    padding: 12px;
+    border-radius: 16px;
+  }
+  .tile.frame > .inner {
+    background: var(--color-panel1);
+    border-radius: 13px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .tile.frame .value { color: var(--color-text); }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame .tile { background: #fff; border: 1px solid #e5e5e5; }
+  .light-frame .tile .label { color: #666; }
+  .light-frame .tile .value { color: #000; }
+  .light-frame .tile.meter .meter-bar { background: #f0f0f0; }
+  .light-frame .tile.frame { background: var(--color-primary); border: 0; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Stat tiles</h1>
+    <p class="card-sub">Single-number readouts for the account dashboard. Numerals borrow the pricing-card type treatment — 40px / weight 300 / -1px tracking — so the figure feels handsome rather than aggressive. Optional delta chip, meter, or sparkline below.</p>
+
+    <div class="group">
+      <h3>Default grid</h3>
+      <div class="grid">
+        <div class="tile">
+          <p class="label">Tracks transcribed</p>
+          <p class="value">128</p>
+          <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 14l7-7 7 7"/></svg>+18 this week</span>
+        </div>
+        <div class="tile">
+          <p class="label">Average accuracy</p>
+          <p class="value">94<span class="unit">%</span></p>
+          <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 14l7-7 7 7"/></svg>+1.2pp</span>
+        </div>
+        <div class="tile">
+          <p class="label">Avg. processing time</p>
+          <p class="value">42<span class="unit">s</span></p>
+          <span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 10l7 7 7-7"/></svg>-8s</span>
+        </div>
+        <div class="tile">
+          <p class="label">Failed jobs</p>
+          <p class="value">3</p>
+          <span class="delta flat">No change</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>With meter · usage</h3>
+      <div class="grid three">
+        <div class="tile meter">
+          <p class="label">Minutes used this month</p>
+          <p class="value">87<span class="unit">/ 120</span></p>
+          <div class="meter-bar"><span style="width:72.5%"></span></div>
+          <div class="meter-meta"><span>72.5%</span><span>Renews May 14</span></div>
+        </div>
+        <div class="tile meter">
+          <p class="label">Top-up minutes</p>
+          <p class="value">240</p>
+          <div class="meter-bar"><span style="width:24%"></span></div>
+          <div class="meter-meta"><span>57 of 240 used</span><span>No expiry</span></div>
+        </div>
+        <div class="tile meter">
+          <p class="label">Storage</p>
+          <p class="value">3.4<span class="unit">/ 10 GB</span></p>
+          <div class="meter-bar"><span style="width:34%"></span></div>
+          <div class="meter-meta"><span>34%</span><span>136 files</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>With sparkline</h3>
+      <div class="grid three">
+        <div class="tile spark">
+          <p class="label">Daily uploads · last 14 days</p>
+          <p class="value">22</p>
+          <svg viewBox="0 0 280 38" preserveAspectRatio="none">
+            <polyline points="0,28 20,24 40,18 60,22 80,14 100,16 120,10 140,12 160,8 180,12 200,6 220,10 240,4 260,8 280,2"
+              fill="none" stroke="#012FA7" stroke-width="2"/>
+            <polyline points="0,28 20,24 40,18 60,22 80,14 100,16 120,10 140,12 160,8 180,12 200,6 220,10 240,4 260,8 280,2 280,38 0,38"
+              fill="rgba(1,47,167,0.18)" stroke="none"/>
+          </svg>
+        </div>
+        <div class="tile spark">
+          <p class="label">Accuracy · last 14 days</p>
+          <p class="value">94<span class="unit">%</span></p>
+          <svg viewBox="0 0 280 38" preserveAspectRatio="none">
+            <polyline points="0,16 20,18 40,14 60,12 80,16 100,10 120,12 140,8 160,10 180,6 200,8 220,4 240,6 260,4 280,2"
+              fill="none" stroke="#22c55e" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="tile spark">
+          <p class="label">Avg. job time</p>
+          <p class="value">42<span class="unit">s</span></p>
+          <svg viewBox="0 0 280 38" preserveAspectRatio="none">
+            <polyline points="0,8 20,10 40,12 60,10 80,16 100,14 120,18 140,14 160,20 180,18 200,22 220,20 240,26 260,24 280,28"
+              fill="none" stroke="#ff6b6b" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Framed (headline metric)</h3>
+      <div class="grid three">
+        <div class="tile frame">
+          <div class="inner">
+            <p class="label">Total minutes processed</p>
+            <p class="value">1,284<span class="unit">min</span></p>
+            <span class="delta up" style="background:rgba(34,197,94,0.18)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 14l7-7 7 7"/></svg>+22% MoM</span>
+          </div>
+        </div>
+        <div class="tile">
+          <p class="label">Plan</p>
+          <p class="value" style="font-size:24px;font-weight:500">Professional</p>
+          <p class="label" style="font-size:13px;color:var(--color-muted-foreground)">$24/mo · renews May 14, 2026</p>
+        </div>
+        <div class="tile">
+          <p class="label">Team seats</p>
+          <p class="value">4 <span class="unit">of 5</span></p>
+          <span class="delta flat">1 invitation pending</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group light-frame" data-theme="light">
+      <h3>Light</h3>
+      <div class="grid three">
+        <div class="tile">
+          <p class="label">Tracks transcribed</p>
+          <p class="value">128</p>
+          <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 14l7-7 7 7"/></svg>+18 this week</span>
+        </div>
+        <div class="tile meter">
+          <p class="label">Minutes used</p>
+          <p class="value">87<span class="unit">/ 120</span></p>
+          <div class="meter-bar"><span style="width:72.5%"></span></div>
+          <div class="meter-meta"><span>72.5%</span><span>Renews May 14</span></div>
+        </div>
+        <div class="tile spark">
+          <p class="label">Daily uploads</p>
+          <p class="value">22</p>
+          <svg viewBox="0 0 280 38" preserveAspectRatio="none">
+            <polyline points="0,28 20,24 40,18 60,22 80,14 100,16 120,10 140,12 160,8 180,12 200,6 220,10 240,4 260,8 280,2"
+              fill="none" stroke="#012FA7" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Numeral</dt><dd>40px / 300 / -1px</dd></div>
+      <div><dt>Label</dt><dd>12px muted</dd></div>
+      <div><dt>Delta chip</dt><dd>12px / 500 · 4px radius</dd></div>
+      <div><dt>Meter</dt><dd>6px · cobalt gradient</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

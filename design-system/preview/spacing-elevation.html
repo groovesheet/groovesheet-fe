@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spacing — Elevation & motion</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+  .tile { background: var(--color-panel1); border-radius: 13px; padding: 24px; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tile .name { font-size: 14px; font-weight: 500; color: var(--color-text); }
+  .tile .css { font-family: var(--font-family-mono); font-size: 10px; color: var(--color-muted-foreground); line-height: 1.6; word-break: break-all; }
+  .e1 { box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37); }
+  .e2 { box-shadow: 0 4px 12px rgba(1,47,167,0.3); background: var(--color-primary); }
+  .e2 .name, .e2 .css { color: rgba(255,255,255,0.95); }
+  .e2 .css { color: rgba(255,255,255,0.7); }
+  .e3 { box-shadow: 0 8px 24px rgba(0,0,0,0.37); }
+
+  .motion { background: var(--color-panel2); border-radius: 13px; padding: 28px; }
+  .motion h3 { font-size: 18px; font-weight: 500; margin: 0 0 16px; color: var(--color-text); }
+  .motion .row { display: flex; gap: 16px; align-items: center; padding: 12px 0; border-top: 1px solid var(--color-border-light); }
+  .motion .row:first-child { border-top: 0; }
+  .motion .label { width: 220px; font-size: 13px; color: var(--color-text); }
+  .motion .value { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); }
+  .motion .when { flex: 1; font-size: 13px; color: var(--color-muted-foreground); }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Spacing</p>
+    <h1 class="card-title">Elevation &amp; motion</h1>
+    <p class="card-sub">Three shadows, two timings. The deliberate slow theme crossfade (1.2s) is the system's signature motion choice.</p>
+
+    <div class="grid">
+      <div class="tile e1"><div class="name">Card</div><div class="css">0 8px 32px 0 rgba(0,0,0,0.37)</div></div>
+      <div class="tile e2"><div class="name">Primary glow</div><div class="css">0 4px 12px rgba(1,47,167,0.3)</div></div>
+      <div class="tile e3"><div class="name">Dropdown</div><div class="css">0 8px 24px rgba(0,0,0,0.37)</div></div>
+    </div>
+
+    <div class="motion">
+      <h3>Motion timings</h3>
+      <div class="row"><div class="label">Theme crossfade</div><div class="value">1.2s ease</div><div class="when">All bg, fg, border properties when toggling dark / light.</div></div>
+      <div class="row"><div class="label">Default UI</div><div class="value">0.3s ease</div><div class="when">Hover lifts, dropdown open/close, modal in.</div></div>
+      <div class="row"><div class="label">Fast UI</div><div class="value">0.2s ease</div><div class="when">Button color changes, tab indicator slide.</div></div>
+      <div class="row"><div class="label">Hover lift</div><div class="value">translateY(−2px)</div><div class="when">Cards and primary buttons.</div></div>
+      <div class="row"><div class="label">Press</div><div class="value">scale(1.1)</div><div class="when">Close buttons only.</div></div>
+    </div>
+  </div>
+</body>
+</html>

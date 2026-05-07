@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Buttons</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .section { margin-top: 32px; }
+  .section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 12px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 24px; background: var(--color-panel2); border-radius: 13px; }
+
+  /* One button. One height (40px). One radius (8px). One text size (14px / 500). */
+  .gs-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: var(--font-family-sans);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    outline: none;
+    white-space: nowrap;
+  }
+  .gs-btn-primary { background: #012FA7; color: #fff; }
+  .gs-btn-primary:hover { background: #0139C7; }
+  .gs-btn-secondary { background: transparent; color: #f4f4f4; border-color: rgba(255,255,255,0.18); }
+  .gs-btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.32); }
+  .gs-btn-ghost { background: transparent; color: var(--color-muted-foreground); }
+  .gs-btn-ghost:hover { color: #fff; background: rgba(255,255,255,0.04); }
+
+  .gs-btn[disabled],
+  .gs-btn-disabled { background: #3d3b3e; color: rgba(255,255,255,0.4); border-color: transparent; cursor: not-allowed; }
+
+  .arrow { width: 14px; height: 14px; display: inline-block; }
+  .arrow svg { width: 100%; height: 100%; display: block; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Buttons</h1>
+    <p class="card-sub">One button. One height, one radius, one text size — only the surface treatment changes. Hierarchy comes from variant (Primary, Secondary, Ghost), not from geometry.</p>
+
+    <div class="section">
+      <h3>Variants</h3>
+      <div class="row">
+        <button class="gs-btn gs-btn-primary">Browse Files</button>
+        <button class="gs-btn gs-btn-secondary">Sign In</button>
+        <button class="gs-btn gs-btn-ghost">Cancel</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>With icon</h3>
+      <div class="row">
+        <button class="gs-btn gs-btn-primary">Download <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+        <button class="gs-btn gs-btn-secondary"><span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span> Back</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>States</h3>
+      <div class="row">
+        <button class="gs-btn gs-btn-primary">Default</button>
+        <button class="gs-btn gs-btn-primary" style="background:#0139C7">Hover</button>
+        <button class="gs-btn gs-btn-primary" style="background:#0138C0">Press</button>
+        <button class="gs-btn gs-btn-disabled">Disabled</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Specs</h3>
+      <dl class="legend">
+        <div><dt>Height</dt><dd>40px</dd></div>
+        <div><dt>Radius</dt><dd>8px</dd></div>
+        <div><dt>Text</dt><dd>14px / 500</dd></div>
+        <div><dt>Padding</dt><dd>0 · 20px</dd></div>
+      </dl>
+    </div>
+  </div>
+</body>
+</html>

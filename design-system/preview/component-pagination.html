@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Pagination</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .section { margin-top: 32px; }
+  .section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 12px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; padding: 24px 28px; background: var(--color-panel2); border-radius: 13px; }
+
+  .pager { display: inline-flex; align-items: center; gap: 4px; }
+  .pager button {
+    min-width: 32px; height: 32px;
+    padding: 0 10px;
+    background: transparent;
+    color: #f4f4f4;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-family: var(--font-family-sans); font-size: 13px; font-weight: 500;
+    cursor: pointer;
+  }
+  .pager button:hover { background: rgba(255,255,255,0.05); }
+  .pager .arrow { display: inline-flex; align-items: center; justify-content: center; }
+  .pager .arrow svg { width: 14px; height: 14px; }
+  .pager .current { background: #012FA7; color: #fff; }
+  .pager .current:hover { background: #0139C7; }
+  .pager .ellipsis { color: var(--color-muted-foreground); padding: 0 4px; cursor: default; }
+  .pager .ellipsis:hover { background: transparent; }
+  .pager [disabled] { color: rgba(255,255,255,0.3); cursor: not-allowed; }
+  .pager [disabled]:hover { background: transparent; }
+
+  .compact-bar {
+    display: inline-flex; align-items: center; gap: 12px;
+    height: 36px; padding: 0 4px 0 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: var(--color-muted-foreground);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .compact-bar .count { color: var(--color-text); }
+  .compact-bar .divider { width: 1px; height: 16px; background: rgba(255,255,255,0.1); }
+  .compact-bar .nav { display: inline-flex; gap: 2px; }
+  .compact-bar .nav button {
+    min-width: 28px; width: 28px; height: 28px;
+    padding: 0;
+    color: #f4f4f4;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .compact-bar .nav button svg { width: 12px; height: 12px; stroke: currentColor; }
+
+  .summary {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--color-muted-foreground);
+  }
+  .summary strong { color: var(--color-text); font-weight: 500; }
+  .ps {
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .ps select {
+    background: rgba(255,255,255,0.04); color: #f4f4f4;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+    padding: 4px 8px; font-size: 12px; font-family: inherit;
+    -webkit-appearance: none; appearance: none;
+  }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Pagination</h1>
+    <p class="card-sub">For paged lists like transcription history. Numbers, prev/next chevrons, ellipsis for skipped ranges. The active page wears brand blue; everything else is ghost-by-default and only fills on hover.</p>
+
+    <div class="section">
+      <h3>Numbered</h3>
+      <div class="row">
+        <div class="pager">
+          <button class="arrow" aria-label="Previous"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3L5 7l4 4"/></svg></button>
+          <button>1</button>
+          <button>2</button>
+          <button class="current">3</button>
+          <button>4</button>
+          <button>5</button>
+          <span class="ellipsis">…</span>
+          <button>27</button>
+          <button class="arrow" aria-label="Next"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l4 4-4 4"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Edge states</h3>
+      <div class="row">
+        <div class="pager">
+          <button class="arrow" disabled aria-label="Previous"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3L5 7l4 4"/></svg></button>
+          <button class="current">1</button>
+          <button>2</button>
+          <button>3</button>
+          <button class="arrow" aria-label="Next"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l4 4-4 4"/></svg></button>
+        </div>
+        <div class="pager">
+          <button class="arrow" aria-label="Previous"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3L5 7l4 4"/></svg></button>
+          <button>25</button>
+          <button>26</button>
+          <button class="current">27</button>
+          <button class="arrow" disabled aria-label="Next"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l4 4-4 4"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Compact</h3>
+      <div class="row">
+        <div class="compact-bar">
+          <span><span class="count">61–80</span> of 540</span>
+          <span class="divider"></span>
+          <div class="nav">
+            <button class="arrow" aria-label="Previous"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3L5 7l4 4"/></svg></button>
+            <button class="arrow" aria-label="Next"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3l4 4-4 4"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Footer summary</h3>
+      <div class="row" style="display:block;">
+        <div class="summary">
+          <span>Showing <strong>41 – 60</strong> of <strong>540</strong> transcriptions</span>
+          <div class="ps">
+            <span>Per page</span>
+            <select>
+              <option>20</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Specs</h3>
+      <dl class="legend">
+        <div><dt>Item size</dt><dd>32 × 32</dd></div>
+        <div><dt>Radius</dt><dd>6px</dd></div>
+        <div><dt>Active</dt><dd>#012FA7</dd></div>
+        <div><dt>Hover</dt><dd>white 5%</dd></div>
+      </dl>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Segmented control</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    gap: 2px;
+  }
+  .seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    font-family: var(--font-family-sans);
+    font-size: 13px;
+    font-weight: 500;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .seg button:hover { color: var(--color-text); }
+  .seg button.on {
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .seg button[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+  .seg.lg button { height: 40px; padding: 0 18px; font-size: 14px; }
+  .seg.sm button { height: 26px; padding: 0 10px; font-size: 12px; }
+
+  /* Pill variant — for filters that read like links */
+  .seg.pill {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 120px;
+    padding: 3px;
+  }
+  .seg.pill button { border-radius: 120px; height: 30px; }
+  .seg.pill button.on { background: #fff; color: #012FA7; }
+
+  /* Icon-only */
+  .seg.icons button { padding: 0; width: 32px; }
+  .seg.icons svg { width: 16px; height: 16px; }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame .seg { background: #f6f6f6; border-color: #e5e5e5; }
+  .light-frame .seg button { color: #666; }
+  .light-frame .seg button:hover { color: #000; }
+  .light-frame .seg button.on { background: var(--color-primary); color: #fff; }
+  .light-frame .seg.pill { background: transparent; border-color: #e5e5e5; }
+  .light-frame .seg.pill button.on { background: var(--color-primary); color: #fff; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Segmented control</h1>
+    <p class="card-sub">A small horizontal switch where exactly one option is on at a time. Use for view modes (grid/list), output formats (PDF/MusicXML/MIDI), or scope filters. Different from chips — a segmented control is one tightly-coupled unit.</p>
+
+    <div class="group">
+      <h3>Default · 3 options</h3>
+      <div class="row">
+        <div class="seg" role="tablist">
+          <button class="on">PDF</button>
+          <button>MusicXML</button>
+          <button>MIDI</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>With icons · view mode</h3>
+      <div class="row">
+        <div class="seg icons" role="tablist">
+          <button class="on" aria-label="Grid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></button>
+          <button aria-label="List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          <button aria-label="Timeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Sizes</h3>
+      <div class="row">
+        <div class="seg sm"><button class="on">Mo</button><button>Wk</button><button>Day</button></div>
+        <div class="seg"><button class="on">Month</button><button>Week</button><button>Day</button></div>
+        <div class="seg lg"><button class="on">Month</button><button>Week</button><button>Day</button></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Pill variant</h3>
+      <div class="row">
+        <div class="seg pill"><button class="on">All</button><button>Drums</button><button>Bass</button><button>Piano</button><button>Vocals</button></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Disabled option</h3>
+      <div class="row">
+        <div class="seg"><button class="on">Auto</button><button>Manual</button><button disabled>Batch · Pro only</button></div>
+      </div>
+    </div>
+
+    <div class="group light-frame" data-theme="light">
+      <h3>Light</h3>
+      <div class="row">
+        <div class="seg"><button class="on">PDF</button><button>MusicXML</button><button>MIDI</button></div>
+        <div class="seg pill"><button class="on">All</button><button>Mine</button><button>Shared</button></div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Height</dt><dd>32px (sm 26 / lg 40)</dd></div>
+      <div><dt>Track</dt><dd>surface-light · 8px radius</dd></div>
+      <div><dt>Active</dt><dd>#012FA7 fill · 6px radius</dd></div>
+      <div><dt>Padding</dt><dd>4px track · 0 14px button</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

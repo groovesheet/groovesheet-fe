@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Form field</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+
+  /* Field — label, control, help, error stack */
+  .field { display: flex; flex-direction: column; gap: 6px; max-width: 480px; }
+  .field + .field { margin-top: 18px; }
+  .field-label {
+    font-size: 13px; font-weight: 500; color: var(--color-text);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .field-label .opt {
+    font-weight: 400; font-size: 11px; color: var(--color-muted-foreground);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .field-label .req { color: #ff6b6b; }
+
+  .field-input {
+    height: 40px; padding: 0 12px;
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-input-border);
+    border-radius: 6px;
+    color: var(--color-text);
+    font-family: var(--font-family-sans);
+    font-size: 14px; font-weight: 400;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .field-input::placeholder { color: var(--color-input-placeholder); }
+  .field-input:hover { border-color: rgba(255,255,255,0.32); }
+  .field-input:focus, .field-input.focus { border-color: var(--color-primary); background: var(--color-panel1); }
+
+  .field-help {
+    font-size: 12px; color: var(--color-muted-foreground); line-height: 1.45;
+  }
+
+  /* States */
+  .field.error .field-input { border-color: #ff6b6b; }
+  .field.error .field-help { color: #ff6b6b; display: inline-flex; align-items: center; gap: 6px; }
+  .field.error .field-help::before {
+    content: '!';
+    width: 14px; height: 14px;
+    border-radius: 50%; background: #ff6b6b; color: #1b191c;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+  .field.success .field-input { border-color: #22c55e; }
+  .field.success .field-help { color: #22c55e; display: inline-flex; align-items: center; gap: 6px; }
+  .field.success .field-help::before {
+    content: '✓'; color: #22c55e; font-weight: 700;
+  }
+
+  /* Compound — input with leading icon + trailing affix */
+  .compound {
+    position: relative; display: flex; align-items: stretch;
+    height: 40px;
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-input-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .compound:focus-within { border-color: var(--color-primary); background: var(--color-panel1); }
+  .compound .lead, .compound .tail {
+    display: inline-flex; align-items: center; padding: 0 10px;
+    color: var(--color-muted-foreground);
+    font-size: 13px;
+  }
+  .compound .lead svg { width: 14px; height: 14px; }
+  .compound input {
+    flex: 1;
+    background: transparent; border: 0; outline: none;
+    color: var(--color-text);
+    font-family: var(--font-family-sans);
+    font-size: 14px;
+  }
+  .compound .tail {
+    border-left: 1px solid rgba(255,255,255,0.08);
+    font-family: var(--font-family-mono); font-size: 12px;
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* Textarea */
+  .field textarea.field-input {
+    height: auto; min-height: 96px; padding: 10px 12px; resize: vertical;
+    line-height: 1.45;
+  }
+
+  /* Char counter row */
+  .counter {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--color-muted-foreground);
+  }
+  .counter .num { font-family: var(--font-family-mono); font-size: 11px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Form field</h1>
+    <p class="card-sub">A consistent label + input + help + error stack — 6px gap between rows. Required marked with a small cobalt asterisk; optional marked with a tiny caps tag. Help is 12px muted; on error or success, help inherits the state color and gains a leading marker.</p>
+
+    <div class="group">
+      <h3>Default · focus · disabled</h3>
+      <div class="field">
+        <label class="field-label">Project name</label>
+        <input class="field-input" placeholder="e.g. Album rehearsals" />
+        <span class="field-help">Visible only to you and collaborators.</span>
+      </div>
+      <div class="field">
+        <label class="field-label">Email <span class="req">*</span></label>
+        <input class="field-input focus" value="alex@groovesheet.com" />
+        <span class="field-help">We'll send job-complete notifications here.</span>
+      </div>
+      <div class="field">
+        <label class="field-label">Stripe ID <span class="opt">read only</span></label>
+        <input class="field-input" disabled value="cus_NffrFeUfNV2Hib" style="opacity: 0.55; cursor: not-allowed;" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Error &amp; success</h3>
+      <div class="field error">
+        <label class="field-label">Card number <span class="req">*</span></label>
+        <input class="field-input" value="4242 4242 4242" />
+        <span class="field-help">Card number must be 16 digits.</span>
+      </div>
+      <div class="field success">
+        <label class="field-label">Coupon code <span class="opt">optional</span></label>
+        <input class="field-input" value="ROADIE10" />
+        <span class="field-help">10% off applied to your next invoice.</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Compound &amp; textarea</h3>
+      <div class="field">
+        <label class="field-label">Project URL</label>
+        <div class="compound">
+          <span class="lead">groovesheet.com/</span>
+          <input value="alex/album-rehearsals" />
+          <span class="tail">.gs</span>
+        </div>
+        <span class="field-help">Lowercase, hyphens, no spaces.</span>
+      </div>
+      <div class="field">
+        <label class="field-label">Search</label>
+        <div class="compound">
+          <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input placeholder="Search transcriptions, projects, files…" />
+          <span class="tail">⌘K</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Notes <span class="opt">optional</span></label>
+        <textarea class="field-input" placeholder="Anything to remember about this session — kit, mics, click, etc.">Live recording — slight click bleed in the hi-hat mic.</textarea>
+        <div class="counter"><span>Markdown is supported.</span><span class="num">62 / 280</span></div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Stack gap</dt><dd>6px label · input · help</dd></div>
+      <div><dt>Input</dt><dd>40px · 6px radius</dd></div>
+      <div><dt>Required</dt><dd>* in #ff6b6b</dd></div>
+      <div><dt>Help</dt><dd>12px muted · inherits state</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

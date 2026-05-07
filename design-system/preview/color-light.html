@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Colors — Light Mode</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  body { background: #ffffff; color: #000; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .swatch { border-radius: 12px; padding: 24px; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #e5e5e5; }
+  .swatch .role { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #666; }
+  .swatch .name { font-size: 16px; font-weight: 500; color: #000; margin-top: 6px; }
+  .swatch .hex { font-family: var(--font-family-mono); font-size: 11px; color: #666; }
+  .l-bg { background: #ffffff; }
+  .l-tint { background: #f6f6f6; }
+  .l-input { background: #f6f6f6; }
+  .l-border { background: #e5e5e5; }
+  .l-text { background: #000; color: #fff; }
+  .l-text .role, .l-text .hex { color: rgba(255,255,255,0.6); }
+  .l-text .name { color: #fff; }
+  .l-muted { background: #fff; }
+  .l-muted .name { color: #666; }
+  .l-dot { background: radial-gradient(circle, #B8D4FF 1.5px, transparent 1.5px) #fff; background-size: 16px 16px; }
+  .note { margin-top: 24px; padding: 18px 22px; border: 1px solid #e5e5e5; border-radius: 12px; background: #f6f6f6; font-size: 14px; line-height: 1.5; color: #000; }
+  .note b { color: var(--color-primary); }
+</style>
+</head>
+<body>
+  <div class="card-frame">
+    <p class="card-eyebrow" style="color:#666">Colors · Light mode</p>
+    <h1 class="card-title" style="color:#000">Light surfaces</h1>
+    <p class="card-sub" style="color:#666">Mirror of dark mode. Brand blue stays exactly the same — it works against both palettes. Theme crossfade is intentionally slow (1.2s).</p>
+
+    <div class="grid">
+      <div class="swatch l-bg"><div><div class="role">Background</div><div class="name">Canvas</div></div><div class="hex">#FFFFFF</div></div>
+      <div class="swatch l-tint"><div><div class="role">Tinted</div><div class="name">Section</div></div><div class="hex">#F6F6F6</div></div>
+      <div class="swatch l-border"><div><div class="role">Border</div><div class="name">Hairline</div></div><div class="hex">#E5E5E5</div></div>
+      <div class="swatch l-muted"><div><div class="role">Muted FG</div><div class="name">Secondary text</div></div><div class="hex">#666666</div></div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="swatch l-text"><div><div class="role">Foreground</div><div class="name">Text</div></div><div class="hex">#000000</div></div>
+      <div class="swatch l-input"><div><div class="role">Input</div><div class="name">Field bg</div></div><div class="hex">#F6F6F6</div></div>
+      <div class="swatch l-dot"><div><div class="role">Dot grid</div><div class="name" style="color:#000">Pattern</div></div><div class="hex">#B8D4FF</div></div>
+      <div class="swatch" style="background:#012FA7;color:#fff"><div><div class="role" style="color:rgba(255,255,255,0.7)">Brand</div><div class="name" style="color:#fff">Same in both modes</div></div><div class="hex" style="color:rgba(255,255,255,0.7)">#012FA7</div></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Checkbox &amp; Radio</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 8px; }
+  .stage { background: var(--color-panel2); border-radius: 13px; padding: 24px; }
+  .stage h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+  .stage.span2 { grid-column: 1 / -1; }
+
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; }
+
+  /* Checkbox */
+  .ck { display: inline-flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .ck .box {
+    width: 18px; height: 18px;
+    border: 1.5px solid rgba(255,255,255,0.32);
+    border-radius: 4px;
+    background: transparent;
+    flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .ck .box svg { width: 12px; height: 12px; color: #fff; opacity: 0; }
+  .ck.is-checked .box { background: #012FA7; border-color: #012FA7; }
+  .ck.is-checked .box svg { opacity: 1; }
+  .ck.is-indeterminate .box { background: #012FA7; border-color: #012FA7; }
+  .ck.is-indeterminate .box::after { content: ''; width: 8px; height: 2px; background: #fff; border-radius: 1px; }
+  .ck.is-disabled { opacity: 0.45; cursor: not-allowed; }
+  .ck .label { font-size: 14px; color: #f4f4f4; line-height: 1.45; }
+  .ck .help { display: block; font-size: 12px; color: var(--color-muted-foreground); margin-top: 2px; }
+
+  /* Radio */
+  .rd { display: inline-flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .rd .ring {
+    width: 18px; height: 18px;
+    border: 1.5px solid rgba(255,255,255,0.32);
+    border-radius: 50%;
+    flex: none;
+    margin-top: 1px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .rd .ring::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; opacity: 0; }
+  .rd.is-checked .ring { border-color: #012FA7; background: #012FA7; }
+  .rd.is-checked .ring::after { opacity: 1; }
+  .rd.is-disabled { opacity: 0.45; cursor: not-allowed; }
+  .rd .label { font-size: 14px; color: #f4f4f4; }
+
+  /* Card-style radio (the plan picker pattern) */
+  .card-rd {
+    display: flex; gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .card-rd:hover { border-color: rgba(255,255,255,0.18); }
+  .card-rd.is-checked { border-color: #012FA7; background: rgba(1,47,167,0.08); }
+  .card-rd .ring { margin-top: 2px; }
+  .card-rd .copy { flex: 1; }
+  .card-rd .ttl { font-size: 14px; font-weight: 500; color: #fff; }
+  .card-rd .desc { font-size: 12px; color: var(--color-muted-foreground); margin-top: 2px; line-height: 1.4; }
+  .card-rd .price { font-family: var(--font-family-mono); font-size: 13px; color: #fff; }
+
+  .legend { margin-top: 24px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Checkbox &amp; radio</h1>
+    <p class="card-sub">18px square / circle, 1.5px stroke at white 32%. Selected fills with brand blue and renders the mark in white. Indeterminate is a 2px white minus-bar over a blue square. Card-style radios wrap a copy block and a price for plan pickers.</p>
+
+    <div class="grid">
+      <div class="stage">
+        <h3>Checkbox states</h3>
+        <div class="stack">
+          <label class="ck"><span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span><span class="label">Off</span></label>
+          <label class="ck is-checked"><span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span><span class="label">On</span></label>
+          <label class="ck is-indeterminate"><span class="box"></span><span class="label">Mixed (some children selected)</span></label>
+          <label class="ck is-disabled"><span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span><span class="label">Disabled</span></label>
+        </div>
+      </div>
+
+      <div class="stage">
+        <h3>Radio states</h3>
+        <div class="stack">
+          <label class="rd"><span class="ring"></span><span class="label">Off</span></label>
+          <label class="rd is-checked"><span class="ring"></span><span class="label">On</span></label>
+          <label class="rd is-disabled"><span class="ring"></span><span class="label">Disabled</span></label>
+        </div>
+      </div>
+
+      <div class="stage">
+        <h3>Checkbox group with help text</h3>
+        <div class="stack">
+          <label class="ck is-checked">
+            <span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span>
+            <span class="label">Detect tempo
+              <span class="help">Auto-find the song's BPM and lock the metronome to it.</span>
+            </span>
+          </label>
+          <label class="ck is-checked">
+            <span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span>
+            <span class="label">Detect time signature
+              <span class="help">Best for 4/4, 3/4 and 6/8. Odd meters may need a manual override.</span>
+            </span>
+          </label>
+          <label class="ck">
+            <span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5L5 9.5 10 3.5"/></svg></span>
+            <span class="label">Include ghost notes
+              <span class="help">Picks up soft hits and grace notes — adds detail but also noise.</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="stage">
+        <h3>Radio group</h3>
+        <div class="stack">
+          <label class="rd is-checked"><span class="ring"></span><span class="label">PDF (drum + bass + piano)</span></label>
+          <label class="rd"><span class="ring"></span><span class="label">MusicXML</span></label>
+          <label class="rd"><span class="ring"></span><span class="label">MIDI</span></label>
+          <label class="rd"><span class="ring"></span><span class="label">All formats (.zip)</span></label>
+        </div>
+      </div>
+
+      <div class="stage span2">
+        <h3>Card-style radio (plan picker)</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <label class="card-rd">
+            <span class="ring"></span>
+            <div class="copy">
+              <div class="ttl">Hobbyist</div>
+              <div class="desc">10 min / month · 100 MB / file</div>
+            </div>
+            <div class="price">Free</div>
+          </label>
+          <label class="card-rd is-checked">
+            <span class="ring"></span>
+            <div class="copy">
+              <div class="ttl">Professional</div>
+              <div class="desc">120 min / month · 500 MB / file · Batch processing</div>
+            </div>
+            <div class="price">$10/mo</div>
+          </label>
+          <label class="card-rd">
+            <span class="ring"></span>
+            <div class="copy">
+              <div class="ttl">Enterprise</div>
+              <div class="desc">Unlimited · API access · SSO</div>
+            </div>
+            <div class="price">Contact</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Box</dt><dd>18 × 18</dd></div>
+      <div><dt>Stroke</dt><dd>1.5px</dd></div>
+      <div><dt>Selected</dt><dd>#012FA7</dd></div>
+      <div><dt>Mark</dt><dd>white</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

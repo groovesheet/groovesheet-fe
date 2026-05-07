@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Command palette</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+
+  /* Stage — simulates the dimmed app behind the palette */
+  .stage {
+    position: relative;
+    height: 480px;
+    border-radius: 13px;
+    background: var(--color-background);
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
+    background-size: 43px 43px;
+  }
+  .stage::after {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  /* Palette */
+  .pal {
+    position: absolute; left: 50%; top: 56px;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 32px));
+    background: var(--color-panel1);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 13px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow: hidden;
+    z-index: 1;
+    font-family: var(--font-family-sans);
+  }
+
+  .pal .search {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .pal .search svg { width: 16px; height: 16px; color: var(--color-muted-foreground); flex-shrink: 0; }
+  .pal .search input {
+    flex: 1; background: transparent; border: 0; outline: none;
+    color: var(--color-text);
+    font-family: var(--font-family-sans);
+    font-size: 16px; font-weight: 400;
+  }
+  .pal .search input::placeholder { color: var(--color-input-placeholder); }
+  .pal .search .esc {
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    color: var(--color-muted-foreground);
+    padding: 3px 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .pal .results { padding: 6px; max-height: 360px; overflow: auto; }
+  .pal .lab {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--color-muted-foreground);
+    padding: 10px 10px 6px;
+    font-weight: 500;
+  }
+  .pal .res {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 10px; height: 36px;
+    border-radius: 8px;
+    color: var(--color-foreground);
+    font-size: 13px; cursor: pointer;
+  }
+  .pal .res:hover { background: rgba(255,255,255,0.04); }
+  .pal .res.sel { background: rgba(1,47,167,0.22); color: #fff; }
+  .pal .res .ic {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--color-foreground);
+    flex-shrink: 0;
+  }
+  .pal .res.sel .ic { background: rgba(255,255,255,0.10); color: #fff; }
+  .pal .res .ic svg { width: 12px; height: 12px; }
+  .pal .res .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pal .res .name mark { background: rgba(147,180,255,0.22); color: #fff; padding: 0 1px; border-radius: 2px; }
+  .pal .res .meta {
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    color: var(--color-muted-foreground);
+  }
+  .pal .res.sel .meta { color: rgba(255,255,255,0.7); }
+  .pal .res .kbd {
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    color: var(--color-muted-foreground);
+    padding: 2px 6px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 4px;
+  }
+
+  .pal .foot {
+    display: flex; align-items: center; gap: 14px;
+    padding: 8px 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px; color: var(--color-muted-foreground);
+    background: rgba(0,0,0,0.18);
+  }
+  .pal .foot .key { font-family: var(--font-family-mono); padding: 2px 6px; border: 1px solid rgba(255,255,255,0.10); border-radius: 4px; margin-right: 4px; }
+  .pal .foot .right { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Command palette</h1>
+    <p class="card-sub">⌘K-summoned overlay for navigation and actions. 560px wide, sits 56px from the top of the stage on a dimmed canvas. Sections labelled with 10px caps; selected row uses a translucent cobalt tint, never a hard fill. Highlighted matches use a faint blue mark.</p>
+
+    <div class="group">
+      <h3>Default</h3>
+      <div class="stage">
+        <div class="pal">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input value="trip" placeholder="Search or run a command…" />
+            <span class="esc">esc</span>
+          </div>
+          <div class="results">
+            <div class="lab">Recent transcriptions</div>
+            <div class="res sel">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+              <span class="name"><mark>Trip</mark>let Fill 16-bar.wav</span>
+              <span class="meta">Drums · 124 BPM</span>
+              <span class="kbd">↵</span>
+            </div>
+            <div class="res">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+              <span class="name"><mark>Trip</mark>p Fast Bridge.mp3</span>
+              <span class="meta">Drums · 168 BPM</span>
+            </div>
+
+            <div class="lab">Commands</div>
+            <div class="res">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+              <span class="name">Upload audio…</span>
+              <span class="kbd">⌘U</span>
+            </div>
+            <div class="res">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+              <span class="name">Download last as MusicXML</span>
+              <span class="kbd">⌘⇧X</span>
+            </div>
+            <div class="res">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12c0-3.87-3.13-7-7-7s-7 3.13-7 7"/></svg></span>
+              <span class="name">Toggle theme</span>
+              <span class="kbd">⌘⇧T</span>
+            </div>
+
+            <div class="lab">Jump to</div>
+            <div class="res">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+              <span class="name">Album rehearsals</span>
+              <span class="meta">Project · 12 tracks</span>
+            </div>
+            <div class="res">
+              <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/></svg></span>
+              <span class="name">Billing &amp; usage</span>
+              <span class="meta">Settings</span>
+            </div>
+          </div>
+          <div class="foot">
+            <span><span class="key">↑</span><span class="key">↓</span> Navigate</span>
+            <span><span class="key">↵</span> Open</span>
+            <span class="right">GrooveSheet · v3.4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Width</dt><dd>560px</dd></div>
+      <div><dt>Top inset</dt><dd>56px</dd></div>
+      <div><dt>Row</dt><dd>36px · 13px</dd></div>
+      <div><dt>Selected</dt><dd>Cobalt 22% tint</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

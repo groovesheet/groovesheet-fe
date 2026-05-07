@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Tabs</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+
+  /* Underline tabs */
+  .tabs-u { display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .tabs-u button { background: transparent; border: 0; padding: 14px 18px; color: var(--color-muted-foreground); font-size: 14px; font-weight: 500; cursor: pointer; position: relative; font-family: inherit; transition: color 0.2s; }
+  .tabs-u button:hover { color: var(--color-text); }
+  .tabs-u button.active { color: var(--color-text); }
+  .tabs-u button.active::after { content: ''; position: absolute; bottom: -1px; left: 16px; right: 16px; height: 2px; background: var(--color-primary); border-radius: 2px 2px 0 0; }
+  .tabs-u .count { font-family: var(--font-family-mono); font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); margin-left: 6px; }
+
+  /* Pill tabs */
+  .tabs-p { display: inline-flex; padding: 4px; border-radius: 8px; background: var(--color-panel3); gap: 2px; }
+  .tabs-p button { background: transparent; border: 0; padding: 8px 16px; border-radius: 6px; color: var(--color-muted-foreground); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+  .tabs-p button:hover { color: var(--color-text); }
+  .tabs-p button.active { background: var(--color-primary); color: #fff; }
+
+  /* Vertical tabs (sidebar) */
+  .tabs-v { display: flex; gap: 24px; }
+  .tabs-v nav { display: flex; flex-direction: column; gap: 2px; min-width: 200px; }
+  .tabs-v nav button { display: flex; align-items: center; gap: 10px; background: transparent; border: 0; padding: 10px 14px; border-radius: 6px; color: var(--color-muted-foreground); font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; font-family: inherit; }
+  .tabs-v nav button:hover { background: rgba(255,255,255,0.04); color: var(--color-text); }
+  .tabs-v nav button.active { background: rgba(1,47,167,0.18); color: #93b4ff; }
+  .tabs-v nav button .ico { width: 16px; height: 16px; opacity: 0.8; }
+  .tabs-v .body { flex: 1; padding: 18px; border-radius: 8px; background: rgba(255,255,255,0.03); font-size: 14px; color: var(--color-muted-foreground); }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Tabs</h1>
+    <p class="card-sub">Underline for in-page section switching. Pills for flat option toggling. Vertical for app-shell navigation (account page).</p>
+
+    <div class="group">
+      <h3>Underline</h3>
+      <div class="tabs-u">
+        <button class="active">Account</button>
+        <button>Billing <span class="count">2</span></button>
+        <button>API keys</button>
+        <button>Notifications</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Pill</h3>
+      <div class="tabs-p">
+        <button class="active">All</button>
+        <button>In progress</button>
+        <button>Done</button>
+        <button>Failed</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Vertical (sidebar)</h3>
+      <div class="tabs-v">
+        <nav>
+          <button class="active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg> Account</button>
+          <button><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg> Billing</button>
+          <button><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 13.5V8a2 2 0 0 0-2-2h-7l-2-2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h7"/><circle cx="18" cy="18" r="3"/><path d="m21 21-1.5-1.5"/></svg> API keys</button>
+          <button><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg> Notifications</button>
+          <button><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4l-2 16M9 9H5l4 6H5"/></svg> Usage &amp; quota</button>
+        </nav>
+        <div class="body">Account settings — name, email, password, 2FA. The active item gets a 18% blue tint and a 93b4ff text color. Inactive items are muted; hover lifts to white-on-translucent.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

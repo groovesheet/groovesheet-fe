@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Keyboard keys</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+
+  kbd {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px;
+    padding: 0 6px;
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+  kbd.lg { min-width: 28px; height: 28px; font-size: 13px; padding: 0 8px; }
+
+  .combo { display: inline-flex; align-items: center; gap: 4px; }
+  .combo .plus { color: var(--color-muted-foreground); font-size: 11px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; }
+
+  .shortcut-list {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px 24px;
+    background: var(--color-panel1);
+    border-radius: 13px;
+    padding: 20px 24px;
+  }
+  .shortcut-list dt { font-size: 14px; color: var(--color-text); margin: 0; }
+  .shortcut-list dd { margin: 0; }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame kbd { background: #fff; color: #1b191c; border-color: #d4d4d4; box-shadow: 0 1px 0 #d4d4d4; border-bottom-width: 1px; }
+  .light-frame .shortcut-list { background: #f6f6f6; }
+  .light-frame .shortcut-list dt { color: #1b191c; }
+  .light-frame .combo .plus { color: #888; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Keyboard keys</h1>
+    <p class="card-sub">For shortcut hints inline in copy, in tooltips, and in the dedicated shortcuts overlay. Mono glyphs in slim caps. The bottom border is 2px in dark mode to fake a tactile edge — switched to a 1px shadow in light mode.</p>
+
+    <div class="group">
+      <h3>Single keys</h3>
+      <div class="row">
+        <kbd>⌘</kbd><kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>⏎</kbd><kbd>⌫</kbd><kbd>⎋</kbd><kbd>␣</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>?</kbd>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Combos</h3>
+      <div class="row">
+        <span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>U</kbd></span>
+        <span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>⇧</kbd><span class="plus">+</span><kbd>E</kbd></span>
+        <span class="combo"><kbd>␣</kbd></span>
+        <span class="combo"><kbd>G</kbd> <kbd>H</kbd></span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Sizes</h3>
+      <div class="row">
+        <span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>K</kbd></span>
+        <span class="combo"><kbd class="lg">⌘</kbd><span class="plus">+</span><kbd class="lg">K</kbd></span>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>In a shortcut sheet</h3>
+      <dl class="shortcut-list">
+        <dt>Upload a track</dt>
+        <dd><span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>U</kbd></span></dd>
+        <dt>Toggle playback</dt>
+        <dd><span class="combo"><kbd>␣</kbd></span></dd>
+        <dt>Jump to start</dt>
+        <dd><span class="combo"><kbd>⇧</kbd><span class="plus">+</span><kbd>0</kbd></span></dd>
+        <dt>Export current view</dt>
+        <dd><span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>⇧</kbd><span class="plus">+</span><kbd>E</kbd></span></dd>
+        <dt>Open command bar</dt>
+        <dd><span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>K</kbd></span></dd>
+        <dt>Show all shortcuts</dt>
+        <dd><span class="combo"><kbd>?</kbd></span></dd>
+      </dl>
+    </div>
+
+    <div class="group">
+      <h3>Inline in body copy</h3>
+      <p class="gs-body" style="max-width:680px">
+        Hold <kbd>⌥</kbd> while dragging a region to set a custom loop point; press <kbd>␣</kbd> to play it. Drop the file or hit <span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>U</kbd></span> from anywhere on the page.
+      </p>
+    </div>
+
+    <div class="group light-frame" data-theme="light">
+      <h3>Light</h3>
+      <dl class="shortcut-list">
+        <dt>Upload</dt><dd><span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>U</kbd></span></dd>
+        <dt>Play / pause</dt><dd><span class="combo"><kbd>␣</kbd></span></dd>
+        <dt>Command bar</dt><dd><span class="combo"><kbd>⌘</kbd><span class="plus">+</span><kbd>K</kbd></span></dd>
+      </dl>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Height</dt><dd>22px (lg 28)</dd></div>
+      <div><dt>Surface</dt><dd>white 8% · 14% border</dd></div>
+      <div><dt>Edge</dt><dd>2px bottom border (tactile)</dd></div>
+      <div><dt>Font</dt><dd>11px mono / 500</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Toggles</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+
+  /* Checkbox */
+  .gs-check { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--color-foreground); user-select: none; }
+  .gs-check input { position: absolute; opacity: 0; pointer-events: none; }
+  .gs-check .box { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.32); background: transparent; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+  .gs-check input:checked ~ .box { background: var(--color-primary); border-color: var(--color-primary); }
+  .gs-check .box svg { width: 12px; height: 12px; opacity: 0; transform: scale(0.5); transition: all 0.15s ease; }
+  .gs-check input:checked ~ .box svg { opacity: 1; transform: scale(1); }
+  .gs-check input:disabled ~ .box { background: #2a2a2a; border-color: #3d3b3e; }
+
+  /* Radio */
+  .gs-radio { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--color-foreground); user-select: none; }
+  .gs-radio input { position: absolute; opacity: 0; pointer-events: none; }
+  .gs-radio .ring { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.32); background: transparent; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+  .gs-radio .ring::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; transform: scale(0); transition: transform 0.15s ease; }
+  .gs-radio input:checked ~ .ring { border-color: var(--color-primary); background: var(--color-primary); }
+  .gs-radio input:checked ~ .ring::after { transform: scale(1); }
+
+  /* Switch */
+  .gs-switch { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; color: var(--color-foreground); user-select: none; }
+  .gs-switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .gs-switch .track { position: relative; width: 36px; height: 20px; border-radius: 120px; background: rgba(255,255,255,0.12); transition: background 0.2s ease; }
+  .gs-switch .thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s ease; }
+  .gs-switch input:checked ~ .track { background: var(--color-primary); }
+  .gs-switch input:checked ~ .track .thumb { transform: translateX(16px); }
+  .gs-switch input:disabled ~ .track { opacity: 0.4; cursor: not-allowed; }
+
+  /* Slider */
+  .gs-slider { width: 100%; }
+  .gs-slider input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.12); outline: none; }
+  .gs-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--color-primary); cursor: pointer; box-shadow: 0 0 0 4px rgba(1,47,167,0.18); }
+  .gs-slider .label-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-muted-foreground); margin-bottom: 6px; }
+  .gs-slider .val { color: var(--color-text); font-weight: 500; }
+
+  /* Segmented */
+  .gs-seg { display: inline-flex; padding: 3px; border-radius: 8px; background: var(--color-panel3); border: 1px solid rgba(255,255,255,0.06); gap: 2px; }
+  .gs-seg button { background: transparent; border: 0; padding: 7px 16px; border-radius: 6px; color: var(--color-muted-foreground); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
+  .gs-seg button:hover { color: var(--color-text); }
+  .gs-seg button.active { background: var(--color-primary); color: #fff; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Toggles &amp; selectors</h1>
+    <p class="card-sub">Checkbox for many-of-many. Radio for one-of-many in-line. Switch for instant-effect settings. Segmented for 2–4 short labels. Slider for continuous values.</p>
+
+    <div class="grid">
+      <div class="group">
+        <h3>Checkbox</h3>
+        <div class="stack">
+          <label class="gs-check"><input type="checkbox" checked /><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Email me when transcription completes</label>
+          <label class="gs-check"><input type="checkbox" /><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Send me product updates</label>
+          <label class="gs-check"><input type="checkbox" disabled /><span class="box"><svg viewBox="0 0 24 24"></svg></span> Beta features (Pro plan only)</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Radio</h3>
+        <div class="stack">
+          <label class="gs-radio"><input type="radio" name="export" /><span class="ring"></span> PDF (sheet music)</label>
+          <label class="gs-radio"><input type="radio" name="export" checked /><span class="ring"></span> MusicXML</label>
+          <label class="gs-radio"><input type="radio" name="export" /><span class="ring"></span> MIDI</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Switch</h3>
+        <div class="stack">
+          <label class="gs-switch"><input type="checkbox" checked /><span class="track"><span class="thumb"></span></span> Dark mode</label>
+          <label class="gs-switch"><input type="checkbox" /><span class="track"><span class="thumb"></span></span> Detect swing feel</label>
+          <label class="gs-switch"><input type="checkbox" disabled /><span class="track"><span class="thumb"></span></span> Auto-publish to library</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Segmented</h3>
+        <div class="stack">
+          <div class="gs-seg">
+            <button>Drums</button>
+            <button class="active">Bass</button>
+            <button>Piano</button>
+            <button>Vocals</button>
+          </div>
+          <div class="gs-seg">
+            <button class="active">Monthly</button>
+            <button>Yearly · save 20%</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="group" style="grid-column: 1 / -1">
+        <h3>Slider</h3>
+        <div class="gs-slider">
+          <div class="label-row"><span>Ghost-note sensitivity</span><span class="val">42 / 100</span></div>
+          <input type="range" min="0" max="100" value="42" />
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

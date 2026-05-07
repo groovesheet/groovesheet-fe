@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — List row</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+
+  .list { background: var(--color-panel1); border-radius: 13px; overflow: hidden; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: baseline;
+    gap: 24px;
+    padding: 16px 22px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .row:first-child { border-top: 0; }
+  .row:hover { background: rgba(255,255,255,0.03); }
+
+  /* Track name + small inline kind label */
+  .name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+    margin: 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+  .kind {
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--color-muted-foreground);
+    text-transform: uppercase;
+  }
+  .sub {
+    font-size: 12px;
+    color: var(--color-muted-foreground);
+    margin: 4px 0 0;
+    font-family: var(--font-family-mono);
+    letter-spacing: 0.01em;
+  }
+
+  /* Inline meta (BPM / time signature) — quiet text */
+  .meta {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px;
+    color: var(--color-muted-foreground);
+    white-space: nowrap;
+  }
+
+  /* Status — pill */
+  .status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 9px;
+    border-radius: 120px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .status .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status.done { background: #22c55e; color: #0b2417; }
+  .status.done .dot { background: #0b2417; }
+  .status.running { background: var(--color-primary); color: #fff; }
+  .status.running .dot { background: #fff; animation: pulse 1.5s ease-in-out infinite; }
+  .status.failed { background: #ff6b6b; color: #1b191c; }
+  .status.failed .dot { background: #1b191c; }
+  .status.queued { background: rgba(255,255,255,0.08); color: var(--color-muted-foreground); }
+  .status.queued .dot { background: var(--color-muted-foreground); }
+  @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
+
+  /* Trailing meta-only menu — only on hover */
+  .more {
+    width: 24px; height: 24px;
+    background: transparent; border: 0;
+    color: var(--color-muted-foreground);
+    cursor: pointer; opacity: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+  .row:hover .more { opacity: 1; }
+  .more:hover { color: var(--color-text); }
+  .more svg { width: 14px; height: 14px; }
+
+  /* Selection: a single thin cobalt mark in the gutter — quiet, no tinted bg */
+  .row.selected { background: transparent; }
+  .row.selected .name::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    margin-right: 4px;
+    transform: translateY(-1px);
+  }
+
+  /* Compact */
+  .list.compact .row { padding: 11px 18px; gap: 18px; }
+  .list.compact .sub { display: none; }
+
+  /* Header row (column labels) */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 24px;
+    padding: 10px 22px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-muted-foreground);
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .head span { font-weight: 500; }
+  .head .right { text-align: right; min-width: 80px; }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame .list { background: #fff; border: 1px solid #e5e5e5; }
+  .light-frame .row { border-top-color: #f0f0f0; }
+  .light-frame .row:hover { background: #fafafa; }
+  .light-frame .name { color: #1b191c; }
+  .light-frame .sub, .light-frame .kind { color: #666; }
+  .light-frame .more { color: #999; }
+  .light-frame .more:hover { color: #1b191c; }
+  .light-frame .head { background: #f6f6f6; color: #666; border-bottom-color: #e5e5e5; }
+  .light-frame .meta { color: #666; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">List row</h1>
+    <p class="card-sub">Quiet, type-led rows for transcription history. No glyph squares, no pill-shaped status badges, no tinted selection bg — the row earns hierarchy from typography and a single hairline divider. Selected rows get one small cobalt dot beside the name; the overflow menu only appears on hover.</p>
+
+    <div class="group">
+      <h3>Default</h3>
+      <div class="list">
+        <div class="head"><span>Track</span><span>Detection</span><span class="right">Status</span></div>
+        <div class="row selected">
+          <div>
+            <p class="name">Triplet Fill 16-bar.wav <span class="kind">Drums</span></p>
+            <p class="sub">2 min ago · Alex</p>
+          </div>
+          <span class="meta">124 BPM · 4/4</span>
+          <span class="status running"><span class="dot"></span>Transcribing</span>
+        </div>
+        <div class="row">
+          <div>
+            <p class="name">Bass Walk Demo.flac <span class="kind">Bass</span></p>
+            <p class="sub">Yesterday · 4:08 PM</p>
+          </div>
+          <span class="meta">96 BPM · swing</span>
+          <span class="status done"><span class="dot"></span>Complete</span>
+        </div>
+        <div class="row">
+          <div>
+            <p class="name">Verse Sketch — Take 3.mp3 <span class="kind">Piano</span></p>
+            <p class="sub">Tuesday · Maya</p>
+          </div>
+          <span class="meta">72 BPM · 6/8</span>
+          <span class="status done"><span class="dot"></span>Complete</span>
+        </div>
+        <div class="row">
+          <div>
+            <p class="name">Choir loop crowdmic.ogg <span class="kind">Vocals</span></p>
+            <p class="sub">Last week</p>
+          </div>
+          <span class="meta">— · 0:38</span>
+          <span class="status failed"><span class="dot"></span>Failed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Compact</h3>
+      <div class="list compact">
+        <div class="row">
+          <p class="name">Triplet Fill 16-bar.wav <span class="kind">Drums</span></p>
+          <span class="meta">124 BPM</span>
+          <span class="status done"><span class="dot"></span>Done</span>
+        </div>
+        <div class="row">
+          <p class="name">Bass Walk Demo.flac <span class="kind">Bass</span></p>
+          <span class="meta">96 BPM</span>
+          <span class="status done"><span class="dot"></span>Done</span>
+        </div>
+        <div class="row">
+          <p class="name">Verse Sketch — Take 3.mp3 <span class="kind">Piano</span></p>
+          <span class="meta">72 BPM</span>
+          <span class="status done"><span class="dot"></span>Done</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="group light-frame" data-theme="light">
+      <h3>Light</h3>
+      <div class="list">
+        <div class="row selected">
+          <div>
+            <p class="name">Triplet Fill 16-bar.wav <span class="kind">Drums</span></p>
+            <p class="sub">2 min ago · Alex</p>
+          </div>
+          <span class="meta">124 BPM · 4/4</span>
+          <span class="status done"><span class="dot"></span>Complete</span>
+        </div>
+        <div class="row">
+          <div>
+            <p class="name">Bass Walk Demo.flac <span class="kind">Bass</span></p>
+            <p class="sub">Yesterday</p>
+          </div>
+          <span class="meta">96 BPM</span>
+          <span class="status done"><span class="dot"></span>Complete</span>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Hierarchy</dt><dd>Type only · no glyph squares</dd></div>
+      <div><dt>Selected</dt><dd>6px cobalt dot · no tint</dd></div>
+      <div><dt>Status</dt><dd>Pill · 11px / 600</dd></div>
+      <div><dt>Divider</dt><dd>1px white 6% hairline</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

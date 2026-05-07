@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Stepper</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 22px; font-weight: 500; }
+
+  .stepper { display: flex; align-items: flex-start; gap: 0; }
+  .step { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; flex: 1; }
+  .step-row { display: flex; align-items: center; width: 100%; }
+  .dot {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.08);
+    color: var(--color-muted-foreground);
+    border: 1px solid rgba(255,255,255,0.12);
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .step.done .dot { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+  .step.active .dot {
+    background: transparent;
+    border-color: var(--color-primary);
+    color: var(--color-text);
+    box-shadow: 0 0 0 4px rgba(1,47,167,0.18);
+  }
+  .rail {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.08);
+    margin: 0 12px;
+  }
+  .step.done + .step .rail,
+  .step.done .rail-leading { background: var(--color-primary); }
+
+  .step-meta { padding-top: 12px; padding-right: 16px; }
+  .step-label { font-size: 13px; font-weight: 500; color: var(--color-text); margin: 0; }
+  .step-sub { font-size: 12px; color: var(--color-muted-foreground); margin: 2px 0 0; }
+  .step:not(.active):not(.done) .step-label { color: var(--color-muted-foreground); }
+
+  /* vertical */
+  .v-stepper { display: flex; flex-direction: column; gap: 0; }
+  .v-step { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding-bottom: 22px; position: relative; }
+  .v-step:last-child { padding-bottom: 0; }
+  .v-step::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    bottom: -4px;
+    width: 2px;
+    background: rgba(255,255,255,0.08);
+  }
+  .v-step:last-child::before { display: none; }
+  .v-step.done::before { background: var(--color-primary); }
+  .v-step .step-label { font-size: 14px; }
+  .v-step .step-sub { font-size: 12px; }
+
+  .check { width: 14px; height: 14px; }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame .dot { background: #f6f6f6; border-color: #e5e5e5; color: #666; }
+  .light-frame .step.done .dot { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+  .light-frame .step-label { color: #000; }
+  .light-frame .step-sub { color: #666; }
+  .light-frame .rail, .light-frame .v-step::before { background: #e5e5e5; }
+  .light-frame .step.done + .step .rail, .light-frame .v-step.done::before { background: var(--color-primary); }
+  .light-frame .step:not(.active):not(.done) .step-label { color: #999; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Stepper</h1>
+    <p class="card-sub">Linear progress through a flow. Used across the upload → process → export pipeline and onboarding. Done steps fill cobalt; the active step gets a 4px halo; future steps stay muted.</p>
+
+    <div class="group">
+      <h3>Horizontal · upload pipeline</h3>
+      <div class="stepper">
+        <div class="step done">
+          <div class="step-row"><span class="dot"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span><div class="rail"></div></div>
+          <div class="step-meta"><p class="step-label">Upload</p><p class="step-sub">Triplet Fill 16-bar.wav</p></div>
+        </div>
+        <div class="step done">
+          <div class="step-row"><span class="dot"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span><div class="rail"></div></div>
+          <div class="step-meta"><p class="step-label">Detect</p><p class="step-sub">124 BPM · 4/4</p></div>
+        </div>
+        <div class="step active">
+          <div class="step-row"><span class="dot">3</span><div class="rail"></div></div>
+          <div class="step-meta"><p class="step-label">Transcribe</p><p class="step-sub">In progress · 42%</p></div>
+        </div>
+        <div class="step">
+          <div class="step-row"><span class="dot">4</span><div class="rail"></div></div>
+          <div class="step-meta"><p class="step-label">Review</p><p class="step-sub">Quantize &amp; mapping</p></div>
+        </div>
+        <div class="step">
+          <div class="step-row"><span class="dot">5</span></div>
+          <div class="step-meta"><p class="step-label">Export</p><p class="step-sub">PDF · MusicXML · MIDI</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+      <div>
+        <h3>Vertical · onboarding</h3>
+        <div class="v-stepper">
+          <div class="v-step done">
+            <span class="dot"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>
+            <div><p class="step-label">Create your account</p><p class="step-sub">Verified · alex@band.fm</p></div>
+          </div>
+          <div class="v-step active">
+            <span class="dot">2</span>
+            <div><p class="step-label">Pick your instruments</p><p class="step-sub">Tells us which detectors to prioritize.</p></div>
+          </div>
+          <div class="v-step">
+            <span class="dot">3</span>
+            <div><p class="step-label">Upload your first track</p><p class="step-sub">10 free minutes per month.</p></div>
+          </div>
+          <div class="v-step">
+            <span class="dot">4</span>
+            <div><p class="step-label">Export to your DAW</p><p class="step-sub">MusicXML opens in Logic, MuseScore, Sibelius.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="light-frame" data-theme="light" style="background:#fff; border-radius:8px; padding:20px;">
+        <h3>Light · vertical</h3>
+        <div class="v-stepper">
+          <div class="v-step done">
+            <span class="dot"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>
+            <div><p class="step-label">Plan selected</p><p class="step-sub">Professional · $24/mo</p></div>
+          </div>
+          <div class="v-step active">
+            <span class="dot">2</span>
+            <div><p class="step-label">Payment</p><p class="step-sub">Add a card or link a bank.</p></div>
+          </div>
+          <div class="v-step">
+            <span class="dot">3</span>
+            <div><p class="step-label">Confirm</p><p class="step-sub">Review and activate.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Dot size</dt><dd>28px</dd></div>
+      <div><dt>Active halo</dt><dd>4px · primary 18%</dd></div>
+      <div><dt>Done fill</dt><dd>#012FA7</dd></div>
+      <div><dt>Rail</dt><dd>2px</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — FAQ Accordion</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  /* Lifted from src/components/FAQ.css */
+  .faq-sections { display: flex; flex-direction: column; }
+  .faq-section { border-top: 1px solid var(--color-foreground); }
+  .faq-section:last-child .faq-questions-column .faq-question-row:last-child { border-bottom: 1px solid var(--color-foreground); }
+  .faq-section-header { display: flex; align-items: flex-start; }
+  .faq-section-label { flex: 0 0 280px; padding: 32px 20px 32px 0; }
+  .faq-section-title { font-family: var(--font-family-sans); font-size: 24px; font-weight: 400; line-height: 32px; color: var(--color-foreground); margin: 0; }
+  .faq-questions-column { flex: 1; display: flex; flex-direction: column; }
+  .faq-question-row { border-top: 1px solid var(--color-foreground); }
+  .faq-section .faq-questions-column .faq-question-row:first-child { border-top: none; }
+  .faq-question-button { width: 100%; padding: 28px 0; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; gap: 20px; color: inherit; font-family: inherit; }
+  .faq-question-text { flex: 1; text-align: left; }
+  .faq-question-text span { font-family: var(--font-family-sans); font-size: 24px; font-weight: 400; line-height: 32px; color: var(--color-foreground); }
+  /* Bare chevron — no background, no circle */
+  .faq-icon { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; color: var(--color-foreground); flex-shrink: 0; transition: transform 0.18s ease; }
+  .faq-icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .faq-question-row.open .faq-icon { transform: rotate(180deg); }
+  .faq-answer { color: var(--color-muted-foreground); font-family: var(--font-family-sans); font-size: 18px; line-height: 28px; padding: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.22s ease, opacity 0.22s ease, padding 0.18s ease; }
+  .faq-question-row.open .faq-answer { max-height: 400px; opacity: 1; padding: 0 0 24px 0; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">FAQ accordion</h1>
+    <p class="card-sub">Two-column layout from the homepage with a sticky section label on the left and stacked questions on the right. Bare chevron — no pill, no fill — rotates 180° on open. Question text is 24px Hubot Sans regular.</p>
+
+    <div class="faq-sections">
+      <section class="faq-section">
+        <div class="faq-section-header">
+          <div class="faq-section-label"><h3 class="faq-section-title">Getting Started</h3></div>
+          <div class="faq-questions-column">
+            <div class="faq-question-row open">
+              <button class="faq-question-button">
+                <div class="faq-question-text"><span>How do I sign up or sign in?</span></div>
+                <span class="faq-icon"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+              </button>
+              <div class="faq-answer">Hit Sign In on the top right and pick Email, Google, Apple, or Facebook. We'll create your account on first sign-in — no separate sign-up step.</div>
+            </div>
+            <div class="faq-question-row">
+              <button class="faq-question-button">
+                <div class="faq-question-text"><span>What audio formats can I upload?</span></div>
+                <span class="faq-icon"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+              </button>
+              <div class="faq-answer">MP3, WAV, FLAC, and OGG up to 50 MB.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="faq-section">
+        <div class="faq-section-header">
+          <div class="faq-section-label"><h3 class="faq-section-title">Transcription</h3></div>
+          <div class="faq-questions-column">
+            <div class="faq-question-row">
+              <button class="faq-question-button">
+                <div class="faq-question-text"><span>How accurate is the transcription?</span></div>
+                <span class="faq-icon"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+              </button>
+              <div class="faq-answer">Studio recordings produce the cleanest notation. Live recordings may work but results vary.</div>
+            </div>
+            <div class="faq-question-row">
+              <button class="faq-question-button">
+                <div class="faq-question-text"><span>What happens if a job fails?</span></div>
+                <span class="faq-icon"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+              </button>
+              <div class="faq-answer">You won't be charged minutes. Retry from the history screen — usually re-encoding the source file fixes it.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

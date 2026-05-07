@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Type — Family</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .families {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+    margin-top: 8px;
+  }
+  .family { padding: 32px 28px; position: relative; }
+  .family + .family { border-left: 1px solid var(--color-border-light); }
+
+  .family-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-family-mono);
+    font-size: 11px; letter-spacing: 0.06em;
+    color: var(--color-muted-foreground);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .family-tag .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-text); }
+  .family.dm .family-tag .dot { background: var(--color-muted-foreground); }
+  .family.mono .family-tag .dot { background: var(--color-primary); }
+
+  .family-name { font-size: 28px; font-weight: 400; letter-spacing: -0.5px; margin: 0 0 4px; color: var(--color-text); }
+  .family.dm .family-name { font-family: var(--font-family-alt); }
+  .family.mono .family-name { font-family: var(--font-family-mono); font-size: 24px; letter-spacing: -0.2px; }
+
+  .family-role { font-size: 13px; color: var(--color-muted-foreground); margin: 0 0 24px; line-height: 1.45; }
+
+  /* Specimens */
+  .specimen { margin: 0; line-height: 0.95; color: var(--color-text); }
+  .spec-hubot { font-family: var(--font-family-sans); font-size: 132px; font-weight: 400; letter-spacing: -3px; }
+  .spec-hubot em { font-style: italic; color: var(--color-primary); }
+  .spec-dm { font-family: var(--font-family-alt); font-size: 132px; font-weight: 400; letter-spacing: -3px; }
+  .spec-dm em { font-style: italic; color: var(--color-muted-foreground); }
+  .spec-mono { font-family: var(--font-family-mono); font-size: 110px; font-weight: 400; letter-spacing: -2px; }
+  .spec-mono span { color: var(--color-primary); }
+
+  .meta { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); margin-top: 16px; letter-spacing: 0.02em; }
+
+  /* Usage row */
+  .usage { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .usage > div { padding: 26px 28px 4px; }
+  .usage > div + div { border-left: 1px solid var(--color-border-light); }
+  .usage-label { font-family: var(--font-family-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted-foreground); margin-bottom: 10px; }
+
+  .sample-hubot { font-family: var(--font-family-sans); font-size: 24px; line-height: 1.2; margin: 0 0 6px; color: var(--color-text); letter-spacing: -0.3px; }
+  .sample-dm { font-family: var(--font-family-alt); font-size: 16px; line-height: 1.5; margin: 0; color: var(--color-muted-foreground); }
+  .sample-mono { font-family: var(--font-family-mono); font-size: 13px; line-height: 1.55; color: var(--color-text); margin: 0; white-space: pre; }
+  .sample-mono .c { color: var(--color-muted-foreground); }
+  .sample-mono .k { color: var(--color-primary); }
+
+  .weights { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; font-size: 14px; }
+
+  /* Pairing strip — show the three together as they'd appear */
+  .pairing { margin-top: 32px; padding: 28px; border-top: 1px solid var(--color-border-light); }
+  .pairing .label { font-family: var(--font-family-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted-foreground); margin-bottom: 18px; }
+  .pairing h3 { font-family: var(--font-family-sans); font-size: 36px; font-weight: 400; letter-spacing: -0.6px; line-height: 1.1; margin: 0 0 8px; }
+  .pairing p { font-family: var(--font-family-alt); font-size: 17px; line-height: 1.5; color: var(--color-muted-foreground); margin: 0 0 12px; max-width: 56ch; }
+  .pairing .price { font-family: var(--font-family-mono); font-size: 24px; color: var(--color-primary); }
+  .pairing .price .small { color: var(--color-muted-foreground); font-size: 14px; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Type — Family</p>
+    <h1 class="card-title">Three typefaces, three jobs.</h1>
+    <p class="card-sub">Hubot Sans for headings — confident, slightly technical. DM Sans for descriptions and body — quieter, more readable. Source Code Pro for numbers and IDs — tabular, monospaced. Each does one job; never substitute.</p>
+
+    <div class="families">
+      <div class="family sans">
+        <div class="family-tag"><span class="dot"></span>01 · Headings</div>
+        <h2 class="family-name">Hubot Sans</h2>
+        <p class="family-role">Variable sans-serif. All headings, hero titles, button labels, plan badges. Loaded at 300 / 400 / 500.</p>
+        <p class="specimen spec-hubot">Aa<em>Gg</em></p>
+        <p class="meta">Hubot Sans · 300 / 400 / 500</p>
+      </div>
+
+      <div class="family dm">
+        <div class="family-tag"><span class="dot"></span>02 · Body</div>
+        <h2 class="family-name">DM Sans</h2>
+        <p class="family-role">Geometric sans. Descriptions, paragraph copy, FAQ answers, helper text. Sits beneath Hubot — never above it.</p>
+        <p class="specimen spec-dm">Aa<em>Gg</em></p>
+        <p class="meta">DM Sans · 400 / 500</p>
+      </div>
+
+      <div class="family mono">
+        <div class="family-tag"><span class="dot"></span>03 · Numbers</div>
+        <h2 class="family-name">Source Code Pro</h2>
+        <p class="family-role">Monospace. Numerical data, IDs, code, tempo readouts, run timestamps, the small uppercase spec labels.</p>
+        <p class="specimen spec-mono">12<span>34</span></p>
+        <p class="meta">Source Code Pro · 400 / 500 · tabular</p>
+      </div>
+    </div>
+
+    <div class="usage">
+      <div>
+        <div class="usage-label">Hubot — heading</div>
+        <p class="sample-hubot">Get scores in seconds — not weeks.</p>
+        <div class="weights">
+          <span style="font-family:var(--font-family-sans);font-weight:300">300 · disclaimer</span>
+          <span style="font-family:var(--font-family-sans);font-weight:400">400 · headings</span>
+          <span style="font-family:var(--font-family-sans);font-weight:500">500 · buttons, badges</span>
+        </div>
+      </div>
+      <div>
+        <div class="usage-label">DM Sans — description</div>
+        <p class="sample-dm">Built for speed and accuracy so you can focus on practice, teaching, and performance. We detect tempo, time signatures, and drum events automatically.</p>
+        <div class="weights">
+          <span style="font-family:var(--font-family-alt);font-weight:400">400 · paragraph copy</span>
+          <span style="font-family:var(--font-family-alt);font-weight:500">500 · emphasized helper text</span>
+        </div>
+      </div>
+      <div>
+        <div class="usage-label">Source Code Pro — numbers</div>
+<pre class="sample-mono"><span class="c">// tempo</span>
+<span class="k">124</span> BPM   <span class="c">±0.4</span>
+<span class="c">// run_id</span>
+<span class="k">RUN</span>-2026-04-A11F
+<span class="c">// status</span>
+<span class="k">PASSED</span>  3.2s</pre>
+      </div>
+    </div>
+
+    <div class="pairing">
+      <div class="label">All three together</div>
+      <h3>Triplet Fill 16-bar.wav</h3>
+      <p>Drum transcription with ghost-note detection. We split the file into eight 2-bar segments and matched each to the kit map you selected.</p>
+      <div class="price">124 BPM <span class="small">· 4/4 · 32.4s</span></div>
+    </div>
+  </div>
+</body>
+</html>

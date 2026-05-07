@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Spacing — Radii</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .tile { background: var(--color-panel1); border: 1px solid var(--color-border-light); padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 200px; justify-content: center; }
+  .tile .demo { width: 100px; height: 100px; background: var(--color-primary); }
+  .tile .name { font-size: 14px; font-weight: 500; color: var(--color-text); }
+  .tile .px { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Spacing</p>
+    <h1 class="card-title">Corner radii</h1>
+    <p class="card-sub">Pill, card, and three small steps. The 16/13 outer/inner pair is the system's signature: it makes the popular pricing card look like a hand-thick picture frame.</p>
+
+    <div class="grid">
+      <div class="tile"><div class="demo" style="border-radius:120px"></div><div class="name">Pill</div><div class="px">120px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:16px"></div><div class="name">Card LG</div><div class="px">16px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:13px"></div><div class="name">Card</div><div class="px">13px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:12px"></div><div class="name">MD</div><div class="px">12px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:8px"></div><div class="name">SM</div><div class="px">8px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:6px"></div><div class="name">XS · Button</div><div class="px">6px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:4px"></div><div class="name">XXS · Badge</div><div class="px">4px</div></div>
+      <div class="tile"><div class="demo" style="border-radius:0"></div><div class="name">None</div><div class="px">0px</div></div>
+    </div>
+
+  </div>
+</body>
+</html>

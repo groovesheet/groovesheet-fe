@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Timeline</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+
+  /* Timeline — vertical rail, each event has a 10px node aligned to the rail */
+  .tl { position: relative; padding-left: 26px; margin: 0; }
+  .tl::before {
+    content: ''; position: absolute;
+    left: 4px; top: 6px; bottom: 6px;
+    width: 1px; background: rgba(255,255,255,0.10);
+  }
+  .ev {
+    position: relative;
+    padding: 0 0 22px 0;
+  }
+  .ev:last-child { padding-bottom: 0; }
+
+  .ev .node {
+    position: absolute; left: -26px; top: 4px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--color-panel2);
+    border: 2px solid rgba(255,255,255,0.32);
+    box-sizing: border-box;
+  }
+  .ev.done .node { background: #22c55e; border-color: #22c55e; }
+  .ev.run .node {
+    background: var(--color-primary); border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(1,47,167,0.22);
+    animation: pulseR 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseR {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(1,47,167,0.22); }
+    50%      { box-shadow: 0 0 0 7px rgba(1,47,167,0.10); }
+  }
+  .ev.fail .node { background: #ff6b6b; border-color: #ff6b6b; }
+  .ev.queued .node { background: var(--color-panel2); border-color: rgba(255,255,255,0.20); }
+
+  .ev .head {
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .ev .title {
+    font-size: 14px; font-weight: 500; color: var(--color-text);
+    margin: 0;
+  }
+  .ev .when {
+    font-family: var(--font-family-mono);
+    font-size: 11px; color: var(--color-muted-foreground);
+    letter-spacing: 0.04em;
+    margin-left: auto;
+  }
+  .ev .body {
+    margin: 4px 0 0;
+    font-size: 13px; line-height: 1.5;
+    color: var(--color-muted-foreground);
+  }
+  .ev .body code {
+    font-family: var(--font-family-mono);
+    font-size: 12px;
+    color: var(--color-foreground);
+    background: rgba(255,255,255,0.05);
+    padding: 1px 6px; border-radius: 4px;
+  }
+
+  /* Compact / activity-feed variant */
+  .tl.compact .ev { padding-bottom: 12px; }
+  .tl.compact .ev .body { display: none; }
+
+  /* Day group label */
+  .day {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--color-muted-foreground);
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+  .day + .tl { margin-bottom: 22px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Timeline</h1>
+    <p class="card-sub">Vertical rail at white-10%, with 10px state nodes inline. Use for transcription job stages, account activity, and audit logs. The active node pulses cobalt; completed is green; failed is red; queued is hollow. Time stamps right-align in mono.</p>
+
+    <div class="group">
+      <h3>Job stages</h3>
+      <ul class="tl">
+        <li class="ev done">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Upload received</h4><span class="when">15:42:08</span></div>
+          <p class="body">Triplet Fill 16-bar.wav · <code>18.4 MB</code> · WAV 48 kHz / 24-bit</p>
+        </li>
+        <li class="ev done">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Audio analyzed</h4><span class="when">15:42:14</span></div>
+          <p class="body">Detected tempo <code>124 BPM</code>, time signature <code>4/4</code>, single drum kit. Confidence 0.92.</p>
+        </li>
+        <li class="ev run">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Transcribing drums</h4><span class="when">15:42:20</span></div>
+          <p class="body">Model <code>gs-drums-v3</code> — bar 9 of 16. Running with ghost-note sensitivity 0.6.</p>
+        </li>
+        <li class="ev queued">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Generate exports</h4><span class="when">queued</span></div>
+          <p class="body">PDF · MusicXML · MIDI</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <h3>Account activity feed</h3>
+
+      <p class="day">Today · May 4</p>
+      <ul class="tl compact">
+        <li class="ev done">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Bass Walk Demo.flac transcribed</h4><span class="when">2 min ago</span></div>
+        </li>
+        <li class="ev fail">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Choir loop crowdmic.ogg failed — file too noisy</h4><span class="when">14 min ago</span></div>
+        </li>
+        <li class="ev done">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Plan changed: Hobbyist → Professional</h4><span class="when">1:08 PM</span></div>
+        </li>
+      </ul>
+
+      <p class="day">Yesterday · May 3</p>
+      <ul class="tl compact">
+        <li class="ev done">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Verse Sketch — Take 3.mp3 transcribed</h4><span class="when">4:08 PM</span></div>
+        </li>
+        <li class="ev done">
+          <span class="node"></span>
+          <div class="head"><h4 class="title">Maya joined "Album rehearsals"</h4><span class="when">11:22 AM</span></div>
+        </li>
+      </ul>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Rail</dt><dd>1px white 10%</dd></div>
+      <div><dt>Node</dt><dd>10px circle, 2px ring</dd></div>
+      <div><dt>States</dt><dd>done · run · fail · queued</dd></div>
+      <div><dt>When</dt><dd>11px mono · right</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Menu</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px 24px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 18px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+
+  /* Menu surface — panel1 floating with a hard-edged shadow */
+  .menu {
+    width: 220px;
+    padding: 6px;
+    background: var(--color-panel1);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    font-family: var(--font-family-sans);
+    user-select: none;
+  }
+  .menu .lab {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--color-muted-foreground);
+    padding: 8px 10px 4px;
+    font-weight: 500;
+  }
+  .menu .item {
+    display: flex; align-items: center; gap: 10px;
+    height: 32px; padding: 0 10px;
+    border-radius: 8px;
+    font-size: 13px; color: var(--color-foreground);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .menu .item:hover, .menu .item.hover { background: rgba(255,255,255,0.06); color: var(--color-text); }
+  .menu .item.danger { color: #ff6b6b; }
+  .menu .item.danger:hover { background: rgba(255,107,107,0.10); }
+  .menu .item .ic { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.85; }
+  .menu .item .kbd {
+    margin-left: auto;
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    color: var(--color-muted-foreground);
+    letter-spacing: 0.04em;
+  }
+  .menu .item .check { margin-left: auto; color: var(--color-primary); font-weight: 700; font-size: 12px; }
+  .menu .item .chev { margin-left: auto; opacity: 0.5; }
+  .menu .sep { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 4px; }
+
+  /* Trigger — visual only */
+  .trigger {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: var(--color-panel1);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--color-text);
+  }
+  .trigger.icon-only {
+    width: 28px; height: 28px; padding: 0; justify-content: center;
+    background: transparent; border-color: transparent;
+    color: var(--color-muted-foreground);
+  }
+
+  /* Anchor cluster */
+  .anchor { display: inline-flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+
+  /* Right-click target */
+  .ctx-target {
+    width: 320px; height: 120px;
+    border-radius: 13px;
+    background: var(--color-panel1);
+    border: 1px dashed rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-muted-foreground);
+    font-size: 13px;
+    position: relative;
+  }
+  .ctx-target .menu { position: absolute; top: 32px; left: 96px; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Menu</h1>
+    <p class="card-sub">Floating list surface used for overflow menus, context menus, and split-button drops. 220px wide, 32px rows, 8px row radius, mono kbd hints align right. Section labels in 10px caps. Separator is a 1px hairline at white-6%.</p>
+
+    <div class="group">
+      <h3>Overflow menu</h3>
+      <div class="row">
+        <div class="anchor">
+          <button class="trigger icon-only">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+          <div class="menu">
+            <div class="item hover"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download PDF<span class="kbd">⌘D</span></div>
+            <div class="item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download MusicXML</div>
+            <div class="item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download MIDI</div>
+            <div class="sep"></div>
+            <div class="item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>Re-transcribe<span class="kbd">⌘R</span></div>
+            <div class="item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</div>
+            <div class="item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Settings…</div>
+            <div class="sep"></div>
+            <div class="item danger"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete<span class="kbd">⌫</span></div>
+          </div>
+        </div>
+
+        <div class="anchor">
+          <button class="trigger">
+            Sort: Newest
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="menu" style="width: 200px;">
+            <div class="lab">Sort by</div>
+            <div class="item">Newest first<span class="check">✓</span></div>
+            <div class="item">Oldest first</div>
+            <div class="item">Name (A–Z)</div>
+            <div class="item">Name (Z–A)</div>
+            <div class="item">Duration</div>
+            <div class="sep"></div>
+            <div class="lab">Filter</div>
+            <div class="item">Show failed only</div>
+            <div class="item">Show running only</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Context menu (right-click)</h3>
+      <div class="ctx-target">
+        Triplet Fill 16-bar.wav
+        <div class="menu" style="width: 200px;">
+          <div class="item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play preview<span class="kbd">␣</span></div>
+          <div class="item hover"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Open in editor<span class="kbd">↵</span></div>
+          <div class="item">Rename<span class="kbd">F2</span></div>
+          <div class="sep"></div>
+          <div class="item">Copy link</div>
+          <div class="item">Move to project<span class="chev">›</span></div>
+          <div class="sep"></div>
+          <div class="item danger">Delete<span class="kbd">⌫</span></div>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Width</dt><dd>220px (default)</dd></div>
+      <div><dt>Row</dt><dd>32px / 13px</dd></div>
+      <div><dt>Radius</dt><dd>12px outer · 8px row</dd></div>
+      <div><dt>Shadow</dt><dd>0 12 32 / 50%</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Colors — Dark Surfaces</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .swatch { border-radius: 12px; padding: 24px; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--color-border-light); }
+  .swatch .role { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted-foreground); }
+  .swatch .name { font-size: 16px; font-weight: 500; color: var(--color-text); margin-top: 6px; }
+  .swatch .hex { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); }
+  .stack { display: flex; flex-direction: column; gap: 0; border-radius: 12px; overflow: hidden; margin-top: 28px; border: 1px solid var(--color-border-light); }
+  .stack > div { padding: 22px 28px; display: flex; justify-content: space-between; font-size: 14px; }
+  .stack .h { color: var(--color-text); }
+  .stack .h2 { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); }
+  .l-canvas { background: #171717; }
+  .l-tinted { background: #151515; }
+  .l-panel3 { background: #1a1a1a; }
+  .l-panel2 { background: #212121; }
+  .l-panel1 { background: #323033; }
+  .l-charcoal { background: #1b191c; }
+  .l-border { background: #3d3b3e; }
+  .l-muted { background: #5f5e60; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Colors · Dark mode</p>
+    <h1 class="card-title">Dark surfaces</h1>
+    <p class="card-sub">Three depths of panel stacked over near-black canvas. Lighter = more "lifted". The upload card sits on Panel 1; cards-inside-cards drop to Panel 3.</p>
+
+    <div class="grid">
+      <div class="swatch l-canvas"><div><div class="role">Background</div><div class="name">Canvas</div></div><div class="hex">#171717</div></div>
+      <div class="swatch l-panel2"><div><div class="role">Panel 2</div><div class="name">Section</div></div><div class="hex">#212121</div></div>
+      <div class="swatch l-panel3"><div><div class="role">Panel 3</div><div class="name">Inner card</div></div><div class="hex">#1A1A1A</div></div>
+      <div class="swatch l-panel1"><div><div class="role">Panel 1</div><div class="name">Lifted</div></div><div class="hex">#323033</div></div>
+    </div>
+
+    <div class="stack">
+      <div class="l-tinted"><span class="h">Tinted background</span><span class="h2">#151515</span></div>
+      <div class="l-charcoal"><span class="h">Charcoal</span><span class="h2">#1B191C</span></div>
+      <div class="l-border"><span class="h">Border</span><span class="h2">#3D3B3E</span></div>
+      <div class="l-muted"><span class="h">Surface muted</span><span class="h2">#5F5E60</span></div>
+    </div>
+  </div>
+</body>
+</html>

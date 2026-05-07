@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Colors — Status</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .swatch { border-radius: 13px; padding: 28px; min-height: 140px; display: flex; flex-direction: column; justify-content: space-between; }
+  .swatch .name { font-size: 18px; font-weight: 500; }
+  .swatch .hex { font-family: var(--font-family-mono); font-size: 11px; opacity: 0.7; }
+  .swatch .role { font-size: 12px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.1em; }
+  .s-danger { background: #ff6b6b; color: #1b191c; }
+  .s-success { background: #22c55e; color: #1b191c; }
+  .toast { display: flex; align-items: center; gap: 14px; padding: 18px 22px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-top: 12px; }
+  .toast .icon { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  .toast.danger { background: #ff6b6b; color: #1b191c; }
+  .toast.danger .icon { background: #1b191c; color: #ff6b6b; }
+  .toast.success { background: #22c55e; color: #1b191c; }
+  .toast.success .icon { background: #1b191c; color: #22c55e; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Colors</p>
+    <h1 class="card-title">Status</h1>
+    <p class="card-sub">Used sparingly. Danger appears on failed transcriptions and form errors; Success on completed jobs and confetti moments.</p>
+
+    <div class="grid">
+      <div class="swatch s-danger"><div><div class="role">Danger</div><div class="name">#FF6B6B</div></div><div class="hex">Error · Destructive · Failed job</div></div>
+      <div class="swatch s-success"><div><div class="role">Success</div><div class="name">#22C55E</div></div><div class="hex">Completed · Confirmed · Plan active</div></div>
+    </div>
+
+    <div class="toast danger"><span class="icon">!</span>File too large. Maximum upload size is 32 MB.</div>
+    <div class="toast success"><span class="icon">✓</span>Transcription complete — your scores are ready.</div>
+  </div>
+</body>
+</html>

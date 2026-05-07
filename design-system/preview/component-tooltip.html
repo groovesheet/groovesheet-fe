@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Tooltip</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 32px 24px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0; align-self: flex-start; font-weight: 500; }
+
+  .stage { position: relative; }
+
+  .tt {
+    position: absolute;
+    background: var(--color-charcoal);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .tt::after { content: ''; position: absolute; width: 8px; height: 8px; background: inherit; border: inherit; transform: rotate(45deg); }
+
+  .tt.top { bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+  .tt.top::after { bottom: -5px; left: 50%; margin-left: -4px; border-top: 0; border-left: 0; }
+
+  .tt.bottom { top: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+  .tt.bottom::after { top: -5px; left: 50%; margin-left: -4px; border-bottom: 0; border-right: 0; }
+
+  .tt.right { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+  .tt.right::after { left: -5px; top: 50%; margin-top: -4px; border-top: 0; border-right: 0; }
+
+  .tt.kbd { display: flex; align-items: center; gap: 6px; }
+  .tt kbd { font-family: var(--font-family-mono); font-size: 11px; background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px; }
+
+  .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; color: var(--color-foreground); cursor: pointer; }
+  .icon-btn svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Tooltip</h1>
+    <p class="card-sub">Single-line text on a charcoal pill, 12px / weight 500. For naming icon-only buttons, surfacing keyboard shortcuts, and explaining specs.</p>
+
+    <div class="grid">
+      <div class="group">
+        <h3>Top</h3>
+        <div class="stage">
+          <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+          <span class="tt top">Download</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Bottom</h3>
+        <div class="stage">
+          <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
+          <span class="tt bottom">Files over 32 MB are split into segments</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Right</h3>
+        <div class="stage">
+          <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+          <span class="tt right">Search</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>With shortcut</h3>
+        <div class="stage">
+          <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>
+          <span class="tt top kbd">Save <kbd>⌘S</kbd></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

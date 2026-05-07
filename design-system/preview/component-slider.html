@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Slider</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .section { margin-top: 28px; }
+  .section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 12px; font-weight: 500; }
+  .stage { padding: 28px 32px; background: var(--color-panel2); border-radius: 13px; }
+  .stage + .stage { margin-top: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 12px; }
+  .field-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .field-label { font-size: 13px; color: #f4f4f4; font-weight: 500; }
+  .field-help { font-size: 12px; color: var(--color-muted-foreground); }
+  .field-value { font-family: var(--font-family-mono); font-size: 13px; color: #fff; }
+
+  /* Track */
+  .track {
+    position: relative;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+  }
+  .fill {
+    position: absolute; inset: 0 auto 0 0;
+    background: #012FA7;
+    border-radius: 4px;
+  }
+  .thumb {
+    position: absolute; top: 50%;
+    width: 16px; height: 16px;
+    background: #fff; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 0 0 4px rgba(1,47,167,0.25);
+  }
+  .ticks {
+    position: absolute; inset: 0; pointer-events: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ticks span { width: 1px; height: 8px; background: rgba(255,255,255,0.18); border-radius: 1px; }
+  .ticks span.major { height: 12px; background: rgba(255,255,255,0.32); }
+
+  .scale-labels { display: flex; justify-content: space-between; font-family: var(--font-family-mono); font-size: 10px; color: var(--color-muted-foreground); }
+
+  /* Audio scrubber */
+  .scrubber {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--color-panel1);
+    padding: 16px 20px;
+    border-radius: 13px;
+  }
+  .play-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #012FA7;
+    border: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex: none;
+  }
+  .play-btn svg { width: 16px; height: 16px; color: #fff; }
+  .scrubber .meta { font-family: var(--font-family-mono); font-size: 12px; color: var(--color-muted-foreground); white-space: nowrap; }
+  .scrubber .meta strong { color: #fff; font-weight: 500; }
+  .scrubber-track {
+    flex: 1;
+    position: relative;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .scrubber-fill {
+    position: absolute; inset: 0 auto 0 0;
+    background: linear-gradient(90deg, #012FA7, #0139C7);
+    border-radius: 4px;
+  }
+  .scrubber-buffer {
+    position: absolute; inset: 0 auto 0 0;
+    background: rgba(255,255,255,0.18);
+    border-radius: 4px;
+  }
+  .scrubber-thumb {
+    position: absolute; top: 50%;
+    width: 14px; height: 14px;
+    background: #fff; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+
+  /* Range (two-thumb) */
+  .range-track {
+    position: relative; height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+  }
+  .range-fill {
+    position: absolute; top: 0; bottom: 0;
+    background: #012FA7;
+    border-radius: 4px;
+  }
+
+  .legend { margin-top: 16px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Sliders &amp; scrubbers</h1>
+    <p class="card-sub">A 4px track with brand-blue fill and a 16px white thumb wrapped in a soft blue halo. Used for tempo nudges, sensitivity dials, time-range filters, and audio playback.</p>
+
+    <div class="section">
+      <h3>Single value</h3>
+      <div class="stage">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label">Ghost-note sensitivity</span>
+            <span class="field-value">62</span>
+          </div>
+          <div class="track">
+            <div class="fill" style="width:62%;"></div>
+            <div class="thumb" style="left:62%;"></div>
+          </div>
+          <div class="field-help">Higher values pick up softer hits; very high values may add noise.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>With ticks &amp; labels</h3>
+      <div class="stage">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label">Tempo offset</span>
+            <span class="field-value">+4 bpm</span>
+          </div>
+          <div class="track">
+            <div class="fill" style="left:50%;width:8%;"></div>
+            <div class="ticks">
+              <span class="major"></span><span></span><span></span><span></span><span></span>
+              <span class="major"></span>
+              <span></span><span></span><span></span><span></span><span class="major"></span>
+            </div>
+            <div class="thumb" style="left:58%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span>−10</span><span>−5</span><span>0</span><span>+5</span><span>+10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Two-thumb range</h3>
+      <div class="stage">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label">Job duration</span>
+            <span class="field-value">1:30 – 4:45</span>
+          </div>
+          <div class="range-track">
+            <div class="range-fill" style="left:18%; right:32%;"></div>
+            <div class="thumb" style="left:18%;"></div>
+            <div class="thumb" style="left:68%;"></div>
+          </div>
+          <div class="scale-labels">
+            <span>0:00</span><span>2:00</span><span>4:00</span><span>6:00</span><span>8:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Audio scrubber</h3>
+      <div class="stage">
+        <div class="scrubber">
+          <button class="play-btn" aria-label="Pause">
+            <svg viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="3" height="10" rx="0.6"/><rect x="9" y="3" width="3" height="10" rx="0.6"/></svg>
+          </button>
+          <span class="meta"><strong>1:24</strong></span>
+          <div class="scrubber-track">
+            <div class="scrubber-buffer" style="width:74%;"></div>
+            <div class="scrubber-fill" style="width:38%;"></div>
+            <div class="scrubber-thumb" style="left:38%;"></div>
+          </div>
+          <span class="meta">3:42</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Specs</h3>
+      <dl class="legend">
+        <div><dt>Track</dt><dd>4px</dd></div>
+        <div><dt>Thumb</dt><dd>16px white</dd></div>
+        <div><dt>Halo</dt><dd>4px blue 25%</dd></div>
+        <div><dt>Fill</dt><dd>#012FA7</dd></div>
+      </dl>
+    </div>
+  </div>
+</body>
+</html>

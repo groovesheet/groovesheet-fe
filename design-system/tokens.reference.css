@@ -1,0 +1,305 @@
+/* =============================================================
+   GrooveSheet Design System — Colors & Typography
+   Sourced from groovesheet-fe/src/styles/tokens.css and
+   groovesheet-fe/docs/DESIGN_SYSTEM.md
+   ============================================================= */
+
+/* Hubot Sans — primary brand typeface.
+   Variable font shipped locally from assets/fonts/. */
+@font-face {
+  font-family: 'Hubot Sans';
+  src: url('fonts/HubotSans-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('fonts/HubotSans-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Hubot Sans';
+  src: url('fonts/HubotSans-Italic-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('fonts/HubotSans-Italic-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-style: italic;
+  font-display: swap;
+}
+/* DM Sans — alt typeface. Variable font shipped locally from fonts/. */
+@font-face {
+  font-family: 'DM Sans';
+  src: url('fonts/DMSans-VariableFont_opsz,wght.ttf') format('truetype-variations'),
+       url('fonts/DMSans-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('fonts/DMSans-Italic-VariableFont_opsz,wght.ttf') format('truetype-variations'),
+       url('fonts/DMSans-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- TYPOGRAPHY ---------- */
+  --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+  --font-family-alt: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-mono: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+  /* Weights actually used in product */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* ---------- BRAND ---------- */
+  --color-primary: #012fa7;          /* Brand blue — every CTA, every accent */
+  --color-primary-hover: #0139c7;    /* Hover */
+  --color-primary-press: #0138c0;    /* Press */
+  --color-primary-shadow: rgba(1, 47, 167, 0.3);
+
+  /* ---------- DARK MODE (DEFAULT) ---------- */
+  --color-background-dark: #171717;
+  --color-tinted-background-dark: #151515;
+  --color-panel1-dark: #323033;
+  --color-panel2-dark: #212121;
+  --color-panel3-dark: #1a1a1a;
+  --color-border-dark: #3d3b3e;
+  --color-text-dark: #ffffff;
+  --color-foreground-dark: #f4f4f4;
+  --color-muted-foreground-dark: #8d8c8d;
+  --color-surface-muted-dark: #5f5e60;
+  --color-charcoal: #1b191c;
+
+  /* ---------- LIGHT MODE ---------- */
+  --color-background-light: #ffffff;
+  --color-tinted-background-light: #f6f6f6;
+  --color-panel1-light: #ffffff;
+  --color-panel2-light: #f6f6f6;
+  --color-panel3-light: #ffffff;
+  --color-border-light-mode: #e5e5e5;
+  --color-text-light: #000000;
+  --color-foreground-light: #000000;
+  --color-muted-foreground-light: #666666;
+  --color-surface-muted-light: #ffffff;
+
+  /* ---------- STATUS ---------- */
+  --color-danger: #ff6b6b;
+  --color-success: #22c55e;
+
+  /* ---------- UTILITY ---------- */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* ---------- SEMANTIC OVERLAYS (DARK) ---------- */
+  --color-overlay-dark: rgba(0, 0, 0, 0.8);
+  --color-overlay-light: rgba(0, 0, 0, 0.5);
+  --color-border-light: rgba(255, 255, 255, 0.1);
+  --color-border-lighter: rgba(255, 255, 255, 0.18);
+  --color-surface-light: rgba(255, 255, 255, 0.05);
+  --color-surface-lighter: rgba(255, 255, 255, 0.08);
+  --color-surface-lightest: rgba(255, 255, 255, 0.04);
+  --color-inset-light: rgba(255, 255, 255, 0.15);
+  --color-inset-dark: rgba(0, 0, 0, 0.1);
+  --color-shadow-dark: rgba(0, 0, 0, 0.37);
+
+  /* ---------- DOT GRID ---------- */
+  --color-dot-pattern-dark: #171e43;
+  --color-dot-pattern-light: #b8d4ff;
+  --color-dot-pattern: var(--color-dot-pattern-dark);
+
+  /* ---------- INPUT FIELD ---------- */
+  --color-input-bg-dark: #232226;
+  --color-input-bg-light: #f6f6f6;
+  --color-input-border-dark: #3d3b3e;
+  --color-input-border-light: #e5e5e5;
+  --color-input-placeholder-dark: #8d8c8d;
+  --color-input-placeholder-light: #b0b0b0;
+
+  /* ---------- ALIASES applied by default (dark) ---------- */
+  --color-background: var(--color-background-dark);
+  --color-tinted-background: var(--color-tinted-background-dark);
+  --color-panel1: var(--color-panel1-dark);
+  --color-panel2: var(--color-panel2-dark);
+  --color-panel3: var(--color-panel3-dark);
+  --color-border: var(--color-border-dark);
+  --color-text: var(--color-text-dark);
+  --color-foreground: var(--color-foreground-dark);
+  --color-muted-foreground: var(--color-muted-foreground-dark);
+  --color-surface-muted: var(--color-surface-muted-dark);
+  --color-shadow: var(--color-shadow-dark);
+  --color-input-bg: var(--color-input-bg-dark);
+  --color-input-border: var(--color-input-border-dark);
+  --color-input-placeholder: var(--color-input-placeholder-dark);
+
+  /* ---------- TYPE SCALE (semantic) ---------- */
+  /* Pulled from production CSS: Hero, Features, Pricing, Testimonials, FAQ */
+  --fs-hero-title: 60px;     /* desktop hero */
+  --lh-hero-title: 76.8px;
+  --fs-hero-sub: 24px;
+  --lh-hero-sub: 38.4px;
+
+  --fs-h1: 40px;             /* section titles */
+  --lh-h1: 52px;
+  --ls-h1: -0.8px;
+
+  --fs-h2: 32px;
+  --lh-h2: 40px;
+
+  --fs-h3: 24px;             /* feature/card titles */
+  --lh-h3: 31.2px;
+
+  --fs-large: 24px;          /* tabs, large body */
+  --lh-large: 32px;
+
+  --fs-medium: 20px;         /* descriptions */
+  --lh-medium: 24px;
+
+  --fs-body: 18px;           /* upload text / body */
+  --lh-body: 24px;
+
+  --fs-small: 16px;
+  --lh-small: 20.8px;
+
+  --fs-button: 14px;
+  --lh-button: 18.2px;
+
+  --fs-disclaimer: 12px;
+  --lh-disclaimer: 16px;
+
+  /* ---------- SPACING ---------- */
+  --sp-xs: 4px;
+  --sp-sm: 8px;
+  --sp-md: 12px;
+  --sp-base: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 28.8px;
+  --sp-2xl: 32px;
+  --sp-3xl: 40px;
+  --sp-4xl: 60px;
+  --sp-5xl: 80px;
+
+  --container-content: 1190px;
+  --container-hero: 1414px;
+  --container-hero-text: 660px;
+  --container-upload: 586px;
+
+  /* ---------- RADII ---------- */
+  --radius-pill: 120px;
+  --radius-card-lg: 16px;
+  --radius-card: 13px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --radius-xxs: 4px;
+
+  /* ---------- ELEVATION ---------- */
+  --shadow-card-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-primary-glow: 0 4px 12px rgba(1, 47, 167, 0.3);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.37);
+
+  /* ---------- MOTION ---------- */
+  --motion-fast: 0.2s ease;
+  --motion-default: 0.3s ease;
+  --motion-theme: 1.2s ease;       /* the deliberately slow theme crossfade */
+}
+
+[data-theme='light'] {
+  --color-background: var(--color-background-light);
+  --color-tinted-background: var(--color-tinted-background-light);
+  --color-panel1: var(--color-panel1-light);
+  --color-panel2: var(--color-panel2-light);
+  --color-panel3: var(--color-panel3-light);
+  --color-border: var(--color-border-light-mode);
+  --color-text: var(--color-text-light);
+  --color-foreground: var(--color-foreground-light);
+  --color-muted-foreground: var(--color-muted-foreground-light);
+  --color-surface-muted: var(--color-surface-muted-light);
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-overlay-dark: rgba(255, 255, 255, 0.98);
+  --color-border-light: rgba(0, 0, 0, 0.08);
+  --color-border-lighter: rgba(0, 0, 0, 0.1);
+  --color-surface-light: rgba(0, 0, 0, 0.05);
+  --color-surface-lighter: rgba(240, 240, 240, 0.5);
+  --color-surface-lightest: rgba(248, 248, 248, 0.95);
+  --color-inset-light: rgba(0, 0, 0, 0.05);
+  --color-inset-dark: rgba(0, 0, 0, 0.03);
+  --color-dot-pattern: var(--color-dot-pattern-light);
+  --color-input-bg: var(--color-input-bg-light);
+  --color-input-border: var(--color-input-border-light);
+  --color-input-placeholder: var(--color-input-placeholder-light);
+}
+
+/* =============================================================
+   Semantic typography classes
+   ============================================================= */
+.gs-hero-title {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-hero-title);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-hero-title);
+  color: var(--color-text);
+  margin: 0;
+}
+.gs-hero-sub {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-hero-sub);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-hero-sub);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+.gs-h1 {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-h1);
+  letter-spacing: var(--ls-h1);
+  color: var(--color-text);
+  margin: 0;
+}
+.gs-h2 {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-h2);
+  color: var(--color-text);
+  margin: 0;
+}
+.gs-h3 {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-h3);
+  color: var(--color-foreground);
+  margin: 0;
+}
+.gs-body {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+  color: var(--color-text);
+  margin: 0;
+}
+.gs-small {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-small);
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+.gs-button {
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-button);
+}
+.gs-mono {
+  font-family: var(--font-family-mono);
+}

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Code block</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 28px; margin-bottom: 18px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+
+  .code {
+    background: #1b191c;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .code-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+  }
+  .code-head .file {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-family-mono);
+    font-size: 12px;
+    color: var(--color-muted-foreground);
+  }
+  .code-head .file .lang {
+    background: rgba(255,255,255,0.06);
+    color: var(--color-text);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .copy-btn {
+    appearance: none; border: 0;
+    background: transparent;
+    color: var(--color-muted-foreground);
+    font-family: var(--font-family-sans);
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .copy-btn svg { width: 12px; height: 12px; }
+
+  pre.code-body {
+    margin: 0;
+    padding: 16px 18px;
+    font-family: var(--font-family-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--color-foreground);
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+  /* Minimal token coloring — handcrafted, not lifted from any library */
+  .tok-tag { color: #7aa3ff; }
+  .tok-attr { color: #c084fc; }
+  .tok-str { color: #6ce5a3; }
+  .tok-key { color: #c084fc; }
+  .tok-num { color: #ffb86c; }
+  .tok-com { color: var(--color-muted-foreground); font-style: italic; }
+  .tok-pun { color: #8d8c8d; }
+
+  /* Inline code */
+  code.inline {
+    font-family: var(--font-family-mono);
+    font-size: 0.85em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    color: var(--color-text);
+  }
+
+  /* Numbered lines variant */
+  .lined .code-body { padding-left: 50px; position: relative; }
+  .lined .gutter {
+    position: absolute; left: 0; top: 16px;
+    width: 40px; padding-right: 12px;
+    text-align: right;
+    font-family: var(--font-family-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.25);
+    user-select: none;
+    pointer-events: none;
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+  .lined { position: relative; }
+
+  .light-frame { background: #fff; }
+  .light-frame h3 { color: #666; }
+  .light-frame .code { background: #f6f6f6; border-color: #e5e5e5; }
+  .light-frame .code-head { background: #fff; border-bottom-color: #e5e5e5; }
+  .light-frame pre.code-body { color: #1b191c; }
+  .light-frame .tok-tag { color: #0042c0; }
+  .light-frame .tok-attr { color: #7c3aed; }
+  .light-frame .tok-str { color: #047857; }
+  .light-frame .tok-key { color: #7c3aed; }
+  .light-frame .tok-num { color: #b45309; }
+  .light-frame .tok-com { color: #888; }
+
+  .legend { margin-top: 8px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Code block</h1>
+    <p class="card-sub">For exposing MusicXML, MIDI metadata, API snippets, and webhook payloads. Header carries the filename + language tag and a copy button; the body uses the system mono stack with a six-token color set tuned for our cobalt-on-charcoal palette.</p>
+
+    <div class="group">
+      <h3>Default · MusicXML excerpt</h3>
+      <div class="code">
+        <div class="code-head">
+          <span class="file"><span class="lang">XML</span>triplet-fill-16-bar.musicxml</span>
+          <button class="copy-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
+        </div>
+<pre class="code-body"><span class="tok-com">&lt;!-- Auto-generated by GrooveSheet · 124 BPM · 4/4 --&gt;</span>
+<span class="tok-pun">&lt;</span><span class="tok-tag">measure</span> <span class="tok-attr">number</span><span class="tok-pun">=</span><span class="tok-str">"1"</span><span class="tok-pun">&gt;</span>
+  <span class="tok-pun">&lt;</span><span class="tok-tag">attributes</span><span class="tok-pun">&gt;</span>
+    <span class="tok-pun">&lt;</span><span class="tok-tag">divisions</span><span class="tok-pun">&gt;</span><span class="tok-num">480</span><span class="tok-pun">&lt;/</span><span class="tok-tag">divisions</span><span class="tok-pun">&gt;</span>
+    <span class="tok-pun">&lt;</span><span class="tok-tag">time</span><span class="tok-pun">&gt;&lt;</span><span class="tok-tag">beats</span><span class="tok-pun">&gt;</span><span class="tok-num">4</span><span class="tok-pun">&lt;/</span><span class="tok-tag">beats</span><span class="tok-pun">&gt;&lt;</span><span class="tok-tag">beat-type</span><span class="tok-pun">&gt;</span><span class="tok-num">4</span><span class="tok-pun">&lt;/</span><span class="tok-tag">beat-type</span><span class="tok-pun">&gt;&lt;/</span><span class="tok-tag">time</span><span class="tok-pun">&gt;</span>
+  <span class="tok-pun">&lt;/</span><span class="tok-tag">attributes</span><span class="tok-pun">&gt;</span>
+  <span class="tok-pun">&lt;</span><span class="tok-tag">note</span><span class="tok-pun">&gt;&lt;</span><span class="tok-tag">unpitched</span><span class="tok-pun">&gt;&lt;</span><span class="tok-tag">display-step</span><span class="tok-pun">&gt;</span>F<span class="tok-pun">&lt;/</span><span class="tok-tag">display-step</span><span class="tok-pun">&gt;&lt;/</span><span class="tok-tag">unpitched</span><span class="tok-pun">&gt;&lt;</span><span class="tok-tag">duration</span><span class="tok-pun">&gt;</span><span class="tok-num">120</span><span class="tok-pun">&lt;/</span><span class="tok-tag">duration</span><span class="tok-pun">&gt;&lt;/</span><span class="tok-tag">note</span><span class="tok-pun">&gt;</span>
+<span class="tok-pun">&lt;/</span><span class="tok-tag">measure</span><span class="tok-pun">&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>With line numbers · webhook payload</h3>
+      <div class="code lined">
+        <div class="code-head">
+          <span class="file"><span class="lang">JSON</span>webhook.transcription.completed</span>
+          <button class="copy-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
+        </div>
+        <span class="gutter">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11</span>
+<pre class="code-body">{
+  <span class="tok-key">"event"</span>: <span class="tok-str">"transcription.completed"</span>,
+  <span class="tok-key">"job_id"</span>: <span class="tok-str">"job_8f3c1a"</span>,
+  <span class="tok-key">"track"</span>: <span class="tok-str">"triplet-fill-16-bar.wav"</span>,
+  <span class="tok-key">"tempo_bpm"</span>: <span class="tok-num">124</span>,
+  <span class="tok-key">"time_signature"</span>: <span class="tok-str">"4/4"</span>,
+  <span class="tok-key">"accuracy"</span>: <span class="tok-num">0.94</span>,
+  <span class="tok-key">"exports"</span>: [
+    { <span class="tok-key">"format"</span>: <span class="tok-str">"pdf"</span>, <span class="tok-key">"url"</span>: <span class="tok-str">"…"</span> },
+    { <span class="tok-key">"format"</span>: <span class="tok-str">"midi"</span>, <span class="tok-key">"url"</span>: <span class="tok-str">"…"</span> }
+  ]
+}</pre>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Inline code in body copy</h3>
+      <p class="gs-body" style="max-width:680px">
+        Trigger a re-render with <code class="inline">POST /v1/jobs/{id}/retry</code> — pass an optional
+        <code class="inline">tempo_hint</code> to bias the detector. The webhook fires
+        <code class="inline">transcription.completed</code> on success and
+        <code class="inline">transcription.failed</code> with a <code class="inline">reason</code> string on error.
+      </p>
+    </div>
+
+    <div class="group light-frame" data-theme="light">
+      <h3>Light</h3>
+      <div class="code">
+        <div class="code-head">
+          <span class="file"><span class="lang">SH</span>install</span>
+          <button class="copy-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
+        </div>
+<pre class="code-body"><span class="tok-com"># Install the GrooveSheet CLI</span>
+npm install -g <span class="tok-str">@groovesheet/cli</span>
+groovesheet auth login
+groovesheet upload <span class="tok-str">./take-04.wav</span> --instrument drums</pre>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Body</dt><dd>12.5px mono · 1.6 line-height</dd></div>
+      <div><dt>Surface</dt><dd>#1b191c · 8px radius</dd></div>
+      <div><dt>Header</dt><dd>filename · lang tag · copy</dd></div>
+      <div><dt>Inline</dt><dd>0.85em · white 6% bg</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

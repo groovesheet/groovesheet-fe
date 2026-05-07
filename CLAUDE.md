@@ -26,12 +26,26 @@
   - BassUNet: `bassunet_jazz_bass_midi`, `bassunet_jazz_bass_musicxml`, `bassunet_jazz_bass_f0_csv`, `bassunet_jazz_bass_notes_csv`, `bassunet_jazz_bass_metadata_json`
   - midi2score (via orchestrator output_key_mapping): `midi2score_drums_musicxml`, `midi2score_piano_musicxml`, `midi2score_bass_musicxml`, `midi2score_jazz_bass_musicxml`
 
-## UI/Styling Conventions
+## Design System
+
+**Source of truth: [`design-system/`](./design-system/)** — visual guide, per-component specs, tokens, preview HTMLs. Read these first when designing or scaffolding any UI:
+- `design-system/README.md` — index + how to use
+- `design-system/VISUAL_GUIDE.md` — tone, typography, color, motion, copy rules
+- `design-system/components/_index.md` — component status table (shipped / gap)
+- `design-system/components/<Name>.md` — per-component spec citing the real source file
+- `design-system/tokens.reference.css` — full token spec (read-only reference; runtime is `src/styles/tokens.css`)
+
+**Claude skill:** `.claude/skills/design-system/SKILL.md` auto-loads on UI work. It enforces the read-spec-then-mirror-real-component workflow.
+
+**Rule:** when generated previews or specs disagree with the FE, the FE wins. Drift goes into the component spec, not into the code.
+
+### High-signal styling notes
 - Primary font: Hubot Sans
-- Primary CTA blue: `#012FA7`; card backgrounds: `#323033`
+- Primary CTA blue: `#012FA7`; panel backgrounds: `#323033`
 - Component-specific CSS files (e.g. `Hero.css`) — do not move styles to global
-- High z-index modals: use `ReactDOM.createPortal`
-- Reference `docs/DESIGN_SYSTEM.md` for spacing and colors
+- High z-index modals/dropdowns: use `ReactDOM.createPortal(..., document.body)` with `z-index: 2147483647`
+- Glass morphism is used **once** — only on the Hero upload card. Don't add it elsewhere.
+- `docs/DESIGN_SYSTEM.md` is now a stub redirecting to `design-system/`. The 496-line original is preserved in git history.
 
 ## Auth & Gating
 - Gate UI with `<SignedIn>` / `<SignedOut>` from `@clerk/clerk-react`

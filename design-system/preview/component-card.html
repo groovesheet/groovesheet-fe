@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Card</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .group { background: var(--color-panel2); border-radius: 13px; padding: 24px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 16px; font-weight: 500; }
+
+  /* Base card */
+  .gs-card { background: var(--color-panel1); border-radius: 13px; padding: 24px; }
+  .gs-card-h { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .gs-card-title { font-size: 18px; font-weight: 500; margin: 0; }
+  .gs-card-sub { font-size: 13px; color: var(--color-muted-foreground); margin: 4px 0 0; }
+  .gs-card-body { font-size: 14px; line-height: 1.55; color: var(--color-foreground); }
+  .gs-card-foot { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--color-muted-foreground); }
+
+  /* Interactive card */
+  .gs-card.clickable { cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; }
+  .gs-card.clickable:hover { transform: translateY(-2px); background: #3a383b; }
+
+  /* Glass — only for upload/hero */
+  .gs-card.glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px) saturate(180%); box-shadow: 0 8px 32px rgba(0,0,0,0.37), inset 0 1px 1px rgba(255,255,255,0.15); }
+
+  /* Frame (popular) — 12px blue picture frame */
+  .gs-card.framed { background: var(--color-primary); padding: 12px; border-radius: 16px; }
+  .gs-card.framed > .inner { background: var(--color-panel1); border-radius: 13px; padding: 24px; }
+
+  .preview-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--color-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+
+  .gs-btn { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 6px; background: var(--color-primary); color: #fff; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
+  .legend { margin-top: 24px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Card</h1>
+    <p class="card-sub">The generic container. Lifts content one panel-depth off the canvas. Three flavors — base, glass (for the hero upload), and framed (for the popular pricing tier).</p>
+
+    <div class="grid">
+      <div class="group">
+        <h3>Base</h3>
+        <div class="gs-card">
+          <div class="gs-card-h">
+            <div>
+              <p class="gs-card-title">Triplet Fill 16-bar.wav</p>
+              <p class="gs-card-sub">Drums · 2 min ago</p>
+            </div>
+            <span class="preview-icon">D</span>
+          </div>
+          <p class="gs-card-body">Tempo detected at 124 BPM. 4/4 throughout. Ghost-note sensitivity: standard.</p>
+          <div class="gs-card-foot">
+            <span>3 exports ready</span>
+            <button class="gs-btn">Open</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Clickable</h3>
+        <div class="gs-card clickable">
+          <div class="gs-card-h">
+            <div>
+              <p class="gs-card-title">Bass Walk Demo.flac</p>
+              <p class="gs-card-sub">Bass · Yesterday</p>
+            </div>
+            <span class="preview-icon" style="background:#22c55e">B</span>
+          </div>
+          <p class="gs-card-body">Detected swing feel. Note range E1 → C4.</p>
+          <div class="gs-card-foot">
+            <span>Ready</span>
+            <span style="font-size:18px">→</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Glass (hero / upload only)</h3>
+        <div class="gs-card glass">
+          <div class="gs-card-h">
+            <div>
+              <p class="gs-card-title">Drop a track</p>
+              <p class="gs-card-sub">MP3 · WAV · FLAC · OGG · max 32 MB</p>
+            </div>
+          </div>
+          <p class="gs-card-body" style="color:var(--color-muted-foreground)">Backdrop blur + 1px inset highlight. Use this once per screen, max.</p>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Framed (popular)</h3>
+        <div class="gs-card framed">
+          <div class="inner">
+            <div class="gs-card-h">
+              <div>
+                <p class="gs-card-title">Professional</p>
+                <p class="gs-card-sub">Best for small teams</p>
+              </div>
+              <span style="background:#fff;color:var(--color-primary);padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase">Most Popular</span>
+            </div>
+            <p style="font-size:48px;font-weight:300;letter-spacing:-1px;margin:8px 0;line-height:1">$24<span style="font-size:16px;color:var(--color-muted-foreground);font-weight:400">/mo</span></p>
+            <p class="gs-card-body" style="color:var(--color-muted-foreground)">12px blue frame, 16px outer radius, 13px inner radius — the "picture frame" treatment.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Outer radius</dt><dd>13px (16px framed)</dd></div>
+      <div><dt>Inner radius</dt><dd>13px</dd></div>
+      <div><dt>Padding</dt><dd>24px default</dd></div>
+      <div><dt>Border</dt><dd>None — contrast carries it</dd></div>
+    </dl>
+  </div>
+</body>
+</html>

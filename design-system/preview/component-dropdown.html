@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Components — Dropdown menu</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px; }
+  .stage { background: var(--color-panel2); border-radius: 13px; padding: 36px 32px; min-height: 520px; position: relative; }
+  .stage h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-muted-foreground); margin: 0 0 24px; font-weight: 500; }
+
+  .anchor {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 16px;
+    background: transparent; color: #f4f4f4;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 8px;
+    font-family: var(--font-family-sans); font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .anchor .chev { width: 12px; height: 12px; opacity: 0.7; }
+
+  .menu {
+    width: 240px;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.37);
+    color: #f4f4f4;
+  }
+  .menu-positioned {
+    position: absolute;
+    top: 120px;
+    left: 32px;
+  }
+  .menu-positioned-2 {
+    position: absolute;
+    top: 120px;
+    left: 32px;
+  }
+  .menu-section { padding: 10px 10px 8px; font-size: 10px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500; }
+  .menu-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 10px;
+    border-radius: 6px;
+    font-size: 14px; line-height: 1;
+    color: #f4f4f4;
+    cursor: pointer;
+  }
+  .menu-item:hover { background: rgba(255,255,255,0.06); }
+  .menu-item .ico { width: 16px; height: 16px; opacity: 0.85; flex: none; }
+  .menu-item .meta { margin-left: auto; font-size: 11px; color: var(--color-muted-foreground); font-family: var(--font-family-mono); }
+  .menu-item.is-active { background: rgba(1,47,167,0.18); color: #fff; }
+  .menu-item.is-active .check { width: 14px; height: 14px; margin-left: auto; color: #4d8aff; }
+  .menu-item.danger { color: #ff8c8c; }
+  .menu-item.danger:hover { background: rgba(255,107,107,0.12); }
+  .menu-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 4px; }
+
+  .legend { margin-top: 24px; padding: 16px 20px; border-radius: 8px; background: rgba(255,255,255,0.03); display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; font-size: 12px; }
+  .legend dt { font-family: var(--font-family-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .legend dd { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body class="dotted">
+  <div class="card-frame">
+    <p class="card-eyebrow">Components</p>
+    <h1 class="card-title">Dropdown menu</h1>
+    <p class="card-sub">A floating panel anchored to a trigger button. Lifted surface (#1A1A1A) with a hairline border, 12px radius, drop shadow. Items are 32px tall. Selected items get a tinted-blue background and a small check on the right; destructive items are coral.</p>
+
+    <div class="grid">
+      <div class="stage">
+        <h3>Account menu</h3>
+        <button class="anchor">
+          <span class="av-mini" style="width:20px;height:20px;border-radius:50%;background:#012FA7;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;">JL</span>
+          Jamie Liu
+          <svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4.5L6 7.5 9 4.5"/></svg>
+        </button>
+        <div class="menu menu-positioned" style="top:96px;left:32px;">
+          <div class="menu-section">Account</div>
+          <div class="menu-item">
+            <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2.5 13.5c.8-2.5 3-4 5.5-4s4.7 1.5 5.5 4"/></svg>
+            Profile
+          </div>
+          <div class="menu-item">
+            <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="12" height="9" rx="1.5"/><path d="M2 7h12"/></svg>
+            Billing &amp; plan
+            <span class="meta">Pro</span>
+          </div>
+          <div class="menu-item">
+            <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>
+            Settings
+            <span class="meta">⌘,</span>
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-item">
+            <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M6 7c.4-1.5 1.6-2 2.5-2 1.2 0 2 .8 2 1.8 0 1-.5 1.5-1.5 2L8 10"/><circle cx="8" cy="12" r=".5" fill="currentColor"/></svg>
+            Help &amp; docs
+          </div>
+          <div class="menu-item danger">
+            <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H4a1 1 0 00-1 1v8a1 1 0 001 1h5"/><path d="M11 5l3 3-3 3M14 8H7"/></svg>
+            Sign out
+          </div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <h3>Sort menu (selectable)</h3>
+        <button class="anchor">
+          Sort: Newest first
+          <svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4.5L6 7.5 9 4.5"/></svg>
+        </button>
+        <div class="menu menu-positioned-2" style="top:96px;left:32px;">
+          <div class="menu-item is-active">
+            Newest first
+            <svg class="check" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7.5L6 10.5 11 4.5"/></svg>
+          </div>
+          <div class="menu-item">Oldest first</div>
+          <div class="menu-item">Title A → Z</div>
+          <div class="menu-item">Title Z → A</div>
+          <div class="menu-divider"></div>
+          <div class="menu-item">File size · largest</div>
+          <div class="menu-item">Duration · longest</div>
+        </div>
+      </div>
+    </div>
+
+    <dl class="legend">
+      <div><dt>Surface</dt><dd>#1A1A1A</dd></div>
+      <div><dt>Radius</dt><dd>12px</dd></div>
+      <div><dt>Item height</dt><dd>40px</dd></div>
+      <div><dt>Shadow</dt><dd>dropdown</dd></div>
+    </dl>
+  </div>
+</body>
+</html>
