@@ -1,0 +1,137 @@
+.explore-page {
+  min-height: 100vh;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.explore-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.explore-content {
+  width: 100%;
+  max-width: 1414px;
+  padding: 40px 0 80px;
+}
+
+.explore-main {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.explore-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.explore-title-section {
+  max-width: 520px;
+}
+
+.explore-title {
+  font-family: var(--font-family-sans);
+  font-size: 40px;
+  line-height: 52px;
+  color: var(--color-text);
+  margin: 0;
+  font-weight: normal;
+}
+
+.explore-info {
+  max-width: 372px;
+  padding-bottom: 0.595px;
+}
+
+.explore-info p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px;
+  line-height: 24px;
+  color: var(--color-text);
+  margin: 0;
+  font-weight: 400;
+}
+
+.explore-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.explore-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 32px 24px;
+}
+
+.explore-empty {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  color: var(--color-muted-foreground);
+}
+
+@media (max-width: 1440px) {
+  .explore-content {
+    padding: 40px 20px 80px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .tracks-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .explore-header {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .explore-title-section,
+  .explore-info {
+    max-width: 100%;
+  }
+
+  .tracks-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .explore-content {
+    padding: 40px 16px 80px;
+  }
+
+  .tracks-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 16px;
+  }
+
+  .explore-title {
+    font-size: 32px;
+    line-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .explore-content {
+    padding: 32px 12px 60px;
+  }
+
+  .tracks-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 12px;
+  }
+}

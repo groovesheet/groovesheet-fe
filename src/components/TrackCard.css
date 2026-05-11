@@ -1,0 +1,100 @@
+.track-card {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  transition: transform 180ms ease;
+}
+
+.track-card:hover {
+  transform: translateY(-2px);
+}
+
+.track-card:hover .track-card-title {
+  color: var(--color-foreground);
+}
+
+.track-card-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 13px;
+  overflow: hidden;
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  position: relative;
+}
+
+.track-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.track-card-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    var(--color-panel2) 0%,
+    var(--color-panel3) 100%
+  );
+}
+
+.track-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.track-card-title {
+  font-family: 'Hubot Sans', 'Noto Sans', sans-serif;
+  font-size: 18px;
+  line-height: 24px;
+  color: var(--color-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-card-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.track-card-artist,
+.track-card-year {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-card-artist {
+  flex-shrink: 1;
+}
+
+.track-card-dot {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-muted-foreground);
+  flex-shrink: 0;
+}
+
+.track-card-year {
+  flex-shrink: 0;
+}
