@@ -429,7 +429,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
 
     try {
       // Workflow name selection
-      let workflowName = 'demucs_separate';
+      let workflowName = 'bs_roformer_separate';
       if (selectedInstrument === 'drums') {
         workflowName = 'separate_to_drumscore_full';
       } else if (selectedInstrument === 'jazz_bass') {
@@ -438,6 +438,8 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
         workflowName = 'separate_to_bass_score_full';
       } else if (selectedInstrument === 'piano') {
         workflowName = 'separate_to_piano_score_full';
+      } else if (selectedInstrument === 'guitar') {
+        workflowName = 'separate_to_guitar_stem';
       }
 
       let data;
@@ -629,13 +631,14 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
   // Pre-fetch secondary download files (stem, MIDI) in the background after job completes
   const prefetchSecondaryFiles = async (id) => {
     const stemKeyMap = {
-      drums: 'demucs_drums_stem',
-      piano: 'demucs_other_stem',
-      bass: 'demucs_bass_stem',
-      jazz_bass: 'demucs_bass_stem',
-      bass_separation: 'demucs_bass_stem',
-      vocals: 'demucs_vocals_stem',
-      other: 'demucs_other_stem',
+      drums: 'bs_roformer_drums_stem',
+      piano: 'bs_roformer_piano_stem',
+      bass: 'bs_roformer_bass_stem',
+      jazz_bass: 'bs_roformer_bass_stem',
+      bass_separation: 'bs_roformer_bass_stem',
+      vocals: 'bs_roformer_vocals_stem',
+      guitar: 'bs_roformer_guitar_stem',
+      other: 'bs_roformer_other_stem',
     };
     const midiKeyMap = {
       drums: 'adtof_drums_midi',
@@ -671,11 +674,13 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     if (['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument)) {
       fileKey = 'musicxml';
     } else if (selectedInstrument === 'vocals') {
-      fileKey = 'demucs_vocals_stem';
+      fileKey = 'bs_roformer_vocals_stem';
+    } else if (selectedInstrument === 'guitar') {
+      fileKey = 'bs_roformer_guitar_stem';
     } else if (selectedInstrument === 'other') {
-      fileKey = 'demucs_other_stem';
+      fileKey = 'bs_roformer_other_stem';
     } else if (selectedInstrument === 'bass_separation') {
-      fileKey = 'demucs_bass_stem';
+      fileKey = 'bs_roformer_bass_stem';
     } else {
       fileKey = selectedInstrument;
     }
@@ -783,16 +788,17 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     }
   };
 
-  // Download stem WAV using backend descriptive demucs keys
+  // Download stem WAV using backend descriptive BS-Roformer keys
   const handleDownloadStem = () => {
     const stemKeyMap = {
-      drums: 'demucs_drums_stem',
-      piano: 'demucs_other_stem',
-      bass: 'demucs_bass_stem',
-      jazz_bass: 'demucs_bass_stem',
-      bass_separation: 'demucs_bass_stem',
-      vocals: 'demucs_vocals_stem',
-      other: 'demucs_other_stem',
+      drums: 'bs_roformer_drums_stem',
+      piano: 'bs_roformer_piano_stem',
+      bass: 'bs_roformer_bass_stem',
+      jazz_bass: 'bs_roformer_bass_stem',
+      bass_separation: 'bs_roformer_bass_stem',
+      vocals: 'bs_roformer_vocals_stem',
+      guitar: 'bs_roformer_guitar_stem',
+      other: 'bs_roformer_other_stem',
     };
     const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
     handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
@@ -888,7 +894,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           { value: 'vocals', label: 'Vocal', icon: LiaMicrophoneAltSolid },
           { value: 'drums', label: 'Drums', icon: LuDrum },
           { value: 'piano', label: 'Piano', icon: Piano },
-          { value: 'jazz_bass', label: 'Guitar', icon: LuGuitar },
+          { value: 'guitar', label: 'Guitar', icon: LuGuitar },
           { value: 'bass', label: 'Bass', icon: BassIcon }
         ].map((instrument) => {
           const IconComp = instrument.icon;

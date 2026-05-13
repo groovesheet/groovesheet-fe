@@ -12,6 +12,7 @@ import { LoginModal } from './components/LoginModal';
 import TranscriptionHistory from './components/TranscriptionHistory';
 import SSOCallback from './components/SSOCallback';
 import Blog from './components/Blog';
+import BlogPost from './components/BlogPost';
 import About from './components/About';
 import StemSplitter from './components/StemSplitter';
 import MidiConverter from './components/MidiConverter';
@@ -21,6 +22,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import BusinessInformation from './components/BusinessInformation';
 import TermsConditions from './components/TermsConditions';
 import RefundPolicy from './components/RefundPolicy';
+import PreviewDemo from './components/PreviewDemo';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
 import { claimPendingPreviewIfAny } from './utils/previewApi';
@@ -175,6 +177,7 @@ function App() {
           <Route path="/" element={<LandingPage onLoginClick={openLoginModal} />} />
           <Route path="/history" element={<TranscriptionHistory />} />
           <Route path="/blog" element={<Blog onLoginClick={openLoginModal} />} />
+          <Route path="/blog/:slug" element={<BlogPost onLoginClick={openLoginModal} />} />
           <Route path="/about" element={<About onLoginClick={openLoginModal} />} />
           <Route path="/stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
           <Route path="/midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
@@ -184,6 +187,7 @@ function App() {
           <Route path="/terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
           <Route path="/refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
           <Route path="/sso-callback" element={<SSOCallback />} />
+          <Route path="/preview-demo-1" element={<PreviewDemo />} />
         </Routes>
         <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
       </Router>

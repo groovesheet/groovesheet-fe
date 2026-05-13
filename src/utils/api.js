@@ -101,7 +101,7 @@ export async function authenticatedFetch(url, options = {}, getToken, signOut = 
 /**
  * Upload a file to the backend with authentication
  * @param {File} file - The file to upload
- * @param {string} endpoint - The API endpoint (e.g., '/workflow/demucs_separate')
+ * @param {string} endpoint - The API endpoint (e.g., '/workflow/bs_roformer_separate')
  * @param {Function} getToken - auth getToken function from the app auth hook
  * @param {string} baseUrl - Base URL for the API (default: '/api')
  * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
@@ -198,6 +198,28 @@ export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToke
 }
 
 /**
+ * Fetch a workflow output as text (e.g. MusicXML).
+ * Returns null on 404.
+ */
+export async function fetchMusicXmlText(baseUrl, workflowId, getToken, fileKey = 'musicxml') {
+  const result = await downloadWorkflowFile(baseUrl, workflowId, fileKey, getToken);
+  if (!result) return null;
+  const text = await result.blob.text();
+  return text;
+}
+
+/**
+ * Fetch a workflow output as ArrayBuffer (e.g. MIDI bytes).
+ * Returns null on 404.
+ */
+export async function fetchMidiArrayBuffer(baseUrl, workflowId, midiKey, getToken) {
+  const result = await downloadWorkflowFile(baseUrl, workflowId, midiKey, getToken);
+  if (!result) return null;
+  const buffer = await result.blob.arrayBuffer();
+  return buffer;
+}
+
+/**
  * Extract the filename portion from a value that may be a full file path.
  * Returns the original value if it doesn't look like a path.
  */
@@ -261,12 +283,13 @@ export function resolveDisplayName(workflow) {
 
 // Maps instrument to the file keys for each output type
 const STEM_KEYS = {
-  drums: 'demucs_drums_stem',
-  piano: 'demucs_other_stem',
-  bass: 'demucs_bass_stem',
-  jazz_bass: 'demucs_bass_stem',
-  vocals: 'demucs_vocals_stem',
-  other: 'demucs_other_stem',
+  drums: 'bs_roformer_drums_stem',
+  piano: 'bs_roformer_piano_stem',
+  bass: 'bs_roformer_bass_stem',
+  jazz_bass: 'bs_roformer_bass_stem',
+  vocals: 'bs_roformer_vocals_stem',
+  guitar: 'bs_roformer_guitar_stem',
+  other: 'bs_roformer_other_stem',
 };
 
 const MIDI_KEYS = {
@@ -371,6 +394,91 @@ export async function fetchWorkflowStatus(baseUrl, workflowId, getToken, signOut
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `Failed to fetch workflow status: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch the signed-in user's account summary (credits balance, plan, topups, etc.)
+ * @param {string} baseUrl - Base URL for the API
+ * @param {Function} getToken - auth getToken function from the app auth hook
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
+ * @returns {Promise<Object>} - AccountSummaryResponse
+ */
+export async function fetchAccountSummary(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/summary`,
+    {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    },
+    getToken,
+    signOut
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch account summary: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch the signed-in user's credit transaction history.
+ * @param {string} baseUrl - Base URL for the API
+ * @param {Function} getToken - auth getToken function from the app auth hook
+ * @param {{ limit?: number, offset?: number }} [params]
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
+ * @returns {Promise<Object>} - UsageHistoryResponse { items, total, limit, offset }
+ */
+export async function fetchAccountUsageHistory(baseUrl, getToken, params = {}, signOut = null) {
+  const search = new URLSearchParams();
+  if (params.limit != null) search.set('limit', String(params.limit));
+  if (params.offset != null) search.set('offset', String(params.offset));
+  const qs = search.toString();
+  const url = `${baseUrl}/account/usage-history${qs ? `?${qs}` : ''}`;
+
+  const response = await authenticatedFetch(
+    url,
+    {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    },
+    getToken,
+    signOut
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch usage history: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch the signed-in user's account settings (profile, security, prefs).
+ * @param {string} baseUrl - Base URL for the API
+ * @param {Function} getToken - auth getToken function from the app auth hook
+ * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
+ * @returns {Promise<Object>} - AccountSettingsResponse
+ */
+export async function fetchAccountSettings(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/settings`,
+    {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    },
+    getToken,
+    signOut
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch account settings: ${response.statusText}`);
   }
 
   return response.json();

@@ -250,7 +250,7 @@ function StemSplitter({ onLoginClick }) {
       if (usePreview) {
         data = await startPreview(
           API_BASE_URL,
-          'demucs_separate',
+          'bs_roformer_separate',
           fileToUpload,
           { instrument: selectedInstrument },
           getToken
@@ -284,7 +284,7 @@ function StemSplitter({ onLoginClick }) {
         formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
 
         const response = await authenticatedFetch(
-          `${API_BASE_URL}/workflow/demucs_separate`,
+          `${API_BASE_URL}/workflow/bs_roformer_separate`,
           { method: 'POST', body: formData },
           getToken
         );
@@ -397,15 +397,16 @@ function StemSplitter({ onLoginClick }) {
 
   // Download the separated stem audio file (.wav)
   const downloadStemFile = async (id) => {
-    // Demucs outputs: drums, bass, vocals, other (piano/guitar go into "other")
+    // BS-Roformer outputs 6 stems: vocals, drums, bass, guitar, piano, other.
     const stemKeyMap = {
-      vocals: 'demucs_vocals_stem',
-      drums: 'demucs_drums_stem',
-      bass: 'demucs_bass_stem',
-      piano: 'demucs_other_stem',
-      guitar: 'demucs_other_stem',
+      vocals: 'bs_roformer_vocals_stem',
+      drums: 'bs_roformer_drums_stem',
+      bass: 'bs_roformer_bass_stem',
+      piano: 'bs_roformer_piano_stem',
+      guitar: 'bs_roformer_guitar_stem',
+      other: 'bs_roformer_other_stem',
     };
-    const fileKey = stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
+    const fileKey = stemKeyMap[selectedInstrument] || `bs_roformer_${selectedInstrument}_stem`;
     const url = `${API_BASE_URL}${apiPrefixForId(id)}/download/${id}/${fileKey}`;
     const isPreview = id && id.startsWith('PRV');
     const fetchFn = isPreview ? previewFetch : authenticatedFetch;

@@ -27,6 +27,16 @@
   justify-content: space-between;
   align-items: start;
   gap: 68px;
+  transition: gap 0.3s ease;
+}
+
+.hero-container.success-expanded {
+  justify-content: center;
+  gap: 0;
+}
+
+.hero-container.success-expanded .hero-content {
+  display: none;
 }
 
 .hero-content {
@@ -119,7 +129,11 @@
   --mouse-y: 0px;
   --corner-offset: 1rem;
   --corner-size: 4rem;
-  transition: all 0.4s ease-in-out, translate 0.4s ease-out;
+  transition: max-width 0.4s ease, all 0.4s ease-in-out, translate 0.4s ease-out;
+}
+
+.upload-area.expanded {
+  max-width: 1414px;
 }
 
 .upload-area::before {

@@ -239,7 +239,8 @@ function MidiConverter({ onLoginClick }) {
       case 'jazz_bass': return 'separate_to_jazz_bass_score';
       case 'bass': return 'separate_to_bass_score';
       case 'piano': return 'separate_to_piano_score';
-      default: return 'demucs_separate';
+      case 'guitar': return 'separate_to_guitar_stem';
+      default: return 'bs_roformer_separate';
     }
   };
 
@@ -410,12 +411,13 @@ function MidiConverter({ onLoginClick }) {
   // Pre-fetch secondary download files (stem, MIDI) in the background after job completes
   const prefetchSecondaryFiles = async (id) => {
     const stemKeyMap = {
-      drums: 'demucs_drums_stem',
-      piano: 'demucs_other_stem',
-      bass: 'demucs_bass_stem',
-      jazz_bass: 'demucs_bass_stem',
-      vocals: 'demucs_vocals_stem',
-      other: 'demucs_other_stem',
+      drums: 'bs_roformer_drums_stem',
+      piano: 'bs_roformer_piano_stem',
+      bass: 'bs_roformer_bass_stem',
+      jazz_bass: 'bs_roformer_bass_stem',
+      vocals: 'bs_roformer_vocals_stem',
+      guitar: 'bs_roformer_guitar_stem',
+      other: 'bs_roformer_other_stem',
     };
     const midiKeyMap = {
       drums: 'adtof_drums_midi',
@@ -452,10 +454,11 @@ function MidiConverter({ onLoginClick }) {
       piano: 'transkun_v2_piano_midi',
     };
     const stemKeyMap = {
-      vocals: 'demucs_vocals_stem',
-      other: 'demucs_other_stem',
+      vocals: 'bs_roformer_vocals_stem',
+      guitar: 'bs_roformer_guitar_stem',
+      other: 'bs_roformer_other_stem',
     };
-    let fileKey = midiKeyMap[selectedInstrument] || stemKeyMap[selectedInstrument] || `demucs_${selectedInstrument}_stem`;
+    let fileKey = midiKeyMap[selectedInstrument] || stemKeyMap[selectedInstrument] || `bs_roformer_${selectedInstrument}_stem`;
     const url = `${API_BASE_URL}${apiPrefixForId(id)}/download/${id}/${fileKey}`;
     const isPreview = id && id.startsWith('PRV');
     const fetchFn = isPreview ? previewFetch : authenticatedFetch;
@@ -487,12 +490,13 @@ function MidiConverter({ onLoginClick }) {
   const handleDownloadStem = async () => {
     if (!jobId) return;
     const stemKeyMap = {
-      drums: 'demucs_drums_stem',
-      piano: 'demucs_other_stem',
-      bass: 'demucs_bass_stem',
-      jazz_bass: 'demucs_bass_stem',
-      vocals: 'demucs_vocals_stem',
-      other: 'demucs_other_stem',
+      drums: 'bs_roformer_drums_stem',
+      piano: 'bs_roformer_piano_stem',
+      bass: 'bs_roformer_bass_stem',
+      jazz_bass: 'bs_roformer_bass_stem',
+      vocals: 'bs_roformer_vocals_stem',
+      guitar: 'bs_roformer_guitar_stem',
+      other: 'bs_roformer_other_stem',
     };
     const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
     await handleDownloadFile(stemKey, '.wav', `${selectedInstrument}_stem`);
@@ -619,7 +623,7 @@ function MidiConverter({ onLoginClick }) {
           { value: 'vocals', label: 'Vocal', icon: LiaMicrophoneAltSolid },
           { value: 'drums', label: 'Drums', icon: LuDrum },
           { value: 'piano', label: 'Piano', icon: Piano },
-          { value: 'jazz_bass', label: 'Guitar', icon: LuGuitar },
+          { value: 'guitar', label: 'Guitar', icon: LuGuitar },
           { value: 'bass', label: 'Bass', icon: BassIcon }
         ].map((instrument) => {
           const IconComp = instrument.icon;
