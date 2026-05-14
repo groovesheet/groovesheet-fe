@@ -1,30 +1,98 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
+import { fetchBlogPostBySlug } from '../utils/blog';
+import './BlogPost.css';
 
-// Placeholder route component for /blog/:slug.
-// The full BlogPost component (renders the MDX/CMS post body) will replace
-// this once the blog content pipeline lands. Kept as a real React component
-// so production builds resolve the import in App.js.
 function BlogPost({ onLoginClick }) {
   const { slug } = useParams();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setPost(null);
+    fetchBlogPostBySlug(slug)
+      .then((row) => {
+        if (!cancelled) setPost(row);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Failed to load post');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   return (
     <div className="blog-post-page">
       <Header onLoginClick={onLoginClick} />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: '96px 24px', textAlign: 'center' }}>
-        <p style={{ opacity: 0.6, fontSize: 14, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          {slug}
-        </p>
-        <h1 style={{ marginTop: 16, fontSize: 32 }}>This post is coming soon.</h1>
-        <p style={{ marginTop: 16, opacity: 0.75 }}>
-          We are still polishing this article. In the meantime, browse the rest of the blog.
-        </p>
-        <p style={{ marginTop: 32 }}>
-          <Link to="/blog">&larr; Back to blog</Link>
-        </p>
+
+      <main className="blog-post-main">
+        <div className="blog-post-container">
+          <Link to="/blog" className="blog-post-back">
+            ← Back to blog
+          </Link>
+
+          {loading && <p className="blog-post-status">Loading…</p>}
+          {error && !loading && (
+            <p className="blog-post-status blog-post-status-error">
+              Couldn’t load this post: {error}
+            </p>
+          )}
+          {!loading && !error && !post && (
+            <div className="blog-post-status">
+              <h1>Post not found</h1>
+              <p>The post you’re looking for doesn’t exist or hasn’t been published yet.</p>
+            </div>
+          )}
+
+          {post && (
+            <article className="blog-post-article">
+              <header className="blog-post-article-header">
+                <div className="blog-post-article-meta">
+                  <span>{post.date}</span>
+                  <span className="blog-post-article-dot" />
+                  <span>{post.readTime}</span>
+                  <span className="blog-post-article-dot" />
+                  <span>{post.author}</span>
+                </div>
+                <h1 className="blog-post-article-title">{post.title}</h1>
+                {post.excerpt && (
+                  <p className="blog-post-article-excerpt">{post.excerpt}</p>
+                )}
+              </header>
+
+              {post.coverImageUrl && (
+                <div
+                  className="blog-post-article-cover"
+                  style={{ backgroundImage: `url(${post.coverImageUrl})` }}
+                />
+              )}
+
+              <div className="blog-post-article-body">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeSanitize]}
+                >
+                  {post.bodyMd}
+                </ReactMarkdown>
+              </div>
+            </article>
+          )}
+        </div>
       </main>
+
       <Footer />
     </div>
   );

@@ -1,24 +1,63 @@
-import React from 'react';
-import Header from './layout/Header';
-import Footer from './layout/Footer';
+import React, { useEffect, useState } from 'react';
+import PreviewPanel from './PreviewPanel/PreviewPanel';
 
-// Placeholder route component for /preview-demo-1.
-// The full PreviewDemo (interactive walkthrough of the preview pipeline)
-// will replace this once the demo content lands. Kept as a real component
-// so production builds resolve the import in App.js.
-function PreviewDemo() {
+const SAMPLE_XML_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample.musicxml`;
+const SAMPLE_MIDI_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample.mid`;
+
+export default function PreviewDemo() {
+  const [xml, setXml] = useState(null);
+  const [midi, setMidi] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [xmlRes, midiRes] = await Promise.all([
+          fetch(SAMPLE_XML_URL),
+          fetch(SAMPLE_MIDI_URL),
+        ]);
+        if (!xmlRes.ok) throw new Error(`XML fetch failed: ${xmlRes.status}`);
+        if (!midiRes.ok) throw new Error(`MIDI fetch failed: ${midiRes.status}`);
+        const xmlText = await xmlRes.text();
+        const midiBuf = await midiRes.arrayBuffer();
+        if (cancelled) return;
+        setXml(xmlText);
+        setMidi(midiBuf);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   return (
-    <div className="preview-demo-page">
-      <Header />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: '96px 24px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: 32 }}>Preview demo coming soon.</h1>
-        <p style={{ marginTop: 16, opacity: 0.75 }}>
-          We are still putting this walkthrough together. Please check back shortly.
-        </p>
-      </main>
-      <Footer />
-    </div>
+    <section className="hero">
+      <div className="hero-container success-expanded" style={{ paddingTop: 40 }}>
+        <div className="upload-area state-success expanded" style={{ position: 'relative' }}>
+          <div className="upload-content-top compact">
+            <div className="upload-text success-text">
+              <h3>Preview Demo — Beethoven sample</h3>
+              <p className="filename-text">sample.musicxml + sample.mid</p>
+            </div>
+          </div>
+          {error && (
+            <p style={{ color: '#ff6b6b', padding: 16 }}>Failed to load samples: {error}</p>
+          )}
+          {(xml || midi) && (
+            <PreviewPanel
+              workflowId="demo"
+              selectedInstrument="piano"
+              prefetchedFiles={{}}
+              preloadedMusicXml={xml}
+              preloadedMidiBuffer={midi}
+            />
+          )}
+          {!xml && !midi && !error && (
+            <p style={{ color: 'var(--color-muted-foreground)', padding: 16 }}>Loading samples…</p>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
-
-export default PreviewDemo;
