@@ -106,7 +106,19 @@ function TermsConditions({ onLoginClick }) {
             </div>
 
             <div className="legal-section">
-              <h2 className="legal-heading">13. Changes</h2>
+              <h2 className="legal-heading">13. YouTube Integration</h2>
+              <p className="legal-text">
+                GrooveSheet operates an automated publishing pipeline that uploads stem-separation videos to a YouTube channel we
+                own (<a href="https://www.youtube.com/@groovesheet_ai" rel="noopener noreferrer" target="_blank">@groovesheet_ai</a>)
+                using the YouTube Data API v3. Use of this integration is subject to the{' '}
+                <a href="https://www.youtube.com/t/terms" rel="noopener noreferrer" target="_blank">YouTube Terms of Service</a> and the{' '}
+                <a href="https://policies.google.com/privacy" rel="noopener noreferrer" target="_blank">Google Privacy Policy</a>.
+                See our <a href="/privacy-policy">Privacy Policy</a> for the specific OAuth scopes used and how Google API data is handled.
+              </p>
+            </div>
+
+            <div className="legal-section">
+              <h2 className="legal-heading">14. Changes</h2>
               <p className="legal-text">
                 We may update these Terms from time to time. Continued use of the Service after updates means you accept the updated Terms.
               </p>
