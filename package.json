@@ -8,6 +8,7 @@
     "@tonejs/midi": "^2.0.28",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.469.0",
+    "opensheetmusicdisplay": "^1.9.3",
     "osmd-extended": "file:../osmd-extended",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
