@@ -1,5 +1,7 @@
 ﻿# GrooveSheet Frontend (groovesheet-fe)
 
+> Agent memory for Claude Code. See [`.claude/`](./.claude/) for team-shared permissions and slash commands (`/qa`, `/dev`, `/env`). Personal overrides go in `.claude/settings.local.json` (gitignored).
+
 ## Stack
 - React 18 + Create React App, React Router v7, Tailwind CSS + component CSS files
 - Auth: Clerk (`@clerk/clerk-react`)

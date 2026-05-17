@@ -26,3 +26,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code — personal overrides only
+.claude/settings.local.json
