@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import './LoginModal.css';
 import {
   X,
@@ -16,6 +17,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const { setActive } = useClerk();
+  const { t } = useTranslation();
   const [showEmailSignIn, setShowEmailSignIn] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [email, setEmail] = useState('');
@@ -317,13 +319,13 @@ export const LoginModal = ({ isOpen, onClose }) => {
             <div className="flex flex-col min-h-[373px] items-start justify-between relative self-stretch w-full">
               <div className="flex items-center justify-between relative self-stretch w-full flex-[0_0_auto] mb-8">
                 <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-white text-4xl tracking-[0] leading-[31.2px] sm:whitespace-nowrap">
-                  Welcome to DrumScore
+                  {t('login.welcome')}
                 </div>
 
                 <button
                   className="close-button relative w-9 h-9 cursor-pointer bg-transparent border-0 p-0 flex items-center justify-center"
                   onClick={onClose}
-                  aria-label="Close modal"
+                  aria-label={t('login.closeAria')}
                 >
                   <X size={36} color="white" weight="bold" />
                 </button>
@@ -331,7 +333,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
 
               <div className="flex flex-col items-start gap-3 relative self-stretch w-full">
                 <div className="relative flex items-start justify-start self-stretch [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-white text-2xl tracking-[0] leading-[normal]">
-                  Continue with
+                  {t('login.continueWith')}
                 </div>
 
                 <div className="inline-flex items-center gap-2 relative flex-[0_0_auto]">
@@ -340,8 +342,8 @@ export const LoginModal = ({ isOpen, onClose }) => {
                   </div>
 
                   <p className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Light',Helvetica] font-light text-white text-sm tracking-[0] leading-4 whitespace-nowrap">
-                    <span className="hidden sm:inline">Subscribe to DrumScore updates and never miss a beat!</span>
-                    <span className="sm:hidden">Subscribe to DrumScore updates</span>
+                    <span className="hidden sm:inline">{t('login.subscribeLong')}</span>
+                    <span className="sm:hidden">{t('login.subscribeShort')}</span>
                   </p>
                 </div>
 
@@ -357,7 +359,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                       }}
                     >
                       <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Medium',Helvetica] font-medium text-white text-xl tracking-[0] leading-8 whitespace-nowrap">
-                        Google
+                        {t('login.google')}
                       </div>
 
                       <div className="auth-icon relative w-11 h-11 mt-6">
@@ -375,7 +377,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                       }}
                     >
                       <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Medium',Helvetica] font-medium text-white text-xl tracking-[0] leading-8 whitespace-nowrap">
-                        Facebook
+                        {t('login.facebook')}
                       </div>
 
                       <div className="auth-icon relative w-11 h-11 mt-6">
@@ -393,7 +395,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                       }}
                     >
                       <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Medium',Helvetica] font-medium text-white text-xl tracking-[0] leading-8 whitespace-nowrap">
-                        Apple
+                        {t('login.apple')}
                       </div>
 
                       <div className="auth-icon relative w-11 h-11 mt-6">
@@ -411,7 +413,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                       }}
                     >
                       <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Medium',Helvetica] font-medium text-white text-xl tracking-[0] leading-8 whitespace-nowrap">
-                        Email
+                        {t('login.email')}
                       </div>
 
                       <div className="auth-icon relative w-11 h-11 mt-10">
@@ -422,12 +424,11 @@ export const LoginModal = ({ isOpen, onClose }) => {
 
                   <div className="inline-flex items-start relative flex-[0_0_auto] flex-wrap mt-2">
                     <p className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Light',Helvetica] font-light text-[#a4a3a4] text-xs tracking-[0] leading-4">
-                      By clicking 'Continue with Google / Apple / Facebook / Email', you agree to
-                      our&nbsp;
+                      {t('login.termsPrefix')}&nbsp;
                     </p>
 
                     <button className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-[#a4a3a4] text-xs tracking-[0] leading-4 underline cursor-pointer bg-transparent border-0 p-0 hover:text-white transition-colors">
-                      Privacy Policy
+                      {t('login.privacyPolicy')}
                     </button>
                   </div>
                 </div>
@@ -443,21 +444,21 @@ export const LoginModal = ({ isOpen, onClose }) => {
                   >
                     <ArrowLeft size={24} color="white" weight="bold" />
                     <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-white text-lg tracking-[0] leading-[normal]">
-                      Back
+                      {t('login.back')}
                     </div>
                   </button>
 
                   <button
                     className="close-button relative w-9 h-9 cursor-pointer bg-transparent border-0 p-0 flex items-center justify-center"
                     onClick={onClose}
-                    aria-label="Close modal"
+                    aria-label={t('login.closeAria')}
                   >
                     <X size={36} color="white" weight="bold" />
                   </button>
                 </div>
 
                 <p className="relative flex items-center justify-start w-[426.94px] [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-white text-4xl tracking-[0] leading-[44px]">
-                  We will send a 6-digit verification code to the following email address:
+                  {t('login.emailPrompt')}
                 </p>
               </div>
 
@@ -468,7 +469,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="groovesheet@gmail.com"
+                      placeholder={t('login.emailPlaceholder')}
                       className={`${
                         email ? 'text-white' : 'text-[#a4a3a4]'
                       } w-full bg-transparent relative flex items-center justify-center [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-2xl tracking-[0] leading-8 border-0 outline-none placeholder:text-[#a4a3a4]`}
@@ -480,7 +481,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                     className="inline-flex justify-center flex-[0_0_auto] bg-[#012fa7] h-[98px] items-center px-5 py-px relative rounded-md overflow-hidden hover:bg-[#0137c7] transition-all cursor-pointer border-0"
                   >
                     <div className="text-white relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-2xl tracking-[0] leading-8 whitespace-nowrap">
-                      Confirm
+                      {t('login.confirm')}
                     </div>
                   </button>
                 </div>
@@ -496,21 +497,21 @@ export const LoginModal = ({ isOpen, onClose }) => {
                   >
                     <ArrowLeft size={24} color="white" weight="bold" />
                     <div className="relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-white text-lg tracking-[0] leading-[normal]">
-                      Back
+                      {t('login.back')}
                     </div>
                   </button>
 
                   <button
                     className="close-button relative w-9 h-9 cursor-pointer bg-transparent border-0 p-0 flex items-center justify-center"
                     onClick={onClose}
-                    aria-label="Close modal"
+                    aria-label={t('login.closeAria')}
                   >
                     <X size={36} color="white" weight="bold" />
                   </button>
                 </div>
 
                 <p className="relative flex items-center justify-start w-[426.94px] [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-white text-4xl tracking-[0] leading-[44px]">
-                  Please enter your 6-digit verification code:
+                  {t('login.codePrompt')}
                 </p>
               </div>
 
@@ -547,7 +548,7 @@ export const LoginModal = ({ isOpen, onClose }) => {
                   className="h-[98px] justify-center w-full bg-[#012fa7] flex items-center px-5 py-px relative self-stretch rounded-md overflow-hidden hover:bg-[#0137c7] transition-all cursor-pointer border-0"
                 >
                   <div className="text-white text-2xl relative flex items-center justify-center w-fit [font-family:'Hubot_Sans-Regular',Helvetica] font-normal tracking-[0] leading-8 whitespace-nowrap">
-                    Confirm
+                    {t('login.confirm')}
                   </div>
                 </button>
               </div>

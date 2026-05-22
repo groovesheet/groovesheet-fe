@@ -27,6 +27,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
 import { claimPendingPreviewIfAny } from './utils/previewApi';
 import config from './config';
+import { LocaleScope, LocaleSync } from './i18n/locale';
 
 // Function to preload an image and return a promise
 const preloadImage = (src) => {
@@ -169,25 +170,40 @@ function App() {
     document.body.classList.remove('modal-open');
   };
 
+  const appRoutes = (
+    <Routes>
+      <Route index element={<LandingPage onLoginClick={openLoginModal} />} />
+      <Route path="history" element={<TranscriptionHistory />} />
+      <Route path="blog" element={<Blog onLoginClick={openLoginModal} />} />
+      <Route path="blog/:slug" element={<BlogPost onLoginClick={openLoginModal} />} />
+      <Route path="about" element={<About onLoginClick={openLoginModal} />} />
+      <Route path="stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
+      <Route path="midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
+      <Route path="explore" element={<Explore onLoginClick={openLoginModal} />} />
+      <Route path="privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
+      <Route path="business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
+      <Route path="terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
+      <Route path="refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
+      <Route path="sso-callback" element={<SSOCallback />} />
+      <Route path="preview-demo-1" element={<PreviewDemo />} />
+    </Routes>
+  );
+
   return (
     <ThemeProvider>
       <Router>
         <PendingPreviewClaimRunner />
+        <LocaleSync />
         <Routes>
-          <Route path="/" element={<LandingPage onLoginClick={openLoginModal} />} />
-          <Route path="/history" element={<TranscriptionHistory />} />
-          <Route path="/blog" element={<Blog onLoginClick={openLoginModal} />} />
-          <Route path="/blog/:slug" element={<BlogPost onLoginClick={openLoginModal} />} />
-          <Route path="/about" element={<About onLoginClick={openLoginModal} />} />
-          <Route path="/stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
-          <Route path="/midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
-          <Route path="/explore" element={<Explore onLoginClick={openLoginModal} />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
-          <Route path="/business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
-          <Route path="/terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
-          <Route path="/refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
-          <Route path="/sso-callback" element={<SSOCallback />} />
-          <Route path="/preview-demo-1" element={<PreviewDemo />} />
+          <Route
+            path="/zh-CN/*"
+            element={<LocaleScope locale="zh-CN">{appRoutes}</LocaleScope>}
+          />
+          <Route
+            path="/zh-TW/*"
+            element={<LocaleScope locale="zh-TW">{appRoutes}</LocaleScope>}
+          />
+          <Route path="/*" element={<LocaleScope locale="en">{appRoutes}</LocaleScope>} />
         </Routes>
         <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
       </Router>

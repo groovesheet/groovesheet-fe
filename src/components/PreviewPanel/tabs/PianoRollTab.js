@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { Midi } from '@tonejs/midi';
 
-const NOTE_COLOR = '#3df573';
+const NOTE_COLOR = '#012FA7';
 const KEY_HEIGHT = 110;
-const TOTAL_DURATION = 10;
+const DEFAULT_DURATION = 10;
+const VISIBLE_WINDOW = 10;
 
 function midiToCanvasNote(note, canvasWidth, fallHeightPx, durationSec) {
   const minPitch = 21;
@@ -47,10 +48,18 @@ function drawPianoKeyboard(ctx, width, height, y) {
   ctx.fillRect(0, y - 4, width, 4);
 }
 
-export default function PianoRollTab({ midiBuffer, isLoading, error }) {
+export default function PianoRollTab({ midiBuffer, isLoading, error, currentTime = 0, isPlaying = false }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
-  const startTimeRef = useRef(null);
+  const syncRef = useRef({ at: 0, time: currentTime, playing: false });
+
+  useEffect(() => {
+    syncRef.current = {
+      at: (typeof performance !== 'undefined' ? performance.now() : Date.now()),
+      time: currentTime,
+      playing: isPlaying,
+    };
+  }, [currentTime, isPlaying]);
 
   useEffect(() => {
     if (!midiBuffer || !canvasRef.current) return undefined;
@@ -59,7 +68,8 @@ export default function PianoRollTab({ midiBuffer, isLoading, error }) {
     let midi;
     try { midi = new Midi(midiBuffer); } catch (e) { return undefined; }
 
-    const allNotes = midi.tracks.flatMap((t) => t.notes).filter((n) => n.time < TOTAL_DURATION);
+    const totalDuration = Math.max(midi.duration || DEFAULT_DURATION, DEFAULT_DURATION);
+    const allNotes = midi.tracks.flatMap((t) => t.notes).filter((n) => n.time < totalDuration);
 
     const resize = () => {
       canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
@@ -68,9 +78,10 @@ export default function PianoRollTab({ midiBuffer, isLoading, error }) {
     resize();
     window.addEventListener('resize', resize);
 
-    const render = (ts) => {
-      if (!startTimeRef.current) startTimeRef.current = ts;
-      const elapsed = ((ts - startTimeRef.current) / 1000) % (TOTAL_DURATION + 2);
+    const render = () => {
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const sync = syncRef.current;
+      const elapsed = sync.playing ? sync.time + (now - sync.at) / 1000 : sync.time;
 
       const w = canvas.width;
       const h = canvas.height;
@@ -93,14 +104,14 @@ export default function PianoRollTab({ midiBuffer, isLoading, error }) {
       ctx.shadowColor = NOTE_COLOR;
       ctx.shadowBlur = 12;
       allNotes.forEach((note) => {
-        const noteEndY = ((note.time + note.duration - elapsed) / TOTAL_DURATION) * fallHeight + fallHeight;
-        const noteStartY = ((note.time - elapsed) / TOTAL_DURATION) * fallHeight + fallHeight;
-        if (noteEndY < 0 || noteStartY > fallHeight) return;
+        const noteStartY = fallHeight - ((note.time - elapsed) / VISIBLE_WINDOW) * fallHeight;
+        const noteEndY = fallHeight - ((note.time + note.duration - elapsed) / VISIBLE_WINDOW) * fallHeight;
+        if (noteStartY < 0 || noteEndY > fallHeight) return;
         const minP = 21; const maxP = 108; const range = maxP - minP;
         const x = ((note.midi - minP) / range) * w;
         const nw = w / range;
-        const top = Math.max(0, noteStartY);
-        const bottom = Math.min(fallHeight, noteEndY);
+        const top = Math.max(0, noteEndY);
+        const bottom = Math.min(fallHeight, noteStartY);
         ctx.fillRect(x, top, nw - 1, bottom - top);
       });
       ctx.shadowBlur = 0;
@@ -114,7 +125,6 @@ export default function PianoRollTab({ midiBuffer, isLoading, error }) {
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
-      startTimeRef.current = null;
     };
   }, [midiBuffer]);
 

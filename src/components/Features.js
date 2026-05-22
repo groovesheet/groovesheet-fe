@@ -1,18 +1,18 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './Features.css';
 
 function Features() {
+  const { t } = useTranslation();
   return (
     <section className="features">
       <div className="features-container">
         <div className="features-header">
           <div className="features-title-wrapper">
-            <h2 className="features-title">Get Scores in Seconds - Not Weeks.</h2>
+            <h2 className="features-title">{t('features.title')}</h2>
           </div>
           <div className="features-description-wrapper">
-            <p className="features-description">
-              Built for speed and accuracy so you can focus on practice, teaching, and performance.
-            </p>
+            <p className="features-description">{t('features.subtitle')}</p>
           </div>
         </div>
 
@@ -28,10 +28,8 @@ function Features() {
                 </svg>
               </div>
               <div className="feature-content">
-                <h3 className="feature-card-title">Upload Your Track</h3>
-                <p className="feature-card-text">
-                  Drag in an MP3 (or choose one). We detect tempo, time signatures, and drum events automatically. Max 10 MB.
-                </p>
+                <h3 className="feature-card-title">{t('features.card1.title')}</h3>
+                <p className="feature-card-text">{t('features.card1.body')}</p>
               </div>
             </div>
           </div>
@@ -47,10 +45,8 @@ function Features() {
                 </svg>
               </div>
               <div className="feature-content">
-                <h3 className="feature-card-title">Customize Instantly</h3>
-                <p className="feature-card-text">
-                  Adjust tempo map, barlines, kit mapping, and ghost-note sensitivity. See changes in the live preview.
-                </p>
+                <h3 className="feature-card-title">{t('features.card2.title')}</h3>
+                <p className="feature-card-text">{t('features.card2.body')}</p>
               </div>
             </div>
           </div>
@@ -66,10 +62,8 @@ function Features() {
                 </svg>
               </div>
               <div className="feature-content">
-                <h3 className="feature-card-title">Export!</h3>
-                <p className="feature-card-text">
-                  Export clean notation to PDF, MusicXML, or MIDI. Print, share, or import into your editor.
-                </p>
+                <h3 className="feature-card-title">{t('features.card3.title')}</h3>
+                <p className="feature-card-text">{t('features.card3.body')}</p>
               </div>
             </div>
           </div>

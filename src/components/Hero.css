@@ -80,9 +80,9 @@
 .hero-disclaimer {
   color: var(--color-text);
   font-family: var(--font-family-sans);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 300;
-  line-height: 16px;
+  line-height: 20.8px;
 }
 
 .hero-disclaimer a {
@@ -764,8 +764,8 @@
     display: block;
     order: 3;
     text-align: left;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 16px;
+    line-height: 20.8px;
     width: 100%;
   }
 }
@@ -804,8 +804,8 @@
     display: block;
     order: 3;
     text-align: left;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 16px;
+    line-height: 20.8px;
     width: 100%;
   }
 

@@ -22,8 +22,6 @@
         <script src="js/jasmid/midifile.js"></script>
         <script src="js/jasmid/replayer.js"></script>
 
-        <script type="text/javascript" src="js/dat.gui.js"></script>
-
         <style>
             canvas
             {
@@ -81,7 +79,7 @@
                 this.key_max_rotation = 0.72;
                 this.octave = 2;
                 this.song = "game_of_thrones.mid";
-                this.noteOnColor = [ 255, 0, 0, 1.0 ];
+                this.noteOnColor = [ 1, 47, 167, 1.0 ];
                 this.play = function()
                     {
                         MIDI.Player.resume();
@@ -365,10 +363,20 @@
                     //MIDI.Player.loadFile(song[0], MIDI.Player.start);
                     MIDI.Player.timeWarp = 1.0; // speed the song is played back
                     var qsMidi = new URLSearchParams(window.location.search).get('midiUrl');
+                    var midiLoaded = false;
+                    var pendingPlay = false;
+                    function onMidiLoaded() {
+                        midiLoaded = true;
+                        if (pendingPlay) {
+                            pendingPlay = false;
+                            MIDI.Player.resume();
+                        }
+                        parent.postMessage({ source: 'gs', type: 'loaded', duration: (MIDI.Player.endTime || 0) / 1000 }, '*');
+                    }
                     if (qsMidi) {
-                        MIDI.Player.loadFile(qsMidi, MIDI.Player.start);
+                        MIDI.Player.loadFile(qsMidi, onMidiLoaded);
                     } else {
-                        MIDI.Player.loadFile("midi/" + controls.song);
+                        MIDI.Player.loadFile("midi/" + controls.song, onMidiLoaded);
                     }
                     
                     MIDI.Player.addListener(function(data)
@@ -384,61 +392,49 @@
                         }
                     });
 
-                    // Close the MIDI loader widget and open the GUI                                        
+                    // Close the MIDI loader widget
                     MIDI.loader.stop();
-                    songsToFiles ={
-                                    "Game Of Thrones Theme, Ramin Djawadi": "game_of_thrones.mid",
-                                    "Mario Overworld Theme (Super Mario Bros 3), Koji Kondo": "mario_-_overworld_theme.mid",                                    
-                                    "He's a Pirate (Pirates of the Caribbean), Klaus Badelt" : "hes_a_pirate.mid",
-                                    "Hedwigs Theme (Harry Potter), John Williams": "hedwigs_theme.mid",
-                                    "Something There (Beauty and the Beast), Alan Menken":"something_there.mid",
-                                    "Cruel Angel Thesis (Neon Genesis Evangelion)": "cruel_angel__s_thesis.mid",
-                                    "Me cuesta tanto olvidarte (Mecano)": "me_cuesta.mid",
-                                    "Sonata No. 14 C# minor (Moonlight), Beethoven": "mond_1.mid",
-                                    "For Elise, Beethoven": "for_elise_by_beethoven.mid",                                    
-                                    "Asturias (Leyenda), Albeniz": "alb_se5_format0.mid",
-                                    "Aragon (Fantasia), Albeniz": "alb_se6.mid",
-                                    "Prelude and Fugue in C major BWV 846, Bach": "bach_846.mid",
-                                    "Fantasia C major, Schubert": "schub_d760_1.mid",
-                                    "Sonata No. 16 C major, Mozart": "mz_545_1.mid",			    
-                                    "Sonata No. 11 A major (K331, First Movement), Mozart": "mz_331_1.mid",
-                                    "March - Song of the Lark, Tchaikovsky":"ty_maerz.mid",
-                                    "Piano Sonata in C major, Hoboken, Haydn": "haydn_35_1.mid",
-                                    "Etudes, Opus 25, Chopin": "chpn_op25_e1.mid",
-                                    "Polonaise Ab major, Opus 53, Chopin": "chpn_op53.mid",
-                                    "No. 2 - Oriental, Granados": "gra_esp_2.mid",
-                                    "Bohemian Rhapsody, Queen": "bohemian1.mid",                                    
-                                  };
-                    var gui = new dat.GUI({ width:625});
-                    //gui.add(controls, 'key_attack_time', 2.0 , 40.0);
-                    //gui.add(controls, 'key_max_rotation',0.2 , 1.0);                             
-                    var song = gui.add(controls, 'song', songsToFiles);
-                    var noteOnColorControl = gui.addColor(controls, 'noteOnColor');
-                    noteOnColorControl.onChange(function(value)
-                                    {
-                                        noteOnColor = new THREE.Color().setRGB(controls.noteOnColor[0]/256.0, controls.noteOnColor[1]/256.0, controls.noteOnColor[2]/256.0);;
-                                    });
 
-                    song.onChange(function(value)
-                                    {
-                                        MIDI.Player.stop();
-                                        MIDI.Player.loadFile("midi/" + value, MIDI.Player.start);
-                                    });
+                    function postState() {
+                        try {
+                            parent.postMessage({
+                                source: 'gs',
+                                type: 'state',
+                                isPlaying: MIDI.Player.playing === true,
+                                currentTime: (MIDI.Player.currentTime || 0) / 1000,
+                                duration: (MIDI.Player.endTime || 0) / 1000,
+                            }, '*');
+                        } catch (e) {}
+                    }
+                    setInterval(postState, 50);
 
-                    // make sure to remove any key pressed when changing the octave
-                    var octave = gui.add(controls, 'octave',0 , 4).step(1);
-                    octave.onChange(function(value)
-                                    {
-                                        for (keyCode in keys_down)
-                                        {  
-                                            var note = keyCode_to_note(keyCode);
-                                            key_status(note, keyState.note_off);
-                                        }
-                                        
-                                    });
+                    window.addEventListener('message', function (ev) {
+                        var m = ev.data;
+                        if (!m || m.source !== 'gs') return;
+                        if (m.type === 'play') {
+                            if (MIDI.Player.playing) return;
+                            if (!midiLoaded) { pendingPlay = true; return; }
+                            if (MIDI.Player.currentTime >= MIDI.Player.endTime - 1) MIDI.Player.currentTime = 0;
+                            MIDI.Player.resume();
+                        } else if (m.type === 'pause') {
+                            MIDI.Player.pause();
+                        } else if (m.type === 'stop') {
+                            MIDI.Player.stop();
+                        } else if (m.type === 'seek') {
+                            MIDI.Player.currentTime = (m.seconds || 0) * 1000;
+                        } else if (m.type === 'speed') {
+                            try { MIDI.Player.timeWarp = 1 / (m.factor || 1); } catch (e) {}
+                        } else if (m.type === 'noteOn') {
+                            try {
+                                MIDI.setVolume(0, 127);
+                                MIDI.noteOn(0, m.note, m.velocity || 110, 0);
+                                MIDI.noteOff(0, m.note, (m.duration || 0.6));
+                            } catch (e) {}
+                        }
+                        postState();
+                    });
 
-                    gui.add(controls, 'play');
-                    gui.add(controls, 'stop');
+                    parent.postMessage({ source: 'gs', type: 'ready' }, '*');
                 });                               
             };            
 
@@ -446,35 +442,5 @@
 
         </script>
 
-    <script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
-    </script>
-    <script type="text/javascript">
-    _uacct = "UA-302418-4";
-    urchinTracker();
-    </script>
-
-    <script type="text/javascript">
-    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-    try
-    {
-      var pageTracker = _gat._getTracker("UA-302418-4");
-      pageTracker._trackPageview();
-    }
-    catch(err)
-    {
-    }
-    </script>
-
-    <div id="info">
-        <a href="http://threejs.org" target="_blank">three.js</a> - 3D Piano player demo<br />
-        Controls: Keyboard to play, Mouse to orbit<br/>
-        Uses <a href="http://mudcu.be/midi-js/" target="_blank">MIDI.js</a> Source code available on <a href="https://github.com/reality3d/3d-piano-player" target="_blank">Github</a><br/>
-        <a href="http://www.x.com/reality3d/" target="_blank">Borja Morales</a>
-		<a href="https://www.x.com/share" class="twitter-share-button" data-url="https://www.borjamorales.com/3d-piano-player/" data-via="reality3d">Tweet</a>
-    </div>
-	<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>	
     </body>
 </html>

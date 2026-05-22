@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
@@ -9,7 +10,9 @@ import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import { useWorkflowPersistence } from '../hooks/useWorkflowPersistence';
-import VisualizationPanel from './visualization/VisualizationPanel';
+import DownloadSection from './visualization/DownloadSection';
+import './visualization/VisualizationPanel.css';
+import PreviewPanel from './PreviewPanel/PreviewPanel';
 import './Hero.css';
 import config from '../config';
 
@@ -116,6 +119,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
+  const { t } = useTranslation();
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
@@ -385,12 +389,12 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     if (!selectedFile) return;
 
     if (!isSupportedFileType(selectedFile)) {
-      setError('File format not supported. Accepted: .mp3, .wav, .flac, .ogg, .au, .sph');
+      setError(t('hero.errors.fileFormat'));
       return;
     }
 
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-      setError('File size too large. Max 32MB.');
+      setError(t('hero.errors.fileSize'));
       return;
     }
 
@@ -891,11 +895,11 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     <>
       <div className="instrument-tabs">
         {[
-          { value: 'vocals', label: 'Vocal', icon: LiaMicrophoneAltSolid },
-          { value: 'drums', label: 'Drums', icon: LuDrum },
-          { value: 'piano', label: 'Piano', icon: Piano },
-          { value: 'guitar', label: 'Guitar', icon: LuGuitar },
-          { value: 'bass', label: 'Bass', icon: BassIcon }
+          { value: 'vocals', label: t('hero.instruments.vocal'), icon: LiaMicrophoneAltSolid },
+          { value: 'drums', label: t('hero.instruments.drums'), icon: LuDrum },
+          { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
+          { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
+          { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon }
         ].map((instrument) => {
           const IconComp = instrument.icon;
           const isSelected = selectedInstrument === instrument.value;
@@ -928,16 +932,16 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
             </div>
             
             <div className="upload-text-group">
-              <p className="upload-main-text">Drag and drop an audio file</p>
-              <p className="upload-sub-text">MP3, WAV, FLAC up to 50MB</p>
+              <p className="upload-main-text">{t('hero.dragDrop')}</p>
+              <p className="upload-sub-text">{t('hero.fileTypes')}</p>
             </div>
           </div>
 
-          <button 
-            className="browse-files-btn" 
+          <button
+            className="browse-files-btn"
             onClick={handleBrowseClick}
           >
-            Browse Files
+            {t('hero.browseFiles')}
           </button>
         </div>
       </div>
@@ -951,7 +955,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           <TrayArrowUpIcon />
         </div>
         <div className="upload-text">
-          <h3>Uploading...</h3>
+          <h3>{t('hero.uploading')}</h3>
         </div>
       </div>
 
@@ -967,7 +971,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
         </div>
 
         <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+          {t('hero.cancel')}
         </button>
       </div>
     </>
@@ -980,7 +984,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           <ServerIcon />
         </div>
         <div className="upload-text">
-          <h3>Starting server...</h3>
+          <h3>{t('hero.startingServer')}</h3>
         </div>
       </div>
 
@@ -991,7 +995,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
         </div>
 
         <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+          {t('hero.cancel')}
         </button>
       </div>
     </>
@@ -1004,7 +1008,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           <MagicWandIcon />
         </div>
         <div className="upload-text">
-          <h3>Transcribing...</h3>
+          <h3>{t('hero.transcribing')}</h3>
         </div>
       </div>
 
@@ -1020,28 +1024,33 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
         </div>
 
         <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+          {t('hero.cancel')}
         </button>
       </div>
     </>
   );
 
-  // Success state: render full-width VisualizationPanel instead of normal hero layout
+  // Success state: render DownloadSection + PreviewPanel (mirror /preview-demo-1)
   if (uiState === 'success') {
     return (
       <section className="hero">
         <div className="hero-container hero-container-success">
-          <VisualizationPanel
-            jobId={jobId}
-            selectedInstrument={selectedInstrument}
-            fileName={file?.name}
-            getToken={getToken}
-            onDownloadTranscription={handleManualDownload}
-            onDownloadStem={handleDownloadStem}
-            onDownloadMidi={handleDownloadMidi}
-            onReset={resetUpload}
-            downloadError={downloadError}
-          />
+          <div className="viz-panel">
+            <DownloadSection
+              fileName={file?.name}
+              selectedInstrument={selectedInstrument}
+              onDownloadTranscription={handleManualDownload}
+              onDownloadStem={handleDownloadStem}
+              onDownloadMidi={handleDownloadMidi}
+              onReset={resetUpload}
+              downloadError={downloadError}
+            />
+            <PreviewPanel
+              workflowId={jobId}
+              selectedInstrument={selectedInstrument}
+              prefetchedFiles={{}}
+            />
+          </div>
         </div>
       </section>
     );
@@ -1052,14 +1061,12 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
       <div className="hero-container">
         <div className="hero-content">
           <div className="hero-text">
-            <h1 className="hero-title">Audio In. Music Notation Out.</h1>
-            <p className="hero-subtitle">
-              Upload an audio. Receive accurate, editable & printable music notation in minutes.
-            </p>
+            <h1 className="hero-title">{t('hero.title')}</h1>
+            <p className="hero-subtitle">{t('hero.subtitle')}</p>
           </div>
           <div className="hero-disclaimer hero-disclaimer-desktop">
-            <span>By uploading a file, you agree to our </span>
-            <a href="#terms">Terms of Service</a>
+            <span>{t('hero.disclaimerPrefix')}</span>
+            <a href="#terms">{t('hero.termsOfService')}</a>
           </div>
         </div>
         <div
@@ -1098,8 +1105,8 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           )}
         </div>
         <div className="hero-disclaimer hero-disclaimer-mobile">
-          <span>By uploading a file, you agree to our </span>
-          <a href="#terms">Terms of Service</a>
+          <span>{t('hero.disclaimerPrefix')}</span>
+          <a href="#terms">{t('hero.termsOfService')}</a>
         </div>
       </div>
     </section>

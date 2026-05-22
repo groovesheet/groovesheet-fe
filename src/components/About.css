@@ -129,12 +129,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center -100px;
 }
 
 .about-image-row .about-image-small:last-child img {
   object-fit: cover;
-  object-position: center top;
+  object-position: center -130px;
 }
 
 /* Who We Are Section */

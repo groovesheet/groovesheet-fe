@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useClerk } from '../auth';
 import { User } from '@phosphor-icons/react';
+import { useLocalizedNavigate } from '../i18n/locale';
 import './AccountIcon.css';
 
 export const AccountIcon = ({ compact = false }) => {
@@ -10,8 +11,9 @@ export const AccountIcon = ({ compact = false }) => {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
-  const navigate = useNavigate();
+  const navigate = useLocalizedNavigate();
   const { signOut } = useClerk();
+  const { t } = useTranslation();
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -112,7 +114,7 @@ export const AccountIcon = ({ compact = false }) => {
             textAlign: 'left',
           }}
         >
-          Account
+          {t('nav.account')}
         </button>
 
         {isDropdownOpen &&
@@ -133,14 +135,14 @@ export const AccountIcon = ({ compact = false }) => {
               />
               <div ref={dropdownRef} className="account-dropdown-menu mobile">
                 <button className="account-dropdown-item" onClick={handleProfile}>
-                  <span>Profile</span>
+                  <span>{t('nav.profile')}</span>
                 </button>
                 <button className="account-dropdown-item" onClick={handleHistory}>
-                  <span>Transcription History</span>
+                  <span>{t('nav.history')}</span>
                 </button>
                 <div className="account-dropdown-divider" />
-                <button className="account-dropdown-item" onClick={handleSignOut}>
-                  <span>Sign out</span>
+                <button className="account-dropdown-item danger" onClick={handleSignOut}>
+                  <span>{t('nav.signOut')}</span>
                 </button>
               </div>
             </>,
@@ -168,7 +170,7 @@ export const AccountIcon = ({ compact = false }) => {
           className="account-label"
           style={{ fontFamily: "'Hubot_Sans-Regular',Helvetica", transform: 'translateY(1px)' }}
         >
-          Account
+          {t('nav.account')}
         </div>
       </button>
 
@@ -198,14 +200,14 @@ export const AccountIcon = ({ compact = false }) => {
               }}
             >
               <button className="account-dropdown-item" onClick={handleProfile}>
-                <span>Profile</span>
+                <span>{t('nav.profile')}</span>
               </button>
               <button className="account-dropdown-item" onClick={handleHistory}>
-                <span>Transcription History</span>
+                <span>{t('nav.history')}</span>
               </button>
               <div className="account-dropdown-divider" />
-              <button className="account-dropdown-item" onClick={handleSignOut}>
-                <span>Sign out</span>
+              <button className="account-dropdown-item danger" onClick={handleSignOut}>
+                <span>{t('nav.signOut')}</span>
               </button>
             </div>
           </>,

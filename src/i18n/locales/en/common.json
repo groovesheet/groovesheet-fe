@@ -1,0 +1,271 @@
+{
+  "nav": {
+    "products": "Products",
+    "musicTranscription": "Music Transcription",
+    "stemSplitter": "Stem Splitter",
+    "midiConverter": "MIDI Converter",
+    "explore": "Explore",
+    "pricing": "Pricing",
+    "help": "Help",
+    "about": "About",
+    "blog": "Blog",
+    "login": "Log in",
+    "account": "Account",
+    "profile": "Profile",
+    "history": "Transcription History",
+    "signOut": "Sign out",
+    "toggleMenuAria": "Toggle menu"
+  },
+  "theme": {
+    "toggleAria": "Toggle dark/light mode",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "language": {
+    "selectAria": "Select language",
+    "searchPlaceholder": "Search language",
+    "noResults": "No languages found"
+  },
+  "footer": {
+    "explore": "Explore",
+    "pricing": "Pricing",
+    "api": "API",
+    "help": "Help",
+    "support": "Support",
+    "changelog": "Changelog",
+    "apps": "Apps",
+    "desktopApp": "Desktop App",
+    "iosApp": "iOS App",
+    "androidApp": "Android App",
+    "copyright": "© {{year}} DrumScore",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "refund": "Refund Policy",
+    "reviewPrompt": "Care to share on Trustpilot?",
+    "reviewCta": "Review Us"
+  },
+  "hero": {
+    "title": "Audio In. Music Notation Out.",
+    "subtitle": "Upload an audio. Receive accurate, editable & printable music notation in minutes.",
+    "disclaimerPrefix": "By uploading a file, you agree to our ",
+    "termsOfService": "Terms of Service",
+    "dragDrop": "Drag and drop an audio file",
+    "fileTypes": "MP3, WAV, FLAC up to 50MB",
+    "browseFiles": "Browse Files",
+    "uploading": "Uploading...",
+    "startingServer": "Starting server...",
+    "transcribing": "Transcribing...",
+    "cancel": "Cancel",
+    "instruments": {
+      "vocal": "Vocal",
+      "drums": "Drums",
+      "piano": "Piano",
+      "guitar": "Guitar",
+      "bass": "Bass"
+    },
+    "errors": {
+      "fileFormat": "File format not supported. Accepted: .mp3, .wav, .flac, .ogg, .au, .sph",
+      "fileSize": "File size too large. Max 32MB."
+    }
+  },
+  "features": {
+    "title": "Get Scores in Seconds - Not Weeks.",
+    "subtitle": "Built for speed and accuracy so you can focus on practice, teaching, and performance.",
+    "card1": {
+      "title": "Upload Your Track",
+      "body": "Drag in an MP3 (or choose one). We detect tempo, time signatures, and drum events automatically. Max 10 MB."
+    },
+    "card2": {
+      "title": "Customize Instantly",
+      "body": "Adjust tempo map, barlines, kit mapping, and ghost-note sensitivity. See changes in the live preview."
+    },
+    "card3": {
+      "title": "Export!",
+      "body": "Export clean notation to PDF, MusicXML, or MIDI. Print, share, or import into your editor."
+    }
+  },
+  "pricing": {
+    "title": "Affordable Plans For Everyone.",
+    "subtitle": "Try it free today. Upgrade for higher limits and advanced features without breaking the bank.",
+    "tabs": {
+      "plans": "Plans",
+      "topups": "Top-Ups"
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "annual": "Annually",
+      "threeMonthsFree": "3 Months Free"
+    },
+    "processing": "Processing...",
+    "perMonth": "/month",
+    "perUserMonth": "user/month",
+    "oneTime": "one-time",
+    "popular": "MOST POPULAR",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "badge": "HOBBYIST",
+        "subtitle": "For individuals",
+        "cta": "Get Free",
+        "feature1": "10 minutes / month",
+        "feature2": "Free result previews",
+        "feature3": "100 MB upload/file",
+        "feature4": "Standard queue"
+      },
+      "lite": {
+        "name": "Lite",
+        "badge": "PROFESSIONAL",
+        "subtitle": "Best for small teams",
+        "cta": "Subscribe",
+        "feature1": "120 minutes / month",
+        "feature2": "Result downloads (PDF, MusicXML, MIDI)",
+        "feature3": "500 MB upload/file",
+        "feature4": "Batch processing",
+        "feature5": "Priority support with chat"
+      },
+      "pro": {
+        "name": "Pro",
+        "badge": "ENTERPRISE",
+        "subtitle": "Designed for companies",
+        "cta": "Subscribe",
+        "feature1": "Everything in Lite",
+        "feature2": "Fast queue",
+        "feature3": "1 GB upload/file",
+        "feature4": "Early access to new features"
+      }
+    },
+    "topups": {
+      "starter": {
+        "name": "Starter",
+        "badge": "STARTER",
+        "subtitle": "Quick boost",
+        "cta": "Buy",
+        "feature1": "30 minutes added",
+        "feature2": "Never expire",
+        "feature3": "All formats included",
+        "feature4": "Standard queue"
+      },
+      "plus": {
+        "name": "Plus",
+        "badge": "PLUS",
+        "subtitle": "Best value",
+        "cta": "Buy",
+        "feature1": "60 minutes added",
+        "feature2": "Never expire",
+        "feature3": "All formats included",
+        "feature4": "Priority queue"
+      },
+      "power": {
+        "name": "Power",
+        "badge": "POWER",
+        "subtitle": "Maximum boost",
+        "cta": "Buy",
+        "feature1": "120 minutes added",
+        "feature2": "Never expire",
+        "feature3": "All formats included",
+        "feature4": "Priority queue"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Trusted by Musicians and Educators",
+    "subtitle": "See how people are using us. Real users. Real tracks. Faster practice and cleaner charts",
+    "roles": {
+      "sessionDrummer": "Session drummer",
+      "drumTeacher": "Drum Teacher",
+      "bandleader": "Bandleader",
+      "student": "Student",
+      "producer": "Producer",
+      "musicEducator": "Music Educator",
+      "contentCreator": "Content Creator",
+      "studioOwner": "Studio Owner",
+      "beginner": "Beginner"
+    }
+  },
+  "faq": {
+    "title": "FAQ",
+    "sections": {
+      "overview": {
+        "title": "Overview",
+        "questions": {
+          "signup": {
+            "q": "How do I sign up/sign in?",
+            "a": "Use the Sign up / Sign in button in the top-right to create an account or sign in with SSO. After signing in you can access paid features from your account page."
+          },
+          "split": {
+            "q": "How do I split a full track?",
+            "a": "Upload the full track and use the split controls in the editor to choose segments. You can then process each segment separately."
+          }
+        }
+      },
+      "packs": {
+        "title": "Packs and Minutes",
+        "questions": {
+          "expiration": {
+            "q": "What is the expiration date on paid packages?",
+            "a": "Paid packages expire 12 months from the purchase date unless otherwise specified in the package details."
+          },
+          "minutesMean": {
+            "q": "What does the \"number of minutes in a pack\" mean?",
+            "a": "The minutes indicate the total processing audio time included in the pack; longer tracks use more minutes proportionally."
+          },
+          "deducted": {
+            "q": "How are the minutes deducted from my account?",
+            "a": "Minutes are deducted based on the length of audio you process. Partial minutes round up to the nearest second as described in billing."
+          },
+          "remaining": {
+            "q": "Where can I see the number of remaining minutes?",
+            "a": "Your remaining minutes are shown on your account dashboard under 'Billing & Usage'."
+          },
+          "jobFails": {
+            "q": "What happens if a job fails?",
+            "a": "If a job fails we'll retry automatically; if it still fails we won't deduct minutes and you'll see a failure notice with options to retry or contact support."
+          },
+          "addMinutes": {
+            "q": "How can I add more minutes to my account?",
+            "a": "Visit the Pricing page and select an add-on pack or upgrade to a higher plan to increase your minutes."
+          }
+        }
+      },
+      "features": {
+        "title": "Features",
+        "questions": {
+          "quality": {
+            "q": "How do I improve the notation quality?",
+            "a": "Use higher-quality recordings, reduce background noise, and provide clear instrument separation for best results."
+          },
+          "live": {
+            "q": "Will it work on live recordings?",
+            "a": "Live recordings may work but results vary; studio-quality or clean recordings produce the best notation."
+          },
+          "meters": {
+            "q": "Does it handle odd meters and tempo changes?",
+            "a": "Yes — the system detects tempo changes and odd meters, but accuracy improves with clear rhythmic content."
+          },
+          "format": {
+            "q": "In what format will I receive the results?",
+            "a": "You can download results as PDF, MusicXML, and MIDI depending on your plan."
+          }
+        }
+      }
+    }
+  },
+  "login": {
+    "welcome": "Welcome to DrumScore",
+    "continueWith": "Continue with",
+    "subscribeLong": "Subscribe to DrumScore updates and never miss a beat!",
+    "subscribeShort": "Subscribe to DrumScore updates",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple",
+    "email": "Email",
+    "termsPrefix": "By clicking 'Continue with Google / Apple / Facebook / Email', you agree to our ",
+    "privacyPolicy": "Privacy Policy",
+    "back": "Back",
+    "emailPrompt": "We will send a 6-digit verification code to the following email address:",
+    "emailPlaceholder": "groovesheet@gmail.com",
+    "confirm": "Confirm",
+    "codePrompt": "Please enter your 6-digit verification code:",
+    "closeAria": "Close modal"
+  }
+}

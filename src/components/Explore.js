@@ -1,146 +1,216 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Funnel } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
-import TrackCard from './TrackCard';
+import Sidebar from './explore/Sidebar';
+import ExploreHeader from './explore/ExploreHeader';
+import Section from './explore/Section';
+import { SONGS, ROWS, FILTERS } from '../mocks/exploreData';
 import './Explore.css';
 
-// Fixture catalog. Replaced by GET /library/tracks once the backend lands.
-// Cover URLs are real Spotify CDN URLs from the social pipeline's existing runs
-// so the layout iterates against real album art.
-const FIXTURE_TRACKS = [
-  {
-    id: 'fixture-1',
-    spotify_id: '3ZffCQKLFLUvYM59XKLbVm',
-    title: 'Wake Me Up When September Ends',
-    artist: 'Green Day',
-    year: 2004,
-    cover_url:
-      'https://i.scdn.co/image/ab67616d0000b273dc30583ba717007b00cceb25',
-  },
-  {
-    id: 'fixture-2',
-    spotify_id: '5TpPSTItCwtZ8Sltr3vdzm',
-    title: 'Last Night on Earth',
-    artist: 'Green Day',
-    year: 2009,
-    cover_url:
-      'https://i.scdn.co/image/ab67616d0000b273c2ced39899b0d67cd5a724fa',
-  },
-  {
-    id: 'fixture-3',
-    spotify_id: '5qqabIl2vWzo9ApSC317sa',
-    title: 'Wonderwall (Remastered)',
-    artist: 'Oasis',
-    year: 1995,
-    cover_url:
-      'https://i.scdn.co/image/ab67616d0000b27395ed03898e8a9e904baa45e6',
-  },
-  {
-    id: 'fixture-4',
-    spotify_id: '0lvhEsN1zkMzfp2M1o17yy',
-    title: 'Holiday',
-    artist: 'Green Day',
-    year: 2024,
-    cover_url:
-      'https://i.scdn.co/image/ab67616d0000b273e7e7a06f7f85b02bcd72ab95',
-  },
-  {
-    id: 'fixture-5',
-    spotify_id: '70LcF31zb1H0PyJoS1Sx1r',
-    title: 'Creep',
-    artist: 'Radiohead',
-    year: 1993,
-    cover_url:
-      'https://i.scdn.co/image/ab67616d0000b273de3c04b5fc750b68899b20a9',
-  },
-];
+function matchesQuery(song, q) {
+  if (!q) return true;
+  const needle = q.trim().toLowerCase();
+  if (!needle) return true;
+  return (
+    song.title.toLowerCase().includes(needle) ||
+    song.artist.toLowerCase().includes(needle) ||
+    song.primary.toLowerCase().includes(needle) ||
+    song.genre.toLowerCase().includes(needle)
+  );
+}
+
+function handleCardClick(track) {
+  // Detail view comes after backend lands; log so clicks are visible during demo.
+  // eslint-disable-next-line no-console
+  console.log('track clicked', track);
+}
 
 export const Explore = ({ onLoginClick }) => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState({
+    difficulty: new Set(),
+    instrument: new Set(),
+    genre: new Set(),
+    format: new Set(),
+    length: new Set(),
+  });
+  const [activeChips, setActiveChips] = useState(new Set(['Piano']));
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const filteredTracks = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return FIXTURE_TRACKS;
-    return FIXTURE_TRACKS.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.artist.toLowerCase().includes(q),
-    );
-  }, [searchQuery]);
+  const toggleChip = (c) =>
+    setActiveChips((prev) => {
+      const next = new Set(prev);
+      if (next.has(c)) next.delete(c);
+      else next.add(c);
+      return next;
+    });
 
-  const handleBack = () => {
-    navigate('/');
-  };
+  const songsById = useMemo(() => {
+    const map = {};
+    SONGS.forEach((s) => {
+      map[s.id] = s;
+    });
+    return map;
+  }, []);
 
-  const handleTrackClick = (track) => {
-    // Detail view comes after backend lands. For now, log so we know clicks work.
-    // eslint-disable-next-line no-console
-    console.log('track clicked', track);
-  };
+  const resolve = (ids) =>
+    ids
+      .map((id) => songsById[id])
+      .filter(Boolean)
+      .filter((s) => matchesQuery(s, query));
+
+  useEffect(() => {
+    document.body.classList.toggle('modal-open', drawerOpen);
+    return () => document.body.classList.remove('modal-open');
+  }, [drawerOpen]);
+
+  const formatSections = [
+    {
+      key: 'sheet',
+      title: 'Popular sheet music',
+      subtitle: 'Engraved, downloadable as PDF and MusicXML.',
+      variant: 'sheet',
+      songs: resolve(ROWS.sheet),
+    },
+    {
+      key: 'midi',
+      title: 'Popular MIDI',
+      subtitle: 'Multi-track .mid files. Drop into your DAW.',
+      variant: 'midi',
+      songs: resolve(ROWS.midi),
+    },
+    {
+      key: 'stems',
+      title: 'Popular stems',
+      subtitle: 'Isolated vocals, drums, bass, keys.',
+      variant: 'stems',
+      songs: resolve(ROWS.stems),
+    },
+  ];
+
+  const discoverySections = [
+    {
+      key: 'trending',
+      title: 'Trending now',
+      subtitle: 'What working musicians are downloading this week.',
+      songs: resolve(ROWS.trending),
+    },
+    {
+      key: 'new',
+      title: 'New this week',
+      subtitle: 'Fresh transcriptions, less than 7 days old.',
+      songs: resolve(ROWS.newWeek),
+    },
+    {
+      key: 'learners',
+      title: 'For learners',
+      subtitle: 'Beginner-friendly picks across instruments.',
+      songs: resolve(ROWS.learners),
+      accent: true,
+    },
+  ];
+
+  const classicalSongs = SONGS.filter((s) => s.genre === 'Classical').filter((s) =>
+    matchesQuery(s, query),
+  );
+  const animeSongs = SONGS.filter((s) => s.genre === 'Anime/Game').filter((s) =>
+    matchesQuery(s, query),
+  );
+
+  const sidebarNode = (close) => (
+    <Sidebar
+      filters={filters}
+      setFilters={setFilters}
+      popularChips={FILTERS.popular}
+      activeChips={activeChips}
+      toggleChip={toggleChip}
+      onClose={close}
+    />
+  );
 
   return (
     <div className="explore-page">
+      <div className="dot-grid" />
       <Header onLoginClick={onLoginClick} />
+      <div className="explore-nav-divider" />
 
-      <div className="explore-container">
-        <div className="explore-content">
-          <button className="back-button" onClick={handleBack}>
-            <ArrowLeft size={35} weight="regular" />
-            <span>Back</span>
+      <div className="explore-layout">
+        <div className="explore-sidebar-col">{sidebarNode(null)}</div>
+
+        {drawerOpen && (
+          <>
+            <div
+              className="explore-sidebar-backdrop"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <div className="explore-sidebar-drawer">
+              {sidebarNode(() => setDrawerOpen(false))}
+            </div>
+          </>
+        )}
+
+        <main className="explore-main">
+          <button
+            type="button"
+            className="explore-mobile-filters"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open filters"
+          >
+            <Funnel size={18} weight="regular" />
+            <span>Filters</span>
           </button>
 
-          <div className="explore-main">
-            <div className="explore-header">
-              <div className="explore-title-section">
-                <h1 className="explore-title">Explore the Library</h1>
-              </div>
-              <div className="explore-info">
-                <p>
-                  Browse stems separated from a daily-curated playlist. Sign in
-                  to download lossless FLAC.
-                </p>
-              </div>
-            </div>
+          <ExploreHeader query={query} onQueryChange={setQuery} />
 
-            <div className="explore-sections">
-              <div className="search-bar">
-                <MagnifyingGlass size={32} weight="regular" />
-                <input
-                  type="text"
-                  placeholder="Search by song or artist"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+          {formatSections.map((s) => (
+            <Section
+              key={s.key}
+              title={s.title}
+              subtitle={s.subtitle}
+              variant={s.variant}
+              songs={s.songs}
+              onCardClick={handleCardClick}
+            />
+          ))}
 
-              {filteredTracks.length === 0 ? (
-                <div className="explore-section">
-                  <p className="explore-empty">
-                    No tracks match "{searchQuery}".
-                  </p>
-                </div>
-              ) : (
-                <div className="explore-section">
-                  <div className="tracks-grid">
-                    {filteredTracks.map((track) => (
-                      <TrackCard
-                        key={track.id}
-                        title={track.title}
-                        artist={track.artist}
-                        year={track.year}
-                        coverUrl={track.cover_url}
-                        onClick={() => handleTrackClick(track)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+          <div className="explore-divider">
+            <span className="explore-divider-label">Keep digging</span>
+            <div className="explore-divider-lines">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="explore-divider-line" style={{ top: i * 3 }} />
+              ))}
             </div>
           </div>
-        </div>
+
+          {discoverySections.map((s) => (
+            <Section
+              key={s.key}
+              title={s.title}
+              subtitle={s.subtitle}
+              songs={s.songs}
+              accent={s.accent}
+              onCardClick={handleCardClick}
+            />
+          ))}
+
+          {classicalSongs.length > 0 && (
+            <Section
+              title="Best of classical"
+              subtitle="Curated by our editorial team."
+              songs={classicalSongs}
+              onCardClick={handleCardClick}
+            />
+          )}
+          {animeSongs.length > 0 && (
+            <Section
+              title="Best of anime & game"
+              subtitle="Curated by our editorial team."
+              songs={animeSongs}
+              onCardClick={handleCardClick}
+            />
+          )}
+        </main>
       </div>
 
       <Footer />

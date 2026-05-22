@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Header.css';
 import { SignedIn, SignedOut } from '../../auth';
 import AccountIcon from '../AccountIcon';
 import { useTheme } from '../../context/ThemeContext';
+import { LocalizedLink, stripLocaleFromPath } from '../../i18n/locale';
+import { LanguageSelector } from '../LanguageSelector';
 
 function Header({ onLoginClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,6 +17,12 @@ function Header({ onLoginClick }) {
   const productsRef = useRef(null);
   const closeTimeoutRef = useRef(null);
   const { isDarkMode, toggleTheme } = useTheme();
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const localePathname = stripLocaleFromPath(pathname);
+  const isActive = (path) => localePathname === path;
+  const productsPaths = ['/', '/stem-splitter', '/midi-converter'];
+  const isProductsActive = productsPaths.includes(localePathname);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -64,21 +73,21 @@ function Header({ onLoginClick }) {
         {/* Inner constrained content to align with main page sections (e.g. Pricing) */}
         <div className="header-inner">
           <div className="header-left">
-            <Link to="/" className="logo">
+            <LocalizedLink to="/" className="logo">
               <img
                 src={isDarkMode ? '/images/Logo_White.png' : '/images/Logo_Dark.png'}
                 alt="DrumScore Logo"
                 className="logo-image"
               />
-            </Link>
+            </LocalizedLink>
             <nav className="nav-menu">
               <div
                 ref={productsRef}
-                className={`nav-item dropdown nav-products${isProductsOpen ? ' open' : ''}`}
+                className={`nav-item dropdown nav-products${isProductsOpen ? ' open' : ''}${isProductsActive ? ' active' : ''}`}
                 onMouseEnter={handleProductsEnter}
                 onMouseLeave={handleProductsLeave}
               >
-                <span>Products</span>
+                <span>{t('nav.products')}</span>
                 <svg
                   className="dropdown-arrow"
                   width="16"
@@ -93,26 +102,29 @@ function Header({ onLoginClick }) {
                   />
                 </svg>
               </div>
-              <a href="/pricing" className="nav-item">
-                Pricing
-              </a>
+              <LocalizedLink to="/explore" className={`nav-item${isActive('/explore') ? ' active' : ''}`}>
+                {t('nav.explore')}
+              </LocalizedLink>
+              <LocalizedLink to="/pricing" className={`nav-item${isActive('/pricing') ? ' active' : ''}`}>
+                {t('nav.pricing')}
+              </LocalizedLink>
               <a href="#help" className="nav-item">
-                Help
+                {t('nav.help')}
               </a>
-              <Link to="/about" className="nav-item">
-                About
-              </Link>
-              <Link to="/blog" className="nav-item">
-                Blog
-              </Link>
+              <LocalizedLink to="/about" className={`nav-item${isActive('/about') ? ' active' : ''}`}>
+                {t('nav.about')}
+              </LocalizedLink>
+              <LocalizedLink to="/blog" className={`nav-item${isActive('/blog') ? ' active' : ''}`}>
+                {t('nav.blog')}
+              </LocalizedLink>
             </nav>
           </div>
           <div className="header-right">
             <button
               className="theme-toggle"
               onClick={toggleTheme}
-              aria-label="Toggle dark/light mode"
-              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={t('theme.toggleAria')}
+              title={isDarkMode ? t('theme.switchToLight') : t('theme.switchToDark')}
             >
               {isDarkMode ? (
                 <svg
@@ -208,24 +220,12 @@ function Header({ onLoginClick }) {
                 </svg>
               )}
             </button>
-            <div className="language-selector desktop-only">
-              <span>En</span>
-              <svg
-                width="16"
-                height="10"
-                viewBox="0 0 17 10"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M8.60986 9.49994L1.10986 1.99994L2.15986 0.949938L8.60986 7.39994L15.0599 0.949938L16.1099 1.99994L8.60986 9.49994Z"
-                  fill="currentColor"
-                />
-              </svg>
+            <div className="desktop-only">
+              <LanguageSelector />
             </div>
             <SignedOut>
               <button onClick={openLoginModal} className="login-btn desktop-only">
-                Log in
+                {t('nav.login')}
               </button>
             </SignedOut>
             <SignedIn>
@@ -235,7 +235,7 @@ function Header({ onLoginClick }) {
             </SignedIn>
 
             {/* Mobile Hamburger Menu */}
-            <button className="hamburger-menu" onClick={toggleMobileMenu} aria-label="Toggle menu">
+            <button className="hamburger-menu" onClick={toggleMobileMenu} aria-label={t('nav.toggleMenuAria')}>
               <span></span>
               <span></span>
               <span></span>
@@ -257,9 +257,9 @@ function Header({ onLoginClick }) {
           onMouseEnter={handleProductsEnter}
           onMouseLeave={handleProductsLeave}
         >
-          <a href="/" className="products-dropdown-item">Music Transcription</a>
-          <a href="/stem-splitter" className="products-dropdown-item">Stem Splitter</a>
-          <a href="/midi-converter" className="products-dropdown-item">MIDI Converter</a>
+          <LocalizedLink to="/" className="products-dropdown-item">{t('nav.musicTranscription')}</LocalizedLink>
+          <LocalizedLink to="/stem-splitter" className="products-dropdown-item">{t('nav.stemSplitter')}</LocalizedLink>
+          <LocalizedLink to="/midi-converter" className="products-dropdown-item">{t('nav.midiConverter')}</LocalizedLink>
         </div>,
         document.body
       )}
@@ -291,10 +291,10 @@ function Header({ onLoginClick }) {
             >
               <div className="mobile-menu-content">
                 <div
-                  className="mobile-nav-item"
+                  className={`mobile-nav-item${isProductsActive ? ' active' : ''}`}
                   onClick={() => setIsMobileProductsOpen(!isMobileProductsOpen)}
                 >
-                  <span>Products</span>
+                  <span>{t('nav.products')}</span>
                   <svg
                     className={`dropdown-arrow${isMobileProductsOpen ? ' open' : ''}`}
                     width="14"
@@ -311,48 +311,39 @@ function Header({ onLoginClick }) {
                 </div>
                 {isMobileProductsOpen && (
                   <>
-                    <a href="/" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
-                      Music Transcription
-                    </a>
-                    <a href="/stem-splitter" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
-                      Stem Splitter
-                    </a>
-                    <a href="/midi-converter" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
-                      MIDI Converter
-                    </a>
+                    <LocalizedLink to="/" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
+                      {t('nav.musicTranscription')}
+                    </LocalizedLink>
+                    <LocalizedLink to="/stem-splitter" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
+                      {t('nav.stemSplitter')}
+                    </LocalizedLink>
+                    <LocalizedLink to="/midi-converter" className="mobile-nav-item mobile-nav-sub-item" onClick={closeMobileMenu}>
+                      {t('nav.midiConverter')}
+                    </LocalizedLink>
                   </>
                 )}
-                <a href="/pricing" className="mobile-nav-item" onClick={closeMobileMenu}>
-                  Pricing
-                </a>
+                <LocalizedLink to="/explore" className={`mobile-nav-item${isActive('/explore') ? ' active' : ''}`} onClick={closeMobileMenu}>
+                  {t('nav.explore')}
+                </LocalizedLink>
+                <LocalizedLink to="/pricing" className={`mobile-nav-item${isActive('/pricing') ? ' active' : ''}`} onClick={closeMobileMenu}>
+                  {t('nav.pricing')}
+                </LocalizedLink>
                 <a href="#help" className="mobile-nav-item" onClick={closeMobileMenu}>
-                  Help
+                  {t('nav.help')}
                 </a>
-                <Link to="/about" className="mobile-nav-item" onClick={closeMobileMenu}>
-                  About
-                </Link>
-                <Link to="/blog" className="mobile-nav-item" onClick={closeMobileMenu}>
-                  Blog
-                </Link>
+                <LocalizedLink to="/about" className={`mobile-nav-item${isActive('/about') ? ' active' : ''}`} onClick={closeMobileMenu}>
+                  {t('nav.about')}
+                </LocalizedLink>
+                <LocalizedLink to="/blog" className={`mobile-nav-item${isActive('/blog') ? ' active' : ''}`} onClick={closeMobileMenu}>
+                  {t('nav.blog')}
+                </LocalizedLink>
                 <div className="mobile-menu-divider"></div>
-                <div className="mobile-nav-item">
-                  <span>En</span>
-                  <svg
-                    width="16"
-                    height="10"
-                    viewBox="0 0 17 10"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M8.60986 9.49994L1.10986 1.99994L2.15986 0.949938L8.60986 7.39994L15.0599 0.949938L16.1099 1.99994L8.60986 9.49994Z"
-                      fill="white"
-                    />
-                  </svg>
+                <div className="mobile-nav-item mobile-language-row">
+                  <LanguageSelector compact />
                 </div>
                 <SignedOut>
                   <button onClick={openLoginModal} className="mobile-nav-item">
-                    Log in
+                    {t('nav.login')}
                   </button>
                 </SignedOut>
                 <SignedIn>

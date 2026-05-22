@@ -10,6 +10,10 @@
   transition: background-color 0.2s ease;
 }
 
+.explore-page .header {
+  padding-bottom: 22px;
+}
+
 .header-container {
   display: flex;
   width: 100%;
@@ -35,7 +39,7 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 32px;
 }
 
 .logo {
@@ -53,7 +57,7 @@
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
 }
 
 .nav-item {
@@ -77,7 +81,24 @@
   transition-duration: 0.2s !important;
 }
 
-.nav-item:hover {
+.nav-item:hover,
+.nav-item.active {
+  color: var(--color-foreground);
+}
+
+.nav-item.active.dropdown svg,
+.nav-item.active.dropdown svg *,
+.nav-item.active.dropdown svg path,
+.nav-item.active.dropdown svg polygon,
+.nav-item.active.dropdown svg circle,
+.nav-item.active.dropdown svg line,
+.nav-item.active.dropdown svg polyline {
+  color: var(--color-foreground);
+  fill: var(--color-foreground);
+  stroke: var(--color-foreground);
+}
+
+.mobile-nav-item.active {
   color: var(--color-foreground);
 }
 
@@ -148,8 +169,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  /* tighten horizontal padding so "En" sits closer to the account button */
-  padding: 0 0px;
+  padding: 4px 12px;
   color: var(--color-muted-foreground);
   font-size: 24px;
   font-weight: 400;

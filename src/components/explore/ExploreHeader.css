@@ -1,0 +1,131 @@
+.explore-hero {
+  padding-top: 44px;
+  padding-bottom: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.eh-copy {
+  max-width: 620px;
+  flex: 1 1 380px;
+  min-width: 0;
+}
+
+.eh-title {
+  font-family: var(--font-family-sans);
+  font-size: clamp(48px, 6vw, 72px);
+  line-height: 1.05;
+  letter-spacing: -1.4px;
+  font-weight: 400;
+  color: var(--color-text);
+  margin: 8px 0 0;
+}
+
+.eh-sub {
+  font-size: 21px;
+  color: var(--color-muted-foreground);
+  margin: 14px 0 0;
+  max-width: 560px;
+  line-height: 1.55;
+}
+
+.eh-search {
+  flex: 1 1 340px;
+  max-width: 560px;
+  min-width: 0;
+}
+
+.eh-search-shell {
+  position: relative;
+}
+
+.eh-search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted-foreground);
+  display: inline-flex;
+}
+
+.eh-search-input {
+  width: 100%;
+  background: var(--color-panel1);
+  border: 1px solid var(--color-border);
+  border-radius: 120px;
+  color: var(--color-text);
+  font-size: 17px;
+  padding: 17px 130px 17px 52px;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.eh-search-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.eh-search-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+
+.eh-search-btn {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10px 22px;
+  border-radius: 120px;
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.eh-search-btn:hover {
+  background: #0139c7;
+}
+
+.eh-try {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  align-items: center;
+}
+
+.eh-try-label {
+  font-size: 14px;
+  color: var(--color-muted-foreground);
+  margin-right: 4px;
+}
+
+.eh-try-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 120px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-foreground);
+  background: var(--color-panel1);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.eh-try-chip:hover {
+  background: var(--color-panel2);
+  border-color: var(--color-surface-muted);
+}

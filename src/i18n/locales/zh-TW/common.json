@@ -1,0 +1,271 @@
+{
+  "nav": {
+    "products": "產品",
+    "musicTranscription": "音樂轉譜",
+    "stemSplitter": "音軌分離",
+    "midiConverter": "MIDI 轉換器",
+    "explore": "探索",
+    "pricing": "價格",
+    "help": "說明",
+    "about": "關於",
+    "blog": "部落格",
+    "login": "登入",
+    "account": "帳戶",
+    "profile": "個人資料",
+    "history": "轉譜紀錄",
+    "signOut": "登出",
+    "toggleMenuAria": "切換選單"
+  },
+  "theme": {
+    "toggleAria": "切換深色/淺色模式",
+    "switchToLight": "切換至淺色模式",
+    "switchToDark": "切換至深色模式"
+  },
+  "language": {
+    "selectAria": "選擇語言",
+    "searchPlaceholder": "搜尋語言",
+    "noResults": "找不到語言"
+  },
+  "footer": {
+    "explore": "探索",
+    "pricing": "價格",
+    "api": "API",
+    "help": "說明",
+    "support": "技術支援",
+    "changelog": "更新日誌",
+    "apps": "應用程式",
+    "desktopApp": "桌面版",
+    "iosApp": "iOS 應用程式",
+    "androidApp": "Android 應用程式",
+    "copyright": "© {{year}} DrumScore",
+    "terms": "服務條款",
+    "privacy": "隱私政策",
+    "refund": "退款政策",
+    "reviewPrompt": "願意在 Trustpilot 分享嗎?",
+    "reviewCta": "為我們評分"
+  },
+  "hero": {
+    "title": "輸入音訊,輸出樂譜。",
+    "subtitle": "上傳音訊,幾分鐘內取得精準、可編輯、可列印的樂譜。",
+    "disclaimerPrefix": "上傳檔案即代表您同意我們的 ",
+    "termsOfService": "服務條款",
+    "dragDrop": "拖曳音訊檔案至此",
+    "fileTypes": "MP3、WAV、FLAC,最大 50MB",
+    "browseFiles": "瀏覽檔案",
+    "uploading": "上傳中...",
+    "startingServer": "伺服器啟動中...",
+    "transcribing": "轉譜中...",
+    "cancel": "取消",
+    "instruments": {
+      "vocal": "人聲",
+      "drums": "鼓",
+      "piano": "鋼琴",
+      "guitar": "吉他",
+      "bass": "貝斯"
+    },
+    "errors": {
+      "fileFormat": "不支援的檔案格式。可接受:.mp3、.wav、.flac、.ogg、.au、.sph",
+      "fileSize": "檔案過大。最大 32MB。"
+    }
+  },
+  "features": {
+    "title": "幾秒出譜,不必等上數週。",
+    "subtitle": "為速度與精度打造,讓您專注於練習、教學與演出。",
+    "card1": {
+      "title": "上傳您的曲目",
+      "body": "拖入一首 MP3(或選擇檔案)。我們自動偵測速度、拍號與鼓擊事件。單檔最大 10 MB。"
+    },
+    "card2": {
+      "title": "即時自訂",
+      "body": "調整速度圖、小節線、鼓組對應與 ghost note 靈敏度,即時預覽變更。"
+    },
+    "card3": {
+      "title": "輸出!",
+      "body": "輸出乾淨的 PDF、MusicXML 或 MIDI 樂譜。列印、分享,或匯入您的編輯器。"
+    }
+  },
+  "pricing": {
+    "title": "人人都負擔得起的方案。",
+    "subtitle": "今日免費試用。需要更高額度與進階功能時再升級,價格實惠。",
+    "tabs": {
+      "plans": "方案",
+      "topups": "加值"
+    },
+    "billing": {
+      "monthly": "月繳",
+      "annual": "年繳",
+      "threeMonthsFree": "省下 3 個月"
+    },
+    "processing": "處理中...",
+    "perMonth": "/月",
+    "perUserMonth": "使用者/月",
+    "oneTime": "一次性",
+    "popular": "最受歡迎",
+    "plans": {
+      "free": {
+        "name": "免費版",
+        "badge": "業餘",
+        "subtitle": "適合個人",
+        "cta": "免費開始",
+        "feature1": "每月 10 分鐘",
+        "feature2": "免費預覽結果",
+        "feature3": "單檔 100 MB",
+        "feature4": "標準佇列"
+      },
+      "lite": {
+        "name": "輕量版",
+        "badge": "專業",
+        "subtitle": "適合小團隊",
+        "cta": "訂閱",
+        "feature1": "每月 120 分鐘",
+        "feature2": "結果下載(PDF、MusicXML、MIDI)",
+        "feature3": "單檔 500 MB",
+        "feature4": "批次處理",
+        "feature5": "聊天優先支援"
+      },
+      "pro": {
+        "name": "專業版",
+        "badge": "企業",
+        "subtitle": "為公司設計",
+        "cta": "訂閱",
+        "feature1": "包含輕量版全部功能",
+        "feature2": "快速佇列",
+        "feature3": "單檔 1 GB",
+        "feature4": "新功能搶先體驗"
+      }
+    },
+    "topups": {
+      "starter": {
+        "name": "入門包",
+        "badge": "入門",
+        "subtitle": "快速補給",
+        "cta": "購買",
+        "feature1": "增加 30 分鐘",
+        "feature2": "永不過期",
+        "feature3": "包含所有格式",
+        "feature4": "標準佇列"
+      },
+      "plus": {
+        "name": "升級包",
+        "badge": "升級",
+        "subtitle": "最佳性價比",
+        "cta": "購買",
+        "feature1": "增加 60 分鐘",
+        "feature2": "永不過期",
+        "feature3": "包含所有格式",
+        "feature4": "優先佇列"
+      },
+      "power": {
+        "name": "豪華包",
+        "badge": "豪華",
+        "subtitle": "最大補給",
+        "cta": "購買",
+        "feature1": "增加 120 分鐘",
+        "feature2": "永不過期",
+        "feature3": "包含所有格式",
+        "feature4": "優先佇列"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "音樂人與教育者的信賴之選",
+    "subtitle": "看看大家如何使用我們。真實用戶,真實曲目,練習更快,譜面更乾淨。",
+    "roles": {
+      "sessionDrummer": "錄音室鼓手",
+      "drumTeacher": "鼓老師",
+      "bandleader": "樂團團長",
+      "student": "學生",
+      "producer": "製作人",
+      "musicEducator": "音樂教師",
+      "contentCreator": "內容創作者",
+      "studioOwner": "錄音室主理人",
+      "beginner": "初學者"
+    }
+  },
+  "faq": {
+    "title": "常見問題",
+    "sections": {
+      "overview": {
+        "title": "概覽",
+        "questions": {
+          "signup": {
+            "q": "如何註冊/登入?",
+            "a": "點擊右上角的註冊/登入按鈕建立帳戶,或使用 SSO 登入。登入後即可在帳戶頁使用付費功能。"
+          },
+          "split": {
+            "q": "如何切分完整曲目?",
+            "a": "上傳完整曲目,在編輯器中使用切分控制選擇段落,然後逐段處理。"
+          }
+        }
+      },
+      "packs": {
+        "title": "方案與分鐘數",
+        "questions": {
+          "expiration": {
+            "q": "付費方案的有效期多久?",
+            "a": "除非方案說明另有規定,付費方案自購買日起 12 個月內有效。"
+          },
+          "minutesMean": {
+            "q": "方案中的「分鐘數」是什麼意思?",
+            "a": "分鐘數代表方案內含的總處理音訊時長;曲目越長,按比例消耗的分鐘數越多。"
+          },
+          "deducted": {
+            "q": "分鐘數如何從帳戶扣除?",
+            "a": "依據處理音訊長度扣除,不足一分鐘按秒進位,詳見帳單說明。"
+          },
+          "remaining": {
+            "q": "在哪裡查看剩餘分鐘數?",
+            "a": "在帳戶儀表板的「帳單與用量」中可查看剩餘分鐘數。"
+          },
+          "jobFails": {
+            "q": "任務失敗怎麼辦?",
+            "a": "系統會自動重試;若仍失敗則不會扣除分鐘,並會顯示失敗通知與重試或聯絡支援的選項。"
+          },
+          "addMinutes": {
+            "q": "如何為帳戶新增分鐘數?",
+            "a": "前往價格頁選擇加購包或升級方案以增加分鐘數。"
+          }
+        }
+      },
+      "features": {
+        "title": "功能",
+        "questions": {
+          "quality": {
+            "q": "如何提升樂譜品質?",
+            "a": "使用更高品質的錄音、降低背景雜訊,並提供清晰的樂器分離,可獲得最佳結果。"
+          },
+          "live": {
+            "q": "現場錄音可以用嗎?",
+            "a": "現場錄音可處理但結果不一;錄音室等級或乾淨的錄音可獲得最佳譜面。"
+          },
+          "meters": {
+            "q": "支援不規則拍號與速度變化嗎?",
+            "a": "支援——系統會偵測速度變化與不規則拍號,節奏越清晰準確度越高。"
+          },
+          "format": {
+            "q": "結果以什麼格式提供?",
+            "a": "依據您的方案,可下載 PDF、MusicXML 與 MIDI。"
+          }
+        }
+      }
+    }
+  },
+  "login": {
+    "welcome": "歡迎使用 DrumScore",
+    "continueWith": "以下列方式繼續",
+    "subscribeLong": "訂閱 DrumScore 更新,不錯過任何節奏!",
+    "subscribeShort": "訂閱 DrumScore 更新",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple",
+    "email": "電子郵件",
+    "termsPrefix": "點擊「以 Google / Apple / Facebook / 電子郵件繼續」即代表您同意我們的 ",
+    "privacyPolicy": "隱私政策",
+    "back": "返回",
+    "emailPrompt": "我們將會把 6 位數驗證碼寄到下列電子郵件地址:",
+    "emailPlaceholder": "groovesheet@gmail.com",
+    "confirm": "確認",
+    "codePrompt": "請輸入 6 位數驗證碼:",
+    "closeAria": "關閉視窗"
+  }
+}
