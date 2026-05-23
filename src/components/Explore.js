@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Funnel } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -20,13 +21,9 @@ function matchesQuery(song, q) {
   );
 }
 
-function handleCardClick(track) {
-  // Detail view comes after backend lands; log so clicks are visible during demo.
-  // eslint-disable-next-line no-console
-  console.log('track clicked', track);
-}
-
 export const Explore = ({ onLoginClick }) => {
+  const navigate = useNavigate();
+  const handleCardClick = (track) => navigate(`/explore/${track.id}`);
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({
     difficulty: new Set(),

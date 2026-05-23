@@ -17,6 +17,7 @@ import About from './components/About';
 import StemSplitter from './components/StemSplitter';
 import MidiConverter from './components/MidiConverter';
 import Explore from './components/Explore';
+import Song from './components/Song';
 import Element from './components/Element';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import BusinessInformation from './components/BusinessInformation';
@@ -180,6 +181,7 @@ function App() {
       <Route path="stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
       <Route path="midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
       <Route path="explore" element={<Explore onLoginClick={openLoginModal} />} />
+      <Route path="explore/:trackId" element={<Song onLoginClick={openLoginModal} />} />
       <Route path="privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
       <Route path="business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
       <Route path="terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
