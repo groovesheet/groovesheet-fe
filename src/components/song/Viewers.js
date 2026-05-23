@@ -55,6 +55,7 @@ function Stem({
   isPrimary,
   onTimeUpdate,
   onEnded,
+  isMock,
 }) {
   const audioRef = useRef(null);
   const effectivelyMuted = state.mute || (anySolo && !state.solo) || masterMuted;
@@ -116,7 +117,12 @@ function Stem({
   }, [stem.name]);
 
   const progress = totalSec > 0 ? Math.min(1, currentSec / totalSec) : 0;
-  const streamUrl = `/api/library/assets/${stem.assetId}/url?purpose=stream`;
+  // In mock mode we have no real asset on the backend, so leave src empty —
+  // the audio element renders but never loads. Real backend rows resolve via
+  // the BE's signed-URL redirect.
+  const streamUrl = isMock
+    ? undefined
+    : `/api/library/assets/${stem.assetId}/url?purpose=stream`;
 
   return (
     <div
@@ -204,17 +210,19 @@ function Stem({
         <span className="gs-stem-vol">{state.volume}</span>
       </div>
 
-      <audio
-        ref={audioRef}
-        src={streamUrl}
-        preload="auto"
-        onTimeUpdate={(e) => {
-          if (isPrimary) onTimeUpdate?.(e.currentTarget.currentTime);
-        }}
-        onEnded={() => {
-          if (isPrimary) onEnded?.();
-        }}
-      />
+      {streamUrl && (
+        <audio
+          ref={audioRef}
+          src={streamUrl}
+          preload="auto"
+          onTimeUpdate={(e) => {
+            if (isPrimary) onTimeUpdate?.(e.currentTarget.currentTime);
+          }}
+          onEnded={() => {
+            if (isPrimary) onEnded?.();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -230,6 +238,7 @@ export function StemsView({
   muted,
   onTimeUpdate,
   onEnded,
+  isMock,
 }) {
   if (!stems.length) {
     return (
@@ -262,10 +271,13 @@ export function StemsView({
           isPrimary={i === 0}
           onTimeUpdate={onTimeUpdate}
           onEnded={onEnded}
+          isMock={isMock}
         />
       ))}
       <div className="gs-stems-footer">
-        Stems streamed as Opus · separated by GrooveSheet pipeline.
+        {isMock
+          ? 'Demo data — stem audio is disabled until the backend has a real row for this track.'
+          : 'Stems streamed as Opus · separated by GrooveSheet pipeline.'}
       </div>
     </div>
   );

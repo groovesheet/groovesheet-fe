@@ -105,3 +105,86 @@ export const ROWS = {
 export const fmtDur = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 export const fmtCount = (n) =>
   n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n);
+
+// ---------- Song detail page mock data ----------
+// The /explore/:trackId page expects the same shape the backend's
+// GET /library/tracks/{id} endpoint returns. Until that endpoint has data,
+// the Song page falls back to synthesizing a record from the SONGS row above
+// (single source of truth for titles/artists; details below add album/year/
+// stem layout).
+//
+// Stems map explore "parts" labels → backend stem_names. The Song page only
+// renders 'opus' format stems anonymously; under mock fallback the audio
+// elements get no src (playback is disabled — clearly noted in the UI).
+
+const PART_TO_STEM = {
+  Vocals: 'vocals',
+  Drums: 'drums',
+  Bass: 'bass',
+  Piano: 'piano',
+  Guitar: 'guitar',
+  Strings: 'other',
+  Brass: 'other',
+  Woodwinds: 'other',
+  Synth: 'other',
+};
+
+// Album + year fill-ins keyed by song id. Only entries present here get the
+// richer sidebar metadata; others fall through with album/year omitted.
+const TRACK_EXTRAS = {
+  s01: { album: 'Suite bergamasque',  year: 1905 },
+  s02: { album: 'Long Way Home',      year: 1971 },
+  s03: { album: 'After Hours',        year: 2023 },
+  s04: { album: 'Brandenburg Suite',  year: 1721 },
+  s05: { album: 'Hanami',             year: 2024 },
+  s07: { album: 'Glass Lanterns EP',  year: 2025 },
+  s10: { album: 'Pixel Princess OST', year: 2022 },
+  s13: { album: 'Two Hands',          year: 2024 },
+  s14: { album: 'After the Storm',    year: 2025 },
+  s20: { album: 'Aria',               year: 2024 },
+};
+
+function synthAssets(songId, parts) {
+  // Deduplicate after mapping (Brass + Strings + Synth could all collapse to 'other')
+  const seen = new Set();
+  const stems = [];
+  for (const p of parts) {
+    const name = PART_TO_STEM[p] || 'other';
+    if (seen.has(name)) continue;
+    seen.add(name);
+    stems.push(name);
+  }
+  return stems.map((stem_name, i) => ({
+    id: `mock-${songId}-${stem_name}`,
+    asset_type: 'stem',
+    stem_name,
+    format: 'opus',
+    r2_key: null,
+    size_bytes: null,
+  }));
+}
+
+/**
+ * Look up a mock track record by Explore song id.
+ * Returns a backend-shaped object (matches GET /library/tracks/{id}) plus a
+ * sentinel `_isMock: true` so the UI can mark playback as disabled.
+ */
+export function getMockTrack(id) {
+  const song = SONGS.find((s) => s.id === id);
+  if (!song) return null;
+  const extras = TRACK_EXTRAS[id] || {};
+  return {
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    album: extras.album || null,
+    year: extras.year || null,
+    duration_sec: song.length,
+    cover_r2_key: null,
+    popularity: song.saves || 0,
+    source: 'mock_fixture',
+    published_at: '2026-01-15T00:00:00Z',
+    assets: synthAssets(song.id, song.parts),
+    _isMock: true,
+  };
+}

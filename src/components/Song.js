@@ -5,6 +5,7 @@ import Footer from './layout/Footer';
 import Playbar from './song/Playbar';
 import SongSidebar from './song/SongSidebar';
 import { SheetView, PianoRollView, StemsView } from './song/Viewers';
+import { getMockTrack } from '../mocks/exploreData';
 import './Song.css';
 
 function fmtTime(s) {
@@ -62,22 +63,30 @@ function Song({ onLoginClick }) {
   const [transpose, setTranspose] = useState(0);
   const [stemState, setStemState] = useState({});
 
-  // Fetch track + assets
+  // Fetch track + assets. Backend is authoritative; mock fixture is the
+  // fallback so the page works before /library is populated. Flips over
+  // automatically once a real row exists for this id.
   useEffect(() => {
     let cancelled = false;
     setTrack(null);
     setError(null);
     (async () => {
+      let backendOk = false;
       try {
         const r = await fetch(`/api/library/tracks/${trackId}`);
-        if (!r.ok) {
-          throw new Error(r.status === 404 ? 'Track not found' : `Failed to load (${r.status})`);
+        if (r.ok) {
+          const data = await r.json();
+          if (!cancelled) setTrack(data);
+          backendOk = true;
         }
-        const data = await r.json();
-        if (!cancelled) setTrack(data);
-      } catch (e) {
-        if (!cancelled) setError(e.message || 'Failed to load track');
+      } catch {
+        // Network error → fall through to mock.
       }
+      if (backendOk || cancelled) return;
+      const mock = getMockTrack(trackId);
+      if (cancelled) return;
+      if (mock) setTrack(mock);
+      else setError('Track not found');
     })();
     return () => {
       cancelled = true;
@@ -219,6 +228,7 @@ function Song({ onLoginClick }) {
                     onTimeUpdate={setCurrentSec}
                     onEnded={() => setIsPlaying(false)}
                     onSeekFraction={onSeekFraction}
+                    isMock={!!track._isMock}
                   />
                 )}
               </div>
