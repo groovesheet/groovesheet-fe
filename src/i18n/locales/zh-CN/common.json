@@ -40,9 +40,7 @@
     "copyright": "© {{year}} DrumScore",
     "terms": "服务条款",
     "privacy": "隐私政策",
-    "refund": "退款政策",
-    "reviewPrompt": "愿意在 Trustpilot 上分享吗?",
-    "reviewCta": "给我们评分"
+    "refund": "退款政策"
   },
   "hero": {
     "title": "音频输入,乐谱输出。",

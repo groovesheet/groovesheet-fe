@@ -40,9 +40,7 @@
     "copyright": "© {{year}} DrumScore",
     "terms": "服務條款",
     "privacy": "隱私政策",
-    "refund": "退款政策",
-    "reviewPrompt": "願意在 Trustpilot 分享嗎?",
-    "reviewCta": "為我們評分"
+    "refund": "退款政策"
   },
   "hero": {
     "title": "輸入音訊,輸出樂譜。",

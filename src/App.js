@@ -24,6 +24,7 @@ import BusinessInformation from './components/BusinessInformation';
 import TermsConditions from './components/TermsConditions';
 import RefundPolicy from './components/RefundPolicy';
 import PreviewDemo from './components/PreviewDemo';
+import BillingSuccess from './components/BillingSuccess';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
 import { claimPendingPreviewIfAny } from './utils/previewApi';
@@ -187,7 +188,8 @@ function App() {
       <Route path="terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
       <Route path="refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
       <Route path="sso-callback" element={<SSOCallback />} />
-      <Route path="preview-demo-1" element={<PreviewDemo />} />
+      <Route path="preview1" element={<PreviewDemo />} />
+      <Route path="billing/success" element={<BillingSuccess />} />
     </Routes>
   );
 

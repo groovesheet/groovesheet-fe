@@ -179,26 +179,13 @@
 
 .footer-bottom-right {
   display: flex;
-  gap: 4px;
-  color: var(--color-muted-foreground);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 22px;
+  align-items: center;
+  min-width: 220px;
+  max-width: 320px;
 }
 
-.footer-bottom-right a {
-  color: var(--color-muted-foreground);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 22px;
-  text-decoration: none;
-  border-bottom: 1px solid var(--color-border-dark);
-  transition: color 0.2s;
-}
-
-.footer-bottom-right a:hover {
-  color: var(--color-white);
-  border-bottom-color: var(--color-white);
+.footer-bottom-right .trustpilot-widget {
+  width: 100%;
 }
 
 /* Light mode overrides for footer links */
@@ -218,11 +205,6 @@
 }
 
 [data-theme='light'] .footer-legal a:hover {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-}
-
-[data-theme='light'] .footer-bottom-right a:hover {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
 }

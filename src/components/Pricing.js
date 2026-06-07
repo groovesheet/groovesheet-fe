@@ -9,31 +9,63 @@ function Pricing({ onLoginClick }) {
   const { getToken } = useAuth();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(null);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('plans');
   const [billingMode, setBillingMode] = useState('annual');
 
+  /**
+   * Resolve a UI plan slug + billing mode to the backend plan key.
+   * The 'free' tier never hits checkout (no payment).
+   */
+  const resolvePlanKey = (plan) => {
+    if (plan === 'tier2') return billingMode === 'annual' ? 'tier2_annual' : 'tier2';
+    if (plan === 'tier3') return billingMode === 'annual' ? 'tier3_annual' : 'tier3';
+    return plan; // topup-30 / topup-60 / topup-120
+  };
+
   const handlePlanClick = async (plan) => {
+    setError(null);
+
     if (!isSignedIn) {
       if (onLoginClick) onLoginClick();
       return;
     }
+
+    // Free tier has no payment; nothing to do here (handled elsewhere on signup).
+    if (plan === 'free') return;
+
     setLoading(plan);
     try {
+      const planKey = resolvePlanKey(plan);
       const response = await authenticatedFetch(
-        '/api/user/assign-plan',
+        '/api/billing/create-checkout-session',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan }),
+          body: JSON.stringify({ plan: planKey }),
         },
         getToken
       );
+
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        console.error('Failed to assign plan:', err.detail || response.statusText);
+        const message = err.detail || response.statusText || 'Failed to start checkout';
+        console.error('Checkout session error:', message);
+        setError(message);
+        return;
       }
-    } catch (error) {
-      console.error('Error assigning plan:', error);
+
+      const data = await response.json();
+      if (!data?.url) {
+        setError('Checkout session was created but no redirect URL was returned.');
+        return;
+      }
+
+      // Hand off to Stripe-hosted Checkout
+      window.location.assign(data.url);
+    } catch (err) {
+      console.error('Error creating checkout session:', err);
+      setError(err.message || 'Unexpected error starting checkout');
     } finally {
       setLoading(null);
     }
@@ -48,6 +80,11 @@ function Pricing({ onLoginClick }) {
               <h2 className="pricing-title">{t('pricing.title')}</h2>
             </div>
             <p className="pricing-description">{t('pricing.subtitle')}</p>
+            {error && (
+              <p className="pricing-error" role="alert" style={{ color: '#ff5470', marginTop: '8px' }}>
+                {error}
+              </p>
+            )}
           </div>
 
           <div className="pricing-tabs">

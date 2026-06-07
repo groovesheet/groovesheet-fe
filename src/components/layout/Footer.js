@@ -4,6 +4,7 @@ import * as PhosphorIcons from '@phosphor-icons/react';
 import { useTheme } from '../../context/ThemeContext';
 import { LocalizedLink } from '../../i18n/locale';
 import { LanguageSelector } from '../LanguageSelector';
+import TrustBox from '../TrustBox';
 import './Footer.css';
 
 function Footer() {
@@ -114,8 +115,7 @@ function Footer() {
           </div>
 
           <div className="footer-bottom-right">
-            <span>{t('footer.reviewPrompt')} </span>
-            <a href="https://www.trustpilot.com/evaluate/groovesheet.net" target="_blank" rel="noopener noreferrer">{t('footer.reviewCta')}</a>
+            <TrustBox />
           </div>
         </div>
       </div>

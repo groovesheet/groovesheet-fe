@@ -40,9 +40,7 @@
     "copyright": "© {{year}} DrumScore",
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
-    "refund": "Refund Policy",
-    "reviewPrompt": "Care to share on Trustpilot?",
-    "reviewCta": "Review Us"
+    "refund": "Refund Policy"
   },
   "hero": {
     "title": "Audio In. Music Notation Out.",

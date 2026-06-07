@@ -25,8 +25,6 @@ Site-wide footer. Three-column main row, two-row bottom bar.
       <div.footer-bottom-left>
         <Link.copyright> © 2025 DrumScore       ← links to /business-information
         <div.footer-legal> Terms / Privacy / Refund
-      <div.footer-bottom-right>
-        Care to share on Trustpilot? Review Us
 ```
 
 ## Variants & states
@@ -49,7 +47,6 @@ Facebook, Instagram, X, YouTube, TikTok, Reddit, GitHub, LinkedIn, Discord, Dev.
 
 - Column headings in **Title Case** ("Explore", "Apps")
 - Link text in Title Case ("Pricing", "Desktop App")
-- Bottom bar in sentence case ("Care to share on Trustpilot?")
 - Copyright reads `© 2025 DrumScore` — legacy brand name, intentional, links to `/business-information`
 
 ## Do / Don't

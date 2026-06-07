@@ -1030,7 +1030,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     </>
   );
 
-  // Success state: render DownloadSection + PreviewPanel (mirror /preview-demo-1)
+  // Success state: render DownloadSection + PreviewPanel (mirror /preview1)
   if (uiState === 'success') {
     return (
       <section className="hero">
