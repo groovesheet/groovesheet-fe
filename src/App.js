@@ -17,13 +17,15 @@ import About from './components/About';
 import StemSplitter from './components/StemSplitter';
 import MidiConverter from './components/MidiConverter';
 import Explore from './components/Explore';
-import Song from './components/Song';
+import SongDetail from './components/song/SongDetail';
 import Element from './components/Element';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import BusinessInformation from './components/BusinessInformation';
 import TermsConditions from './components/TermsConditions';
 import RefundPolicy from './components/RefundPolicy';
 import PreviewDemo from './components/PreviewDemo';
+import Video1 from './components/video/Video1';
+import Video2 from './components/video/Video2';
 import BillingSuccess from './components/BillingSuccess';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
@@ -182,13 +184,15 @@ function App() {
       <Route path="stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
       <Route path="midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
       <Route path="explore" element={<Explore onLoginClick={openLoginModal} />} />
-      <Route path="explore/:trackId" element={<Song onLoginClick={openLoginModal} />} />
+      <Route path="explore/:songId" element={<SongDetail onLoginClick={openLoginModal} />} />
       <Route path="privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
       <Route path="business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
       <Route path="terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
       <Route path="refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
       <Route path="sso-callback" element={<SSOCallback />} />
       <Route path="preview1" element={<PreviewDemo />} />
+      <Route path="video1" element={<Video1 />} />
+      <Route path="video2" element={<Video2 />} />
       <Route path="billing/success" element={<BillingSuccess />} />
     </Routes>
   );

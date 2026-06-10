@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Funnel } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -7,6 +6,7 @@ import Sidebar from './explore/Sidebar';
 import ExploreHeader from './explore/ExploreHeader';
 import Section from './explore/Section';
 import { SONGS, ROWS, FILTERS } from '../mocks/exploreData';
+import { useLocalizedNavigate } from '../i18n/locale';
 import './Explore.css';
 
 function matchesQuery(song, q) {
@@ -22,7 +22,7 @@ function matchesQuery(song, q) {
 }
 
 export const Explore = ({ onLoginClick }) => {
-  const navigate = useNavigate();
+  const navigate = useLocalizedNavigate();
   const handleCardClick = (track) => navigate(`/explore/${track.id}`);
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({
