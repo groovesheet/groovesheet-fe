@@ -1,0 +1,13 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Keep auth, billing, and demo/utility routes out of search results
+Disallow: /history
+Disallow: /sso-callback
+Disallow: /billing/
+Disallow: /preview1
+Disallow: /video1
+Disallow: /video2
+
+Sitemap: https://www.groovesheet.net/sitemap.xml
