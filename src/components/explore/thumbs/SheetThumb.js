@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { DENSITY, mulberry32, hashStr } from './thumbUtils';
 
 function SheetThumb({ song, width = 320, height = 192 }) {
-  const seed = useMemo(() => hashStr(song.id), [song.id]);
+  const seed = useMemo(() => hashStr(String(song.id)), [song.id]);
   const rand = useMemo(() => mulberry32(seed), [seed]);
 
   const W = width;

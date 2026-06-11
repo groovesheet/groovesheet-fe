@@ -6,6 +6,9 @@ import PreviewTabs from './PreviewTabs';
 import PreviewControls from './PreviewControls';
 import PreviewBottomBar from './PreviewBottomBar';
 import { MIDI_KEY_BY_INSTRUMENT, MUSICXML_KEY_BY_INSTRUMENT, truncateMidiToSeconds } from './previewUtils';
+import { createTransport } from '../../player/transport';
+import { useTransport } from '../../player/transport-react';
+import { createSheetSecMapper } from '../../player/syncMap';
 import './PreviewPanel.css';
 
 const MusicSheetTab = lazy(() => import('./tabs/MusicSheetTab'));
@@ -13,12 +16,15 @@ const PianoRollTab = lazy(() => import('./tabs/PianoRollTab'));
 
 const TRANSCRIPTION_INSTRUMENTS = ['drums', 'piano', 'jazz_bass', 'bass'];
 
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
 export default function PreviewPanel({
   workflowId,
   selectedInstrument,
   prefetchedFiles,
   preloadedMusicXml,
   preloadedMidiBuffer,
+  preloadedSyncMap,
 }) {
   const auth = useAuth();
   const getToken = auth?.getToken;
@@ -32,21 +38,62 @@ export default function PreviewPanel({
   const [xmlError, setXmlError] = useState(null);
   const [midiError, setMidiError] = useState(null);
   const [iframeUrl, setIframeUrl] = useState(null);
-  const [iframeState, setIframeState] = useState({ isPlaying: false, currentTime: 0, duration: 0 });
-  const [osmdState, setOsmdState] = useState({ isPlaying: false, currentTime: 0, duration: 0 });
   const [speed, setSpeed] = useState(1);
   const containerRef = useRef(null);
   const osmdRef = useRef(null);
   const iframeRef = useRef(null);
   const blobUrlRef = useRef(null);
 
+  // --- shared transport (MIDI seconds are truth) --------------------------
+  // One transport instance per panel. Two engines:
+  //   'osmd' — the sheet tab's OSMD PlaybackManager (its audio plays; we read
+  //            position from onPlaybackStateChange).
+  //   'midi' — the 3d-piano iframe (always mounted, hidden off the piano_3d
+  //            tab). It is the audio source for the piano-roll and 3D tabs;
+  //            we drive it via postMessage and read its 'state' messages.
+  // Tab switching swaps the active engine, preserving position + play state.
+  const transportRef = useRef(null);
+  if (!transportRef.current) transportRef.current = createTransport();
+  const transport = transportRef.current;
+  const transportState = useTransport(transport);
+
+  // Latest OSMD playback state (sheet seconds), fed by onPlaybackStateChange.
+  const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
+  // Latest iframe state message (midi seconds) + receive timestamp, so the
+  // engine can interpolate between the iframe's 50ms state posts.
+  const iframeSyncRef = useRef({ time: 0, at: 0, playing: false });
+  // midiSec ↔ sheetSec mapping. Identity unless a sync map + sheet duration
+  // are known (then it's the sync map composed with the sheet's timing).
+  const mapperRef = useRef(createSheetSecMapper({}));
+  const syncMapRef = useRef(preloadedSyncMap || null);
+  const sheetDurRef = useRef(0);
+  const midiDurRef = useRef(0);
+  const rateRef = useRef(1);
+  // Set when the OSMD engine is told to seek/play before OSMD is ready
+  // (e.g. right after remounting the sheet tab); applied on first OSMD tick.
+  const pendingOsmdSyncRef = useRef(false);
+  // After commanding OSMD to seek, its timing source reports stale time for a
+  // few frames. Until OSMD's clock lands near the target (or the window
+  // expires), the engine's readTime() returns null so the transport
+  // self-advances instead of snapping back to the stale value.
+  const osmdExpectRef = useRef(null); // { sheetSec, until } | null
+
   const isDemoMode = Boolean(preloadedMusicXml || preloadedMidiBuffer);
   const isTranscriptionInstrument = isDemoMode || TRANSCRIPTION_INSTRUMENTS.includes(selectedInstrument);
   const midiKey = MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
   const musicXmlKey = MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
 
-  const engine = activeTab === 'music_sheet' ? 'osmd' : 'iframe';
-  const playerState = engine === 'osmd' ? osmdState : iframeState;
+  const rebuildMapper = useCallback(() => {
+    mapperRef.current = createSheetSecMapper({
+      pairs: syncMapRef.current?.pairs,
+      sheetDurationSec: sheetDurRef.current,
+    });
+  }, []);
+
+  useEffect(() => {
+    syncMapRef.current = preloadedSyncMap || null;
+    rebuildMapper();
+  }, [preloadedSyncMap, rebuildMapper]);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -124,56 +171,189 @@ export default function PreviewPanel({
     };
   }, [midiBuffer]);
 
-  useEffect(() => {
-    const onMessage = (ev) => {
-      const m = ev.data;
-      if (!m || m.source !== 'gs') return;
-      if (m.type === 'state') {
-        setIframeState({
-          isPlaying: Boolean(m.isPlaying),
-          currentTime: Number(m.currentTime) || 0,
-          duration: Number(m.duration) || 0,
-        });
-      }
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, []);
-
   const postToIframe = useCallback((msg) => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return;
     win.postMessage({ source: 'gs', ...msg }, '*');
   }, []);
 
-  useEffect(() => {
-    if (engine === 'osmd') {
-      postToIframe({ type: 'pause' });
-    } else if (osmdRef.current) {
-      try { osmdRef.current.pause?.(); } catch (e) {}
-    }
-  }, [engine, postToIframe]);
+  // Command OSMD to (seek and optionally play) a sheet-seconds position, and
+  // open a settle window during which its stale clock is ignored.
+  const commandOsmd = useCallback((sheetSec, andPlay) => {
+    const osmd = osmdRef.current;
+    if (!osmd) return;
+    osmdExpectRef.current = { sheetSec, until: nowMs() + 2000 };
+    try { osmd.seekMs?.(sheetSec * 1000); } catch (e) {}
+    if (andPlay) { try { osmd.play?.(); } catch (e) {} }
+  }, []);
 
-  const handleTogglePlay = useCallback(async () => {
-    if (engine === 'osmd') {
+  // --- engines -------------------------------------------------------------
+  useEffect(() => {
+    const t = transportRef.current;
+    t.attachEngine({
+      id: 'osmd',
+      play: (atSec) => {
+        if (!osmdRef.current || !osmdSyncRef.current.ready) {
+          pendingOsmdSyncRef.current = true;
+          return;
+        }
+        commandOsmd(mapperRef.current.midiSecToSheetSec(atSec), true);
+      },
+      pause: () => {
+        try { osmdRef.current?.pause?.(); } catch (e) {}
+      },
+      seek: (sec) => {
+        if (!osmdRef.current || !osmdSyncRef.current.ready) {
+          pendingOsmdSyncRef.current = true;
+          return;
+        }
+        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), false);
+      },
+      readTime: () => {
+        const s = osmdSyncRef.current;
+        if (!s.ready) return null;
+        const expect = osmdExpectRef.current;
+        if (expect) {
+          const settled = Math.abs(s.time - expect.sheetSec) <= 0.75;
+          if (!settled && nowMs() < expect.until) return null; // stale clock — self-advance
+          osmdExpectRef.current = null;
+        }
+        return mapperRef.current.sheetSecToMidiSec(s.time);
+      },
+    });
+    t.attachEngine({
+      id: 'midi',
+      play: (atSec) => {
+        postToIframe({ type: 'seek', seconds: atSec });
+        postToIframe({ type: 'play' });
+      },
+      pause: () => postToIframe({ type: 'pause' }),
+      seek: (sec) => postToIframe({ type: 'seek', seconds: sec }),
+      readTime: () => {
+        const s = iframeSyncRef.current;
+        if (!s.at) return null;
+        if (!s.playing) return s.time;
+        // The iframe posts state every 50ms; interpolate between posts.
+        return s.time + ((nowMs() - s.at) / 1000) * rateRef.current;
+      },
+    });
+    // Detach (not dispose) so React StrictMode's dev double-invoke of effects
+    // can re-attach to the same long-lived transport instance.
+    return () => {
+      t.pause();
+      t.detachEngine('osmd');
+      t.detachEngine('midi');
+    };
+  }, [postToIframe, commandOsmd]);
+
+  // Active engine follows the visible tab. setActiveEngine pauses the old
+  // engine, seeks the new one to the shared position, and resumes if playing.
+  useEffect(() => {
+    const t = transportRef.current;
+    if (activeTab === 'music_sheet') {
+      // The sheet tab remounts OSMD; mark it not-ready until its first tick
+      // and re-sync (seek + optional play) once it reports in.
+      osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+      pendingOsmdSyncRef.current = true;
+      t.setActiveEngine('osmd');
+    } else {
+      osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+      t.setActiveEngine('midi');
+    }
+  }, [activeTab]);
+
+  // Cross-drive: whenever the transport moves and OSMD is mounted but NOT the
+  // active engine, follow with the sheet cursor (midi sec → sheet sec). The
+  // piano-roll playhead follows the sheet automatically because it renders
+  // from transport position.
+  useEffect(() => {
+    const t = transportRef.current;
+    return t.subscribe((st) => {
+      if (t.getActiveEngineId() === 'osmd') return;
       const osmd = osmdRef.current;
       if (!osmd) return;
-      if (osmdState.isPlaying) await osmd.pause?.();
-      else await osmd.play?.();
-    } else {
-      if (iframeState.isPlaying) postToIframe({ type: 'pause' });
-      else postToIframe({ type: 'play' });
-    }
-  }, [engine, osmdState.isPlaying, iframeState.isPlaying, postToIframe]);
+      try { osmd.syncCursorToTime?.(mapperRef.current.midiSecToSheetSec(st.positionSec)); } catch (e) {}
+    });
+  }, []);
 
-  const handleSkipBack = useCallback(async () => {
-    if (engine === 'osmd') {
-      const osmd = osmdRef.current;
-      if (osmd) await osmd.seekMs?.(0);
-    } else {
-      postToIframe({ type: 'seek', seconds: 0 });
+  // --- iframe state messages ------------------------------------------------
+  useEffect(() => {
+    const onMessage = (ev) => {
+      const m = ev.data;
+      if (!m || m.source !== 'gs') return;
+      const t = transportRef.current;
+      if (m.type !== 'state' && m.type !== 'loaded') return;
+      const time = Number(m.currentTime) || 0;
+      const duration = Number(m.duration) || 0;
+      if (m.type === 'state') {
+        iframeSyncRef.current = { time, at: nowMs(), playing: Boolean(m.isPlaying) };
+      }
+      // MIDI duration is the transport's source of truth for durationSec.
+      if (duration > 0 && midiDurRef.current !== duration) {
+        midiDurRef.current = duration;
+        t.setDuration(duration);
+      }
+      // Reconcile: the iframe player stops itself at the end of the file.
+      if (m.type === 'state' && t.getActiveEngineId() === 'midi') {
+        const st = t.getState();
+        if (st.isPlaying && !m.isPlaying && duration > 0 && time >= duration - 0.25) {
+          t.pause();
+        }
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  // --- OSMD state (sheet seconds, every animation frame while mounted) -----
+  const handleOsmdStateChange = useCallback((s) => {
+    const t = transportRef.current;
+    osmdSyncRef.current = {
+      time: s.currentTime,
+      playing: s.isPlaying,
+      duration: s.duration,
+      ready: true,
+    };
+    if (s.duration > 0 && sheetDurRef.current !== s.duration) {
+      sheetDurRef.current = s.duration;
+      rebuildMapper();
+      // No MIDI duration yet (iframe still loading)? Use the sheet's.
+      if (!midiDurRef.current) {
+        t.setDuration(mapperRef.current.sheetSecToMidiSec(s.duration));
+      }
     }
-  }, [engine, postToIframe]);
+    // Deferred engine sync: OSMD just became ready after a tab switch/remount.
+    if (pendingOsmdSyncRef.current && osmdRef.current && t.getActiveEngineId() === 'osmd') {
+      pendingOsmdSyncRef.current = false;
+      const st = t.getState();
+      commandOsmd(mapperRef.current.midiSecToSheetSec(st.positionSec), st.isPlaying);
+    }
+    // Reconcile: OSMD pauses itself at the end of the sheet.
+    if (t.getActiveEngineId() === 'osmd') {
+      const st = t.getState();
+      if (
+        st.isPlaying && !s.isPlaying && s.duration > 0 &&
+        s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+      ) {
+        t.pause();
+      }
+    }
+  }, [rebuildMapper, commandOsmd]);
+
+  // --- UI handlers ----------------------------------------------------------
+  const handleTogglePlay = useCallback(() => {
+    const t = transportRef.current;
+    if (t.getState().isPlaying) t.pause();
+    else {
+      const st = t.getState();
+      if (st.durationSec > 0 && st.positionSec >= st.durationSec) t.seek(0);
+      t.play();
+    }
+  }, []);
+
+  const handleSkipBack = useCallback(() => {
+    transportRef.current.seek(0);
+  }, []);
 
   const handlePlayNote = useCallback(({ note, velocity, duration: dur }) => {
     postToIframe({ type: 'noteOn', note, velocity, duration: dur });
@@ -181,6 +361,8 @@ export default function PreviewPanel({
 
   const handleChangeSpeed = useCallback((newSpeed) => {
     setSpeed(newSpeed);
+    rateRef.current = newSpeed;
+    transportRef.current.setRate(newSpeed);
     const osmd = osmdRef.current;
     if (osmd?.setSpeed) { try { osmd.setSpeed(newSpeed); } catch (e) {} }
     postToIframe({ type: 'speed', factor: newSpeed });
@@ -198,10 +380,6 @@ export default function PreviewPanel({
     } else {
       el.requestFullscreen?.();
     }
-  }, []);
-
-  const handleOsmdStateChange = useCallback((s) => {
-    setOsmdState(s);
   }, []);
 
   const iframeClassName = useMemo(
@@ -244,8 +422,7 @@ export default function PreviewPanel({
               midiBuffer={midiBuffer}
               isLoading={midiLoading}
               error={midiError}
-              currentTime={playerState.currentTime}
-              isPlaying={playerState.isPlaying}
+              transport={transport}
             />
           )}
         </Suspense>
@@ -264,9 +441,9 @@ export default function PreviewPanel({
         </div>
       </div>
       <PreviewBottomBar
-        currentTime={playerState.currentTime}
-        duration={playerState.duration}
-        isPlaying={playerState.isPlaying}
+        currentTime={transportState.positionSec}
+        duration={transportState.durationSec}
+        isPlaying={transportState.isPlaying}
         onTogglePlay={handleTogglePlay}
         onSkipBack={handleSkipBack}
         speed={speed}

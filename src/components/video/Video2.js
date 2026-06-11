@@ -12,12 +12,13 @@ import VideoPianoRoll from './VideoPianoRoll';
  *   - "video"  → the playing frame (Figma 724:3272): one line of music sheet on
  *                top, falling-note piano roll below. Autoplays + loops.
  *
- * Sync: the music sheet (OSMD) is transcribed at a tempo whose natural length
- * (sheetDur) differs from the MIDI/piano-roll length (midiDur). We slow the
- * sheet so both span the same wall-clock time:
- *     factor = sheetDur / midiDur   →   osmd.setSpeed(factor)
- * A single master clock (0..midiDur, looping) drives the roll and the
- * one-line-at-a-time paging of the sheet.
+ * Sync: roll notes, system paging, and the cursor all come from the SAME
+ * parsed OSMD sheet (getNotes/getSystems), in natural sheet seconds — one
+ * timeline, no tempo reconciliation (the old sheetDur/midiDur setSpeed hack
+ * is gone). A single master clock (0..sheetDur, looping) drives the roll,
+ * the one-line-at-a-time paging, and syncCursorToTime(). If a residual
+ * MIDI↔score correction is ever needed here, compose the clock through
+ * src/player/syncMap.js (createSheetSecMapper) like PreviewPanel does.
  */
 
 const ASSETS = '/images';

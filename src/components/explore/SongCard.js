@@ -1,9 +1,9 @@
-import React from 'react';
-import { Play, Eye, Star } from '@phosphor-icons/react';
+import React, { useState } from 'react';
+import { Play, Clock } from '@phosphor-icons/react';
 import SheetThumb from './thumbs/SheetThumb';
 import MidiThumb from './thumbs/MidiThumb';
 import StemThumb from './thumbs/StemThumb';
-import { fmtCount } from '../../mocks/exploreData';
+import { FORMAT_LABELS, fmtDur } from './constants';
 import './SongCard.css';
 
 const THUMB_BY_VARIANT = {
@@ -14,20 +14,42 @@ const THUMB_BY_VARIANT = {
 
 function resolveThumb(song, variant) {
   if (variant && THUMB_BY_VARIANT[variant]) return THUMB_BY_VARIANT[variant];
+  // Stems thumbs are the most honest default (we always have stem peaks when
+  // thumb_data exists); otherwise pick deterministically from the id.
+  if (song.thumbData && song.thumbData.stems) return StemThumb;
   const flavors = ['sheet', 'midi', 'stems'];
-  const c = (song.id.charCodeAt(1) + song.id.charCodeAt(2)) % flavors.length;
+  const id = String(song.id || '00');
+  const c = (id.charCodeAt(0) + id.charCodeAt(id.length - 1)) % flavors.length;
   return THUMB_BY_VARIANT[flavors[c]];
 }
 
+/**
+ * Card model (see Explore.js trackToCard):
+ * { id, title, artist, length, coverUrl, formats, thumbData, parts }
+ */
 function SongCard({ song, variant, onClick }) {
+  const [coverFailed, setCoverFailed] = useState(false);
   const Thumb = resolveThumb(song, variant);
-  const diffClass = `sc-diff sc-diff-${song.difficulty.toLowerCase()}`;
-  const showSkill = song.skill && song.id.charCodeAt(2) % 3 === 0;
+  // Default (no-variant) cards lead with real album art; format-variant rows
+  // always show their generated thumb. Broken covers fall back to the thumb.
+  const showCover = !variant && song.coverUrl && !coverFailed;
+  const formats = song.formats || [];
+  const parts = song.parts || [];
 
   return (
     <article className="song-card" onClick={() => onClick && onClick(song)}>
       <div className="sc-thumb">
-        <Thumb song={song} />
+        {showCover ? (
+          <img
+            className="sc-cover"
+            src={song.coverUrl}
+            alt={`${song.title} cover art`}
+            loading="lazy"
+            onError={() => setCoverFailed(true)}
+          />
+        ) : (
+          <Thumb song={song} peaks={(song.thumbData && song.thumbData.stems) || null} />
+        )}
         <div className="sc-overlay" />
         <div className="sc-overlay-play">
           <span className="sc-play-btn" aria-label="Preview">
@@ -37,38 +59,28 @@ function SongCard({ song, variant, onClick }) {
         <div className="sc-overlay-cta">
           <span className="sc-open-pill">OPEN</span>
         </div>
-        <div className="sc-diff-wrap">
-          <span className={diffClass}>{song.difficulty}</span>
-        </div>
-        {showSkill && (
-          <div className="sc-skill-wrap">
-            <span className="sc-skill-tag">{song.skill}</span>
-          </div>
-        )}
       </div>
       <div className="sc-meta">
         <div className="sc-title">{song.title}</div>
         <div className="sc-artist">{song.artist}</div>
         <div className="sc-row">
           <span className="sc-genre">
-            {song.primary} · {song.genre}
+            {parts.length > 0 ? parts.slice(0, 3).join(' · ') : 'Full mix'}
           </span>
           <span className="sc-stats">
             <span className="sc-views">
-              <Eye size={12} weight="regular" />
-              {fmtCount(song.saves)}
-            </span>
-            <span className="sc-stars" aria-label={`${song.rating} out of 5`}>
-              <Star size={12} weight="fill" />
-              <span className="sc-rating">{song.rating.toFixed(1)}</span>
+              <Clock size={12} weight="regular" />
+              {fmtDur(song.length)}
             </span>
           </span>
         </div>
-        <div className="sc-formats">
-          <span>SHEET</span>
-          <span>MIDI</span>
-          <span>STEMS</span>
-        </div>
+        {formats.length > 0 && (
+          <div className="sc-formats">
+            {formats.map((f) => (
+              <span key={f}>{FORMAT_LABELS[f] || f.toUpperCase()}</span>
+            ))}
+          </div>
+        )}
       </div>
     </article>
   );

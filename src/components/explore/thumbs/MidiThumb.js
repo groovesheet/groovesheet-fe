@@ -1,16 +1,18 @@
 import React, { useMemo } from 'react';
 import { DENSITY, mulberry32, hashStr } from './thumbUtils';
-import { ROLL_COLORS } from '../../../mocks/exploreData';
+import { ROLL_COLORS } from '../constants';
+
+const FALLBACK_PARTS = ['Piano', 'Bass', 'Drums', 'Other'];
 
 function MidiThumb({ song, width = 320, height = 192 }) {
-  const seed = useMemo(() => hashStr(song.id + '_midi'), [song.id]);
+  const seed = useMemo(() => hashStr(String(song.id) + '_midi'), [song.id]);
   const rand = useMemo(() => mulberry32(seed), [seed]);
   const W = width;
   const H = height;
   const padX = 10;
   const padY = 10;
 
-  const lanes = song.parts.slice(0, 4);
+  const lanes = (song.parts && song.parts.length ? song.parts : FALLBACK_PARTS).slice(0, 4);
   const laneH = (H - padY * 2 - 4 * (lanes.length - 1)) / lanes.length;
 
   const cols = 16;

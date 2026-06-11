@@ -1,39 +1,49 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Funnel } from '@phosphor-icons/react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import Sidebar from './explore/Sidebar';
 import ExploreHeader from './explore/ExploreHeader';
 import Section from './explore/Section';
-import { SONGS, ROWS, FILTERS } from '../mocks/exploreData';
+import { SkeletonSection, ExploreEmpty, ExploreError } from './explore/ExploreStates';
+import { STEM_INSTRUMENTS, capitalize } from './explore/constants';
+import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
 import './Explore.css';
 
-function matchesQuery(song, q) {
-  if (!q) return true;
-  const needle = q.trim().toLowerCase();
-  if (!needle) return true;
-  return (
-    song.title.toLowerCase().includes(needle) ||
-    song.artist.toLowerCase().includes(needle) ||
-    song.primary.toLowerCase().includes(needle) ||
-    song.genre.toLowerCase().includes(needle)
-  );
+const PAGE_LIMIT = 60;
+const SEARCH_DEBOUNCE_MS = 300;
+
+/** Map a backend library track (GET /api/library/tracks) to the card model. */
+function trackToCard(track) {
+  const stems = (track.thumb_data && track.thumb_data.stems) || {};
+  return {
+    id: track.id,
+    title: track.title,
+    artist: track.artist,
+    length: track.duration_sec,
+    coverUrl: track.cover_url || null,
+    formats: track.formats || [],
+    thumbData: track.thumb_data || null,
+    // Capitalized for display + chip matching ('drums' → 'Drums').
+    parts: Object.keys(stems).map(capitalize),
+    popularity: track.popularity ?? 0,
+    publishedAt: track.published_at || null,
+  };
 }
 
 export const Explore = ({ onLoginClick }) => {
   const navigate = useLocalizedNavigate();
   const handleCardClick = (track) => navigate(`/explore/${track.id}`);
+
   const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState({
-    difficulty: new Set(),
-    instrument: new Set(),
-    genre: new Set(),
-    format: new Set(),
-    length: new Set(),
-  });
-  const [activeChips, setActiveChips] = useState(new Set(['Piano']));
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [tracks, setTracks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeChips, setActiveChips] = useState(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const requestSeq = useRef(0);
 
   const toggleChip = (c) =>
     setActiveChips((prev) => {
@@ -43,83 +53,91 @@ export const Explore = ({ onLoginClick }) => {
       return next;
     });
 
-  const songsById = useMemo(() => {
-    const map = {};
-    SONGS.forEach((s) => {
-      map[s.id] = s;
-    });
-    return map;
+  // Debounce the search input so each keystroke doesn't hit the server.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const loadTracks = useCallback(async (q) => {
+    const seq = ++requestSeq.current;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchLibraryTracks({ q, limit: PAGE_LIMIT });
+      if (seq !== requestSeq.current) return; // stale response — a newer search won
+      setTracks((data.tracks || []).map(trackToCard));
+    } catch (err) {
+      if (seq !== requestSeq.current) return;
+      console.error('Failed to load library tracks:', err);
+      setTracks([]);
+      setError(err.message || 'Failed to load the library.');
+    } finally {
+      if (seq === requestSeq.current) setLoading(false);
+    }
   }, []);
 
-  const resolve = (ids) =>
-    ids
-      .map((id) => songsById[id])
-      .filter(Boolean)
-      .filter((s) => matchesQuery(s, query));
+  useEffect(() => {
+    loadTracks(debouncedQuery);
+  }, [debouncedQuery, loadTracks]);
 
   useEffect(() => {
     document.body.classList.toggle('modal-open', drawerOpen);
     return () => document.body.classList.remove('modal-open');
   }, [drawerOpen]);
 
-  const formatSections = [
-    {
-      key: 'sheet',
-      title: 'Popular sheet music',
-      subtitle: 'Engraved, downloadable as PDF and MusicXML.',
-      variant: 'sheet',
-      songs: resolve(ROWS.sheet),
-    },
-    {
-      key: 'midi',
-      title: 'Popular MIDI',
-      subtitle: 'Multi-track .mid files. Drop into your DAW.',
-      variant: 'midi',
-      songs: resolve(ROWS.midi),
-    },
-    {
-      key: 'stems',
-      title: 'Popular stems',
-      subtitle: 'Isolated vocals, drums, bass, keys.',
-      variant: 'stems',
-      songs: resolve(ROWS.stems),
-    },
-  ];
+  // Client-side instrument filter on the parts derived from thumb_data.stems.
+  const visibleTracks = useMemo(() => {
+    if (activeChips.size === 0) return tracks;
+    return tracks.filter((t) => t.parts.some((p) => activeChips.has(p)));
+  }, [tracks, activeChips]);
 
-  const discoverySections = [
-    {
-      key: 'trending',
-      title: 'Trending now',
-      subtitle: 'What working musicians are downloading this week.',
-      songs: resolve(ROWS.trending),
-    },
-    {
-      key: 'new',
-      title: 'New this week',
-      subtitle: 'Fresh transcriptions, less than 7 days old.',
-      songs: resolve(ROWS.newWeek),
-    },
-    {
-      key: 'learners',
-      title: 'For learners',
-      subtitle: 'Beginner-friendly picks across instruments.',
-      songs: resolve(ROWS.learners),
-      accent: true,
-    },
-  ];
+  const { formatSections, newSection } = useMemo(() => {
+    const byPopularity = [...visibleTracks].sort((a, b) => b.popularity - a.popularity);
+    const byNewest = [...visibleTracks].sort(
+      (a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0),
+    );
+    // Sheet/MIDI sections only contain tracks that actually ship that format;
+    // Section renders nothing when a list is empty.
+    return {
+      formatSections: [
+        {
+          key: 'stems',
+          title: 'Popular stems',
+          subtitle: 'Isolated vocals, drums, bass, keys.',
+          variant: 'stems',
+          songs: byPopularity.filter((t) => t.formats.includes('stem')),
+        },
+        {
+          key: 'sheet',
+          title: 'Popular sheet music',
+          subtitle: 'Engraved, downloadable as PDF and MusicXML.',
+          variant: 'sheet',
+          songs: byPopularity.filter((t) => t.formats.includes('musicxml')),
+        },
+        {
+          key: 'midi',
+          title: 'Popular MIDI',
+          subtitle: 'Multi-track .mid files. Drop into your DAW.',
+          variant: 'midi',
+          songs: byPopularity.filter((t) => t.formats.includes('midi')),
+        },
+      ],
+      newSection: {
+        key: 'new',
+        title: 'New this week',
+        subtitle: 'Fresh transcriptions, hot off the press.',
+        songs: byNewest,
+        accent: true,
+      },
+    };
+  }, [visibleTracks]);
 
-  const classicalSongs = SONGS.filter((s) => s.genre === 'Classical').filter((s) =>
-    matchesQuery(s, query),
-  );
-  const animeSongs = SONGS.filter((s) => s.genre === 'Anime/Game').filter((s) =>
-    matchesQuery(s, query),
-  );
+  const isEmpty = !loading && !error && visibleTracks.length === 0;
 
   const sidebarNode = (close) => (
     <Sidebar
-      filters={filters}
-      setFilters={setFilters}
-      popularChips={FILTERS.popular}
+      popularChips={STEM_INSTRUMENTS}
       activeChips={activeChips}
       toggleChip={toggleChip}
       onClose={close}
@@ -160,52 +178,58 @@ export const Explore = ({ onLoginClick }) => {
 
           <ExploreHeader query={query} onQueryChange={setQuery} />
 
-          {formatSections.map((s) => (
-            <Section
-              key={s.key}
-              title={s.title}
-              subtitle={s.subtitle}
-              variant={s.variant}
-              songs={s.songs}
-              onCardClick={handleCardClick}
-            />
-          ))}
+          {loading && (
+            <>
+              <SkeletonSection />
+              <SkeletonSection />
+            </>
+          )}
 
-          <div className="explore-divider">
-            <span className="explore-divider-label">Keep digging</span>
-            <div className="explore-divider-lines">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className="explore-divider-line" style={{ top: i * 3 }} />
-              ))}
-            </div>
-          </div>
+          {!loading && error && (
+            <ExploreError message={error} onRetry={() => loadTracks(debouncedQuery)} />
+          )}
 
-          {discoverySections.map((s) => (
-            <Section
-              key={s.key}
-              title={s.title}
-              subtitle={s.subtitle}
-              songs={s.songs}
-              accent={s.accent}
-              onCardClick={handleCardClick}
-            />
-          ))}
-
-          {classicalSongs.length > 0 && (
-            <Section
-              title="Best of classical"
-              subtitle="Curated by our editorial team."
-              songs={classicalSongs}
-              onCardClick={handleCardClick}
+          {isEmpty && (
+            <ExploreEmpty
+              query={debouncedQuery || (activeChips.size > 0 ? [...activeChips].join(', ') : '')}
+              onClear={() => {
+                setQuery('');
+                setActiveChips(new Set());
+              }}
             />
           )}
-          {animeSongs.length > 0 && (
-            <Section
-              title="Best of anime & game"
-              subtitle="Curated by our editorial team."
-              songs={animeSongs}
-              onCardClick={handleCardClick}
-            />
+
+          {!loading && !error && !isEmpty && (
+            <>
+              {formatSections.map((s) => (
+                <Section
+                  key={s.key}
+                  title={s.title}
+                  subtitle={s.subtitle}
+                  variant={s.variant}
+                  songs={s.songs}
+                  onCardClick={handleCardClick}
+                />
+              ))}
+
+              <div className="explore-divider">
+                <span className="explore-divider-label">Keep digging</span>
+                <div className="explore-divider-lines">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i} className="explore-divider-line" style={{ top: i * 3 }} />
+                  ))}
+                </div>
+              </div>
+
+              <Section
+                key={newSection.key}
+                title={newSection.title}
+                subtitle={newSection.subtitle}
+                songs={newSection.songs}
+                accent={newSection.accent}
+                onCardClick={handleCardClick}
+              />
+            </>
           )}
         </main>
       </div>

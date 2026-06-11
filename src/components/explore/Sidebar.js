@@ -1,18 +1,20 @@
 import React from 'react';
 import { X } from '@phosphor-icons/react';
-import FilterGroup from './FilterGroup';
-import { FILTERS } from '../../mocks/exploreData';
+// import FilterGroup from './FilterGroup'; // deferred — see note below
 import './Sidebar.css';
 
-function Sidebar({ filters, setFilters, popularChips, activeChips, toggleChip, onClose }) {
-  const toggleFor = (key) => (label) =>
-    setFilters((prev) => {
-      const next = { ...prev, [key]: new Set(prev[key]) };
-      if (next[key].has(label)) next[key].delete(label);
-      else next[key].add(label);
-      return next;
-    });
-
+/**
+ * Explore sidebar.
+ *
+ * Active filter: the instrument chips, which filter client-side on each
+ * track's `parts` (derived from thumb_data.stems keys).
+ *
+ * DEFERRED: the checkbox FilterGroups (Difficulty / Genre / Format / Length)
+ * are hidden, not deleted, because the public library API does not expose
+ * difficulty/genre yet and per-facet counts are unavailable. Re-enable them
+ * (and FilterGroup above) once the backend returns facets.
+ */
+function Sidebar({ popularChips, activeChips, toggleChip, onClose }) {
   return (
     <aside className="explore-sidebar">
       {onClose && (
@@ -24,7 +26,7 @@ function Sidebar({ filters, setFilters, popularChips, activeChips, toggleChip, o
       )}
 
       <div className="sb-popular">
-        <div className="sb-popular-label">Popular</div>
+        <div className="sb-popular-label">Instruments</div>
         <div className="sb-chips">
           {popularChips.map((c) => (
             <button
@@ -39,17 +41,12 @@ function Sidebar({ filters, setFilters, popularChips, activeChips, toggleChip, o
         </div>
       </div>
 
+      {/* DEFERRED until the library API exposes these facets:
       <FilterGroup
         title="Difficulty"
         items={FILTERS.difficulty}
         value={filters.difficulty}
         onToggle={toggleFor('difficulty')}
-      />
-      <FilterGroup
-        title="Instrument"
-        items={FILTERS.instrument}
-        value={filters.instrument}
-        onToggle={toggleFor('instrument')}
       />
       <FilterGroup
         title="Genre"
@@ -70,6 +67,7 @@ function Sidebar({ filters, setFilters, popularChips, activeChips, toggleChip, o
         onToggle={toggleFor('length')}
         defaultOpen={false}
       />
+      */}
     </aside>
   );
 }

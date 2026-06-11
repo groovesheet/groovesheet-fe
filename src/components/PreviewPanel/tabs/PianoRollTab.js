@@ -48,10 +48,24 @@ function drawPianoKeyboard(ctx, width, height, y) {
   ctx.fillRect(0, y - 4, width, 4);
 }
 
-export default function PianoRollTab({ midiBuffer, isLoading, error, currentTime = 0, isPlaying = false }) {
+export default function PianoRollTab({
+  midiBuffer,
+  isLoading,
+  error,
+  // Preferred: shared playback transport (src/player/transport.js). The
+  // playhead is read straight off transport.getPosition() each frame, so the
+  // roll, sheet cursor, and bottom bar all share one clock.
+  transport,
+  // Legacy fallback when no transport is provided: prop-driven clock.
+  currentTime = 0,
+  isPlaying = false,
+}) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
+  const transportRef = useRef(transport);
   const syncRef = useRef({ at: 0, time: currentTime, playing: false });
+
+  useEffect(() => { transportRef.current = transport; }, [transport]);
 
   useEffect(() => {
     syncRef.current = {
@@ -79,9 +93,15 @@ export default function PianoRollTab({ midiBuffer, isLoading, error, currentTime
     window.addEventListener('resize', resize);
 
     const render = () => {
-      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-      const sync = syncRef.current;
-      const elapsed = sync.playing ? sync.time + (now - sync.at) / 1000 : sync.time;
+      let elapsed;
+      const t = transportRef.current;
+      if (t) {
+        elapsed = t.getPosition();
+      } else {
+        const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        const sync = syncRef.current;
+        elapsed = sync.playing ? sync.time + (now - sync.at) / 1000 : sync.time;
+      }
 
       const w = canvas.width;
       const h = canvas.height;

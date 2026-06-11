@@ -1,8 +1,14 @@
 // Sticky playback bar — transport, time, tempo, transpose, A/B loop, volume,
 // theme, fullscreen. Ported from the design pack (song-playback.jsx).
+// Time/scrub/volume are driven by the shared playback transport (the parent
+// passes transport-derived props). Controls without engine support (tempo,
+// transpose, metronome, loop) can be rendered disabled via `disabledControls`.
 import React, { useRef, useState } from 'react';
 import { Icon } from './icons';
 import { fmtTime } from '../../mocks/songDetailData';
+
+const DISABLED_TITLE = 'Not supported for this track yet';
+const disabledStyle = { opacity: 0.4, pointerEvents: 'none' };
 
 function PlaybackBar({
   isPlaying,
@@ -27,6 +33,9 @@ function PlaybackBar({
   onFullscreen,
   onSeekFraction,
   totalBeats,
+  // { tempo, transpose, metronome, loop } — true disables that control (kept
+  // visible so the layout reads the same; no engine support yet).
+  disabledControls = {},
 }) {
   const scrubRef = useRef(null);
   const [hoverPct, setHoverPct] = useState(null);
@@ -109,7 +118,9 @@ function PlaybackBar({
           <button
             className={`gs-ctrl ${loopMode !== 'off' ? 'gs-ctrl-on' : ''}`}
             onClick={onLoopMode}
-            title={`Loop: ${loopMode}`}
+            disabled={Boolean(disabledControls.loop)}
+            style={disabledControls.loop ? disabledStyle : undefined}
+            title={disabledControls.loop ? DISABLED_TITLE : `Loop: ${loopMode}`}
           >
             <Icon.Loop />
             {loopMode === 'ab' && (
@@ -143,7 +154,10 @@ function PlaybackBar({
         <div className="gs-pb-divider" />
 
         {/* Tempo */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <div
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 10, ...(disabledControls.tempo ? disabledStyle : null) }}
+          title={disabledControls.tempo ? DISABLED_TITLE : undefined}
+        >
           <span className="gs-pb-knob-label">Tempo</span>
           <input
             type="range"
@@ -172,7 +186,10 @@ function PlaybackBar({
         <div className="gs-pb-divider" />
 
         {/* Transpose */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <div
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...(disabledControls.transpose ? disabledStyle : null) }}
+          title={disabledControls.transpose ? DISABLED_TITLE : undefined}
+        >
           <span className="gs-pb-knob-label">Transpose</span>
           <div
             style={{
@@ -215,7 +232,13 @@ function PlaybackBar({
         <div className="gs-pb-divider" />
 
         {/* Metronome */}
-        <button className={`gs-ctrl ${metronome ? 'gs-ctrl-on' : ''}`} onClick={onMetronome} title="Metronome">
+        <button
+          className={`gs-ctrl ${metronome ? 'gs-ctrl-on' : ''}`}
+          onClick={onMetronome}
+          disabled={Boolean(disabledControls.metronome)}
+          style={disabledControls.metronome ? disabledStyle : undefined}
+          title={disabledControls.metronome ? DISABLED_TITLE : 'Metronome'}
+        >
           <Icon.Metronome />
         </button>
 

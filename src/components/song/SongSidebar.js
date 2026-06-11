@@ -40,6 +40,17 @@ function fmtDate(iso) {
 }
 
 function CoverArt({ track }) {
+  if (track.cover_url) {
+    return (
+      <div className="gs-rs-cover-thumb" style={{ overflow: 'hidden' }}>
+        <img
+          src={track.cover_url}
+          alt={`${track.title} cover`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
+    );
+  }
   if (track.cover_r2_key) {
     // Cover bytes aren't behind a public CDN yet; fall back to the gradient
     // tile until we have a public-cover URL builder.

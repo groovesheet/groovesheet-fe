@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import PreviewPanel from './PreviewPanel/PreviewPanel';
+import { parseSyncMap } from '../player/syncMap';
 
 const SAMPLE_XML_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample.musicxml`;
 const SAMPLE_MIDI_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample.mid`;
+const SAMPLE_SYNC_MAP_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample_sync_map.json`;
 
 export default function PreviewDemo() {
   const [xml, setXml] = useState(null);
   const [midi, setMidi] = useState(null);
+  const [syncMap, setSyncMap] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -26,6 +29,20 @@ export default function PreviewDemo() {
         setMidi(midiBuf);
       } catch (err) {
         if (!cancelled) setError(err.message);
+      }
+    })();
+    // Optional sync map: 404 / invalid JSON → identity mapping (sheet clock ≈
+    // MIDI clock after the backend tempo fix). Never blocks the demo.
+    (async () => {
+      try {
+        const res = await fetch(SAMPLE_SYNC_MAP_URL);
+        if (!res.ok) return;
+        // CRA's dev server serves index.html for missing files; parseSyncMap /
+        // res.json() will throw on that and we fall through to identity.
+        const map = parseSyncMap(await res.json());
+        if (!cancelled) setSyncMap(map);
+      } catch (e) {
+        /* identity fallback */
       }
     })();
     return () => { cancelled = true; };
@@ -51,6 +68,7 @@ export default function PreviewDemo() {
               prefetchedFiles={{}}
               preloadedMusicXml={xml}
               preloadedMidiBuffer={midi}
+              preloadedSyncMap={syncMap}
             />
           )}
           {!xml && !midi && !error && (

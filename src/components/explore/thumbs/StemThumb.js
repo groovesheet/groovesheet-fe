@@ -1,25 +1,55 @@
 import React, { useMemo } from 'react';
 import { mulberry32, hashStr } from './thumbUtils';
-import { ROLL_COLORS } from '../../../mocks/exploreData';
+import { ROLL_COLORS, capitalize } from '../constants';
 
-function StemThumb({ song, width = 320, height = 192 }) {
-  const seed = useMemo(() => hashStr(song.id + '_stem'), [song.id]);
+const FALLBACK_PARTS = ['Vocals', 'Drums', 'Bass', 'Other'];
+const SAMPLES = 48;
+
+/**
+ * Max-pool an array of 0..100 ints down to `bars` normalized (0..1) amplitudes.
+ */
+function maxPool(points, bars) {
+  const n = points.length;
+  if (!n) return [];
+  const out = [];
+  for (let i = 0; i < bars; i++) {
+    const start = Math.floor((i * n) / bars);
+    const end = Math.max(start + 1, Math.floor(((i + 1) * n) / bars));
+    let m = 0;
+    for (let j = start; j < end; j++) m = Math.max(m, points[j] || 0);
+    out.push(Math.max(0.06, m / 100));
+  }
+  return out;
+}
+
+/**
+ * Stem waveform thumbnail.
+ *
+ * When `peaks` (the API's thumb_data.stems object: stem name → 200 ints) is
+ * provided, real bars are rendered by max-pooling each stem's points down to
+ * the bar count. Without peaks, falls back to the procedural PRNG waves.
+ */
+function StemThumb({ song, peaks = null, width = 320, height = 192 }) {
+  const seed = useMemo(() => hashStr(String(song.id) + '_stem'), [song.id]);
   const rand = useMemo(() => mulberry32(seed), [seed]);
   const W = width;
   const H = height;
   const padX = 12;
   const padY = 12;
-  const stems = song.parts.slice(0, 4);
+
+  const hasPeaks = peaks && Object.keys(peaks).length > 0;
+  const stems = hasPeaks
+    ? Object.keys(peaks).slice(0, 4).map(capitalize)
+    : ((song.parts && song.parts.length ? song.parts : FALLBACK_PARTS)).slice(0, 4);
   const gap = 6;
   const rowH = (H - padY * 2 - gap * (stems.length - 1)) / stems.length;
 
   const labelAreaW = 76;
 
-  const renderWave = (yMid, color, kind) => {
-    const samples = 48;
+  const proceduralBars = (kind) => {
     const bars = [];
-    for (let i = 0; i < samples; i++) {
-      const t = i / samples;
+    for (let i = 0; i < SAMPLES; i++) {
+      const t = i / SAMPLES;
       let amp;
       if (kind === 'Drums') {
         amp = (rand() > 0.7 ? 0.85 : 0.18) * (0.6 + rand() * 0.4);
@@ -31,10 +61,18 @@ function StemThumb({ song, width = 320, height = 192 }) {
       } else {
         amp = 0.25 + 0.65 * (0.5 + 0.5 * Math.sin(t * Math.PI * 3 + seed * 0.02)) * (0.55 + rand() * 0.35);
       }
-      amp = Math.max(0.06, amp);
-      bars.push(amp);
+      bars.push(Math.max(0.06, amp));
     }
-    const barW = (W - padX * 2 - labelAreaW) / samples;
+    return bars;
+  };
+
+  const renderWave = (yMid, color, kind) => {
+    const stemKey = kind.toLowerCase();
+    const bars =
+      hasPeaks && Array.isArray(peaks[stemKey]) && peaks[stemKey].length > 0
+        ? maxPool(peaks[stemKey], SAMPLES)
+        : proceduralBars(kind);
+    const barW = (W - padX * 2 - labelAreaW) / bars.length;
     const x0 = padX + labelAreaW;
     const maxAmp = rowH / 2 - 2;
     return (
