@@ -77,6 +77,16 @@ export default function PreviewPanel({
   // expires), the engine's readTime() returns null so the transport
   // self-advances instead of snapping back to the stale value.
   const osmdExpectRef = useRef(null); // { sheetSec, until } | null
+  // OSMD's LinearTimingSource.getCurrentTimeInMs() is "wall ms since last
+  // reset" — it excludes the seek offset (and resets on speed changes too).
+  // We track the natural-sheet-seconds position at the last reset ourselves:
+  //   effectiveSheetSec = osmdBase + reported * rate
+  const osmdBaseRef = useRef(0);
+  // Effective OSMD position in natural sheet seconds (see osmdBaseRef).
+  const osmdEffectiveSheetSec = useCallback(
+    () => osmdBaseRef.current + osmdSyncRef.current.time * (rateRef.current || 1),
+    []
+  );
 
   const isDemoMode = Boolean(preloadedMusicXml || preloadedMidiBuffer);
   const isTranscriptionInstrument = isDemoMode || TRANSCRIPTION_INSTRUMENTS.includes(selectedInstrument);
@@ -177,14 +187,36 @@ export default function PreviewPanel({
     win.postMessage({ source: 'gs', ...msg }, '*');
   }, []);
 
-  // Command OSMD to (seek and optionally play) a sheet-seconds position, and
-  // open a settle window during which its stale clock is ignored.
+  // Serialized command queue for OSMD. PlaybackManager.playFromMs() (behind
+  // OSMDViewer.seekMs) starts with `await pause()`, so an un-awaited play()
+  // issued right after a seek races it and restarts playback from 0. Every
+  // seek/play pair must therefore be awaited in sequence.
+  const osmdQueueRef = useRef(Promise.resolve());
+  // Command OSMD to seek (and optionally resume at) a sheet-seconds position,
+  // opening a settle window during which its stale clock is ignored.
   const commandOsmd = useCallback((sheetSec, andPlay) => {
-    const osmd = osmdRef.current;
-    if (!osmd) return;
+    // Open the settle window SYNCHRONOUSLY — before the transport's next rAF
+    // tick can read OSMD's stale clock and snap the position back.
     osmdExpectRef.current = { sheetSec, until: nowMs() + 2000 };
-    try { osmd.seekMs?.(sheetSec * 1000); } catch (e) {}
-    if (andPlay) { try { osmd.play?.(); } catch (e) {} }
+    osmdQueueRef.current = osmdQueueRef.current
+      .then(async () => {
+        const osmd = osmdRef.current;
+        if (!osmd) return;
+        osmdExpectRef.current = { sheetSec, until: nowMs() + 2000 };
+        // seekMs targets OSMD's CURRENT (possibly sped) timeline: after
+        // setSpeed(r), wall-ms-to-position is compressed by r.
+        const r = rateRef.current || 1;
+        try { await osmd.seekMs?.((sheetSec / r) * 1000); } catch (e) {}
+        // The seek reset OSMD's elapsed counter to 0 at this position.
+        osmdBaseRef.current = sheetSec;
+        // Re-check at execution time: the user may have paused or switched
+        // tabs while this command sat in the queue.
+        const t = transportRef.current;
+        if (andPlay && t.getState().isPlaying && t.getActiveEngineId() === 'osmd') {
+          try { await osmd.play?.(); } catch (e) {}
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // --- engines -------------------------------------------------------------
@@ -207,18 +239,21 @@ export default function PreviewPanel({
           pendingOsmdSyncRef.current = true;
           return;
         }
-        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), false);
+        // Engine contract: seek preserves play state. OSMD's playFromMs
+        // pauses internally, so resume when the transport is playing.
+        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), t.getState().isPlaying);
       },
       readTime: () => {
         const s = osmdSyncRef.current;
         if (!s.ready) return null;
+        const eff = osmdEffectiveSheetSec();
         const expect = osmdExpectRef.current;
         if (expect) {
-          const settled = Math.abs(s.time - expect.sheetSec) <= 0.75;
+          const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
           if (!settled && nowMs() < expect.until) return null; // stale clock — self-advance
           osmdExpectRef.current = null;
         }
-        return mapperRef.current.sheetSecToMidiSec(s.time);
+        return mapperRef.current.sheetSecToMidiSec(eff);
       },
     });
     t.attachEngine({
@@ -244,7 +279,7 @@ export default function PreviewPanel({
       t.detachEngine('osmd');
       t.detachEngine('midi');
     };
-  }, [postToIframe, commandOsmd]);
+  }, [postToIframe, commandOsmd, osmdEffectiveSheetSec]);
 
   // Active engine follows the visible tab. setActiveEngine pauses the old
   // engine, seeks the new one to the shared position, and resumes if playing.
@@ -254,6 +289,7 @@ export default function PreviewPanel({
       // The sheet tab remounts OSMD; mark it not-ready until its first tick
       // and re-sync (seek + optional play) once it reports in.
       osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
       pendingOsmdSyncRef.current = true;
       t.setActiveEngine('osmd');
     } else {
@@ -308,18 +344,23 @@ export default function PreviewPanel({
   // --- OSMD state (sheet seconds, every animation frame while mounted) -----
   const handleOsmdStateChange = useCallback((s) => {
     const t = transportRef.current;
+    // While a deferred sync is pending the OSMD clock is definitely stale —
+    // keep ready=false so the transport self-advances rather than adopting it.
     osmdSyncRef.current = {
       time: s.currentTime,
       playing: s.isPlaying,
       duration: s.duration,
-      ready: true,
+      ready: !pendingOsmdSyncRef.current,
     };
-    if (s.duration > 0 && sheetDurRef.current !== s.duration) {
-      sheetDurRef.current = s.duration;
+    // Capture the NATURAL sheet duration once. OSMD's reported duration is in
+    // the current (possibly sped) timeline, so naturalize via rate; speed
+    // changes after capture must not disturb the mapper.
+    if (s.duration > 0 && !sheetDurRef.current) {
+      sheetDurRef.current = s.duration * (rateRef.current || 1);
       rebuildMapper();
       // No MIDI duration yet (iframe still loading)? Use the sheet's.
       if (!midiDurRef.current) {
-        t.setDuration(mapperRef.current.sheetSecToMidiSec(s.duration));
+        t.setDuration(mapperRef.current.sheetSecToMidiSec(sheetDurRef.current));
       }
     }
     // Deferred engine sync: OSMD just became ready after a tab switch/remount.
@@ -329,16 +370,17 @@ export default function PreviewPanel({
       commandOsmd(mapperRef.current.midiSecToSheetSec(st.positionSec), st.isPlaying);
     }
     // Reconcile: OSMD pauses itself at the end of the sheet.
-    if (t.getActiveEngineId() === 'osmd') {
+    if (t.getActiveEngineId() === 'osmd' && osmdSyncRef.current.ready) {
       const st = t.getState();
+      const naturalDur = sheetDurRef.current;
       if (
-        st.isPlaying && !s.isPlaying && s.duration > 0 &&
-        s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+        st.isPlaying && !s.isPlaying && naturalDur > 0 &&
+        osmdEffectiveSheetSec() >= naturalDur - 0.05 && st.positionSec > 0.5
       ) {
         t.pause();
       }
     }
-  }, [rebuildMapper, commandOsmd]);
+  }, [rebuildMapper, commandOsmd, osmdEffectiveSheetSec]);
 
   // --- UI handlers ----------------------------------------------------------
   const handleTogglePlay = useCallback(() => {
@@ -361,12 +403,20 @@ export default function PreviewPanel({
 
   const handleChangeSpeed = useCallback((newSpeed) => {
     setSpeed(newSpeed);
+    const osmd = osmdRef.current;
+    // OSMD's setSpeed re-anchors its timing source and zeroes the elapsed
+    // counter: fold the elapsed time (at the OLD rate) into the base first,
+    // and gate readTime briefly while OSMD applies the change.
+    if (osmd && osmdSyncRef.current.ready) {
+      const eff = osmdEffectiveSheetSec();
+      osmdBaseRef.current = eff;
+      osmdExpectRef.current = { sheetSec: eff, until: nowMs() + 1000 };
+    }
     rateRef.current = newSpeed;
     transportRef.current.setRate(newSpeed);
-    const osmd = osmdRef.current;
     if (osmd?.setSpeed) { try { osmd.setSpeed(newSpeed); } catch (e) {} }
     postToIframe({ type: 'speed', factor: newSpeed });
-  }, [postToIframe]);
+  }, [postToIframe, osmdEffectiveSheetSec]);
 
   const handleToggleTheme = useCallback(() => {
     setTheme((t) => (t === 'light' ? 'dark' : 'light'));
