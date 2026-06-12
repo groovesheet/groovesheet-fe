@@ -15,6 +15,7 @@ const MusicSheetTab = forwardRef(function MusicSheetTab(
           xmlString={musicXmlText}
           theme={theme}
           zoom={zoom}
+          drawMetronomeMarks={false}
           onPlayNote={onPlayNote}
           onPlaybackStateChange={onPlaybackStateChange}
         />

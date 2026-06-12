@@ -271,6 +271,7 @@ export default function Video2() {
               systemDistance={SHEET_ROW_GAP}
               betweenStaffDistance={SHEET_STAFF_GAP}
               drawTitle={false}
+              drawMetronomeMarks={false}
               containerStyle={{ width: FRAME_W, maxWidth: 'none', padding: 0, minHeight: 0 }}
               onPlaybackStateChange={handleOsmdState}
             />

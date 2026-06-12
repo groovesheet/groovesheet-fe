@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE score-partwise  PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<?xml version='1.0' encoding='utf-8'?>
 <score-partwise version="4.0">
   <movement-title>Music21 Fragment</movement-title>
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2026-06-11</encoding-date>
+      <encoding-date>2026-06-13</encoding-date>
       <software>music21 v.9.2.0b3</software>
     </encoding>
   </identification>
@@ -23,9 +22,9 @@
       <part-name />
     </score-part>
   </part-list>
-  <!--=========================== Part 1 ===========================-->
+  
   <part id="P1">
-    <!--========================= Measure 1 ==========================-->
+    
     <measure implicit="no" number="1">
       <attributes>
         <divisions>10080</divisions>
@@ -45,10 +44,10 @@
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
-            <per-minute>84.727</per-minute>
+            <per-minute>85</per-minute>
           </metronome>
         </direction-type>
-        <sound tempo="84.727" />
+        <sound tempo="85" />
       </direction>
       <forward>
         <duration>2520</duration>
@@ -88,7 +87,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 2 ==========================-->
+    
     <measure implicit="no" number="2">
       <attributes>
         <time>
@@ -161,16 +160,16 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 3 ==========================-->
+    
     <measure implicit="no" number="3">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
-            <per-minute>86.834</per-minute>
+            <per-minute>86.549</per-minute>
           </metronome>
         </direction-type>
-        <sound tempo="86.834" />
+        <sound tempo="86.549" />
       </direction>
       <note>
         <pitch>
@@ -258,7 +257,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 4 ==========================-->
+    
     <measure implicit="no" number="4">
       <note>
         <pitch>
@@ -316,7 +315,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 5 ==========================-->
+    
     <measure implicit="no" number="5">
       <note>
         <pitch>
@@ -365,16 +364,16 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 6 ==========================-->
+    
     <measure implicit="no" number="6">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
-            <per-minute>88.82</per-minute>
+            <per-minute>89.423</per-minute>
           </metronome>
         </direction-type>
-        <sound tempo="88.82" />
+        <sound tempo="89.423" />
       </direction>
       <note>
         <pitch>
@@ -463,7 +462,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 7 ==========================-->
+    
     <measure implicit="no" number="7">
       <note>
         <pitch>
@@ -544,16 +543,16 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 8 ==========================-->
+    
     <measure implicit="no" number="8">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
-            <per-minute>84.293</per-minute>
+            <per-minute>83.757</per-minute>
           </metronome>
         </direction-type>
-        <sound tempo="84.293" />
+        <sound tempo="83.757" />
       </direction>
       <note>
         <pitch>
@@ -611,9 +610,9 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 9 ==========================-->
+    
     <measure implicit="no" number="9">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -645,9 +644,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 10 =========================-->
+    
     <measure implicit="no" number="10">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -676,9 +675,9 @@
         <dot />
       </note>
     </measure>
-    <!--========================= Measure 11 =========================-->
+    
     <measure implicit="no" number="11">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -812,9 +811,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 12 =========================-->
+    
     <measure implicit="no" number="12">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -948,9 +947,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 13 =========================-->
+    
     <measure implicit="no" number="13">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1080,9 +1079,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 14 =========================-->
+    
     <measure implicit="no" number="14">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1147,9 +1146,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 15 =========================-->
+    
     <measure implicit="no" number="15">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1283,9 +1282,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 16 =========================-->
+    
     <measure implicit="no" number="16">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1419,9 +1418,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 17 =========================-->
+    
     <measure implicit="no" number="17">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1551,9 +1550,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 18 =========================-->
+    
     <measure implicit="no" number="18">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1585,9 +1584,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 19 =========================-->
+    
     <measure implicit="no" number="19">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1616,9 +1615,9 @@
         <dot />
       </note>
     </measure>
-    <!--========================= Measure 20 =========================-->
+    
     <measure implicit="no" number="20">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1696,9 +1695,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 21 =========================-->
+    
     <measure implicit="no" number="21">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1733,7 +1732,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 22 =========================-->
+    
     <measure implicit="no" number="22">
       <note>
         <pitch>
@@ -1756,9 +1755,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 23 =========================-->
+    
     <measure implicit="no" number="23">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1833,9 +1832,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 24 =========================-->
+    
     <measure implicit="no" number="24">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -1911,7 +1910,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 25 =========================-->
+    
     <measure implicit="no" number="25">
       <note>
         <pitch>
@@ -1938,7 +1937,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 26 =========================-->
+    
     <measure implicit="no" number="26">
       <note>
         <pitch>
@@ -1972,9 +1971,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 27 =========================-->
+    
     <measure implicit="no" number="27">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2006,9 +2005,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 28 =========================-->
+    
     <measure implicit="no" number="28">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2037,9 +2036,9 @@
         <dot />
       </note>
     </measure>
-    <!--========================= Measure 29 =========================-->
+    
     <measure implicit="no" number="29">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2173,9 +2172,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 30 =========================-->
+    
     <measure implicit="no" number="30">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2309,7 +2308,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 31 =========================-->
+    
     <measure implicit="no" number="31">
       <note>
         <pitch>
@@ -2432,9 +2431,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 32 =========================-->
+    
     <measure implicit="no" number="32">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2514,9 +2513,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 33 =========================-->
+    
     <measure implicit="no" number="33">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2650,9 +2649,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 34 =========================-->
+    
     <measure implicit="no" number="34">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2786,7 +2785,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 35 =========================-->
+    
     <measure implicit="no" number="35">
       <note>
         <pitch>
@@ -2909,9 +2908,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 36 =========================-->
+    
     <measure implicit="no" number="36">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -2943,9 +2942,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 37 =========================-->
+    
     <measure implicit="no" number="37">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -3035,9 +3034,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 38 =========================-->
+    
     <measure implicit="no" number="38">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -3215,9 +3214,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 39 =========================-->
+    
     <measure implicit="no" number="39">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -3372,7 +3371,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 40 =========================-->
+    
     <measure implicit="no" number="40">
       <note>
         <pitch>
@@ -3423,7 +3422,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 41 =========================-->
+    
     <measure implicit="no" number="41">
       <note>
         <pitch>
@@ -3538,7 +3537,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 42 =========================-->
+    
     <measure implicit="no" number="42">
       <note>
         <pitch>
@@ -3709,9 +3708,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 43 =========================-->
+    
     <measure implicit="no" number="43">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -3833,9 +3832,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 44 =========================-->
+    
     <measure implicit="no" number="44">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -3912,9 +3911,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 45 =========================-->
+    
     <measure implicit="no" number="45">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -3970,9 +3969,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 46 =========================-->
+    
     <measure implicit="no" number="46">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4050,9 +4049,9 @@
         <type>eighth</type>
       </note>
     </measure>
-    <!--========================= Measure 47 =========================-->
+    
     <measure implicit="no" number="47">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4189,9 +4188,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 48 =========================-->
+    
     <measure implicit="no" number="48">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4325,9 +4324,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 49 =========================-->
+    
     <measure implicit="no" number="49">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4460,9 +4459,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 50 =========================-->
+    
     <measure implicit="no" number="50">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4542,9 +4541,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 51 =========================-->
+    
     <measure implicit="no" number="51">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4678,9 +4677,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 52 =========================-->
+    
     <measure implicit="no" number="52">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4814,9 +4813,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 53 =========================-->
+    
     <measure implicit="no" number="53">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4946,9 +4945,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 54 =========================-->
+    
     <measure implicit="no" number="54">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -4980,9 +4979,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 55 =========================-->
+    
     <measure implicit="no" number="55">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -5066,9 +5065,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 56 =========================-->
+    
     <measure implicit="no" number="56">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -5202,9 +5201,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 57 =========================-->
+    
     <measure implicit="no" number="57">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -5336,9 +5335,9 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 58 =========================-->
+    
     <measure implicit="no" number="58">
-      <direction>
+      <direction print-object="no">
         <direction-type>
           <metronome parentheses="no">
             <beat-unit>quarter</beat-unit>
@@ -5444,9 +5443,9 @@
       </note>
     </measure>
   </part>
-  <!--=========================== Part 2 ===========================-->
+  
   <part id="P2">
-    <!--========================= Measure 1 ==========================-->
+    
     <measure implicit="no" number="1">
       <attributes>
         <divisions>10080</divisions>
@@ -5468,7 +5467,7 @@
         <voice>1</voice>
       </note>
     </measure>
-    <!--========================= Measure 2 ==========================-->
+    
     <measure implicit="no" number="2">
       <attributes>
         <time>
@@ -5585,7 +5584,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 3 ==========================-->
+    
     <measure implicit="no" number="3">
       <note>
         <pitch>
@@ -5696,7 +5695,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 4 ==========================-->
+    
     <measure implicit="no" number="4">
       <note>
         <pitch>
@@ -5803,7 +5802,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 5 ==========================-->
+    
     <measure implicit="no" number="5">
       <note>
         <pitch>
@@ -5916,7 +5915,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 6 ==========================-->
+    
     <measure implicit="no" number="6">
       <note>
         <pitch>
@@ -6027,7 +6026,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 7 ==========================-->
+    
     <measure implicit="no" number="7">
       <note>
         <pitch>
@@ -6138,7 +6137,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 8 ==========================-->
+    
     <measure implicit="no" number="8">
       <note>
         <pitch>
@@ -6245,7 +6244,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 9 ==========================-->
+    
     <measure implicit="no" number="9">
       <note>
         <pitch>
@@ -6356,7 +6355,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 10 =========================-->
+    
     <measure implicit="no" number="10">
       <note>
         <pitch>
@@ -6435,7 +6434,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 11 =========================-->
+    
     <measure implicit="no" number="11">
       <note>
         <pitch>
@@ -6546,7 +6545,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 12 =========================-->
+    
     <measure implicit="no" number="12">
       <note>
         <pitch>
@@ -6657,7 +6656,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 13 =========================-->
+    
     <measure implicit="no" number="13">
       <note>
         <pitch>
@@ -6764,7 +6763,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 14 =========================-->
+    
     <measure implicit="no" number="14">
       <note>
         <pitch>
@@ -6877,7 +6876,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 15 =========================-->
+    
     <measure implicit="no" number="15">
       <note>
         <pitch>
@@ -6988,7 +6987,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 16 =========================-->
+    
     <measure implicit="no" number="16">
       <note>
         <pitch>
@@ -7099,7 +7098,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 17 =========================-->
+    
     <measure implicit="no" number="17">
       <note>
         <pitch>
@@ -7206,7 +7205,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 18 =========================-->
+    
     <measure implicit="no" number="18">
       <note>
         <pitch>
@@ -7317,7 +7316,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 19 =========================-->
+    
     <measure implicit="no" number="19">
       <note>
         <pitch>
@@ -7396,7 +7395,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 20 =========================-->
+    
     <measure implicit="no" number="20">
       <note>
         <pitch>
@@ -7507,7 +7506,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 21 =========================-->
+    
     <measure implicit="no" number="21">
       <note>
         <pitch>
@@ -7607,7 +7606,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 22 =========================-->
+    
     <measure implicit="no" number="22">
       <note>
         <pitch>
@@ -7714,7 +7713,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 23 =========================-->
+    
     <measure implicit="no" number="23">
       <note>
         <pitch>
@@ -7827,7 +7826,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 24 =========================-->
+    
     <measure implicit="no" number="24">
       <note>
         <pitch>
@@ -7938,7 +7937,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 25 =========================-->
+    
     <measure implicit="no" number="25">
       <note>
         <pitch>
@@ -8049,7 +8048,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 26 =========================-->
+    
     <measure implicit="no" number="26">
       <note>
         <pitch>
@@ -8156,7 +8155,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 27 =========================-->
+    
     <measure implicit="no" number="27">
       <note>
         <pitch>
@@ -8267,7 +8266,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 28 =========================-->
+    
     <measure implicit="no" number="28">
       <note>
         <pitch>
@@ -8346,7 +8345,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 29 =========================-->
+    
     <measure implicit="no" number="29">
       <note>
         <pitch>
@@ -8457,7 +8456,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 30 =========================-->
+    
     <measure implicit="no" number="30">
       <note>
         <pitch>
@@ -8568,7 +8567,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 31 =========================-->
+    
     <measure implicit="no" number="31">
       <note>
         <pitch>
@@ -8675,7 +8674,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 32 =========================-->
+    
     <measure implicit="no" number="32">
       <note>
         <pitch>
@@ -8788,7 +8787,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 33 =========================-->
+    
     <measure implicit="no" number="33">
       <note>
         <pitch>
@@ -8899,7 +8898,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 34 =========================-->
+    
     <measure implicit="no" number="34">
       <note>
         <pitch>
@@ -8999,7 +8998,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 35 =========================-->
+    
     <measure implicit="no" number="35">
       <note>
         <pitch>
@@ -9106,7 +9105,7 @@
         <stem>up</stem>
       </note>
     </measure>
-    <!--========================= Measure 36 =========================-->
+    
     <measure implicit="no" number="36">
       <note>
         <pitch>
@@ -9217,7 +9216,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 37 =========================-->
+    
     <measure implicit="no" number="37">
       <note>
         <pitch>
@@ -9300,7 +9299,7 @@
         <type>eighth</type>
       </note>
     </measure>
-    <!--========================= Measure 38 =========================-->
+    
     <measure implicit="no" number="38">
       <note>
         <pitch>
@@ -9411,7 +9410,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 39 =========================-->
+    
     <measure implicit="no" number="39">
       <note>
         <pitch>
@@ -9518,7 +9517,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 40 =========================-->
+    
     <measure implicit="no" number="40">
       <note>
         <pitch>
@@ -9608,7 +9607,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 41 =========================-->
+    
     <measure implicit="no" number="41">
       <note>
         <pitch>
@@ -9721,7 +9720,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 42 =========================-->
+    
     <measure implicit="no" number="42">
       <note>
         <pitch>
@@ -9821,7 +9820,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 43 =========================-->
+    
     <measure implicit="no" number="43">
       <note>
         <pitch>
@@ -9928,7 +9927,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 44 =========================-->
+    
     <measure implicit="no" number="44">
       <note>
         <pitch>
@@ -10027,7 +10026,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 45 =========================-->
+    
     <measure implicit="no" number="45">
       <note>
         <pitch>
@@ -10138,7 +10137,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 46 =========================-->
+    
     <measure implicit="no" number="46">
       <note>
         <pitch>
@@ -10221,7 +10220,7 @@
         <type>eighth</type>
       </note>
     </measure>
-    <!--========================= Measure 47 =========================-->
+    
     <measure implicit="no" number="47">
       <note>
         <pitch>
@@ -10332,7 +10331,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 48 =========================-->
+    
     <measure implicit="no" number="48">
       <note>
         <pitch>
@@ -10432,7 +10431,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 49 =========================-->
+    
     <measure implicit="no" number="49">
       <note>
         <pitch>
@@ -10528,7 +10527,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 50 =========================-->
+    
     <measure implicit="no" number="50">
       <note>
         <pitch>
@@ -10641,7 +10640,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 51 =========================-->
+    
     <measure implicit="no" number="51">
       <note>
         <pitch>
@@ -10752,7 +10751,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 52 =========================-->
+    
     <measure implicit="no" number="52">
       <note>
         <pitch>
@@ -10852,7 +10851,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 53 =========================-->
+    
     <measure implicit="no" number="53">
       <note>
         <pitch>
@@ -10959,7 +10958,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 54 =========================-->
+    
     <measure implicit="no" number="54">
       <note>
         <pitch>
@@ -11072,7 +11071,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 55 =========================-->
+    
     <measure implicit="no" number="55">
       <note>
         <pitch>
@@ -11157,7 +11156,7 @@
         <type>eighth</type>
       </note>
     </measure>
-    <!--========================= Measure 56 =========================-->
+    
     <measure implicit="no" number="56">
       <forward>
         <duration>15120</duration>
@@ -11186,7 +11185,7 @@
         <stem>down</stem>
       </note>
     </measure>
-    <!--========================= Measure 57 =========================-->
+    
     <measure implicit="no" number="57">
       <forward>
         <duration>15120</duration>
@@ -11223,7 +11222,7 @@
         </notations>
       </note>
     </measure>
-    <!--========================= Measure 58 =========================-->
+    
     <measure implicit="no" number="58">
       <forward>
         <duration>15120</duration>
@@ -11313,7 +11312,7 @@
         </notations>
       </note>
     </measure>
-    <!--========================= Measure 59 =========================-->
+    
     <measure implicit="no" number="59">
       <note>
         <pitch>
