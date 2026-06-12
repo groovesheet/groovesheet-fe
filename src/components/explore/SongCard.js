@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Play, Clock } from '@phosphor-icons/react';
+import { Play, Eye, Star } from '@phosphor-icons/react';
 import SheetThumb from './thumbs/SheetThumb';
 import MidiThumb from './thumbs/MidiThumb';
 import StemThumb from './thumbs/StemThumb';
-import { FORMAT_LABELS, fmtDur } from './constants';
+import { FORMAT_LABELS, fmtCount } from './constants';
+import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import './SongCard.css';
 
 const THUMB_BY_VARIANT = {
@@ -25,7 +26,10 @@ function resolveThumb(song, variant) {
 
 /**
  * Card model (see Explore.js trackToCard):
- * { id, title, artist, length, coverUrl, formats, thumbData, parts }
+ * { id, title, artist, length, year, coverUrl, formats, thumbData, parts, popularity }
+ *
+ * Difficulty / views / rating are deterministic cosmetic placeholders
+ * (utils/cosmeticStats) until the backend exposes real engagement fields.
  */
 function SongCard({ song, variant, onClick }) {
   const [coverFailed, setCoverFailed] = useState(false);
@@ -35,6 +39,11 @@ function SongCard({ song, variant, onClick }) {
   const showCover = !variant && song.coverUrl && !coverFailed;
   const formats = song.formats || [];
   const parts = song.parts || [];
+
+  const difficulty = seededDifficulty(song.id);
+  const views = seededViews(song.id, song.popularity);
+  const rating = seededRating(song.id);
+  const primary = parts.length > 0 ? parts[0] : 'Full mix';
 
   return (
     <article className="song-card" onClick={() => onClick && onClick(song)}>
@@ -59,18 +68,23 @@ function SongCard({ song, variant, onClick }) {
         <div className="sc-overlay-cta">
           <span className="sc-open-pill">OPEN</span>
         </div>
+        <div className="sc-diff-wrap">
+          <span className={`sc-diff sc-diff-${difficulty.toLowerCase()}`}>{difficulty}</span>
+        </div>
       </div>
       <div className="sc-meta">
         <div className="sc-title">{song.title}</div>
         <div className="sc-artist">{song.artist}</div>
         <div className="sc-row">
-          <span className="sc-genre">
-            {parts.length > 0 ? parts.slice(0, 3).join(' · ') : 'Full mix'}
-          </span>
+          <span className="sc-genre">{song.year ? `${primary} · ${song.year}` : primary}</span>
           <span className="sc-stats">
             <span className="sc-views">
-              <Clock size={12} weight="regular" />
-              {fmtDur(song.length)}
+              <Eye size={12} weight="regular" />
+              {fmtCount(views)}
+            </span>
+            <span className="sc-stars" aria-label={`${rating.toFixed(1)} out of 5`}>
+              <Star size={12} weight="fill" />
+              <span className="sc-rating">{rating.toFixed(1)}</span>
             </span>
           </span>
         </div>

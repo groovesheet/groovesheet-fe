@@ -15,6 +15,7 @@ import SongSidebar from './SongSidebar';
 import CardRow from './CardRow';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import { fetchLibraryTrack, fetchLibraryTracks } from '../../utils/libraryApi';
+import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
@@ -78,11 +79,19 @@ function trackToCard(t) {
     id: t.id,
     title: t.title,
     artist: t.artist,
-    diff: (t.formats || []).includes('musicxml') ? 'Score' : 'Stems',
-    rating: Math.max(3, Math.min(5, 3 + (Number(t.popularity) || 0) / 50)),
-    views: Number(t.popularity) || 0,
+    diff: seededDifficulty(t.id),
+    rating: seededRating(t.id),
+    views: seededViews(t.id, Number(t.popularity) || 0),
     dur: fmtDur(t.thumb_data?.duration_sec || t.duration_sec),
   };
+}
+
+/** Stable id hash — seeds the "Recommended" rail's deterministic shuffle. */
+function hashId(id) {
+  let h = 0;
+  const s = String(id || '');
+  for (let i = 0; i < s.length; i += 1) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
 }
 
 function Breadcrumb({ title, artist, navigate }) {
@@ -613,24 +622,76 @@ function SongDetail({ onLoginClick }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [handlePlayPause, available]);
 
-  // --- related rail ------------------------------------------------------------------
+  // --- related rails -----------------------------------------------------------------
+  // One fetch; every rail below the viewer (and the sidebar's "More by {artist}")
+  // is a client-side slice of this raw track list.
   const [related, setRelated] = useState([]);
   useEffect(() => {
     let cancelled = false;
     setRelated([]);
     (async () => {
       try {
-        const data = await fetchLibraryTracks({ limit: 12 });
+        const data = await fetchLibraryTracks({ limit: 24 });
         if (cancelled) return;
-        setRelated((data.tracks || []).filter((t) => t.id !== songId).map(trackToCard));
+        setRelated((data.tracks || []).filter((t) => t.id !== songId));
       } catch (e) {
-        if (!cancelled) setRelated([]); // hide the rail on failure
+        if (!cancelled) setRelated([]); // hide the rails on failure
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [songId]);
+
+  const rails = useMemo(() => {
+    if (!related.length) return [];
+    const cards = (list) => list.map(trackToCard);
+    const recommended = [...related].sort((a, b) => hashId(a.id) - hashId(b.id));
+    const trending = [...related].sort(
+      (a, b) =>
+        (Number(b.popularity) || 0) - (Number(a.popularity) || 0) ||
+        seededViews(b.id, 0) - seededViews(a.id, 0)
+    );
+    const newest = [...related].sort(
+      (a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0)
+    );
+    const out = [
+      {
+        key: 'recommended',
+        title: 'Recommended scores',
+        subtitle: 'Picked from the GrooveSheet library — close in energy and instrumentation.',
+        items: cards(recommended),
+        variant: 'mix',
+      },
+      {
+        key: 'trending',
+        title: 'Trending now',
+        subtitle: 'What musicians are practicing this week.',
+        items: cards(trending),
+        variant: 'mix',
+      },
+      {
+        key: 'new',
+        title: 'New this week',
+        subtitle: 'The latest transcriptions and stem packs in the catalog.',
+        items: cards(newest),
+        variant: 'sheet',
+      },
+    ];
+    if (track) {
+      const byArtist = related.filter((t) => t.artist === track.artist);
+      if (byArtist.length) {
+        out.push({
+          key: 'artist',
+          title: `More from ${track.artist}`,
+          subtitle: `Every ${track.artist} track in the GrooveSheet library.`,
+          items: cards(byArtist),
+          variant: 'sheet',
+        });
+      }
+    }
+    return out;
+  }, [related, track]);
 
   const goToSong = useCallback((s) => navigate(`/explore/${s.id}`), [navigate]);
 
@@ -667,7 +728,11 @@ function SongDetail({ onLoginClick }) {
       <div className="gs-dotgrid" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Full-bleed site header + hairline divider, identical to /explore.
+            Both stay OUTSIDE the two-column shell so the sidebar column never
+            constrains them. */}
         <Header onLoginClick={onLoginClick} />
+        <div className="gs-nav-divider" />
 
         {trackError && (
           <CenteredNotice
@@ -763,21 +828,29 @@ function SongDetail({ onLoginClick }) {
                   )}
                 </div>
 
-                {/* Below-viewer rail */}
-                {related.length > 0 && (
+                {/* Below-viewer rails — design-style slices of the related tracks */}
+                {rails.map((rail) => (
                   <CardRow
-                    title="More from the library"
-                    subtitle="Fresh transcriptions and stem packs from the GrooveSheet catalog."
-                    items={related}
-                    variant="mix"
+                    key={rail.key}
+                    title={rail.title}
+                    subtitle={rail.subtitle}
+                    items={rail.items}
+                    variant={rail.variant}
                     onCardClick={goToSong}
                   />
-                )}
+                ))}
               </div>
 
-              {/* Right sidebar (desktop) */}
+              {/* Right sidebar (desktop) — keyed by track so display-only
+                  select state reseeds when navigating between songs */}
               <div className="gs-song-sidebar-desktop">
-                <SongSidebar track={track} stems={stems} />
+                <SongSidebar
+                  key={track.id}
+                  track={track}
+                  stems={stems}
+                  relatedTracks={related}
+                  onSongClick={goToSong}
+                />
               </div>
             </div>
 
@@ -789,7 +862,13 @@ function SongDetail({ onLoginClick }) {
               <>
                 <div className="gs-rs-drawer-backdrop" onClick={() => setDrawerOpen(false)} />
                 <div className="gs-rs-drawer">
-                  <SongSidebar track={track} stems={stems} onClose={() => setDrawerOpen(false)} />
+                  <SongSidebar
+                    key={track.id}
+                    track={track}
+                    stems={stems}
+                    relatedTracks={related}
+                    onSongClick={goToSong}
+                  />
                 </div>
               </>
             )}

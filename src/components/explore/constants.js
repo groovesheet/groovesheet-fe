@@ -39,6 +39,26 @@ export const FORMAT_LABELS = {
   stem: 'STEMS',
 };
 
+// Sidebar facet labels.
+export const DIFFICULTY_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+
+// Sidebar "Format" facet labels → backend `formats` values.
+export const FORMAT_FILTER_MAP = {
+  'Sheet Music': 'musicxml',
+  MIDI: 'midi',
+  Stems: 'stem',
+};
+
+export const LENGTH_BUCKETS = ['Under 2 min', '2 to 5 min', '5+ min'];
+
+/** Map a duration in seconds to its sidebar "Length" facet label. */
+export const lengthBucket = (sec) => {
+  const s = sec || 0;
+  if (s < 120) return LENGTH_BUCKETS[0];
+  if (s <= 300) return LENGTH_BUCKETS[1];
+  return LENGTH_BUCKETS[2];
+};
+
 export const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 export const fmtDur = (s) => {

@@ -18,6 +18,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
     betweenStaffDistance,
     systemDistance,
     drawTitle = true,
+    drawMetronomeMarks = true,
   },
   ref
 ) {
@@ -41,6 +42,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
     const osmd = new OpenSheetMusicDisplay(containerRef.current, {
       backend: 'svg',
       drawTitle,
+      drawMetronomeMarks,
       drawSubtitle: false,
       drawComposer: false,
       drawCredits: false,

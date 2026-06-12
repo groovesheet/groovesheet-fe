@@ -66,6 +66,43 @@
   cursor: pointer;
 }
 
+.sb-search-shell {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.sb-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted-foreground);
+  display: inline-flex;
+  pointer-events: none;
+}
+
+.sb-search {
+  width: 100%;
+  background: var(--color-panel1);
+  border: 1px solid var(--color-border);
+  border-radius: 120px;
+  color: var(--color-text);
+  font-size: 14px;
+  padding: 10px 14px 10px 38px;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.sb-search:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.sb-search::placeholder {
+  color: var(--color-muted-foreground);
+}
+
 .sb-popular {
   padding-bottom: 18px;
   margin-bottom: 18px;

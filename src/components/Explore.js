@@ -6,7 +6,8 @@ import Sidebar from './explore/Sidebar';
 import ExploreHeader from './explore/ExploreHeader';
 import Section from './explore/Section';
 import { SkeletonSection, ExploreEmpty, ExploreError } from './explore/ExploreStates';
-import { STEM_INSTRUMENTS, capitalize } from './explore/constants';
+import { STEM_INSTRUMENTS, capitalize, FORMAT_FILTER_MAP, lengthBucket } from './explore/constants';
+import { seededDifficulty, seededViews } from '../utils/cosmeticStats';
 import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
 import './Explore.css';
@@ -21,7 +22,8 @@ function trackToCard(track) {
     id: track.id,
     title: track.title,
     artist: track.artist,
-    length: track.duration_sec,
+    length: (track.thumb_data && track.thumb_data.duration_sec) || track.duration_sec,
+    year: track.year || null,
     coverUrl: track.cover_url || null,
     formats: track.formats || [],
     thumbData: track.thumb_data || null,
@@ -42,6 +44,12 @@ export const Explore = ({ onLoginClick }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeChips, setActiveChips] = useState(new Set());
+  const [filters, setFilters] = useState({
+    difficulty: new Set(),
+    instrument: new Set(),
+    format: new Set(),
+    length: new Set(),
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const requestSeq = useRef(0);
 
@@ -86,30 +94,44 @@ export const Explore = ({ onLoginClick }) => {
     return () => document.body.classList.remove('modal-open');
   }, [drawerOpen]);
 
-  // Client-side instrument filter on the parts derived from thumb_data.stems.
+  // Client-side filtering: AND across groups, OR within a group. The
+  // instrument chips and the Instrument checkbox group act as one OR-group on
+  // the parts derived from thumb_data.stems. Difficulty is the deterministic
+  // cosmetic placeholder until the backend exposes a real field.
   const visibleTracks = useMemo(() => {
-    if (activeChips.size === 0) return tracks;
-    return tracks.filter((t) => t.parts.some((p) => activeChips.has(p)));
-  }, [tracks, activeChips]);
+    const instrumentSet = new Set([...activeChips, ...filters.instrument]);
+    const wantedFormats = [...filters.format].map((label) => FORMAT_FILTER_MAP[label]);
+    return tracks.filter((t) => {
+      if (instrumentSet.size > 0 && !t.parts.some((p) => instrumentSet.has(p))) return false;
+      if (filters.difficulty.size > 0 && !filters.difficulty.has(seededDifficulty(t.id))) {
+        return false;
+      }
+      if (wantedFormats.length > 0 && !wantedFormats.some((f) => t.formats.includes(f))) {
+        return false;
+      }
+      if (filters.length.size > 0 && !filters.length.has(lengthBucket(t.length))) return false;
+      return true;
+    });
+  }, [tracks, activeChips, filters]);
 
-  const { formatSections, newSection } = useMemo(() => {
+  const { formatSections, discoverySections } = useMemo(() => {
     const byPopularity = [...visibleTracks].sort((a, b) => b.popularity - a.popularity);
     const byNewest = [...visibleTracks].sort(
       (a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0),
+    );
+    // Trending: real popularity first, seeded views as a deterministic tiebreak.
+    const byTrending = [...visibleTracks].sort(
+      (a, b) =>
+        b.popularity - a.popularity ||
+        seededViews(b.id, b.popularity) - seededViews(a.id, a.popularity),
     );
     // Sheet/MIDI sections only contain tracks that actually ship that format;
     // Section renders nothing when a list is empty.
     return {
       formatSections: [
         {
-          key: 'stems',
-          title: 'Popular stems',
-          subtitle: 'Isolated vocals, drums, bass, keys.',
-          variant: 'stems',
-          songs: byPopularity.filter((t) => t.formats.includes('stem')),
-        },
-        {
           key: 'sheet',
+          eyebrow: '01 · Sheet music',
           title: 'Popular sheet music',
           subtitle: 'Engraved, downloadable as PDF and MusicXML.',
           variant: 'sheet',
@@ -117,19 +139,42 @@ export const Explore = ({ onLoginClick }) => {
         },
         {
           key: 'midi',
+          eyebrow: '02 · MIDI',
           title: 'Popular MIDI',
           subtitle: 'Multi-track .mid files. Drop into your DAW.',
           variant: 'midi',
           songs: byPopularity.filter((t) => t.formats.includes('midi')),
         },
+        {
+          key: 'stems',
+          eyebrow: '03 · Stems',
+          title: 'Popular stems',
+          subtitle: 'Isolated vocals, drums, bass, keys.',
+          variant: 'stems',
+          songs: byPopularity.filter((t) => t.formats.includes('stem')),
+        },
       ],
-      newSection: {
-        key: 'new',
-        title: 'New this week',
-        subtitle: 'Fresh transcriptions, hot off the press.',
-        songs: byNewest,
-        accent: true,
-      },
+      discoverySections: [
+        {
+          key: 'trending',
+          title: 'Trending now',
+          subtitle: 'What working musicians are downloading this week.',
+          songs: byTrending,
+        },
+        {
+          key: 'new',
+          title: 'New this week',
+          subtitle: 'Fresh transcriptions, hot off the press.',
+          songs: byNewest,
+        },
+        {
+          key: 'learners',
+          title: 'For learners',
+          subtitle: 'Beginner-friendly picks across instruments.',
+          songs: byPopularity.filter((t) => seededDifficulty(t.id) === 'Beginner'),
+          accent: true,
+        },
+      ],
     };
   }, [visibleTracks]);
 
@@ -137,6 +182,11 @@ export const Explore = ({ onLoginClick }) => {
 
   const sidebarNode = (close) => (
     <Sidebar
+      query={query}
+      onQueryChange={setQuery}
+      tracks={tracks}
+      filters={filters}
+      setFilters={setFilters}
       popularChips={STEM_INSTRUMENTS}
       activeChips={activeChips}
       toggleChip={toggleChip}
@@ -195,6 +245,12 @@ export const Explore = ({ onLoginClick }) => {
               onClear={() => {
                 setQuery('');
                 setActiveChips(new Set());
+                setFilters({
+                  difficulty: new Set(),
+                  instrument: new Set(),
+                  format: new Set(),
+                  length: new Set(),
+                });
               }}
             />
           )}
@@ -204,6 +260,7 @@ export const Explore = ({ onLoginClick }) => {
               {formatSections.map((s) => (
                 <Section
                   key={s.key}
+                  eyebrow={s.eyebrow}
                   title={s.title}
                   subtitle={s.subtitle}
                   variant={s.variant}
@@ -221,14 +278,16 @@ export const Explore = ({ onLoginClick }) => {
                 </div>
               </div>
 
-              <Section
-                key={newSection.key}
-                title={newSection.title}
-                subtitle={newSection.subtitle}
-                songs={newSection.songs}
-                accent={newSection.accent}
-                onCardClick={handleCardClick}
-              />
+              {discoverySections.map((s) => (
+                <Section
+                  key={s.key}
+                  title={s.title}
+                  subtitle={s.subtitle}
+                  songs={s.songs}
+                  accent={s.accent}
+                  onCardClick={handleCardClick}
+                />
+              ))}
             </>
           )}
         </main>

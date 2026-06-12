@@ -26,6 +26,37 @@
   font-family: var(--font-family-sans);
 }
 
+/* ----- Site header: full-bleed, exactly like /explore -----
+   Header.css caps .header-inner at the site-wide 1414px; the Explore page
+   overrides that to span the viewport (.explore-page rules in Explore.css).
+   Mirror those overrides here so both pages' top navs look identical. */
+.gs-song-page .header {
+  padding-bottom: 22px;
+}
+.gs-song-page .header-container {
+  padding: 0;
+}
+.gs-song-page .header-inner {
+  max-width: none;
+  padding: 0 36px;
+}
+@media (max-width: 1024px) {
+  .gs-song-page .header-inner {
+    padding: 0 20px;
+  }
+}
+@media (max-width: 640px) {
+  .gs-song-page .header-inner {
+    padding: 0 14px;
+  }
+}
+/* Same hairline divider Explore renders under the nav (.explore-nav-divider) */
+.gs-song-page .gs-nav-divider {
+  height: 1px;
+  width: 100%;
+  background: var(--color-border);
+}
+
 /* ----- Signature dot grid ----- */
 .gs-song-page .gs-dotgrid {
   background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
