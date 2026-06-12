@@ -76,8 +76,8 @@ function SongCard({ song, variant, onClick }) {
         </div>
         {formats.length > 0 && (
           <div className="sc-formats">
-            {formats.map((f) => (
-              <span key={f}>{FORMAT_LABELS[f] || f.toUpperCase()}</span>
+            {formats.filter((f) => FORMAT_LABELS[f]).map((f) => (
+              <span key={f}>{FORMAT_LABELS[f]}</span>
             ))}
           </div>
         )}

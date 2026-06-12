@@ -263,7 +263,9 @@ function SongDetail({ onLoginClick }) {
   if (!transportRef.current) transportRef.current = createTransport();
   const transport = transportRef.current;
   const tState = useTransport(transport);
-  useEffect(() => () => transportRef.current.dispose(), []);
+  // Pause (not dispose) so React StrictMode's dev double-invoke of effects
+  // doesn't leave the render-created transport permanently disposed.
+  useEffect(() => () => transportRef.current.pause(), []);
 
   // True audio duration: thumb_data.duration_sec, NOT the Spotify metadata one.
   const durationSec = track?.thumb_data?.duration_sec || track?.duration_sec || 0;
@@ -395,6 +397,9 @@ function SongDetail({ onLoginClick }) {
 
   const osmdRef = useRef(null);
   const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
+  // OSMD's LinearTimingSource reports elapsed ms since the last seek/reset,
+  // EXCLUDING the seek offset. Effective sheet position = base + reported.
+  const osmdBaseRef = useRef(0);
   const mapperRef = useRef(createSheetSecMapper({}));
   const syncPairsRef = useRef(null);
   const sheetDurRef = useRef(0);
@@ -448,12 +453,32 @@ function SongDetail({ onLoginClick }) {
     };
   }, [track, xmlAsset, syncMapAsset, rebuildMapper]);
 
+  // OSMD's playFromMs awaits pause() internally, so an unawaited seek racing a
+  // play() can start playback from 0. Serialize commands like PreviewPanel does.
+  const osmdCmdQueueRef = useRef(Promise.resolve());
   const commandOsmd = useCallback((sheetSec, andPlay) => {
-    const osmd = osmdRef.current;
-    if (!osmd) return;
-    osmdExpectRef.current = { sheetSec, until: nowMs() + 2000 };
-    try { osmd.seekMs?.(sheetSec * 1000); } catch (e) { /* ignore */ }
-    if (andPlay) { try { osmd.play?.(); } catch (e) { /* ignore */ } }
+    if (!osmdRef.current) return;
+    osmdExpectRef.current = { sheetSec, until: nowMs() + 4000 };
+    osmdCmdQueueRef.current = osmdCmdQueueRef.current
+      .then(async () => {
+        const osmd = osmdRef.current; // re-read: instance may have remounted
+        if (!osmd) return;
+        try { await osmd.seekMs?.(sheetSec * 1000); } catch (e) { /* ignore */ }
+        // The seek reset OSMD's elapsed counter to 0 at this position.
+        osmdBaseRef.current = sheetSec;
+        // Re-check at execution time: the user may have paused or switched
+        // tabs while this command sat in the queue.
+        const t = transportRef.current;
+        if (andPlay && t.getState().isPlaying && t.getActiveEngineId() === 'osmd') {
+          try { await osmd.play?.(); } catch (e) { /* ignore */ }
+        }
+        // Commands done — give OSMD's clock a short settle window from NOW.
+        const expect = osmdExpectRef.current;
+        if (expect && expect.sheetSec === sheetSec) {
+          osmdExpectRef.current = { sheetSec, until: nowMs() + 1500 };
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -481,13 +506,15 @@ function SongDetail({ onLoginClick }) {
       readTime: () => {
         const s = osmdSyncRef.current;
         if (!s.ready) return null;
+        const eff = osmdBaseRef.current + s.time;
         const expect = osmdExpectRef.current;
         if (expect) {
-          const settled = Math.abs(s.time - expect.sheetSec) <= 0.75;
+          const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
           if (!settled && nowMs() < expect.until) return null; // stale — self-advance
+          if (!settled) return null; // never adopt a clock that missed its target
           osmdExpectRef.current = null;
         }
-        return mapperRef.current.sheetSecToMidiSec(s.time);
+        return mapperRef.current.sheetSecToMidiSec(eff);
       },
     });
     return () => {
@@ -514,7 +541,7 @@ function SongDetail({ onLoginClick }) {
         const st = t.getState();
         if (
           st.isPlaying && !s.isPlaying && s.duration > 0 &&
-          s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+          osmdBaseRef.current + s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
         ) {
           t.pause();
         }
@@ -543,6 +570,7 @@ function SongDetail({ onLoginClick }) {
     if (view === 'sheet') {
       // SheetMusicView remounts OSMD; not-ready until its first state tick.
       osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
       pendingOsmdSyncRef.current = true;
       t.setActiveEngine('osmd');
     } else if (view === 'midi') {
