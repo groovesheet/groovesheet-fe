@@ -404,94 +404,55 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
               height: FRAME_H,
               background: '#171717',
               zIndex: 4,
+              fontFamily: 'Hubot Sans, Inter, system-ui, sans-serif',
             }}
           >
-            {/* Album art — 724:3467: content (60,60), 1104x1104 */}
-            <div
-              style={{
-                position: 'absolute',
-                top: 60,
-                left: 2676 - 2616,
-                width: 1104,
-                height: 1104,
-                borderRadius: 32,
-                overflow: 'hidden',
-                background: '#222',
-              }}
-            >
-              <img src={m.coverPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-
-            {/* Title — 724:3469: content y=1136, text x+4, 953 wide, 3 lines @130px */}
-            <div
-              style={{
-                position: 'absolute',
-                top: 60 + 1136,
-                left: 2680 - 2616,
-                width: 953,
-                fontSize: 108,
-                lineHeight: '130px',
-                fontWeight: 500,
-                letterSpacing: '-1.2px',
-                color: '#ffffff',
-              }}
-            >
-              {m.title}
-            </div>
-
-            {/* Artist row — 724:3470: y = 60 + 1136 + 426.86 ≈ 1623, height 115 */}
-            <div
-              style={{
-                position: 'absolute',
-                top: 60 + 1136 + 427,
-                left: 2680 - 2616,
-                height: 115,
-                display: 'flex',
-                alignItems: 'center',
-                fontSize: 60,
-                lineHeight: '115px',
-              }}
-            >
-              {/* avatar — 724:3471: 93.86 x 93.86 */}
-              <div
-                style={{
-                  width: 94,
-                  height: 94,
-                  borderRadius: 9999,
-                  overflow: 'hidden',
-                  background: '#333',
-                  flexShrink: 0,
-                }}
-              >
-                <img src={m.avatarPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {/* Album art + title block — Figma 790:3224: (60,60), DYNAMIC height
+                (album → title → artist all flow in a column, so the title can be
+                1–3 lines and the artist row follows its real bottom). */}
+            <div style={{ position: 'absolute', top: 60, left: 60, width: 1104, display: 'flex', flexDirection: 'column' }}>
+              {/* Album art — 790:3225: 1104x1104 */}
+              <div style={{ width: 1104, height: 1104, borderRadius: 32, overflow: 'hidden', background: '#222', flexShrink: 0 }}>
+                <img src={m.coverPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              <span style={{ marginLeft: 26, color: '#ffffff' }}>{m.artist}</span>
-              <span style={{ marginLeft: 26, color: '#666666' }}>•</span>
-              <span style={{ marginLeft: 26, color: '#666666' }}>{m.year}</span>
+
+              {/* Title block — 790:3226: 32px below the art, flex column gap 35.864, px-4 */}
+              <div style={{ marginTop: 32, paddingLeft: 4, width: 961, display: 'flex', flexDirection: 'column', gap: 35.864, alignItems: 'flex-start' }}>
+                {/* Title — 790:3227: Hubot Sans Regular 108.296 / 130.024, dynamic height */}
+                <div style={{ width: '100%', fontSize: 108.296, lineHeight: '130.024px', fontWeight: 400, color: '#ffffff', wordBreak: 'break-word' }}>
+                  {m.title}
+                </div>
+
+                {/* Artist row — 790:3228: gap 26.18, items-center, Regular 52.36 / 114.538 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 26.18 }}>
+                  <div style={{ width: 93.859, height: 93.859, borderRadius: 9999, overflow: 'hidden', background: '#333', flexShrink: 0 }}>
+                    <img src={m.avatarPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <span style={{ fontSize: 52.36, lineHeight: '114.538px', fontWeight: 400, color: '#ffffff', whiteSpace: 'nowrap' }}>{m.artist}</span>
+                  <span style={{ fontSize: 52.36, lineHeight: '114.538px', fontWeight: 400, color: '#666666' }}>•</span>
+                  <span style={{ fontSize: 52.36, lineHeight: '114.538px', fontWeight: 400, color: '#666666', whiteSpace: 'nowrap' }}>{m.year}</span>
+                </div>
+              </div>
             </div>
 
-            {/* CTA — 724:3431: content y=1911.61 → 1971.61, 1104 x 188.39, panel1 #323033 */}
+            {/* CTA — 790:3233: (60,1911.611), 1104x188.389, panel1 #323033, radius 14.142 */}
             <div
               style={{
                 position: 'absolute',
-                top: 1971.61,
-                left: 2676 - 2616,
+                top: 1911.611,
+                left: 60,
                 width: 1104,
-                height: 188.39,
-                borderRadius: 24,
+                height: 188.389,
+                borderRadius: 14.142,
                 background: '#323033',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 18,
+                gap: 17.939,
               }}
             >
-              <img
-                src={m.ctaIcon}
-                alt=""
-                style={{ height: 62, width: 'auto', filter: 'brightness(0) invert(1)' }}
-              />
-              <span style={{ fontSize: 56, color: '#ffffff' }}>{m.ctaLabel}</span>
+              <img src={m.ctaIcon} alt="" style={{ width: 61.965, height: 61.965, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+              <span style={{ fontSize: 52.616, lineHeight: '75.691px', fontWeight: 400, color: '#ffffff', whiteSpace: 'nowrap' }}>{m.ctaLabel}</span>
             </div>
           </div>
         )}
