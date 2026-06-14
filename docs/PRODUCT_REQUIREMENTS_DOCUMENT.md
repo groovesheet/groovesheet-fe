@@ -146,8 +146,8 @@ GrooveSheet is an AI-powered drum transcription platform that transforms audio r
 - **FR-2.2.5**: System shall trigger celebratory confetti animation upon successful completion
 
 #### 2.3 File Storage
-- **FR-2.3.1**: System shall store uploaded files in Google Cloud Storage
-- **FR-2.3.2**: Files shall be organized by job ID: `gs://groovesheet-jobs/jobs/{job_id}/input.mp3`
+- **FR-2.3.1**: System shall store uploaded files in Cloudflare R2 (S3-compatible object storage)
+- **FR-2.3.2**: Files shall be organized by workflow ID in the `groovesheet-audio` bucket: `uploads/{workflow_id}_input.mp3`
 - **FR-2.3.3**: System shall support local filesystem storage for development/testing
 - **FR-2.3.4**: System shall retain uploaded files for minimum 30 days
 
@@ -179,9 +179,9 @@ GrooveSheet is an AI-powered drum transcription platform that transforms audio r
 - **FR-3.2.4**: System shall handle and report processing errors gracefully
 
 #### 3.3 Processing Architecture
-- **FR-3.3.1**: API service shall publish jobs to Pub/Sub queue (`groovesheet-worker-tasks`)
-- **FR-3.3.2**: Worker service shall process jobs from subscription (`groovesheet-worker-tasks-sub`)
-- **FR-3.3.3**: Worker service shall run with minimum 1 instance always-on for responsiveness
+- **FR-3.3.1**: API service shall publish jobs to a Redis Stream queue (`<service>-jobs`, e.g. `demucs-jobs`)
+- **FR-3.3.2**: Worker service shall consume jobs from the stream via a consumer group (`XREADGROUP`)
+- **FR-3.3.3**: Worker service shall run with minimum 1 replica always-on for responsiveness
 - **FR-3.3.4**: System shall update job metadata (progress, status) in real-time
 - **FR-3.3.5**: Processing shall complete within 60 seconds for typical tracks (3-5 minutes audio)
 
@@ -458,9 +458,10 @@ GrooveSheet is an AI-powered drum transcription platform that transforms audio r
 - **NFR-13.2.3**: TensorFlow 2.10.0 for ML inference
 - **NFR-13.2.4**: Demucs for audio source separation
 - **NFR-13.2.5**: Librosa 0.9.0+ for audio processing
-- **NFR-13.2.6**: Google Cloud Run for serverless containers
-- **NFR-13.2.7**: Google Cloud Storage for file storage
-- **NFR-13.2.8**: Google Cloud Pub/Sub for job queue
+- **NFR-13.2.6**: k3s (hybrid Hetzner control plane + NUS GPU node) for container orchestration
+- **NFR-13.2.7**: Cloudflare R2 for file storage
+- **NFR-13.2.8**: Redis Streams (in-cluster) for job queue
+- **NFR-13.2.9**: Neon Postgres for application database
 
 #### 13.3 ML Models
 - **NFR-13.3.1**: AnNOTEator complete_network.h5 model for drum detection
@@ -469,7 +470,7 @@ GrooveSheet is an AI-powered drum transcription platform that transforms audio r
 
 #### 13.4 Development Environment
 - **NFR-13.4.1**: Docker Compose for local development
-- **NFR-13.4.2**: Separate configurations for local vs. cloud deployment
+- **NFR-13.4.2**: Separate configurations for local vs. cluster deployment
 - **NFR-13.4.3**: Environment variables for configuration management
 - **NFR-13.4.4**: Automated deployment scripts for rapid iteration
 
@@ -481,7 +482,7 @@ GrooveSheet is an AI-powered drum transcription platform that transforms audio r
 - **NFR-14.1.1**: System shall log all errors with stack traces
 - **NFR-14.1.2**: Performance metrics shall be tracked per endpoint
 - **NFR-14.1.3**: Processing pipeline steps shall emit timing metrics
-- **NFR-14.1.4**: Cloud Run instances shall report health status
+- **NFR-14.1.4**: Worker pods shall report health status (k8s liveness/readiness probes)
 
 #### 14.2 User Analytics
 - **NFR-14.2.1**: System shall track user acquisition funnel
@@ -572,16 +573,16 @@ The following features are explicitly **not included** in the current version bu
 2. **Python 3.8**: Required for TensorFlow 2.10.0
 3. **Protobuf 3.9.2**: Compatibility constraint with TensorFlow
 4. **Librosa 0.9.0+**: Audio processing library (requires keyword arguments)
-5. **Demucs**: Source separation model (must limit workers to 1 to prevent Cloud Run hanging)
+5. **Demucs**: Source separation model (must limit workers to 1 to prevent worker hanging)
 
 ### Infrastructure Requirements
-1. **Google Cloud Platform**: GCP project for Cloud Run, Storage, Pub/Sub
-2. **Cloud Run Configuration**: 
-   - Worker min-instances=1 (always-on for responsiveness)
-   - No CPU throttling
+1. **k3s cluster (hybrid)**: Hetzner `gs-master` for the control plane + orchestrator; NUS `clear-crystal` GPU node for ML inference workers
+2. **Worker Configuration**: 
+   - Worker min-replicas=1 (always-on for responsiveness)
+   - GPU workers scheduled on the tainted NUS node
    - Adequate memory allocation (4GB+ for ML models)
-3. **Cloud Storage**: GCS bucket `groovesheet-jobs` for file storage
-4. **Pub/Sub**: Topic `groovesheet-worker-tasks` and subscription `groovesheet-worker-tasks-sub`
+3. **Object storage**: Cloudflare R2 bucket `groovesheet-audio` for file storage
+4. **Job queue**: In-cluster Redis Streams — `<service>-jobs` streams and a `job-events` completion stream
 
 ### Browser Compatibility
 - **Chrome**: Latest 2 versions
@@ -601,7 +602,7 @@ The following features are explicitly **not included** in the current version bu
 |------|-------------|--------|---------------------|
 | ML model accuracy below expectations | Medium | High | Implement feedback loop for model retraining; provide manual editing tools |
 | Processing time exceeds 60s target | Medium | Medium | Optimize Demucs worker configuration; implement queue priority system |
-| Cloud Run cold starts impact UX | Low | Medium | Maintain min-instances=1 for worker service |
+| Worker pod cold starts impact UX | Low | Medium | Maintain min-replicas=1 for worker deployments |
 | Dependency conflicts break deployment | Low | High | Lock all dependency versions; comprehensive CI/CD testing |
 | Storage costs exceed projections | Medium | Medium | Implement automatic file cleanup after 30 days; compress uploads |
 
@@ -696,19 +697,25 @@ REACT_APP_CLERK_PUBLISHABLE_KEY=<clerk_key>
 
 **Backend API Service**
 ```
-USE_CLOUD_STORAGE=true
-GCS_BUCKET_NAME=groovesheet-jobs
-GCP_PROJECT=groovesheet2025
-WORKER_TOPIC=groovesheet-worker-tasks
+DATABASE_URL=<neon-postgres-connection-string>
+STORAGE_BUCKET=groovesheet-audio
+R2_ENDPOINT_URL=https://<account-id>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=<r2-access-key>
+R2_SECRET_ACCESS_KEY=<r2-secret-key>
+REDIS_URL=redis://redis.audio-workers.svc.cluster.local:6379
+JOB_EVENTS_STREAM=job-events
 PORT=8080
 ```
 
 **Backend Worker Service**
 ```
-USE_CLOUD_STORAGE=true
-GCS_BUCKET_NAME=groovesheet-jobs
-GCP_PROJECT=groovesheet2025
-WORKER_SUBSCRIPTION=groovesheet-worker-tasks-sub
+STORAGE_BUCKET=groovesheet-audio
+R2_ENDPOINT_URL=https://<account-id>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=<r2-access-key>
+R2_SECRET_ACCESS_KEY=<r2-secret-key>
+REDIS_URL=redis://redis.audio-workers.svc.cluster.local:6379
+STREAM_NAME=demucs-jobs
+GROUP_NAME=demucs-worker-group
 DEMUCS_NUM_WORKERS=1
 PORT=8080
 ```

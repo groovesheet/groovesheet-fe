@@ -483,3 +483,19 @@ export async function fetchAccountSettings(baseUrl, getToken, signOut = null) {
 
   return response.json();
 }
+
+/**
+ * Fetch the public service-status snapshot (worker health + queue lag + recent
+ * workflow counts). No auth required.
+ * @param {string} baseUrl - Base URL for the API (default: '/api')
+ */
+export async function fetchServiceStatus(baseUrl = '/api') {
+  const response = await fetch(`${baseUrl}/service-status`, {
+    method: 'GET',
+    headers: { accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch service status: ${response.status}`);
+  }
+  return response.json();
+}

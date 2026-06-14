@@ -57,7 +57,14 @@ const meta = {
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
-export default function Video2() {
+/**
+ * @param {object}  props
+ * @param {string} [props.xmlUrl]       MusicXML to render (defaults to the bundled piano sample)
+ * @param {object} [props.metaOverride] partial overrides for the editable frame metadata
+ *                                       (title/artist/year/cover/ctaLabel/ctaIcon/…)
+ */
+export default function Video2({ xmlUrl = SAMPLE_XML_URL, metaOverride } = {}) {
+  const m = { ...meta, ...(metaOverride || {}) };
   const [view, setView] = useState('video'); // 'video' | 'cover'
   const [xml, setXml] = useState(null);
   const [notes, setNotes] = useState(null); // [{time,duration,midi}] from OSMD
@@ -83,7 +90,7 @@ export default function Video2() {
     let cancelled = false;
     (async () => {
       try {
-        const xmlRes = await fetch(SAMPLE_XML_URL);
+        const xmlRes = await fetch(xmlUrl);
         if (!xmlRes.ok) throw new Error(`XML ${xmlRes.status}`);
         const xmlText = await xmlRes.text();
         if (cancelled) return;
@@ -93,7 +100,7 @@ export default function Video2() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [xmlUrl]);
 
   // ---- fit-to-viewport scaling ------------------------------------------
   useEffect(() => {
@@ -285,13 +292,13 @@ export default function Video2() {
 
         {/* Footer: logo bottom-left */}
         <div style={{ position: 'absolute', top: FOOTER_Y + 10, left: 57, height: 93, display: 'flex', alignItems: 'center', zIndex: 3 }}>
-          <img src={meta.logo} alt="GrooveSheet" style={{ height: 70, width: 'auto' }} />
+          <img src={m.logo} alt="GrooveSheet" style={{ height: 70, width: 'auto' }} />
         </div>
 
         {/* Footer: legal bottom-right (hidden under the cover sidebar) */}
         {!isCover && (
           <div style={{ position: 'absolute', top: FOOTER_Y, left: 3120, width: 660, height: 93, color: '#fff', fontSize: 24, lineHeight: '31px', textAlign: 'right', zIndex: 3 }}>
-            {meta.legal}
+            {m.legal}
           </div>
         )}
 
@@ -300,24 +307,24 @@ export default function Video2() {
           <div style={{ position: 'absolute', top: 0, left: 2616, width: 1224, height: FRAME_H, background: '#171717', zIndex: 4, padding: 60, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             {/* album art */}
             <div style={{ width: 1104, height: 1104, borderRadius: 16, overflow: 'hidden', background: '#222', flexShrink: 0 }}>
-              <img src={meta.coverPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={m.coverPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             {/* title + artist */}
             <div style={{ marginTop: 32, flex: 1 }}>
-              <div style={{ fontSize: 108, lineHeight: '124px', color: '#fff', fontWeight: 500 }}>{meta.title}</div>
+              <div style={{ fontSize: 108, lineHeight: '124px', color: '#fff', fontWeight: 500 }}>{m.title}</div>
               <div style={{ marginTop: 40, display: 'flex', alignItems: 'center', gap: 26 }}>
                 <div style={{ width: 94, height: 94, borderRadius: 9999, overflow: 'hidden', background: '#333', flexShrink: 0 }}>
-                  <img src={meta.avatarPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={m.avatarPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <div style={{ fontSize: 60, color: '#fff' }}>{meta.artist}</div>
+                <div style={{ fontSize: 60, color: '#fff' }}>{m.artist}</div>
                 <div style={{ fontSize: 60, color: '#777' }}>•</div>
-                <div style={{ fontSize: 60, color: '#777' }}>{meta.year}</div>
+                <div style={{ fontSize: 60, color: '#777' }}>{m.year}</div>
               </div>
             </div>
             {/* CTA */}
             <div style={{ height: 188, borderRadius: 24, background: '#2a2a2d', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, flexShrink: 0 }}>
-              <img src={meta.ctaIcon} alt="" style={{ height: 62, width: 'auto', filter: 'brightness(0) invert(1)' }} />
-              <span style={{ fontSize: 56, color: '#fff' }}>{meta.ctaLabel}</span>
+              <img src={m.ctaIcon} alt="" style={{ height: 62, width: 'auto', filter: 'brightness(0) invert(1)' }} />
+              <span style={{ fontSize: 56, color: '#fff' }}>{m.ctaLabel}</span>
             </div>
           </div>
         )}

@@ -25,7 +25,8 @@ import TermsConditions from './components/TermsConditions';
 import RefundPolicy from './components/RefundPolicy';
 import PreviewDemo from './components/PreviewDemo';
 import Video1 from './components/video/Video1';
-import Video2 from './components/video/Video2';
+import ServiceStatus from './components/ServiceStatus';
+import Video2Tabs from './components/video/Video2Tabs';
 import BillingSuccess from './components/BillingSuccess';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
@@ -192,7 +193,8 @@ function App() {
       <Route path="sso-callback" element={<SSOCallback />} />
       <Route path="preview1" element={<PreviewDemo />} />
       <Route path="video1" element={<Video1 />} />
-      <Route path="video2" element={<Video2 />} />
+      <Route path="video2" element={<Video2Tabs />} />
+      <Route path="service-status" element={<ServiceStatus />} />
       <Route path="billing/success" element={<BillingSuccess />} />
     </Routes>
   );
