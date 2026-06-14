@@ -106,5 +106,32 @@
     "source": "prior local output",
     "xml": "turkish-march_piano.musicxml",
     "midi": null
+  },
+  {
+    "song": "night-in-tunisia",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud 2026-06-14, separate_to_piano_score_full (midi2score grand-staff, beamed)",
+    "xml": "M2Sd096b6e670b4_score.musicxml",
+    "midi": "TKVbf09cc66eec5_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "ado-mirror",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud 2026-06-14, separate_to_piano_score_full (midi2score grand-staff, beamed)",
+    "xml": "M2S2fcd5a0f6c49_score.musicxml",
+    "midi": "TKV9b61e0669bfd_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "turkish-march",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud 2026-06-14, separate_to_piano_score_full (midi2score grand-staff, beamed)",
+    "xml": "M2S0c3cb0619ff8_score.musicxml",
+    "midi": "TKVcbee612bfabc_transkun_v2_transcription.mid"
   }
 ]
