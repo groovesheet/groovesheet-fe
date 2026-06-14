@@ -238,7 +238,7 @@ function MidiConverter({ onLoginClick }) {
       case 'drums': return 'separate_to_drumscore';
       case 'jazz_bass': return 'separate_to_jazz_bass_score';
       case 'bass': return 'separate_to_bass_score';
-      case 'piano': return 'separate_to_piano_score';
+      case 'piano': return 'separate_to_piano_score_full';
       case 'guitar': return 'separate_to_guitar_stem';
       default: return 'bs_roformer_separate';
     }

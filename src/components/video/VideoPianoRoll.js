@@ -1,21 +1,43 @@
 import React, { useEffect, useRef } from 'react';
 import { Midi } from '@tonejs/midi';
+import { drumVoice } from './videoSynth';
 
 /**
- * VideoPianoRoll — falling-notes piano roll styled to match the GrooveSheet
- * social video frame (green glowing notes on a dark field, keyboard at the
- * base). Forked from PreviewPanel/tabs/PianoRollTab and restyled green.
+ * VideoPianoRoll — falling-notes visualiser for the GrooveSheet social video
+ * frame. Two modes:
  *
- * Time is driven externally by `timeRef`, a ref whose `.current` is the
- * current playback position in seconds. The component runs its own rAF draw
- * loop and reads `timeRef.current` each frame, so the parent can keep a single
- * master clock without forcing a React re-render per frame.
+ *   - mode="piano" (default): 88-key piano roll, notes mapped by MIDI pitch.
+ *     Used for pitched workers (transkun piano, fcpe/bassunet bass).
+ *   - mode="drums": a 5-lane drum grid (Kick / Snare / Hi-Hat / Tom / Crash),
+ *     each note placed in its instrument lane by GM percussion number. Drum
+ *     hits are instantaneous, so blocks are a fixed height regardless of the
+ *     note's notated duration.
+ *
+ * Time is driven externally by `timeRef` (seconds, looping); the component runs
+ * its own rAF loop and reads `timeRef.current` each frame so the parent keeps a
+ * single master clock without a per-frame React re-render.
  */
 
-const NOTE_COLOR = '#012FA7'; // GrooveSheet brand blue
+const NOTE_COLOR = '#012FA7'; // GrooveSheet brand blue (piano mode)
 const VISIBLE_WINDOW = 5; // seconds of lookahead; smaller = taller notes
 const MIN_PITCH = 21;
 const MAX_PITCH = 108;
+
+// Drum lanes, left→right. Each GM voice family maps to one lane; openhat folds
+// into Hi-Hat and ride into Crash so the common 5-piece kit stays legible.
+const DRUM_LANES = [
+  { key: 'kick', label: 'Kick', color: '#012FA7' },
+  { key: 'snare', label: 'Snare', color: '#E8590C' },
+  { key: 'hat', label: 'Hi-Hat', color: '#2F9E44' },
+  { key: 'tom', label: 'Tom', color: '#9C36B5' },
+  { key: 'crash', label: 'Crash', color: '#F08C00' },
+];
+const VOICE_TO_LANE = { kick: 0, snare: 1, hat: 2, openhat: 2, tom: 3, crash: 4, ride: 4 };
+
+function laneForMidi(midi) {
+  const idx = VOICE_TO_LANE[drumVoice(midi)];
+  return idx == null ? 1 : idx;
+}
 
 function drawKeyboard(ctx, width, height, y) {
   const whiteKeyWidth = width / 52;
@@ -47,7 +69,33 @@ function drawKeyboard(ctx, width, height, y) {
   ctx.fillRect(0, y - 5, width, 5);
 }
 
-export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
+function drawDrumBase(ctx, width, height, y) {
+  const n = DRUM_LANES.length;
+  const laneW = width / n;
+  ctx.fillStyle = '#15171a';
+  ctx.fillRect(0, y, width, height);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `600 ${Math.round(height * 0.34)}px "Hubot Sans", Inter, system-ui, sans-serif`;
+  for (let i = 0; i < n; i += 1) {
+    const cx = (i + 0.5) * laneW;
+    // lane swatch + label
+    ctx.fillStyle = DRUM_LANES[i].color;
+    ctx.fillRect(i * laneW + 4, y - 5, laneW - 8, 5); // hit line segment, lane-coloured
+    ctx.globalAlpha = 0.18;
+    ctx.fillRect(i * laneW, y, laneW, height);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(DRUM_LANES[i].label, cx, y + height / 2);
+    if (i > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(i * laneW, y); ctx.lineTo(i * laneW, y + height); ctx.stroke();
+    }
+  }
+}
+
+export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'piano' }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
 
@@ -55,9 +103,10 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
     if (!canvasRef.current) return undefined;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    const isDrums = mode === 'drums';
 
-    // Prefer explicit notes (extracted from the same OSMD sheet → perfectly
-    // synced). Fall back to parsing a raw MIDI buffer for back-compat.
+    // Prefer explicit notes (extracted from the same OSMD sheet / parsed MIDI →
+    // perfectly synced). Fall back to parsing a raw MIDI buffer for back-compat.
     let allNotes;
     if (notes && notes.length) {
       allNotes = notes;
@@ -75,8 +124,7 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
     allNotes = allNotes.slice().sort((a, b) => a.time - b.time);
 
     // Size the backing store to the *displayed* pixels (frame is downscaled to
-    // the viewport via a CSS transform), not the 3840px layout box. Drawing a
-    // full-4K surface at 60fps was the main source of lag. DPR capped at 2.
+    // the viewport via a CSS transform), not the 3840px layout box.
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -90,39 +138,28 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
 
     const range = MAX_PITCH - MIN_PITCH;
 
-    const render = () => {
-      const elapsed = (timeRef?.current ?? 0);
-      const w = canvas.width;
-      const h = canvas.height;
+    const renderPiano = (w, h) => {
       const keyHeight = Math.round(h * 0.28);
       const fallHeight = h - keyHeight;
+      const elapsed = (timeRef?.current ?? 0);
 
-      // dark field
       ctx.fillStyle = '#0c100c';
       ctx.fillRect(0, 0, w, h);
 
-      // faint vertical lane grid
       ctx.strokeStyle = 'rgba(56, 224, 123, 0.06)';
       ctx.lineWidth = 1;
       for (let i = 0; i <= 52; i += 1) {
         const x = (i / 52) * w;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, fallHeight);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, fallHeight); ctx.stroke();
       }
 
-      // falling notes — collect every visible note into ONE path and fill it
-      // in a single call, so the (expensive) shadow blur is computed once per
-      // frame instead of once per note. Notes are sorted by start time, so we
-      // can stop as soon as a note is past the visible window.
       const nw = w / range;
       const r = Math.min(nw / 2, 8 * (w / 3840));
       const path = new Path2D();
       for (let i = 0; i < allNotes.length; i += 1) {
         const note = allNotes[i];
-        if (note.time - elapsed > VISIBLE_WINDOW) break; // not yet on screen; rest are later
-        if (note.time + note.duration < elapsed) continue; // already fallen past
+        if (note.time - elapsed > VISIBLE_WINDOW) break;
+        if (note.time + note.duration < elapsed) continue;
         const startY = fallHeight - ((note.time - elapsed) / VISIBLE_WINDOW) * fallHeight;
         const endY = fallHeight - ((note.time + note.duration - elapsed) / VISIBLE_WINDOW) * fallHeight;
         const x = ((note.midi - MIN_PITCH) / range) * w;
@@ -133,12 +170,59 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
       }
       ctx.fillStyle = NOTE_COLOR;
       ctx.shadowColor = NOTE_COLOR;
-      ctx.shadowBlur = 24 * (w / 3840); // scale glow with backing resolution
+      ctx.shadowBlur = 24 * (w / 3840);
       ctx.fill(path);
       ctx.shadowBlur = 0;
 
       drawKeyboard(ctx, w, keyHeight, fallHeight);
+    };
 
+    const renderDrums = (w, h) => {
+      const baseHeight = Math.round(h * 0.12);
+      const fallHeight = h - baseHeight;
+      const elapsed = (timeRef?.current ?? 0);
+      const n = DRUM_LANES.length;
+      const laneW = w / n;
+      const blockH = Math.max(10, Math.round(0.06 * fallHeight)); // fixed hit height
+      const padX = Math.max(6, laneW * 0.12);
+
+      ctx.fillStyle = '#0c100c';
+      ctx.fillRect(0, 0, w, h);
+
+      // faint lane grid
+      for (let i = 1; i < n; i += 1) {
+        const x = i * laneW;
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, fallHeight); ctx.stroke();
+      }
+
+      for (let i = 0; i < allNotes.length; i += 1) {
+        const note = allNotes[i];
+        if (note.time - elapsed > VISIBLE_WINDOW) break;
+        if (note.time - elapsed < -0.25) continue; // hit already passed
+        const lane = note.lane != null ? note.lane : laneForMidi(note.midi);
+        const cy = fallHeight - ((note.time - elapsed) / VISIBLE_WINDOW) * fallHeight;
+        const top = cy - blockH / 2;
+        if (top > fallHeight || top + blockH < 0) continue;
+        const color = DRUM_LANES[lane]?.color || NOTE_COLOR;
+        const x = lane * laneW + padX;
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 18 * (w / 3840);
+        const p = new Path2D();
+        p.roundRect(x, top, laneW - padX * 2, blockH, blockH / 2);
+        ctx.fill(p);
+      }
+      ctx.shadowBlur = 0;
+
+      drawDrumBase(ctx, w, baseHeight, fallHeight);
+    };
+
+    const render = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (isDrums) renderDrums(w, h); else renderPiano(w, h);
       rafRef.current = requestAnimationFrame(render);
     };
     rafRef.current = requestAnimationFrame(render);
@@ -147,7 +231,7 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
     };
-  }, [midiBuffer, notes, timeRef]);
+  }, [midiBuffer, notes, timeRef, mode]);
 
   return (
     <canvas
@@ -156,3 +240,5 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef }) {
     />
   );
 }
+
+export { DRUM_LANES, laneForMidi };

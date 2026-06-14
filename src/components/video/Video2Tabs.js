@@ -22,10 +22,12 @@ const SAMPLE_XML = `${PUB}/sample-preview/sample.musicxml`;
 
 // one tab per worker (user choice: compare engines directly)
 const WORKERS = [
-  { id: 'transkun-piano', label: 'Piano', sub: 'transkun-v2', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
-  { id: 'adtof-drums', label: 'Drums', sub: 'adtof', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
-  { id: 'bassunet-bass', label: 'Bass', sub: 'bassunet', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
-  { id: 'fcpe-bass', label: 'Bass', sub: 'fcpe', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
+  { id: 'transkun-piano', kind: 'piano', label: 'Piano', sub: 'transkun-v2', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
+  { id: 'transkun-piano-remote', kind: 'piano', label: 'Piano', sub: 'remote raw', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
+  { id: 'transkun-piano-quantized', kind: 'piano', label: 'Piano', sub: 'midi2score ✓', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
+  { id: 'adtof-drums', kind: 'drums', label: 'Drums', sub: 'adtof', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
+  { id: 'bassunet-bass', kind: 'bass', label: 'Bass', sub: 'bassunet', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
+  { id: 'fcpe-bass', kind: 'bass', label: 'Bass', sub: 'fcpe', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
 ];
 
 // display metadata for the test songs (cover art falls back to the default)
@@ -41,14 +43,10 @@ const SAMPLE_FALLBACK = {
   songId: '__sample__',
   workerId: 'transkun-piano',
   xmlUrl: SAMPLE_XML,
+  midiUrl: null,
+  kind: 'piano',
   meta: { title: 'Sample (bundled)', artist: 'GrooveSheet', ctaLabel: 'Keyboard Transcription', ctaIcon: `${ICONS}/Keyboard.svg` },
 };
-
-function pickMusicXml(files) {
-  if (!Array.isArray(files)) return null;
-  const x = files.find((f) => (f.file || '').toLowerCase().endsWith('.musicxml'));
-  return x ? x.file : null;
-}
 
 export default function Video2Tabs() {
   const [summary, setSummary] = useState(null); // raw array | null
@@ -72,16 +70,21 @@ export default function Video2Tabs() {
 
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
-  // song -> worker -> xml url, from completed jobs only
+  // song -> worker -> { xmlUrl, midiUrl, kind }, from completed jobs only.
+  // A worker is renderable if it produced a sheet (xml) OR roll/audio (midi).
   const available = useMemo(() => {
     const map = {};
+    const url = (song, worker, file) =>
+      file ? `${SAMPLES}/${song}/${worker}/${encodeURIComponent(file)}` : null;
     (summary || [])
-      .filter((e) => e.status === 'completed')
+      .filter((e) => e.status === 'completed' && (e.xml || e.midi))
       .forEach((e) => {
-        const file = pickMusicXml(e.files);
-        if (!file) return;
         map[e.song] = map[e.song] || {};
-        map[e.song][e.worker] = `${SAMPLES}/${e.song}/${e.worker}/${encodeURIComponent(file)}`;
+        map[e.song][e.worker] = {
+          xmlUrl: url(e.song, e.worker, e.xml),
+          midiUrl: url(e.song, e.worker, e.midi),
+          kind: e.kind || 'piano',
+        };
       });
     return map;
   }, [summary]);
@@ -95,15 +98,17 @@ export default function Video2Tabs() {
 
   // build the active frame: real output if present, else sample fallback
   const active = useMemo(() => {
-    const url = songId && available[songId] && available[songId][workerId];
-    if (!url) return SAMPLE_FALLBACK;
+    const src = songId && available[songId] && available[songId][workerId];
+    if (!src) return SAMPLE_FALLBACK;
     const w = WORKERS.find((x) => x.id === workerId) || WORKERS[0];
     const s = SONGS[songId] || { title: songId, artist: '', year: '' };
     return {
       key: `${songId}|${workerId}`,
       songId,
       workerId,
-      xmlUrl: url,
+      xmlUrl: src.xmlUrl,
+      midiUrl: src.midiUrl,
+      kind: src.kind || w.kind,
       meta: { title: s.title, artist: s.artist, year: s.year, ctaLabel: w.cta, ctaIcon: w.icon },
     };
   }, [songId, workerId, available]);
@@ -113,7 +118,13 @@ export default function Video2Tabs() {
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#000' }}>
       {/* the rendered Video2 frame; remount per (song,worker) to reset OSMD cleanly */}
-      <Video2 key={active.key} xmlUrl={active.xmlUrl} metaOverride={active.meta} />
+      <Video2
+        key={active.key}
+        xmlUrl={active.xmlUrl}
+        midiUrl={active.midiUrl}
+        kind={active.kind}
+        metaOverride={active.meta}
+      />
 
       {/* tab bar — pinned bottom-center, above the frame controls (which are top-left) */}
       <div style={barWrap}>
@@ -170,17 +181,21 @@ export default function Video2Tabs() {
 const barWrap = {
   position: 'fixed',
   bottom: 16,
-  left: '50%',
-  transform: 'translateX(-50%)',
+  left: 12,
+  right: 12,
   zIndex: 20,
   display: 'flex',
+  flexWrap: 'nowrap',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: 6,
-  padding: '8px 10px',
+  padding: '8px 12px',
   background: 'rgba(20,20,22,0.92)',
   border: '1px solid #333',
   borderRadius: 12,
   backdropFilter: 'blur(6px)',
+  overflowX: 'auto',
+  whiteSpace: 'nowrap',
 };
 
 const hint = {
@@ -205,6 +220,8 @@ function tabBtn(active, enabled) {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
     padding: '7px 12px',
     borderRadius: 9,
     border: `1px solid ${active ? '#012FA7' : '#3a3a3d'}`,
@@ -218,6 +235,8 @@ function tabBtn(active, enabled) {
 
 function songBtn(active) {
   return {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
     padding: '7px 12px',
     borderRadius: 9,
     border: `1px solid ${active ? '#012FA7' : '#3a3a3d'}`,
