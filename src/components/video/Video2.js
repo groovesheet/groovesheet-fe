@@ -391,26 +391,107 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
           </div>
         )}
 
-        {/* Cover sidebar */}
+        {/* Cover sidebar — faithful to Figma node 724:3323 (sidebar 724:3361).
+            Frame is native 3840x2160 so Figma px == frame px (scale 1:1).
+            Sidebar: x=2616, w=1224, full height; inner content inset 60px. */}
         {isCover && (
-          <div style={{ position: 'absolute', top: 0, left: 2616, width: 1224, height: FRAME_H, background: '#171717', zIndex: 4, padding: 60, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ width: 1104, height: 1104, borderRadius: 16, overflow: 'hidden', background: '#222', flexShrink: 0 }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 2616,
+              width: 1224,
+              height: FRAME_H,
+              background: '#171717',
+              zIndex: 4,
+            }}
+          >
+            {/* Album art — 724:3467: content (60,60), 1104x1104 */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 60,
+                left: 2676 - 2616,
+                width: 1104,
+                height: 1104,
+                borderRadius: 32,
+                overflow: 'hidden',
+                background: '#222',
+              }}
+            >
               <img src={m.coverPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div style={{ marginTop: 32, flex: 1 }}>
-              <div style={{ fontSize: 108, lineHeight: '124px', color: '#fff', fontWeight: 500 }}>{m.title}</div>
-              <div style={{ marginTop: 40, display: 'flex', alignItems: 'center', gap: 26 }}>
-                <div style={{ width: 94, height: 94, borderRadius: 9999, overflow: 'hidden', background: '#333', flexShrink: 0 }}>
-                  <img src={m.avatarPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ fontSize: 60, color: '#fff' }}>{m.artist}</div>
-                <div style={{ fontSize: 60, color: '#777' }}>•</div>
-                <div style={{ fontSize: 60, color: '#777' }}>{m.year}</div>
-              </div>
+
+            {/* Title — 724:3469: content y=1136, text x+4, 953 wide, 3 lines @130px */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 60 + 1136,
+                left: 2680 - 2616,
+                width: 953,
+                fontSize: 108,
+                lineHeight: '130px',
+                fontWeight: 500,
+                letterSpacing: '-1.2px',
+                color: '#ffffff',
+              }}
+            >
+              {m.title}
             </div>
-            <div style={{ height: 188, borderRadius: 24, background: '#2a2a2d', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, flexShrink: 0 }}>
-              <img src={m.ctaIcon} alt="" style={{ height: 62, width: 'auto', filter: 'brightness(0) invert(1)' }} />
-              <span style={{ fontSize: 56, color: '#fff' }}>{m.ctaLabel}</span>
+
+            {/* Artist row — 724:3470: y = 60 + 1136 + 426.86 ≈ 1623, height 115 */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 60 + 1136 + 427,
+                left: 2680 - 2616,
+                height: 115,
+                display: 'flex',
+                alignItems: 'center',
+                fontSize: 60,
+                lineHeight: '115px',
+              }}
+            >
+              {/* avatar — 724:3471: 93.86 x 93.86 */}
+              <div
+                style={{
+                  width: 94,
+                  height: 94,
+                  borderRadius: 9999,
+                  overflow: 'hidden',
+                  background: '#333',
+                  flexShrink: 0,
+                }}
+              >
+                <img src={m.avatarPath} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <span style={{ marginLeft: 26, color: '#ffffff' }}>{m.artist}</span>
+              <span style={{ marginLeft: 26, color: '#666666' }}>•</span>
+              <span style={{ marginLeft: 26, color: '#666666' }}>{m.year}</span>
+            </div>
+
+            {/* CTA — 724:3431: content y=1911.61 → 1971.61, 1104 x 188.39, panel1 #323033 */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 1971.61,
+                left: 2676 - 2616,
+                width: 1104,
+                height: 188.39,
+                borderRadius: 24,
+                background: '#323033',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 18,
+              }}
+            >
+              <img
+                src={m.ctaIcon}
+                alt=""
+                style={{ height: 62, width: 'auto', filter: 'brightness(0) invert(1)' }}
+              />
+              <span style={{ fontSize: 56, color: '#ffffff' }}>{m.ctaLabel}</span>
             </div>
           </div>
         )}
