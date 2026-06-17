@@ -1,17 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
-import { authenticatedFetch } from '../utils/api';
+import { fetchBillingPlans, createCheckoutSession } from '../utils/api';
 import './Pricing.css';
+
+/**
+ * Format a USD amount the way the static copy did ($0, $10, $7.5) — drop a
+ * trailing ".0" but keep meaningful cents. Returns null for non-numbers so the
+ * caller can fall back to its static text.
+ */
+const formatPrice = (value) => {
+  if (value == null || Number.isNaN(Number(value))) return null;
+  const num = Number(value);
+  // Up to 2 decimals, but strip insignificant trailing zeros (10.00 -> 10, 7.50 -> 7.5).
+  const trimmed = parseFloat(num.toFixed(2));
+  return `$${trimmed}`;
+};
+
+/**
+ * Format a minute count as a clean integer when whole (120 -> "120"), else keep
+ * one decimal. Returns null for non-numbers so the caller can fall back.
+ */
+const formatMinutes = (value) => {
+  if (value == null || Number.isNaN(Number(value))) return null;
+  const num = Number(value);
+  return Number.isInteger(num) ? String(num) : String(parseFloat(num.toFixed(1)));
+};
 
 function Pricing({ onLoginClick }) {
   const { isSignedIn } = useUser();
-  const { getToken } = useAuth();
+  const { getToken, signOut } = useAuth();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('plans');
   const [billingMode, setBillingMode] = useState('annual');
+
+  // Public pricing catalog from the backend (single source of truth for numbers).
+  const [catalog, setCatalog] = useState(null);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+
+  // "Checkout canceled" notice — shown when Stripe returns the user to /pricing?canceled.
+  const [showCanceled, setShowCanceled] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchBillingPlans('/api');
+        if (!cancelled) setCatalog(data);
+      } catch (err) {
+        // Never block the page — fall back to the static copy already in the markup.
+        console.warn('Failed to load billing plans; using static fallback values.', err);
+      } finally {
+        if (!cancelled) setCatalogLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('canceled')) {
+      setShowCanceled(true);
+    }
+  }, []);
+
+  // Index catalog entries by id for easy lookup. Undefined until the API resolves.
+  const planById = (id) => catalog?.plans?.find((p) => p.id === id);
+  const topupById = (id) => catalog?.topups?.find((tp) => tp.id === id);
 
   /**
    * Resolve a UI plan slug + billing mode to the backend plan key.
@@ -37,25 +96,8 @@ function Pricing({ onLoginClick }) {
     setLoading(plan);
     try {
       const planKey = resolvePlanKey(plan);
-      const response = await authenticatedFetch(
-        '/api/billing/create-checkout-session',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan: planKey }),
-        },
-        getToken
-      );
+      const data = await createCheckoutSession('/api', planKey, getToken, signOut);
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        const message = err.detail || response.statusText || 'Failed to start checkout';
-        console.error('Checkout session error:', message);
-        setError(message);
-        return;
-      }
-
-      const data = await response.json();
       if (!data?.url) {
         setError('Checkout session was created but no redirect URL was returned.');
         return;
@@ -71,8 +113,40 @@ function Pricing({ onLoginClick }) {
     }
   };
 
+  // --- Derived display values (API-driven, with graceful static fallbacks) ---
+  const free = planById('free');
+  const liteMonthly = planById('lite_monthly');
+  const liteAnnual = planById('lite_annual');
+  const proMonthly = planById('pro_monthly');
+  const proAnnual = planById('pro_annual');
+  const starterTopup = topupById('starter');
+  const plusTopup = topupById('plus');
+  const powerTopup = topupById('power');
+
+  // Per-month price for Lite: monthly plan's monthly price, or annual/12 in annual mode.
+  const litePrice =
+    billingMode === 'monthly'
+      ? formatPrice(liteMonthly?.price_monthly_usd)
+      : formatPrice(liteAnnual?.price_annual_usd != null ? liteAnnual.price_annual_usd / 12 : null);
+  const proPrice =
+    billingMode === 'monthly'
+      ? formatPrice(proMonthly?.price_monthly_usd)
+      : formatPrice(proAnnual?.price_annual_usd != null ? proAnnual.price_annual_usd / 12 : null);
+
+  // Minutes (per month for plans, one-time for top-ups).
+  const freeMinutes = formatMinutes(free?.minutes_per_month);
+  const liteMinutes = formatMinutes(liteMonthly?.minutes_per_month);
+  const starterMinutes = formatMinutes(starterTopup?.minutes);
+  const plusMinutes = formatMinutes(plusTopup?.minutes);
+  const powerMinutes = formatMinutes(powerTopup?.minutes);
+
+  // Top-up one-time prices.
+  const starterPrice = formatPrice(starterTopup?.price_usd);
+  const plusPrice = formatPrice(plusTopup?.price_usd);
+  const powerPrice = formatPrice(powerTopup?.price_usd);
+
   return (
-    <section className="pricing">
+    <section className="pricing" aria-busy={catalogLoading}>
       <div className="pricing-container">
         <div className="pricing-header-section">
           <div className="pricing-header">
@@ -80,6 +154,25 @@ function Pricing({ onLoginClick }) {
               <h2 className="pricing-title">{t('pricing.title')}</h2>
             </div>
             <p className="pricing-description">{t('pricing.subtitle')}</p>
+            {showCanceled && (
+              <div className="pricing-canceled-notice" role="status">
+                <span>
+                  {t('pricing.canceledNotice', {
+                    defaultValue: 'Checkout canceled — you were not charged.',
+                  })}
+                </span>
+                <button
+                  type="button"
+                  className="pricing-canceled-dismiss"
+                  aria-label={t('pricing.dismiss', { defaultValue: 'Dismiss' })}
+                  onClick={() => setShowCanceled(false)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            )}
             {error && (
               <p className="pricing-error" role="alert" style={{ color: '#ff5470', marginTop: '8px' }}>
                 {error}
@@ -131,7 +224,14 @@ function Pricing({ onLoginClick }) {
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.18799 8.92992L5.24999 11.9929L12.25 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>{t('pricing.plans.free.feature1')}</span>
+                    <span>
+                      {freeMinutes
+                        ? t('pricing.minutesPerMonth', {
+                            minutes: freeMinutes,
+                            defaultValue: '{{minutes}} minutes / month',
+                          })
+                        : t('pricing.plans.free.feature1')}
+                    </span>
                   </li>
                   <li className="feature-item">
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -164,7 +264,9 @@ function Pricing({ onLoginClick }) {
                     <span className="plan-badge">{t('pricing.plans.lite.badge')}</span>
                   </div>
                   <div className="pricing-card-price">
-                    <span className="price">{billingMode === 'monthly' ? '$10' : '$7.5'}</span>
+                    <span className="price">
+                      {litePrice || (billingMode === 'monthly' ? '$10' : '$7.5')}
+                    </span>
                     <span className="period">{t('pricing.perMonth')}</span>
                   </div>
                   <button className="pricing-btn primary" onClick={() => handlePlanClick('tier2')} disabled={loading === 'tier2'}>
@@ -181,7 +283,14 @@ function Pricing({ onLoginClick }) {
                       <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2.85474 8.53502L5.91674 11.598L12.9167 4.59802" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>{t('pricing.plans.lite.feature1')}</span>
+                      <span>
+                        {liteMinutes
+                          ? t('pricing.minutesPerMonth', {
+                              minutes: liteMinutes,
+                              defaultValue: '{{minutes}} minutes / month',
+                            })
+                          : t('pricing.plans.lite.feature1')}
+                      </span>
                     </li>
                     <li className="feature-item">
                       <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -219,7 +328,9 @@ function Pricing({ onLoginClick }) {
                   <span className="plan-badge">{t('pricing.plans.pro.badge')}</span>
                 </div>
                 <div className="pricing-card-price">
-                  <span className="price">{billingMode === 'monthly' ? '$18' : '$15'}</span>
+                  <span className="price">
+                    {proPrice || (billingMode === 'monthly' ? '$18' : '$15')}
+                  </span>
                   <span className="period">{t('pricing.perUserMonth')}</span>
                 </div>
                 <button className="pricing-btn outline" onClick={() => handlePlanClick('tier3')} disabled={loading === 'tier3'}>
@@ -269,7 +380,7 @@ function Pricing({ onLoginClick }) {
                   <span className="plan-badge">{t('pricing.topups.starter.badge')}</span>
                 </div>
                 <div className="pricing-card-price">
-                  <span className="price">$4</span>
+                  <span className="price">{starterPrice || '$4'}</span>
                   <span className="period">{t('pricing.oneTime')}</span>
                 </div>
                 <button className="pricing-btn outline" onClick={() => handlePlanClick('topup-30')} disabled={loading === 'topup-30'}>
@@ -286,7 +397,14 @@ function Pricing({ onLoginClick }) {
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.18799 8.92992L5.24999 11.9929L12.25 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>{t('pricing.topups.starter.feature1')}</span>
+                    <span>
+                      {starterMinutes
+                        ? t('pricing.minutesAdded', {
+                            minutes: starterMinutes,
+                            defaultValue: '{{minutes}} minutes added',
+                          })
+                        : t('pricing.topups.starter.feature1')}
+                    </span>
                   </li>
                   <li className="feature-item">
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -319,7 +437,7 @@ function Pricing({ onLoginClick }) {
                     <span className="plan-badge">{t('pricing.topups.plus.badge')}</span>
                   </div>
                   <div className="pricing-card-price">
-                    <span className="price">$7</span>
+                    <span className="price">{plusPrice || '$7'}</span>
                     <span className="period">{t('pricing.oneTime')}</span>
                   </div>
                   <button className="pricing-btn primary" onClick={() => handlePlanClick('topup-60')} disabled={loading === 'topup-60'}>
@@ -336,7 +454,14 @@ function Pricing({ onLoginClick }) {
                       <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2.85474 8.53502L5.91674 11.598L12.9167 4.59802" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>{t('pricing.topups.plus.feature1')}</span>
+                      <span>
+                        {plusMinutes
+                          ? t('pricing.minutesAdded', {
+                              minutes: plusMinutes,
+                              defaultValue: '{{minutes}} minutes added',
+                            })
+                          : t('pricing.topups.plus.feature1')}
+                      </span>
                     </li>
                     <li className="feature-item">
                       <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -368,7 +493,7 @@ function Pricing({ onLoginClick }) {
                   <span className="plan-badge">{t('pricing.topups.power.badge')}</span>
                 </div>
                 <div className="pricing-card-price">
-                  <span className="price">$12</span>
+                  <span className="price">{powerPrice || '$12'}</span>
                   <span className="period">{t('pricing.oneTime')}</span>
                 </div>
                 <button className="pricing-btn outline" onClick={() => handlePlanClick('topup-120')} disabled={loading === 'topup-120'}>
@@ -385,7 +510,14 @@ function Pricing({ onLoginClick }) {
                     <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.52148 8.92992L5.58348 11.9929L12.5835 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>{t('pricing.topups.power.feature1')}</span>
+                    <span>
+                      {powerMinutes
+                        ? t('pricing.minutesAdded', {
+                            minutes: powerMinutes,
+                            defaultValue: '{{minutes}} minutes added',
+                          })
+                        : t('pricing.topups.power.feature1')}
+                    </span>
                   </li>
                   <li className="feature-item">
                     <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">

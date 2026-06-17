@@ -35,6 +35,11 @@ export const AccountIcon = ({ compact = false }) => {
     navigate('/history');
   };
 
+  const handleBilling = () => {
+    closeDropdown();
+    navigate('/account/billing');
+  };
+
   const handleSignOut = async () => {
     closeDropdown();
     await signOut();
@@ -140,6 +145,9 @@ export const AccountIcon = ({ compact = false }) => {
                 <button className="account-dropdown-item" onClick={handleHistory}>
                   <span>{t('nav.history')}</span>
                 </button>
+                <button className="account-dropdown-item" onClick={handleBilling}>
+                  <span>{t('nav.billing')}</span>
+                </button>
                 <div className="account-dropdown-divider" />
                 <button className="account-dropdown-item danger" onClick={handleSignOut}>
                   <span>{t('nav.signOut')}</span>
@@ -204,6 +212,9 @@ export const AccountIcon = ({ compact = false }) => {
               </button>
               <button className="account-dropdown-item" onClick={handleHistory}>
                 <span>{t('nav.history')}</span>
+              </button>
+              <button className="account-dropdown-item" onClick={handleBilling}>
+                <span>{t('nav.billing')}</span>
               </button>
               <div className="account-dropdown-divider" />
               <button className="account-dropdown-item danger" onClick={handleSignOut}>

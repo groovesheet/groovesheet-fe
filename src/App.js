@@ -28,6 +28,7 @@ import Video1 from './components/video/Video1';
 import ServiceStatus from './components/ServiceStatus';
 import Video2Tabs from './components/video/Video2Tabs';
 import BillingSuccess from './components/BillingSuccess';
+import AccountBilling from './components/AccountBilling';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
 import { claimPendingPreviewIfAny } from './utils/previewApi';
@@ -193,6 +194,7 @@ function App() {
     <Routes>
       <Route index element={<LandingPage onLoginClick={openLoginModal} />} />
       <Route path="history" element={<TranscriptionHistory />} />
+      <Route path="account/billing" element={<AccountBilling />} />
       <Route path="blog" element={<Blog onLoginClick={openLoginModal} />} />
       <Route path="blog/:slug" element={<BlogPost onLoginClick={openLoginModal} />} />
       <Route path="about" element={<About onLoginClick={openLoginModal} />} />

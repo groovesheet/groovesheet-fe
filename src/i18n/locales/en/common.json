@@ -13,6 +13,7 @@
     "account": "Account",
     "profile": "Profile",
     "history": "Transcription History",
+    "billing": "Billing & Usage",
     "signOut": "Sign out",
     "toggleMenuAria": "Toggle menu"
   },

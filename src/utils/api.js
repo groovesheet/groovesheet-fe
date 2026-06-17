@@ -408,7 +408,7 @@ export async function fetchWorkflowStatus(baseUrl, workflowId, getToken, signOut
  */
 export async function fetchAccountSummary(baseUrl, getToken, signOut = null) {
   const response = await authenticatedFetch(
-    `${baseUrl}/account/summary`,
+    `${baseUrl}/user/account`,
     {
       method: 'GET',
       headers: { accept: 'application/json' },
@@ -431,14 +431,14 @@ export async function fetchAccountSummary(baseUrl, getToken, signOut = null) {
  * @param {Function} getToken - auth getToken function from the app auth hook
  * @param {{ limit?: number, offset?: number }} [params]
  * @param {Function} signOut - Optional signOut function for auto-logout on auth errors
- * @returns {Promise<Object>} - UsageHistoryResponse { items, total, limit, offset }
+ * @returns {Promise<Object>} - { transactions: Array<{ id, amount, amount_minutes, balance_after, transaction_type, description, created_at, workflow_id }>, total }
  */
 export async function fetchAccountUsageHistory(baseUrl, getToken, params = {}, signOut = null) {
   const search = new URLSearchParams();
   if (params.limit != null) search.set('limit', String(params.limit));
   if (params.offset != null) search.set('offset', String(params.offset));
   const qs = search.toString();
-  const url = `${baseUrl}/account/usage-history${qs ? `?${qs}` : ''}`;
+  const url = `${baseUrl}/user/transactions${qs ? `?${qs}` : ''}`;
 
   const response = await authenticatedFetch(
     url,
@@ -496,6 +496,87 @@ export async function fetchServiceStatus(baseUrl = '/api') {
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch service status: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Fetch the public catalog of plans + top-ups. No auth required. This is the
+ * SINGLE SOURCE OF TRUTH for pricing numbers — render prices/minutes from here,
+ * not hardcoded values.
+ * @param {string} baseUrl - Base URL for the API (default: '/api')
+ * @returns {Promise<{ plans: Array<{ id, display_name, credits_per_month, minutes_per_month, price_monthly_usd, price_annual_usd, max_rollover }>, topups: Array<{ id, display_name, credits, minutes, price_usd, priority_queue }> }>}
+ */
+export async function fetchBillingPlans(baseUrl = '/api') {
+  const response = await fetch(`${baseUrl}/billing/plans`, {
+    method: 'GET',
+    headers: { accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch billing plans: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Fetch the signed-in user's subscription + minutes balance.
+ * @returns {Promise<{ user_id, tier, credits_balance, balance_seconds, balance_minutes, is_active, next_recharge_at, subscription_id, customer_id }>}
+ */
+export async function fetchUserSubscription(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/user/subscription`,
+    { method: 'GET', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch subscription: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Create a Stripe Checkout session for a plan or top-up and return the hosted URL.
+ * @param {string} baseUrl
+ * @param {string} plan - one of: tier2, tier2_annual, tier3, tier3_annual, topup-30, topup-60, topup-120
+ * @param {Function} getToken
+ * @param {Function} [signOut]
+ * @returns {Promise<{ session_id: string, url: string }>}
+ */
+export async function createCheckoutSession(baseUrl, plan, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/billing/create-checkout-session`,
+    {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to create checkout session: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Create a Stripe Billing Portal session so the user can manage/cancel their
+ * subscription, and return the hosted portal URL.
+ * @returns {Promise<{ url: string }>}
+ */
+export async function createBillingPortalSession(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/billing/create-portal-session`,
+    { method: 'POST', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to open billing portal: ${response.statusText}`);
   }
   return response.json();
 }

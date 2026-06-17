@@ -505,3 +505,48 @@
 [data-theme='light'] .pricing-btn.primary:hover {
   background: rgba(0, 82, 214, 1);
 }
+
+/* Subtle, non-error notice shown when Stripe returns the user via ?canceled */
+.pricing-canceled-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.pricing-canceled-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pricing-canceled-dismiss:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-foreground);
+}
+
+.pricing-canceled-dismiss:focus,
+.pricing-canceled-dismiss:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
