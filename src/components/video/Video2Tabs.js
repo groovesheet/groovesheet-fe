@@ -23,8 +23,9 @@ const SAMPLE_XML = `${PUB}/sample-preview/sample.musicxml`;
 // one tab per worker (user choice: compare engines directly)
 const WORKERS = [
   { id: 'transkun-piano', kind: 'piano', label: 'Piano', sub: 'transkun-v2', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
-  { id: 'transkun-piano-remote', kind: 'piano', label: 'Piano', sub: 'remote raw', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
-  { id: 'transkun-piano-quantized', kind: 'piano', label: 'Piano', sub: 'midi2score ✓', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
+  { id: 'transkun-piano-split', kind: 'piano', label: 'Piano', sub: 'raw + grand staff', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
+  { id: 'transkun-piano-quantized-before', kind: 'piano', label: 'Piano', sub: 'midi2score ✗ before', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
+  { id: 'transkun-piano-quantized', kind: 'piano', label: 'Piano', sub: 'midi2score ✓ after', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
   { id: 'adtof-drums', kind: 'drums', label: 'Drums', sub: 'adtof', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
   { id: 'bassunet-bass', kind: 'bass', label: 'Bass', sub: 'bassunet', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
   { id: 'fcpe-bass', kind: 'bass', label: 'Bass', sub: 'fcpe', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
@@ -36,12 +37,23 @@ const SONGS = {
   'ado-mirror': { title: 'MIRROR', artist: 'Ado', year: 2024 },
   'piano-idea-10': { title: 'Idea 10', artist: 'Gibran Alcocer', year: 2022 },
   'turkish-march': { title: 'Turkish March', artist: 'Mozart', year: 1783 },
+  'piano-man': { title: 'Piano Man', artist: 'Billy Joel', year: 1973 },
+  'im-still-standing': { title: "I'm Still Standing", artist: 'Elton John', year: 1983 },
+  'vienna': { title: 'Vienna', artist: 'Billy Joel', year: 1977 },
+  'dont-stop-me-now': { title: "Don't Stop Me Now", artist: 'Queen', year: 1978 },
+  // video2_piano pipeline runs (shipped artifacts — debugging the live render bugs)
+  'wonderwall': { title: 'Wonderwall', artist: 'Oasis', year: 1995 },
+  'wake-me-up-september-ends': { title: 'Wake Me Up When September Ends', artist: 'Green Day', year: 2004 },
+  'last-night-on-earth': { title: 'Last Night on Earth', artist: 'Green Day', year: 2009 },
+  'bring-me-to-life': { title: 'Bring Me to Life', artist: 'Evanescence', year: 2003 },
+  'iris': { title: 'Iris', artist: 'Goo Goo Dolls', year: 1998 },
+  'creep': { title: 'Creep', artist: 'Radiohead', year: 1992 },
 };
 
 const SAMPLE_FALLBACK = {
   key: '__sample__',
   songId: '__sample__',
-  workerId: 'transkun-piano',
+  workerId: 'transkun-piano-quantized',
   xmlUrl: SAMPLE_XML,
   midiUrl: null,
   kind: 'piano',
@@ -52,7 +64,7 @@ export default function Video2Tabs() {
   const [summary, setSummary] = useState(null); // raw array | null
   const [loadState, setLoadState] = useState('loading'); // loading | ready | empty
   const [songId, setSongId] = useState(null);
-  const [workerId, setWorkerId] = useState('transkun-piano');
+  const [workerId, setWorkerId] = useState('transkun-piano-quantized');
 
   const loadSummary = React.useCallback(() => {
     setLoadState('loading');
@@ -128,8 +140,8 @@ export default function Video2Tabs() {
 
       {/* tab bar — pinned bottom-center, above the frame controls (which are top-left) */}
       <div style={barWrap}>
-        {/* song selector */}
-        <div style={{ display: 'flex', gap: 6, marginRight: 8 }}>
+        {/* row 1: song selector */}
+        <div style={rowWrap}>
           {songIds.length === 0 && (
             <span style={{ color: '#bbb', fontSize: 12, alignSelf: 'center' }}>
               {loadState === 'loading' ? 'loading…' : 'no transcriptions yet'}
@@ -142,29 +154,30 @@ export default function Video2Tabs() {
           ))}
         </div>
 
-        <div style={{ width: 1, height: 28, background: '#333', margin: '0 4px' }} />
+        {/* divider between the two stacked rows */}
+        <div style={{ height: 1, alignSelf: 'stretch', background: '#333', margin: '2px 0' }} />
 
-        {/* worker tabs */}
-        {WORKERS.map((w) => {
-          const enabled = hasWorker(w.id);
-          const isActive = w.id === workerId && enabled;
-          return (
-            <button
-              key={w.id}
-              disabled={!enabled}
-              onClick={() => enabled && setWorkerId(w.id)}
-              title={enabled ? '' : 'not transcribed yet'}
-              style={tabBtn(isActive, enabled)}
-            >
-              <img src={w.icon} alt="" style={{ height: 16, filter: 'brightness(0) invert(1)', opacity: enabled ? 1 : 0.4 }} />
-              <span>{w.label}</span>
-              <span style={{ fontSize: 10, opacity: 0.6 }}>{w.sub}</span>
-            </button>
-          );
-        })}
-
-        <div style={{ width: 1, height: 28, background: '#333', margin: '0 4px' }} />
-        <button onClick={loadSummary} style={songBtn(false)} title="re-read _summary.json">↻</button>
+        {/* row 2: worker tabs + reload */}
+        <div style={rowWrap}>
+          {WORKERS.map((w) => {
+            const enabled = hasWorker(w.id);
+            const isActive = w.id === workerId && enabled;
+            return (
+              <button
+                key={w.id}
+                disabled={!enabled}
+                onClick={() => enabled && setWorkerId(w.id)}
+                title={enabled ? '' : 'not transcribed yet'}
+                style={tabBtn(isActive, enabled)}
+              >
+                <img src={w.icon} alt="" style={{ height: 16, filter: 'brightness(0) invert(1)', opacity: enabled ? 1 : 0.4 }} />
+                <span>{w.label}</span>
+                <span style={{ fontSize: 10, opacity: 0.6 }}>{w.sub}</span>
+              </button>
+            );
+          })}
+          <button onClick={loadSummary} style={songBtn(false)} title="re-read _summary.json">↻</button>
+        </div>
       </div>
 
       {loadState === 'empty' && (
@@ -185,17 +198,22 @@ const barWrap = {
   right: 12,
   zIndex: 20,
   display: 'flex',
-  flexWrap: 'nowrap',
+  flexDirection: 'column',
   alignItems: 'center',
-  justifyContent: 'center',
   gap: 6,
   padding: '8px 12px',
   background: 'rgba(20,20,22,0.92)',
   border: '1px solid #333',
   borderRadius: 12,
   backdropFilter: 'blur(6px)',
-  overflowX: 'auto',
-  whiteSpace: 'nowrap',
+};
+
+const rowWrap = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
 };
 
 const hint = {

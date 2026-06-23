@@ -76,18 +76,18 @@
     "worker": "transkun-piano",
     "kind": "piano",
     "status": "completed",
-    "source": "prior local output",
-    "xml": "piano-idea-10_piano.musicxml",
-    "midi": null
+    "source": "cloud re-run 2026-06-14, separate_to_piano_score (transkun raw music21) \u2014 the true transkun-v2 output",
+    "xml": "TKVe4ab4b480a67_transkun_v2_transcription.musicxml",
+    "midi": "TKVe4ab4b480a67_transkun_v2_transcription.mid"
   },
   {
     "song": "piano-idea-10",
-    "worker": "transkun-piano-remote",
+    "worker": "transkun-piano-quantized-before",
     "kind": "piano",
     "status": "completed",
-    "source": "cloud re-run 2026-06-14, separate_to_piano_score (transkun raw music21)",
-    "xml": "TKVe4ab4b480a67_transkun_v2_transcription.musicxml",
-    "midi": "TKVe4ab4b480a67_transkun_v2_transcription.mid"
+    "source": "prior local output (was mislabeled transkun-v2; really the pre-midi2score score)",
+    "xml": "piano-idea-10_piano.musicxml",
+    "midi": null
   },
   {
     "song": "piano-idea-10",
@@ -133,5 +133,329 @@
     "source": "cloud 2026-06-14, separate_to_piano_score_full (midi2score grand-staff, beamed)",
     "xml": "M2S0c3cb0619ff8_score.musicxml",
     "midi": "TKVcbee612bfabc_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "piano-man",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "TKV0d4f33a32873_transkun_v2_transcription.musicxml",
+    "midi": "TKV0d4f33a32873_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "im-still-standing",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "TKV718127e670a1_transkun_v2_transcription.musicxml",
+    "midi": "TKV718127e670a1_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "vienna",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "TKVa91fd63d900b_transkun_v2_transcription.musicxml",
+    "midi": "TKVa91fd63d900b_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "TKVdd0f280a1d0f_transkun_v2_transcription.musicxml",
+    "midi": "TKVdd0f280a1d0f_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "piano-man",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "piano-man_quantized_score.musicxml",
+    "midi": "TKV0d4f33a32873_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "im-still-standing",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "im-still-standing_quantized_score.musicxml",
+    "midi": "TKV718127e670a1_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "vienna",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "vienna_quantized_score.musicxml",
+    "midi": "TKVa91fd63d900b_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "dont-stop-me-now_quantized_score.musicxml",
+    "midi": "TKVdd0f280a1d0f_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "piano-man",
+    "worker": "transkun-piano-quantized-before",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "piano-man_quantized_before_score.musicxml",
+    "midi": "TKV0d4f33a32873_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "im-still-standing",
+    "worker": "transkun-piano-quantized-before",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "im-still-standing_quantized_before_score.musicxml",
+    "midi": "TKV718127e670a1_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "vienna",
+    "worker": "transkun-piano-quantized-before",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "vienna_quantized_before_score.musicxml",
+    "midi": "TKVa91fd63d900b_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "transkun-piano-quantized-before",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "dont-stop-me-now_quantized_before_score.musicxml",
+    "midi": "TKVdd0f280a1d0f_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "ado-mirror",
+    "worker": "transkun-piano-quantized-before",
+    "kind": "piano",
+    "status": "completed",
+    "source": "cloud",
+    "xml": "ado-mirror_quantized_before_score.musicxml",
+    "midi": "TKV9b61e0669bfd_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "wonderwall",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "video2_piano pipeline run 2026-06-16 (shipped piano.musicxml, midi2score after)",
+    "xml": "piano.musicxml",
+    "midi": "score.mid"
+  },
+  {
+    "song": "wake-me-up-september-ends",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "video2_piano pipeline run 2026-06-16 (shipped piano.musicxml, midi2score after)",
+    "xml": "piano.musicxml",
+    "midi": "score.mid"
+  },
+  {
+    "song": "last-night-on-earth",
+    "worker": "transkun-piano-quantized",
+    "kind": "piano",
+    "status": "completed",
+    "source": "video2_piano pipeline run 2026-06-16 (shipped piano.musicxml, midi2score after)",
+    "xml": "piano.musicxml",
+    "midi": "score.mid"
+  },
+  {
+    "song": "wonderwall",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "prod separate_to_piano_score (raw transkun-v2) re-run 2026-06-16",
+    "xml": "TKV61fec28a625a_transkun_v2_transcription.musicxml",
+    "midi": "TKV61fec28a625a_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "wake-me-up-september-ends",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "prod separate_to_piano_score (raw transkun-v2) re-run 2026-06-16",
+    "xml": "TKVc0859686b80b_transkun_v2_transcription.musicxml",
+    "midi": "TKVc0859686b80b_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "last-night-on-earth",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "prod separate_to_piano_score (raw transkun-v2) re-run 2026-06-16",
+    "xml": "TKV793572265904_transkun_v2_transcription.musicxml",
+    "midi": "TKV793572265904_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "bring-me-to-life",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "prod separate_to_piano_score (raw transkun-v2) re-run 2026-06-16",
+    "xml": "TKV053b815444cc_transkun_v2_transcription.musicxml",
+    "midi": "TKV053b815444cc_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "iris",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "prod separate_to_piano_score (raw transkun-v2) re-run 2026-06-16",
+    "xml": "TKV77718cd06cb4_transkun_v2_transcription.musicxml",
+    "midi": "TKV77718cd06cb4_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "creep",
+    "worker": "transkun-piano",
+    "kind": "piano",
+    "status": "completed",
+    "source": "prod separate_to_piano_score (raw transkun-v2) re-run 2026-06-16",
+    "xml": "TKV90e3434c5dd8_transkun_v2_transcription.musicxml",
+    "midi": "TKV90e3434c5dd8_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "wonderwall",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "wake-me-up-september-ends",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "last-night-on-earth",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "piano-man",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "im-still-standing",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "vienna",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "piano-idea-10",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "turkish-march",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "night-in-tunisia",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "ado-mirror",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "bring-me-to-life",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "iris",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
+  },
+  {
+    "song": "creep",
+    "worker": "transkun-piano-split",
+    "kind": "piano",
+    "status": "completed",
+    "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
+    "xml": "split_grand_staff.musicxml",
+    "midi": null
   }
 ]

@@ -19,7 +19,7 @@ import { drumVoice } from './videoSynth';
  */
 
 const NOTE_COLOR = '#012FA7'; // GrooveSheet brand blue (piano mode)
-const VISIBLE_WINDOW = 5; // seconds of lookahead; smaller = taller notes
+const VISIBLE_WINDOW = 3; // seconds of lookahead; smaller = taller notes + faster fall
 const MIN_PITCH = 21;
 const MAX_PITCH = 108;
 

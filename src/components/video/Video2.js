@@ -45,6 +45,48 @@ const SHEET_BOTTOM_PAD = 10; // px gap below the row within the band (smaller = 
 const DEFAULT_LEGAL =
   'All rights to the original song belong to its respective artists and labels. Stems and transcription by GrooveSheet for educational use only.';
 
+// Ground-truth staff-block center per system, read straight from the rendered
+// SVG. getBBox() returns local viewBox coords (immune to the CSS paging
+// transform), and staff lines are the only full-width, hairline-thin elements,
+// so they isolate cleanly — unlike screen-space hit-testing, which catches
+// beams in dense music. Returns one frame-px center per system (top→bottom),
+// or null if the SVG isn't painted yet / detection is ambiguous. The N systems
+// are separated by splitting the detected staff-line rows at their N-1 largest
+// vertical gaps, so it works for any stave count without magic thresholds.
+function extractStaffCenters(svg, n) {
+  const vb = svg?.viewBox?.baseVal;
+  const hPx = svg?.height?.baseVal?.value;
+  if (!vb?.height || !hPx || !n) return null;
+  const scaleY = hPx / vb.height; // viewBox units → svg intrinsic (frame) px
+  const minW = vb.width * 0.04; // a staff-line segment spans at least a measure
+  const ys = [];
+  svg.querySelectorAll('path, line, rect').forEach((el) => {
+    let b;
+    try { b = el.getBBox(); } catch (e) { return; }
+    if (b.width >= minW && b.height <= 1.5) ys.push(b.y + b.height / 2);
+  });
+  ys.sort((a, c) => a - c);
+  const rows = [];
+  for (const y of ys) {
+    if (!rows.length || y - rows[rows.length - 1] > 3) rows.push(y);
+  }
+  if (rows.length < 2 * n) return null; // need ≥2 staff lines per system
+  if (n === 1) return [((rows[0] + rows[rows.length - 1]) / 2) * scaleY];
+  const gaps = [];
+  for (let i = 1; i < rows.length; i += 1) gaps.push({ i, g: rows[i] - rows[i - 1] });
+  gaps.sort((a, b) => b.g - a.g);
+  const bounds = gaps.slice(0, n - 1).map((o) => o.i).sort((a, b) => a - b);
+  const centers = [];
+  let start = 0;
+  for (const end of [...bounds, rows.length]) {
+    const first = rows[start];
+    const last = rows[end - 1];
+    centers.push(((first + last) / 2) * scaleY);
+    start = end;
+  }
+  return centers.length === n ? centers : null;
+}
+
 // ---- Editable frame metadata ---------------------------------------------
 const meta = {
   title: 'Remember You (feat. Olivia Olson & Tom Kenny)',
@@ -70,8 +112,14 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
  */
 export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind = 'piano', metaOverride } = {}) {
   const m = { ...meta, ...(metaOverride || {}) };
-  const useMidi = !!midiUrl;
   const hasSheet = !!xmlUrl;
+  // Piano WITH a sheet: drive the roll + audio from the SAME OSMD-parsed sheet
+  // so they share one timeline with the cursor and cannot drift. The piano MIDI
+  // (raw transkun) is a *different* timeline from the quantized/beamed MusicXML
+  // the score is rendered from, so mixing them desyncs roll vs cursor. Keep MIDI
+  // only for drums/bass (it carries instruments the flattened XML loses) or when
+  // there is no sheet at all.
+  const useMidi = !!midiUrl && !(kind === 'piano' && hasSheet);
   const rollMode = kind === 'drums' ? 'drums' : 'piano';
 
   const [view, setView] = useState('video'); // 'video' | 'cover'
@@ -81,6 +129,9 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [scale, setScale] = useState(1);
+  const [uiTime, setUiTime] = useState(0); // seek-bar position (s), throttled from timeRef
+  const [uiDur, setUiDur] = useState(0); // seek-bar length (s), from durRef
+  const seekingRef = useRef(false); // true while the user drags the scrubber
 
   const wrapRef = useRef(null);
   const osmdRef = useRef(null);
@@ -93,6 +144,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
   const systemsRef = useRef([]); // [{ topPx, heightPx, startWall }]
   const initedRef = useRef(false);
   const svgElRef = useRef(null); // cached sheet <svg>
+  const staffCacheRef = useRef({ svg: null, centers: null }); // per-svg staff centers (frame px)
   const lastSysIdxRef = useRef(-1);
   // audio scheduling
   const notesSortedRef = useRef(null);
@@ -182,23 +234,46 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
     for (let i = 0; i < systems.length; i += 1) {
       if (systems[i].startWall <= t + 0.001) idx = i; else break;
     }
-    if (idx === lastSysIdxRef.current) return;
     let svg = svgElRef.current;
     if (!svg || !svg.isConnected) {
       svg = osmdRef.current?.getContainer?.()?.querySelector('svg') || null;
       svgElRef.current = svg;
     }
     if (!svg) return;
+    // Skip work only when the visible line is unchanged AND the staff-center
+    // cache for this <svg> is already built. While the cache is still pending
+    // (SVG not fully painted) keep falling through so we retry the read instead
+    // of getting stuck on the model estimate for the first line.
+    const cacheReady = staffCacheRef.current.svg === svg
+      && staffCacheRef.current.centers
+      && staffCacheRef.current.centers.length === systems.length;
+    if (idx === lastSysIdxRef.current && cacheReady) return;
     const sys = systems[idx];
-    // Fit THIS line to the band: scale down only lines taller than the band
-    // (the overflow case); never enlarge — keeps idea-10-style lines untouched
-    // and guarantees the active line fills/clips to exactly one system.
+    // Fit THIS line to the band: scale down only lines whose full bounding box
+    // (notes + ledger lines included) is taller than the band; never enlarge,
+    // so normal lines stay untouched and nothing clips.
     const avail = SHEET_H - SHEET_TOP_PAD - SHEET_BOTTOM_PAD;
     const fit = sys.heightPx > avail && sys.heightPx > 0 ? avail / sys.heightPx : 1;
-    const scaledH = sys.heightPx * fit;
-    const offset = SHEET_H - scaledH - SHEET_BOTTOM_PAD; // bottom-align line within band
-    const ty = offset - sys.topPx * fit;
-    const tx = (FRAME_W * (1 - fit)) / 2; // keep the shrunk line centred
+    const tx = (FRAME_W * (1 - fit)) / 2; // keep the shrunk line centred horizontally
+
+    // Vertical centering anchors on the STAFF-BLOCK midpoint, not the bounding
+    // box. The bbox grows/shrinks with how far notes stick out above/below the
+    // staves, so anchoring on it makes every line sit at a different height
+    // (the drift). We read each system's true staff center from the rendered
+    // SVG (cached per <svg>); the staff block is identical in size on every
+    // system, so pinning its center to the band's center keeps the music
+    // rock-steady line to line. Falls back to the model estimate until the SVG
+    // has painted enough for a clean read.
+    let cache = staffCacheRef.current;
+    if (cache.svg !== svg || !cache.centers || cache.centers.length !== systems.length) {
+      const centers = extractStaffCenters(svg, systems.length);
+      if (centers) cache = { svg, centers };
+      staffCacheRef.current = cache;
+    }
+    const centerPx = (cache.svg === svg && cache.centers && cache.centers[idx] != null)
+      ? cache.centers[idx]
+      : sys.staffCenterPx;
+    const ty = SHEET_H / 2 - centerPx * fit;
     const tf = `translate(${tx}px, ${ty}px) scale(${fit})`;
     svg.style.transition = 'none';
     svg.style.transformOrigin = '0 0';
@@ -296,6 +371,40 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
     setIsPlaying(false);
   }, [layoutSheet]);
 
+  // ---- scrubbing -----------------------------------------------------------
+  // Jump the master clock to t and re-seat everything that follows it (roll,
+  // OSMD cursor, one-line paging, audio scheduler). Keeps the play/pause state.
+  const seekTo = useCallback((t) => {
+    const c = clockRef.current;
+    const dur = durRef.current || 0;
+    const nt = Math.max(0, dur ? Math.min(t, dur) : t);
+    c.anchorT = nt;
+    c.anchorPerf = now();
+    timeRef.current = nt;
+    const arr = notesSortedRef.current;
+    if (arr) {
+      let i = 0;
+      while (i < arr.length && arr[i].time < nt) i += 1;
+      fireIdxRef.current = i; // don't replay notes before the seek point
+    }
+    lastFireTRef.current = nt;
+    lastSysIdxRef.current = -1;
+    layoutSheet(nt);
+    try { osmdRef.current?.syncCursorToTime?.(nt); } catch (e) {}
+    setUiTime(nt);
+  }, [layoutSheet]);
+
+  // mirror the master clock into React state for the scrubber (throttled; paused
+  // while the user is actively dragging so the thumb doesn't fight the playhead)
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (seekingRef.current) return;
+      setUiTime(timeRef.current);
+      if (durRef.current !== uiDur) setUiDur(durRef.current);
+    }, 100);
+    return () => clearInterval(id);
+  }, [uiDur]);
+
   const togglePlay = useCallback(() => {
     resumeAudio();
     const c = clockRef.current;
@@ -345,6 +454,32 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
         )}
       </div>
 
+      {/* seek bar — drag to scrub anywhere in the song (video view only) */}
+      {!isCover && uiDur > 0 && (
+        <div style={{ position: 'fixed', top: 56, left: 16, right: 16, zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(20,20,22,0.85)', border: '1px solid #333', borderRadius: 10, padding: '8px 14px', backdropFilter: 'blur(6px)' }}>
+          <button
+            onClick={togglePlay}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            style={{ flexShrink: 0, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#012FA7', border: 'none', borderRadius: 7, color: '#fff', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}
+          >
+            {isPlaying ? '❚❚' : '▶'}
+          </button>
+          <span style={{ color: '#ccc', fontSize: 12, fontVariantNumeric: 'tabular-nums', minWidth: 44, textAlign: 'right' }}>{fmtTime(uiTime)}</span>
+          <input
+            type="range"
+            min={0}
+            max={uiDur}
+            step={0.01}
+            value={Math.min(uiTime, uiDur)}
+            onPointerDown={() => { seekingRef.current = true; }}
+            onPointerUp={() => { seekingRef.current = false; }}
+            onChange={(e) => { resumeAudio(); seekTo(Number(e.target.value)); }}
+            style={{ flex: 1, accentColor: '#012FA7', cursor: 'pointer' }}
+          />
+          <span style={{ color: '#888', fontSize: 12, fontVariantNumeric: 'tabular-nums', minWidth: 44 }}>{fmtTime(uiDur)}</span>
+        </div>
+      )}
+
       {error && (
         <div style={{ position: 'fixed', top: 60, left: 16, color: '#ff6b6b', zIndex: 10 }}>Failed: {error}</div>
       )}
@@ -363,6 +498,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
               betweenStaffDistance={SHEET_STAFF_GAP}
               drawTitle={false}
               drawMetronomeMarks={false}
+              forceStemByStaff={kind === 'piano'}
               containerStyle={{ width: FRAME_W, maxWidth: 'none', padding: 0, minHeight: 0 }}
               onPlaybackStateChange={handleOsmdState}
             />
@@ -459,6 +595,13 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
       </div>
     </div>
   );
+}
+
+function fmtTime(s) {
+  if (!Number.isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
 function ctrlStyle(active) {
