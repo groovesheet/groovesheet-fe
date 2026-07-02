@@ -24,10 +24,8 @@ export const AccountIcon = ({ compact = false }) => {
   };
 
   const handleProfile = () => {
-    // Navigate to profile or open account profile
     closeDropdown();
-    // You can implement profile page navigation here
-    console.log('Navigate to profile');
+    navigate('/account/profile');
   };
 
   const handleHistory = () => {
