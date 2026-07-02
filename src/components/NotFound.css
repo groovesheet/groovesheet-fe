@@ -1,0 +1,119 @@
+/* 404 Not Found — catch-all route.
+   Mirrors the empty-state pattern (design-system/preview/component-empty-state.html):
+   centered, hand-stroked currentColor illustration, title/desc, CTA back into the flow. */
+
+.notfound-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Brand dot-grid signature (App.css defines the .dot-grid rule globally). */
+.notfound-page > *:not(.dot-grid) {
+  position: relative;
+  z-index: 10;
+}
+
+.notfound-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.notfound-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 480px;
+}
+
+.notfound-ill {
+  width: 96px;
+  height: 96px;
+  color: var(--color-muted-foreground);
+  margin-bottom: 24px;
+}
+
+.notfound-ill svg {
+  width: 100%;
+  height: 100%;
+}
+
+.notfound-code {
+  font-size: 72px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--color-muted-foreground);
+  margin: 0 0 12px;
+}
+
+.notfound-title {
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--color-text);
+  line-height: 1.25;
+  margin: 0 0 12px;
+}
+
+.notfound-desc {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-muted-foreground);
+  line-height: 1.6;
+  margin: 0 0 32px;
+  max-width: 400px;
+}
+
+.notfound-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.notfound-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.notfound-links a {
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.notfound-links a:hover {
+  color: var(--color-text);
+}
+
+.notfound-links-sep {
+  color: var(--color-border);
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .notfound-code {
+    font-size: 56px;
+  }
+
+  .notfound-title {
+    font-size: 22px;
+  }
+
+  .notfound-actions {
+    flex-direction: column;
+    align-self: stretch;
+  }
+}
