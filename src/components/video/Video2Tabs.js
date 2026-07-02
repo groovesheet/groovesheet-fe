@@ -19,6 +19,9 @@ const PUB = process.env.PUBLIC_URL || '';
 const SAMPLES = `${PUB}/transcription-samples`;
 const ICONS = `${PUB}/video-assets/icons`;
 const SAMPLE_XML = `${PUB}/sample-preview/sample.musicxml`;
+// guitar demo reuses the bundled piano MIDI; notes outside guitar range are
+// skipped by the fretboard placement, the rest land on the neck.
+const SAMPLE_GUITAR_MIDI = `${PUB}/sample-preview/sample.mid`;
 
 // one tab per worker (user choice: compare engines directly)
 const WORKERS = [
@@ -29,7 +32,18 @@ const WORKERS = [
   { id: 'adtof-drums', kind: 'drums', label: 'Drums', sub: 'adtof', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
   { id: 'bassunet-bass', kind: 'bass', label: 'Bass', sub: 'bassunet', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
   { id: 'fcpe-bass', kind: 'bass', label: 'Bass', sub: 'fcpe', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
+  { id: 'guitar', kind: 'guitar', label: 'Guitar', sub: 'falling fretboard', cta: 'Guitar Transcription', icon: `${ICONS}/Guitar.svg` },
 ];
+
+// Guitar has no transcription worker yet, so the tab always renders a bundled
+// guitar MIDI on the fretboard visualiser. Once a real guitar worker writes to
+// transcription-samples/<song>/guitar/ (kind: 'guitar'), summary discovery below
+// picks it up automatically and overrides this.
+const GUITAR_SAMPLE = {
+  xmlUrl: null,
+  midiUrl: SAMPLE_GUITAR_MIDI,
+  kind: 'guitar',
+};
 
 // display metadata for the test songs (cover art falls back to the default)
 const SONGS = {
@@ -110,10 +124,12 @@ export default function Video2Tabs() {
 
   // build the active frame: real output if present, else sample fallback
   const active = useMemo(() => {
-    const src = songId && available[songId] && available[songId][workerId];
+    let src = songId && available[songId] && available[songId][workerId];
+    // guitar tab: fall back to the bundled fretboard demo when no worker output.
+    if (!src && workerId === 'guitar') src = GUITAR_SAMPLE;
     if (!src) return SAMPLE_FALLBACK;
     const w = WORKERS.find((x) => x.id === workerId) || WORKERS[0];
-    const s = SONGS[songId] || { title: songId, artist: '', year: '' };
+    const s = SONGS[songId] || { title: songId || 'Guitar Sample', artist: 'GrooveSheet', year: '' };
     return {
       key: `${songId}|${workerId}`,
       songId,
@@ -125,7 +141,8 @@ export default function Video2Tabs() {
     };
   }, [songId, workerId, available]);
 
-  const hasWorker = (wid) => !!(songId && available[songId] && available[songId][wid]);
+  // guitar always renders (bundled fretboard demo); other workers need real output.
+  const hasWorker = (wid) => wid === 'guitar' || !!(songId && available[songId] && available[songId][wid]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#000' }}>

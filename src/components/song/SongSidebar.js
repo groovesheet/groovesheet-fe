@@ -23,6 +23,8 @@ import {
   seededRating,
   seededRatingCount,
 } from '../../utils/cosmeticStats';
+import { creatorHandleForTrack } from '../../utils/creatorApi';
+import { LocalizedLink } from '../../i18n/locale';
 
 function fmtNum(n) {
   if (n == null) return '—';
@@ -166,6 +168,23 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
               · {track.source === 'social_pipeline' ? 'auto-transcription' : track.source}
             </span>
           )}
+          {(() => {
+            // Prefer the real publisher (owner) from the track payload; fall
+            // back to the deterministic handle for unattributed tracks.
+            const handle = (track.owner && track.owner.username) || creatorHandleForTrack(track);
+            if (!handle) return null;
+            return (
+              <span style={{ opacity: 0.65 }}>
+                {' · by '}
+                <LocalizedLink
+                  to={`/u/${handle}`}
+                  style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                >
+                  @{handle}
+                </LocalizedLink>
+              </span>
+            );
+          })()}
         </div>
         <h1
           style={{

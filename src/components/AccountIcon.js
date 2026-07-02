@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { useClerk } from '../auth';
+import { useAuthActions } from '../auth';
 import { User } from '@phosphor-icons/react';
 import { useLocalizedNavigate } from '../i18n/locale';
 import './AccountIcon.css';
@@ -12,7 +12,7 @@ export const AccountIcon = ({ compact = false }) => {
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const navigate = useLocalizedNavigate();
-  const { signOut } = useClerk();
+  const { signOut } = useAuthActions();
   const { t } = useTranslation();
 
   const toggleDropdown = () => {
@@ -32,7 +32,7 @@ export const AccountIcon = ({ compact = false }) => {
 
   const handleHistory = () => {
     closeDropdown();
-    navigate('/history');
+    navigate('/account/history');
   };
 
   const handleBilling = () => {

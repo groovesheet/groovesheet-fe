@@ -7,6 +7,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Midi } from '@tonejs/midi';
 import OSMDViewer from '../PreviewPanel/OSMDViewer';
+import SkeletonPanel from '../ui/SkeletonPanel';
+import StatusMessage from '../ui/StatusMessage';
 
 // =================================================================
 // 1) Sheet Music — OSMD
@@ -250,13 +252,13 @@ export function PianoRollView({ midiBuffer, transport, loading, error }) {
   return (
     <div className="gs-pianoroll" style={{ position: 'relative' }}>
       {loading && (
-        <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-muted-foreground)', fontSize: 13 }}>
-          Loading MIDI…
+        <div style={{ padding: 24 }}>
+          <SkeletonPanel count={1} height={200} />
         </div>
       )}
       {(error || parseError) && !loading && (
-        <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-muted-foreground)', fontSize: 13 }}>
-          {error || parseError}
+        <div style={{ padding: 24 }}>
+          <StatusMessage variant="error">{error || parseError}</StatusMessage>
         </div>
       )}
       {!loading && !error && midiBuffer && (

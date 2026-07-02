@@ -17,7 +17,10 @@ import Header from './layout/Header';
 import Footer from './layout/Footer';
 import Features from './Features';
 import Pricing from './Pricing';
+import Element from './Element';
+import Testimonials from './Testimonials';
 import FAQ from './FAQ';
+import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
 
@@ -130,8 +133,7 @@ function MidiConverter({ onLoginClick }) {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('drums');
-  // M1: signed-in only "Try a 10s preview" mode. Routes through /preview/{name}.
-  const [previewMode, setPreviewMode] = useState(false);
+  // Every run is a 10s preview by default. Routes through /preview/{name}.
   const [previewSelection, setPreviewSelection] = useState(null);
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -247,8 +249,8 @@ function MidiConverter({ onLoginClick }) {
   const handleUpload = async (fileToUpload) => {
     if (!isLoaded) { setError('Loading user data...'); return; }
 
-    // Anonymous → always preview. Signed-in → preview only when toggled.
-    const usePreview = !isSignedIn || previewMode;
+    // Every run goes through the 10-second preview by default.
+    const usePreview = true;
     const workflowName = workflowNameFor(selectedInstrument);
 
     setError(null);
@@ -641,35 +643,6 @@ function MidiConverter({ onLoginClick }) {
         })}
       </div>
 
-      {isSignedIn && (
-        <label
-          className="preview-mode-toggle"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            margin: '12px 0',
-            fontSize: '13px',
-            color: 'var(--color-text-secondary, #cccccc)',
-            cursor: 'pointer',
-            userSelect: 'none',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={previewMode}
-            onChange={(e) => setPreviewMode(e.target.checked)}
-            style={{ cursor: 'pointer' }}
-          />
-          <span>Try a 10-second preview first</span>
-          {previewMode && (
-            <span style={{ opacity: 0.7, fontSize: '12px' }}>
-              · Returns the most representative 10s of the chosen instrument
-            </span>
-          )}
-        </label>
-      )}
-
       <div
         className="upload-drop-zone"
         onDragOver={handleDragOver}
@@ -845,7 +818,7 @@ function MidiConverter({ onLoginClick }) {
             {uiState === 'success' && renderSuccessState()}
             {error && uiState !== 'success' && (
               <div className="error-overlay">
-                <p className="error-message">{error}</p>
+                <StatusMessage variant="error">{error}</StatusMessage>
               </div>
             )}
           </div>
@@ -868,6 +841,8 @@ function MidiConverter({ onLoginClick }) {
         <Features />
       </div>
       <Pricing onLoginClick={onLoginClick} />
+      <Element />
+      <Testimonials />
       <FAQ />
       <Footer />
     </div>

@@ -31,7 +31,12 @@
   --color-muted-foreground-dark: #8d8c8d;
   --color-foreground-dark: #f4f4f4;
   --color-surface-muted-dark: #5f5e60;
+
+  /* Status (see design-system/preview/color-status.html + component-toast-banner.html) */
   --color-danger: #ff6b6b;
+  --color-success: #22c55e;
+  --color-warning: #ffb020;
+  --color-info: #93b4ff;
 
   /* Button Colors */
   --color-button-light: #ffffff;

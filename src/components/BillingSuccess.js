@@ -17,7 +17,7 @@ function BillingSuccess() {
 
   useEffect(() => {
     if (secondsLeft <= 0) {
-      navigate('/history');
+      navigate('/account/history');
       return;
     }
     const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
@@ -39,7 +39,7 @@ function BillingSuccess() {
         Redirecting you to your history in {secondsLeft}s…
       </p>
       <button
-        onClick={() => navigate('/history')}
+        onClick={() => navigate('/account/history')}
         style={{
           padding: '10px 20px',
           borderRadius: 8,

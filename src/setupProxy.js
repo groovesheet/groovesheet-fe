@@ -4,7 +4,7 @@ module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'https://api.groovesheet.net',
+      target: process.env.GS_PROXY_TARGET || 'https://api.groovesheet.net',
       changeOrigin: true,
       pathRewrite: {
         '^/api': '', // remove /api prefix when forwarding

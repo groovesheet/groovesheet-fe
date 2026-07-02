@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import PreviewPanel from './PreviewPanel/PreviewPanel';
 import { parseSyncMap } from '../player/syncMap';
+import SkeletonPanel from './ui/SkeletonPanel';
+import StatusMessage from './ui/StatusMessage';
 
 const SAMPLE_XML_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample.musicxml`;
 const SAMPLE_MIDI_URL = `${process.env.PUBLIC_URL || ''}/sample-preview/sample.mid`;
@@ -59,7 +61,9 @@ export default function PreviewDemo() {
             </div>
           </div>
           {error && (
-            <p style={{ color: '#ff6b6b', padding: 16 }}>Failed to load samples: {error}</p>
+            <div style={{ padding: 16 }}>
+              <StatusMessage variant="error" title="Failed to load samples">{error}</StatusMessage>
+            </div>
           )}
           {(xml || midi) && (
             <PreviewPanel
@@ -72,7 +76,9 @@ export default function PreviewDemo() {
             />
           )}
           {!xml && !midi && !error && (
-            <p style={{ color: 'var(--color-muted-foreground)', padding: 16 }}>Loading samples…</p>
+            <div style={{ padding: 16 }}>
+              <SkeletonPanel count={1} height={240} />
+            </div>
           )}
         </div>
       </div>

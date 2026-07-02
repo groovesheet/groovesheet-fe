@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Header from './components/layout/Header';
 import Hero from './components/Hero';
@@ -13,11 +13,15 @@ import TranscriptionHistory from './components/TranscriptionHistory';
 import SSOCallback from './components/SSOCallback';
 import Blog from './components/Blog';
 import BlogPost from './components/BlogPost';
+import Changelog from './components/Changelog';
 import About from './components/About';
 import StemSplitter from './components/StemSplitter';
 import MidiConverter from './components/MidiConverter';
+import ApiPage from './components/ApiPage';
+import HelpSupport from './components/HelpSupport';
 import Explore from './components/Explore';
 import SongDetail from './components/song/SongDetail';
+import CreatorProfile from './components/creator/CreatorProfile';
 import Element from './components/Element';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import BusinessInformation from './components/BusinessInformation';
@@ -28,7 +32,9 @@ import Video1 from './components/video/Video1';
 import ServiceStatus from './components/ServiceStatus';
 import Video2Tabs from './components/video/Video2Tabs';
 import BillingSuccess from './components/BillingSuccess';
+import PricingPage from './components/PricingPage';
 import AccountBilling from './components/AccountBilling';
+import AccountProfile from './components/AccountProfile';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
 import { claimPendingPreviewIfAny } from './utils/previewApi';
@@ -193,15 +199,23 @@ function App() {
   const appRoutes = (
     <Routes>
       <Route index element={<LandingPage onLoginClick={openLoginModal} />} />
-      <Route path="history" element={<TranscriptionHistory />} />
+      <Route path="pricing" element={<PricingPage onLoginClick={openLoginModal} />} />
+      <Route path="account/history" element={<TranscriptionHistory />} />
+      <Route path="history" element={<Navigate to="/account/history" replace />} />
       <Route path="account/billing" element={<AccountBilling />} />
+      <Route path="account/profile" element={<AccountProfile />} />
+      <Route path="profile" element={<Navigate to="/account/profile" replace />} />
       <Route path="blog" element={<Blog onLoginClick={openLoginModal} />} />
       <Route path="blog/:slug" element={<BlogPost onLoginClick={openLoginModal} />} />
       <Route path="about" element={<About onLoginClick={openLoginModal} />} />
+      <Route path="changelog" element={<Changelog onLoginClick={openLoginModal} />} />
       <Route path="stem-splitter" element={<StemSplitter onLoginClick={openLoginModal} />} />
       <Route path="midi-converter" element={<MidiConverter onLoginClick={openLoginModal} />} />
+      <Route path="developers" element={<ApiPage onLoginClick={openLoginModal} />} />
+      <Route path="help" element={<HelpSupport onLoginClick={openLoginModal} />} />
       <Route path="explore" element={<Explore onLoginClick={openLoginModal} />} />
       <Route path="explore/:songId" element={<SongDetail onLoginClick={openLoginModal} />} />
+      <Route path="u/:username" element={<CreatorProfile onLoginClick={openLoginModal} />} />
       <Route path="privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />
       <Route path="business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
       <Route path="terms" element={<TermsConditions onLoginClick={openLoginModal} />} />

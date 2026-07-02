@@ -13,6 +13,7 @@ import { useWorkflowPersistence } from '../hooks/useWorkflowPersistence';
 import DownloadSection from './visualization/DownloadSection';
 import './visualization/VisualizationPanel.css';
 import PreviewPanel from './PreviewPanel/PreviewPanel';
+import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
 
@@ -1100,7 +1101,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           {/* Error message overlay */}
           {error && (
             <div className="error-overlay">
-              <p className="error-message">{error}</p>
+              <StatusMessage variant="error">{error}</StatusMessage>
             </div>
           )}
         </div>

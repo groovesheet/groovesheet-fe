@@ -1,0 +1,51 @@
+/* Unified loading placeholder: a breathing, rounded gray panel.
+   Used by TranscriptionHistory and AccountBilling in place of "Loading…" text. */
+
+.skeleton-panel {
+  background: var(--color-surface-lighter);
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  width: 100%;
+  min-width: 0;
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+}
+
+.skeleton-panel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Slight stagger so stacked panels feel alive, not synchronized. */
+.skeleton-panel-group > .skeleton-panel:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.skeleton-panel-group > .skeleton-panel:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.skeleton-panel-group > .skeleton-panel:nth-child(n + 4) {
+  animation-delay: 0.6s;
+}
+
+@keyframes skeleton-breathe {
+  0% {
+    opacity: 0.45;
+    transform: scale(0.998);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.45;
+    transform: scale(0.998);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-panel {
+    animation: none;
+    opacity: 0.7;
+  }
+}

@@ -196,17 +196,28 @@ export function useUser() {
   return { user, isLoaded, isSignedIn };
 }
 
+// Stable across renders so it can be used safely in useEffect dependency
+// arrays without retriggering the effect on every render.
+const getToken = async () => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  return data.session?.access_token || null;
+};
+
+const signOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+};
+
+const setActive = async () => undefined;
+
 export function useAuth() {
   const { session, isLoaded, isSignedIn } = useAuthContext();
   return {
     isLoaded,
     isSignedIn,
     sessionId: session?.access_token || null,
-    getToken: async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return data.session?.access_token || null;
-    },
+    getToken,
   };
 }
 
@@ -218,14 +229,10 @@ export function useSignUp() {
   return { signUp: createOtpFlow() };
 }
 
-export function useClerk() {
-  return {
-    signOut: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    },
-    setActive: async () => undefined,
-  };
+// Auth side-effect actions (sign out, etc.). Returns module-level stable
+// references so consumers can list them in effect deps without loops.
+export function useAuthActions() {
+  return { signOut, setActive };
 }
 
 export function SignedIn({ children }) {

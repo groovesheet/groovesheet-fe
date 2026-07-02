@@ -6,6 +6,8 @@ import rehypeSanitize from 'rehype-sanitize';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import { fetchBlogPostBySlug } from '../utils/blog';
+import SkeletonPanel from './ui/SkeletonPanel';
+import StatusMessage from './ui/StatusMessage';
 import './BlogPost.css';
 
 function BlogPost({ onLoginClick }) {
@@ -44,11 +46,9 @@ function BlogPost({ onLoginClick }) {
             ← Back to blog
           </Link>
 
-          {loading && <p className="blog-post-status">Loading…</p>}
+          {loading && <SkeletonPanel count={1} height={300} />}
           {error && !loading && (
-            <p className="blog-post-status blog-post-status-error">
-              Couldn’t load this post: {error}
-            </p>
+            <StatusMessage variant="error" title="Couldn’t load this post">{error}</StatusMessage>
           )}
           {!loading && !error && !post && (
             <div className="blog-post-status">

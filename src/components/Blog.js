@@ -4,6 +4,8 @@ import Header from './layout/Header';
 import Footer from './layout/Footer';
 import * as PhosphorIcons from '@phosphor-icons/react';
 import { fetchBlogPosts } from '../utils/blog';
+import SkeletonPanel from './ui/SkeletonPanel';
+import StatusMessage from './ui/StatusMessage';
 import './Blog.css';
 
 const socialIcons = [
@@ -120,9 +122,9 @@ function Blog({ onLoginClick }) {
             </div>
           </section>
 
-          {loading && <p className="blog-status">Loading posts…</p>}
+          {loading && <SkeletonPanel count={3} height={120} />}
           {error && !loading && (
-            <p className="blog-status blog-status-error">Couldn’t load posts: {error}</p>
+            <StatusMessage variant="error" title="Couldn’t load posts">{error}</StatusMessage>
           )}
           {!loading && !error && posts.length === 0 && (
             <p className="blog-status">No posts yet. Check back soon.</p>

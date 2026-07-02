@@ -11,12 +11,12 @@ import {
   EnvelopeSimple,
   ArrowLeft,
 } from '@phosphor-icons/react';
-import { useSignIn, useSignUp, useClerk } from '../auth';
+import { useSignIn, useSignUp, useAuthActions } from '../auth';
 
 export const LoginModal = ({ isOpen, onClose }) => {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
-  const { setActive } = useClerk();
+  const { setActive } = useAuthActions();
   const { t } = useTranslation();
   const [showEmailSignIn, setShowEmailSignIn] = useState(false);
   const [showVerification, setShowVerification] = useState(false);

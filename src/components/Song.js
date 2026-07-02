@@ -6,6 +6,8 @@ import Playbar from './song/Playbar';
 import SongSidebar from './song/SongSidebar';
 import { SheetView, PianoRollView, StemsView } from './song/Viewers';
 import { getMockTrack } from '../mocks/exploreData';
+import SkeletonPanel from './ui/SkeletonPanel';
+import StatusMessage from './ui/StatusMessage';
 import './Song.css';
 
 function fmtTime(s) {
@@ -133,17 +135,15 @@ function Song({ onLoginClick }) {
 
       {error && (
         <main className="song-error">
-          <h1>{error}</h1>
-          <p>
+          <StatusMessage variant="error" title={error}>
             <Link to="/explore">Back to explore</Link>
-          </p>
+          </StatusMessage>
         </main>
       )}
 
       {!error && !track && (
         <main className="song-loading">
-          <div className="song-spinner" />
-          <p>Loading track…</p>
+          <SkeletonPanel count={1} height={520} />
         </main>
       )}
 

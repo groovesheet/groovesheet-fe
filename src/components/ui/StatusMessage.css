@@ -1,0 +1,68 @@
+/* Status banner — the site-wide pattern for inline error / warning / info /
+   success messages. Solid filled panel with white text (color-status toast
+   style), accent supplied per variant. */
+
+.gs-statusmsg {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  border: 0;
+  width: 100%;
+  box-sizing: border-box;
+  color: #ffffff;
+}
+
+.gs-statusmsg__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #ffffff;
+}
+
+.gs-statusmsg__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.gs-statusmsg__title {
+  display: block;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Detail sits below the title, slightly softened white for hierarchy. */
+.gs-statusmsg__detail {
+  color: rgba(255, 255, 255, 0.88);
+  margin: 4px 0 0;
+}
+
+/* Single-line (no title) message stays full white. */
+.gs-statusmsg--bare .gs-statusmsg__body {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.gs-statusmsg a {
+  color: #ffffff;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Variants — fully filled accent panel, white text. */
+.gs-statusmsg--error {
+  background: var(--color-danger);
+}
+.gs-statusmsg--warning {
+  background: var(--color-warning);
+}
+.gs-statusmsg--info {
+  background: var(--color-primary);
+}
+.gs-statusmsg--success {
+  background: var(--color-success);
+}

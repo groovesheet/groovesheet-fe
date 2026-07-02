@@ -58,7 +58,11 @@ export function createSynth(kind = 'piano') {
   let sf = null;
   let sfLoading = false;
   const wantSf = kind !== 'drums';
-  const sfName = kind === 'bass' ? 'acoustic_bass' : 'acoustic_grand_piano';
+  const sfName = kind === 'bass'
+    ? 'acoustic_bass'
+    : kind === 'guitar'
+      ? 'acoustic_guitar_steel'
+      : 'acoustic_grand_piano';
   function loadSoundfont() {
     if (!wantSf || sf || sfLoading) return;
     sfLoading = true;

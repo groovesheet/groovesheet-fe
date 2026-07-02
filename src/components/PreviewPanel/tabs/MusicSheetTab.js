@@ -1,5 +1,7 @@
 import React, { forwardRef } from 'react';
 import OSMDViewer from '../OSMDViewer';
+import StatusMessage from '../../ui/StatusMessage';
+import SkeletonPanel from '../../ui/SkeletonPanel';
 
 const MusicSheetTab = forwardRef(function MusicSheetTab(
   { musicXmlText, theme, zoom, isLoading, error, onPlayNote, onPlaybackStateChange },
@@ -7,8 +9,8 @@ const MusicSheetTab = forwardRef(function MusicSheetTab(
 ) {
   return (
     <div className={`music-sheet-tab theme-${theme}`}>
-      {isLoading && <div className="preview-loading">Loading score…</div>}
-      {error && <div className="preview-error">{error}</div>}
+      {isLoading && <div className="preview-loading"><SkeletonPanel count={1} height={200} /></div>}
+      {error && <StatusMessage variant="error">{error}</StatusMessage>}
       {musicXmlText && (
         <OSMDViewer
           ref={ref}

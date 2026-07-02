@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Midi } from '@tonejs/midi';
+import StatusMessage from '../../ui/StatusMessage';
+import SkeletonPanel from '../../ui/SkeletonPanel';
 
 const NOTE_COLOR = '#012FA7';
 const KEY_HEIGHT = 110;
@@ -150,8 +152,8 @@ export default function PianoRollTab({
 
   return (
     <div className="piano-roll-tab">
-      {isLoading && <div className="preview-loading">Loading MIDI…</div>}
-      {error && <div className="preview-error">{error}</div>}
+      {isLoading && <div className="preview-loading"><SkeletonPanel count={1} height={200} /></div>}
+      {error && <StatusMessage variant="error">{error}</StatusMessage>}
       <canvas ref={canvasRef} className="piano-roll-canvas" />
     </div>
   );

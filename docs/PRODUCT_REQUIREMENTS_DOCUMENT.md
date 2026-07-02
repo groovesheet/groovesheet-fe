@@ -448,7 +448,7 @@ GrooveSheet is an AI-powered drum transcription platform that transforms audio r
 #### 13.1 Frontend Stack
 - **NFR-13.1.1**: React 18+ for UI framework
 - **NFR-13.1.2**: React Router for client-side routing
-- **NFR-13.1.3**: Clerk for authentication management
+- **NFR-13.1.3**: Supabase for authentication management
 - **NFR-13.1.4**: Vercel for hosting and deployment
 - **NFR-13.1.5**: Canvas-confetti for celebration animations
 
@@ -692,7 +692,8 @@ REACT_APP_NAME=GrooveSheet
 REACT_APP_URL=https://groovesheet.com
 REACT_APP_API_URL=/api
 REACT_APP_ENABLE_ANALYTICS=true
-REACT_APP_CLERK_PUBLISHABLE_KEY=<clerk_key>
+REACT_APP_SUPABASE_URL=<supabase_url>
+REACT_APP_SUPABASE_ANON_KEY=<supabase_anon_key>
 ```
 
 **Backend API Service**

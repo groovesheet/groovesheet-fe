@@ -4,13 +4,14 @@
 
 ## Stack
 - React 18 + Create React App, React Router v7, Tailwind CSS + component CSS files
-- Auth: Clerk (`@clerk/clerk-react`)
+- Auth: Supabase (`@supabase/supabase-js`), wrapped by `src/auth.js`
 - Icons: `@phosphor-icons/react`, `lucide-react`, `react-icons`
 - Deploy: Vercel (rewrites `/api/*` to Cloud Run)
 
 ## Key Entry Points
-- `src/App.js` — App shell and all routes (`/`, `/history`, `/blog`, `/about`, `/sso-callback`)
-- `src/index.js` — ClerkProvider wiring, requires `REACT_APP_CLERK_PUBLISHABLE_KEY`
+- `src/App.js` — App shell and all routes (`/`, `/account/history`, `/account/billing`, `/blog`, `/about`, `/sso-callback`)
+- `src/auth.js` — Supabase client + auth hooks (`useAuth`, `useUser`, `useAuthActions`, `useSignIn`, `SignedIn`/`SignedOut`); requires `REACT_APP_SUPABASE_URL` + `REACT_APP_SUPABASE_ANON_KEY`
+- `src/index.js` — `AuthProvider` wiring
 - `src/utils/api.js` — SINGLE SOURCE OF TRUTH for all API calls. Always add new helpers here.
 - `src/components/layout/Header.js` / `Footer.js` — Layout
 - `src/setupProxy.js` — Dev proxy forwards `/api` to Cloud Run
@@ -36,6 +37,7 @@
 - `design-system/components/_index.md` — component status table (shipped / gap)
 - `design-system/components/<Name>.md` — per-component spec citing the real source file
 - `design-system/tokens.reference.css` — full token spec (read-only reference; runtime is `src/styles/tokens.css`)
+- `design-system/STATES.md` — **loading & error/status conventions**: use `SkeletonPanel` (breathing gray panel) for all content loading and `StatusMessage` for all error/warning/info/success messages. Never ship plain `Loading…` text or bare red `<p>`.
 
 **Claude skill:** `.claude/skills/design-system/SKILL.md` auto-loads on UI work. It enforces the read-spec-then-mirror-real-component workflow.
 
@@ -50,7 +52,7 @@
 - `docs/DESIGN_SYSTEM.md` is now a stub redirecting to `design-system/`. The 496-line original is preserved in git history.
 
 ## Auth & Gating
-- Gate UI with `<SignedIn>` / `<SignedOut>` from `@clerk/clerk-react`
+- Gate UI with `<SignedIn>` / `<SignedOut>` from `src/auth.js`
 - Login entry points: call `LoginModal` via `onLoginClick` prop (see `Header.js`)
 - SSO callback: `src/components/SSOCallback.js` at `/sso-callback`
 

@@ -9,6 +9,8 @@ import { MIDI_KEY_BY_INSTRUMENT, MUSICXML_KEY_BY_INSTRUMENT, truncateMidiToSecon
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createSheetSecMapper } from '../../player/syncMap';
+import StatusMessage from '../ui/StatusMessage';
+import SkeletonPanel from '../ui/SkeletonPanel';
 import './PreviewPanel.css';
 
 const MusicSheetTab = lazy(() => import('./tabs/MusicSheetTab'));
@@ -454,7 +456,7 @@ export default function PreviewPanel({
         />
       </div>
       <div className={`preview-viewer theme-${theme}`}>
-        <Suspense fallback={<div className="preview-loading">Loading viewer…</div>}>
+        <Suspense fallback={<div className="preview-loading"><SkeletonPanel count={1} height={200} /></div>}>
           {activeTab === 'music_sheet' && (
             <MusicSheetTab
               ref={osmdRef}
@@ -477,8 +479,8 @@ export default function PreviewPanel({
           )}
         </Suspense>
         <div className={`piano-3d-tab ${activeTab === 'piano_3d' ? '' : 'piano-3d-tab-hidden'}`}>
-          {midiLoading && <div className="preview-loading">Loading MIDI…</div>}
-          {midiError && <div className="preview-error">{midiError}</div>}
+          {midiLoading && <div className="preview-loading"><SkeletonPanel count={1} height={200} /></div>}
+          {midiError && <StatusMessage variant="error">{midiError}</StatusMessage>}
           {iframeUrl && (
             <iframe
               ref={iframeRef}

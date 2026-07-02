@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { downloadWorkflowFile } from '../../utils/api';
 import config from '../../config';
+import StatusMessage from '../ui/StatusMessage';
+import SkeletonPanel from '../ui/SkeletonPanel';
 
 const API_BASE_URL = config.apiBaseUrl;
 
@@ -86,7 +88,7 @@ export default function MidiEditorView({ jobId, selectedInstrument, getToken }) 
   if (error) {
     return (
       <div className="viz-content-area viz-dark-bg">
-        <div className="viz-error"><p>{error}</p></div>
+        <div className="viz-error"><StatusMessage variant="error">{error}</StatusMessage></div>
       </div>
     );
   }
@@ -94,7 +96,7 @@ export default function MidiEditorView({ jobId, selectedInstrument, getToken }) 
   if (loading) {
     return (
       <div className="viz-content-area viz-dark-bg">
-        <div className="viz-loading"><p>Loading MIDI editor...</p></div>
+        <div className="viz-loading"><SkeletonPanel count={1} height={260} /></div>
       </div>
     );
   }

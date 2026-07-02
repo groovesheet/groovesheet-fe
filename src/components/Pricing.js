@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
 import { fetchBillingPlans, createCheckoutSession } from '../utils/api';
+import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
 
 /**
@@ -174,9 +175,9 @@ function Pricing({ onLoginClick }) {
               </div>
             )}
             {error && (
-              <p className="pricing-error" role="alert" style={{ color: '#ff5470', marginTop: '8px' }}>
+              <StatusMessage variant="error" style={{ marginTop: '8px' }}>
                 {error}
-              </p>
+              </StatusMessage>
             )}
           </div>
 

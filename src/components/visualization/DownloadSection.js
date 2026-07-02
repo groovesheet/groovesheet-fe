@@ -1,5 +1,6 @@
 import React from 'react';
 import { DownloadSimple, CheckCircle, File } from '@phosphor-icons/react';
+import StatusMessage from '../ui/StatusMessage';
 
 export default function DownloadSection({
   fileName,
@@ -61,7 +62,7 @@ export default function DownloadSection({
       </div>
 
       {downloadError && (
-        <p className="viz-download-error">{downloadError}</p>
+        <StatusMessage variant="error">{downloadError}</StatusMessage>
       )}
     </div>
   );

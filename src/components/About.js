@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import * as PhosphorIcons from '@phosphor-icons/react';
+import StatusMessage from './ui/StatusMessage';
 import './About.css';
 
 function About({ onLoginClick }) {
@@ -268,15 +269,15 @@ function About({ onLoginClick }) {
                 </div>
                 
                 {submitStatus === 'success' && (
-                  <div className="form-message success">
+                  <StatusMessage variant="success">
                     Thank you! Your message has been sent successfully.
-                  </div>
+                  </StatusMessage>
                 )}
-                
+
                 {submitStatus === 'error' && (
-                  <div className="form-message error">
+                  <StatusMessage variant="error">
                     Sorry, there was an error submitting your form. Please try again.
-                  </div>
+                  </StatusMessage>
                 )}
                 
                 <button 

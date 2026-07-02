@@ -17,7 +17,10 @@ import Header from './layout/Header';
 import Footer from './layout/Footer';
 import Features from './Features';
 import Pricing from './Pricing';
+import Element from './Element';
+import Testimonials from './Testimonials';
 import FAQ from './FAQ';
+import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
 
@@ -130,10 +133,8 @@ function StemSplitter({ onLoginClick }) {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('vocals');
-  // M1: signed-in only "Try a 10s preview" mode. Routes the upload through
-  // /preview/{workflow} instead of /workflow/{workflow}; status + download
+  // Every run is a 10s preview by default (PRV* IDs); status + download
   // endpoints are inferred from the returned ID prefix (PRV* vs WF*).
-  const [previewMode, setPreviewMode] = useState(false);
   const [previewSelection, setPreviewSelection] = useState(null);
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -235,9 +236,8 @@ function StemSplitter({ onLoginClick }) {
   const handleUpload = async (fileToUpload) => {
     if (!isLoaded) { setError('Loading user data...'); return; }
 
-    // Anonymous users always go through preview. Signed-in users go through
-    // preview only if they explicitly toggled the option.
-    const usePreview = !isSignedIn || previewMode;
+    // Every run goes through the 10-second preview by default.
+    const usePreview = true;
 
     setError(null);
     setStatus('uploading');
@@ -536,35 +536,6 @@ function StemSplitter({ onLoginClick }) {
         })}
       </div>
 
-      {isSignedIn && (
-        <label
-          className="preview-mode-toggle"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            margin: '12px 0',
-            fontSize: '13px',
-            color: 'var(--color-text-secondary, #cccccc)',
-            cursor: 'pointer',
-            userSelect: 'none',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={previewMode}
-            onChange={(e) => setPreviewMode(e.target.checked)}
-            style={{ cursor: 'pointer' }}
-          />
-          <span>Try a 10-second preview first</span>
-          {previewMode && (
-            <span style={{ opacity: 0.7, fontSize: '12px' }}>
-              · Returns the most representative 10s of the chosen instrument
-            </span>
-          )}
-        </label>
-      )}
-
       <div
         className="upload-drop-zone"
         onDragOver={handleDragOver}
@@ -732,7 +703,7 @@ function StemSplitter({ onLoginClick }) {
             {uiState === 'success' && renderSuccessState()}
             {error && uiState !== 'success' && (
               <div className="error-overlay">
-                <p className="error-message">{error}</p>
+                <StatusMessage variant="error">{error}</StatusMessage>
               </div>
             )}
           </div>
@@ -755,6 +726,8 @@ function StemSplitter({ onLoginClick }) {
         <Features />
       </div>
       <Pricing onLoginClick={onLoginClick} />
+      <Element />
+      <Testimonials />
       <FAQ />
       <Footer />
     </div>

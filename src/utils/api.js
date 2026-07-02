@@ -580,3 +580,234 @@ export async function createBillingPortalSession(baseUrl, getToken, signOut = nu
   }
   return response.json();
 }
+
+/* ------------------------------------------------------------------ *
+ * Account / Profile  (⚠ several of these hit endpoints the backend
+ * does not implement yet — see docs/BACKEND_GAPS.md). Handlers call
+ * them best-effort and surface a friendly error until BE ships.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Fetch the signed-in user's public creator profile (username, display name,
+ * bio, external links, avatar). ⚠ NEW endpoint.
+ * @returns {Promise<{ username, display_name, bio, avatar_url, links:Array<{platform,url}>, member_since }>}
+ */
+export async function fetchCreatorProfile(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/profile`,
+    { method: 'GET', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch profile: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Update the public creator profile. ⚠ NEW endpoint.
+ * @param {{ username?, display_name?, bio?, links? }} patch
+ */
+export async function updateCreatorProfile(baseUrl, patch, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/profile`,
+    {
+      method: 'PUT',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(patch),
+    },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to update profile: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Check whether a username is available. ⚠ NEW endpoint.
+ * @returns {Promise<{ available: boolean }>}
+ */
+export async function checkUsernameAvailability(baseUrl, username, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/profile/username-available?username=${encodeURIComponent(username)}`,
+    { method: 'GET', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Username check failed: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Upload a new avatar image. ⚠ NEW endpoint.
+ * @param {File} file
+ */
+export async function uploadAvatar(baseUrl, file, getToken, signOut = null) {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/profile/avatar`,
+    { method: 'POST', body: form },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Avatar upload failed: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Update the user's private legal name. ⚠ NEW endpoint.
+ * @param {{ first_name, last_name }} patch
+ */
+export async function updateAccountName(baseUrl, patch, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/user/account`,
+    {
+      method: 'PATCH',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(patch),
+    },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to update name: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Request an email-address change (sends a confirmation email). ⚠ NEW endpoint.
+ * Note: Supabase can also do this client-side via supabase.auth.updateUser —
+ * this server route is the preferred path so the BE can keep its mirror in sync.
+ */
+export async function updateUserEmail(baseUrl, newEmail, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/email`,
+    {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ email: newEmail }),
+    },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to change email: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Permanently delete the signed-in user's account. ⚠ NEW endpoint.
+ */
+export async function deleteAccount(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account`,
+    { method: 'DELETE', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to delete account: ${response.statusText}`);
+  }
+  return response.json().catch(() => ({}));
+}
+
+/**
+ * Fetch the default Stripe payment method (brand / last4 / exp) for display.
+ * ⚠ NEW endpoint (currently only the Stripe portal exposes this).
+ * @returns {Promise<{ brand, last4, exp }>}
+ */
+export async function fetchPaymentMethod(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/billing/payment-method`,
+    { method: 'GET', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch payment method: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/* ------------------------------------------------------------------ *
+ * Library publish / edit / delete  (⚠ NEW endpoints — see gap doc)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Set a transcription's publish visibility. ⚠ NEW endpoint.
+ * @param {'public'|'unlisted'|'private'} visibility
+ */
+export async function updateWorkflowVisibility(baseUrl, workflowId, visibility, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/workflow/${workflowId}/visibility`,
+    {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ visibility }),
+    },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to update visibility: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Edit a transcription's metadata (title, original artist, tags, description).
+ * ⚠ NEW endpoint.
+ */
+export async function updateWorkflowMetadata(baseUrl, workflowId, patch, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/workflow/${workflowId}`,
+    {
+      method: 'PATCH',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(patch),
+    },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to update transcription: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Permanently delete a transcription and its files. ⚠ NEW endpoint.
+ */
+export async function deleteWorkflow(baseUrl, workflowId, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/workflow/${workflowId}`,
+    { method: 'DELETE', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to delete transcription: ${response.statusText}`);
+  }
+  return response.json().catch(() => ({}));
+}

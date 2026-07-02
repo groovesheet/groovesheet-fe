@@ -1,5 +1,6 @@
 import React from 'react';
-import { MagnifyingGlass, WarningCircle } from '@phosphor-icons/react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
+import StatusMessage from '../ui/StatusMessage';
 import './ExploreStates.css';
 
 /** Skeleton placeholder mirroring a Section row of SongCards while the library loads. */
@@ -55,12 +56,10 @@ export function ExploreEmpty({ query, onClear }) {
 /** Shown when the library request fails. */
 export function ExploreError({ message, onRetry }) {
   return (
-    <div className="explore-state" role="alert">
-      <span className="explore-state-icon explore-state-icon-error">
-        <WarningCircle size={28} weight="regular" />
-      </span>
-      <h2 className="explore-state-title">Couldn&rsquo;t load the library</h2>
-      <p className="explore-state-sub">{message || 'Something went wrong. Please try again.'}</p>
+    <div className="explore-state">
+      <StatusMessage variant="error" title="Couldn’t load the library">
+        {message || 'Something went wrong. Please try again.'}
+      </StatusMessage>
       {onRetry && (
         <button type="button" className="explore-state-btn" onClick={onRetry}>
           Try again

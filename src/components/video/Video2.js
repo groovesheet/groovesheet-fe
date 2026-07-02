@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Midi } from '@tonejs/midi';
 import OSMDViewer from '../PreviewPanel/OSMDViewer';
 import VideoPianoRoll from './VideoPianoRoll';
+import VideoFretboardRoll from './VideoFretboardRoll';
 import { createSynth } from './videoSynth';
 
 /**
@@ -120,7 +121,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
   // only for drums/bass (it carries instruments the flattened XML loses) or when
   // there is no sheet at all.
   const useMidi = !!midiUrl && !(kind === 'piano' && hasSheet);
-  const rollMode = kind === 'drums' ? 'drums' : 'piano';
+  const rollMode = kind === 'drums' ? 'drums' : kind === 'guitar' ? 'guitar' : 'piano';
 
   const [view, setView] = useState('video'); // 'video' | 'cover'
   const [xml, setXml] = useState(null);
@@ -512,7 +513,9 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
 
         {/* Roll band */}
         <div style={{ position: 'absolute', top: ROLL_Y, left: 0, width: FRAME_W, height: ROLL_H, background: '#0c100c', overflow: 'hidden' }}>
-          {notes && <VideoPianoRoll notes={notes} timeRef={timeRef} mode={rollMode} />}
+          {notes && (rollMode === 'guitar'
+            ? <VideoFretboardRoll notes={notes} timeRef={timeRef} />
+            : <VideoPianoRoll notes={notes} timeRef={timeRef} mode={rollMode} />)}
         </div>
 
         {/* Footer: logo bottom-left */}

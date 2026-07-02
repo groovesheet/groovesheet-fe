@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { downloadWorkflowFile } from '../../utils/api';
 import config from '../../config';
+import StatusMessage from '../ui/StatusMessage';
+import SkeletonPanel from '../ui/SkeletonPanel';
 
 const API_BASE_URL = config.apiBaseUrl;
 
@@ -115,12 +117,12 @@ export default function MusicSheetView({ jobId, selectedInstrument, getToken, zo
     <div className="viz-content-area viz-sheet-bg">
       {loading && (
         <div className="viz-loading">
-          <p>Loading sheet music...</p>
+          <SkeletonPanel count={1} height={260} />
         </div>
       )}
       {error && (
         <div className="viz-error">
-          <p>{error}</p>
+          <StatusMessage variant="error">{error}</StatusMessage>
         </div>
       )}
       <div
