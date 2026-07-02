@@ -84,8 +84,8 @@ function Footer() {
               <h3>{t('footer.explore')}</h3>
               <a href="#pricing">{t('footer.pricing')}</a>
               <a href="#api">{t('footer.api')}</a>
-              <a href="#help">{t('footer.help')}</a>
-              <a href="#support">{t('footer.support')}</a>
+              <LocalizedLink to="/help">{t('footer.help')}</LocalizedLink>
+              <LocalizedLink to="/help">{t('footer.support')}</LocalizedLink>
               <a href="#changelog">{t('footer.changelog')}</a>
             </div>
 

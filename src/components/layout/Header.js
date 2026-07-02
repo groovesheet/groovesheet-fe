@@ -108,9 +108,9 @@ function Header({ onLoginClick }) {
               <LocalizedLink to="/pricing" className={`nav-item${isActive('/pricing') ? ' active' : ''}`}>
                 {t('nav.pricing')}
               </LocalizedLink>
-              <a href="#help" className="nav-item">
+              <LocalizedLink to="/help" className={`nav-item${isActive('/help') ? ' active' : ''}`}>
                 {t('nav.help')}
-              </a>
+              </LocalizedLink>
               <LocalizedLink to="/about" className={`nav-item${isActive('/about') ? ' active' : ''}`}>
                 {t('nav.about')}
               </LocalizedLink>
@@ -328,9 +328,9 @@ function Header({ onLoginClick }) {
                 <LocalizedLink to="/pricing" className={`mobile-nav-item${isActive('/pricing') ? ' active' : ''}`} onClick={closeMobileMenu}>
                   {t('nav.pricing')}
                 </LocalizedLink>
-                <a href="#help" className="mobile-nav-item" onClick={closeMobileMenu}>
+                <LocalizedLink to="/help" className={`mobile-nav-item${isActive('/help') ? ' active' : ''}`} onClick={closeMobileMenu}>
                   {t('nav.help')}
-                </a>
+                </LocalizedLink>
                 <LocalizedLink to="/about" className={`mobile-nav-item${isActive('/about') ? ' active' : ''}`} onClick={closeMobileMenu}>
                   {t('nav.about')}
                 </LocalizedLink>
