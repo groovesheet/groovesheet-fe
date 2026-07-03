@@ -16,6 +16,7 @@ import CardRow from './CardRow';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
 import { useAuth, useUser } from '../../auth';
+import usePageMeta from '../../hooks/usePageMeta';
 import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
@@ -202,10 +203,17 @@ function SongDetail({ onLoginClick }) {
   const playSentRef = useRef(false);
   const [zipDownloading, setZipDownloading] = useState(false);
 
+  // --- track fetch (declared below); page meta reads it once loaded --------
+
   // --- track fetch -----------------------------------------------------------
   const [track, setTrack] = useState(null);
   const [trackLoading, setTrackLoading] = useState(true);
   const [trackError, setTrackError] = useState(null); // { status, message }
+
+  usePageMeta(
+    track ? `${track.title} — ${track.artist}` : null,
+    track ? `Listen and download sheet music, MIDI and stems for ${track.title} by ${track.artist}.` : null
+  );
 
   useEffect(() => {
     let cancelled = false;

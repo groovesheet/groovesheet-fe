@@ -26,6 +26,7 @@ import {
 } from '../../utils/creatorApi';
 import { useUser, useAuth } from '../../auth';
 import { useLocalizedNavigate, LocalizedLink } from '../../i18n/locale';
+import usePageMeta from '../../hooks/usePageMeta';
 import './CreatorProfile.css';
 
 const SORTS = [
@@ -51,6 +52,11 @@ function CreatorProfile({ onLoginClick }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  usePageMeta(
+    profile ? (profile.display_name || `@${profile.username}`) : null,
+    profile?.bio || (profile ? `Transcriptions published by ${profile.display_name || profile.username} on GrooveSheet.` : null)
+  );
 
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('newest');

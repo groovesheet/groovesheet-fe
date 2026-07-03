@@ -10,6 +10,7 @@ import { STEM_INSTRUMENTS, capitalize, FORMAT_FILTER_MAP, lengthBucket } from '.
 import { seededDifficulty, seededViews } from '../utils/cosmeticStats';
 import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
+import usePageMeta from '../hooks/usePageMeta';
 import './Explore.css';
 
 const PAGE_LIMIT = 60;
@@ -41,6 +42,11 @@ function trackToCard(track) {
 export const Explore = ({ onLoginClick }) => {
   const navigate = useLocalizedNavigate();
   const handleCardClick = (track) => navigate(`/explore/${track.id}`);
+
+  usePageMeta(
+    'Explore',
+    'Browse AI transcriptions — sheet music, MIDI files, and isolated stems from the GrooveSheet community.'
+  );
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
