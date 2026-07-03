@@ -47,6 +47,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = config.apiBaseUrl;
 
+// TODO(launch): only piano is production-ready today. The other instruments are
+// temporarily hidden from the picker — add them back here once their pipelines ship.
+const VISIBLE_INSTRUMENTS = ['piano'];
+
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
 // When changing download logic here, update those files too.
@@ -132,7 +136,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
-  const [selectedInstrument, setSelectedInstrument] = useState('drums');
+  const [selectedInstrument, setSelectedInstrument] = useState('piano');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const fileInputRef = useRef(null);
@@ -156,7 +160,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     setJobId(saved.jobId);
     setStatus(saved.status);
     setProgress(saved.progress || 0);
-    setSelectedInstrument(saved.instrument || 'drums');
+    setSelectedInstrument(saved.instrument || 'piano');
     if (saved.fileName) {
       // Create a minimal file-like object with just the name
       setFile({ name: saved.fileName });
@@ -901,7 +905,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
           { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
           { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon }
-        ].map((instrument) => {
+        ].filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value)).map((instrument) => {
           const IconComp = instrument.icon;
           const isSelected = selectedInstrument === instrument.value;
           return (
