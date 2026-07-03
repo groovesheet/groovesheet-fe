@@ -827,11 +827,14 @@ export async function updateWorkflowMetadata(baseUrl, workflowId, patch, getToke
 }
 
 /**
- * Permanently delete a transcription and its files. ⚠ NEW endpoint.
+ * Permanently delete a transcription and its files.
+ * @param {{ deleteTrack?: boolean }} [opts] - deleteTrack: true also removes a
+ *   published track from Explore; omitted/false keeps it live (server default).
  */
-export async function deleteWorkflow(baseUrl, workflowId, getToken, signOut = null) {
+export async function deleteWorkflow(baseUrl, workflowId, getToken, signOut = null, opts = {}) {
+  const qs = opts.deleteTrack ? '?delete_track=true' : '';
   const response = await authenticatedFetch(
-    `${baseUrl}/workflow/${workflowId}`,
+    `${baseUrl}/workflow/${workflowId}${qs}`,
     { method: 'DELETE', headers: { accept: 'application/json' } },
     getToken,
     signOut

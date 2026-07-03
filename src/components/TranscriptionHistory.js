@@ -148,6 +148,7 @@ export const TranscriptionHistory = () => {
   const [menuFor, setMenuFor] = useState(null); // workflow_id with open kebab
   const [popFor, setPopFor] = useState(null); // { id, kind: 'publish' | 'delete' }
   const [editFor, setEditFor] = useState(null); // workflow object being edited
+  const [removeFromExplore, setRemoveFromExplore] = useState(false); // delete-popover option
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
 
@@ -267,8 +268,17 @@ export const TranscriptionHistory = () => {
     // Optimistic local update; reverted with the real error message on failure.
     setWorkflows((ws) => ws.map((w) => (w.workflow_id === workflowId ? { ...w, visibility } : w)));
     try {
-      await updateWorkflowVisibility(config.apiBaseUrl, workflowId, visibility, getToken, signOut);
-      notify(visibility === 'private' ? 'Unpublished' : `Published as ${visibility}`);
+      const res = await updateWorkflowVisibility(config.apiBaseUrl, workflowId, visibility, getToken, signOut);
+      // Publishing may return the linked track id/slug (for the Open link)
+      // and a processing flag while stems are being transcoded.
+      setWorkflows((ws) => ws.map((w) => (
+        w.workflow_id === workflowId
+          ? { ...w, visibility: res?.visibility || visibility, library_track_id: res?.library_track_id || w.library_track_id, published_at: res?.published_at ?? w.published_at }
+          : w
+      )));
+      if (visibility === 'private') notify('Unpublished');
+      else if (res?.processing) notify('Published — preparing streamable audio, this takes a minute');
+      else notify(`Published as ${visibility}`);
     } catch (err) {
       setWorkflows((ws) => ws.map((w) => (w.workflow_id === workflowId ? { ...w, visibility: previous } : w)));
       notify(err?.message || 'Could not change visibility');
@@ -283,11 +293,11 @@ export const TranscriptionHistory = () => {
     notify('Details saved');
   };
 
-  const doDelete = async (workflowId) => {
+  const doDelete = async (workflowId, deleteTrack) => {
     setPopFor(null);
     setMenuFor(null);
     try {
-      await deleteWorkflow(config.apiBaseUrl, workflowId, getToken, signOut);
+      await deleteWorkflow(config.apiBaseUrl, workflowId, getToken, signOut, { deleteTrack });
       setWorkflows((ws) => ws.filter((w) => w.workflow_id !== workflowId));
       notify('Transcription deleted');
     } catch (err) {
@@ -423,7 +433,7 @@ export const TranscriptionHistory = () => {
           <button className="gs-dl" style={dl} disabled={!avail.instrument.available} onClick={() => handleDownload(id, avail.instrument.fileKey, `${id}.wav`)}>Stems</button>
         </div>
         <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />
-        <button role="menuitem" style={item('#FF6B7A')} onClick={() => setPopFor({ id, kind: 'delete' })}>
+        <button role="menuitem" style={item('#FF6B7A')} onClick={() => { setRemoveFromExplore(false); setPopFor({ id, kind: 'delete' }); }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Delete
         </button>
@@ -466,23 +476,42 @@ export const TranscriptionHistory = () => {
     );
   };
 
-  const DeletePopover = (w, anchorBottom) => (
-    <div role="dialog" aria-modal="true" className="gs-pop" style={{ position: 'absolute', right: 0, [anchorBottom ? 'bottom' : 'top']: anchorBottom ? 50 : 46, zIndex: 60, width: 290, background: 'var(--color-panel1)', borderRadius: 12, padding: 18, boxShadow: '0 14px 40px rgba(0,0,0,.45)', textAlign: 'left' }} onClick={(e) => e.stopPropagation()}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <span style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,107,122,.14)', color: '#FF6B7A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </span>
-        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--color-text)' }}>Delete this transcription?</div>
+  const DeletePopover = (w, anchorBottom) => {
+    const published = ['public', 'unlisted'].includes(visibilityOf(w));
+    return (
+      <div role="dialog" aria-modal="true" className="gs-pop" style={{ position: 'absolute', right: 0, [anchorBottom ? 'bottom' : 'top']: anchorBottom ? 50 : 46, zIndex: 60, width: 290, background: 'var(--color-panel1)', borderRadius: 12, padding: 18, boxShadow: '0 14px 40px rgba(0,0,0,.45)', textAlign: 'left' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <span style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,107,122,.14)', color: '#FF6B7A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </span>
+          <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--color-text)' }}>Delete this transcription?</div>
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', lineHeight: '19px', marginBottom: published ? 10 : 16 }}>
+          This permanently removes <span style={{ color: 'var(--color-text)' }}>{resolveDisplayName(w)}</span> and all its files. This can't be undone.
+        </div>
+        {published && (
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, fontSize: 13, color: 'var(--color-text)', marginBottom: 16, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={removeFromExplore}
+              onChange={(e) => setRemoveFromExplore(e.target.checked)}
+              style={{ marginTop: 2 }}
+            />
+            <span>
+              Also remove from Explore
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--color-muted-foreground)' }}>
+                Unchecked, the published version stays live for listeners.
+              </span>
+            </span>
+          </label>
+        )}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="gs-btn gs-btn-secondary" style={{ flex: 1 }} onClick={() => setPopFor(null)}>Cancel</button>
+          <button className="gs-btn gs-btn-destructive" style={{ flex: 1 }} onClick={() => doDelete(w.workflow_id, published && removeFromExplore)}>Delete</button>
+        </div>
       </div>
-      <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', lineHeight: '19px', marginBottom: 16 }}>
-        This permanently removes <span style={{ color: 'var(--color-text)' }}>{resolveDisplayName(w)}</span> and all its files. This can't be undone.
-      </div>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button className="gs-btn gs-btn-secondary" style={{ flex: 1 }} onClick={() => setPopFor(null)}>Cancel</button>
-        <button className="gs-btn gs-btn-destructive" style={{ flex: 1 }} onClick={() => doDelete(w.workflow_id)}>Delete</button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const Card = (w) => {
     const name = resolveDisplayName(w);
@@ -756,7 +785,7 @@ export const TranscriptionHistory = () => {
                             </div>
                           </div>
                         </div>
-                        <button className="gs-btn gs-btn-secondary" onClick={() => setPopFor({ id: w.workflow_id, kind: 'delete' })} style={{ whiteSpace: 'nowrap' }}>Remove</button>
+                        <button className="gs-btn gs-btn-secondary" onClick={() => { setRemoveFromExplore(false); setPopFor({ id: w.workflow_id, kind: 'delete' }); }} style={{ whiteSpace: 'nowrap' }}>Remove</button>
                         <div style={{ position: 'relative' }}>
                           {popFor && popFor.id === w.workflow_id && popFor.kind === 'delete' && DeletePopover(w, false)}
                         </div>
