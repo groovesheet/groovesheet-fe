@@ -129,3 +129,42 @@ export async function fetchLibraryTrack(id) {
 
   return response.json();
 }
+
+/**
+ * Record a play event for a track (anonymous-capable, deduped server-side).
+ * Fire-and-forget: engagement tracking must never break playback.
+ */
+export function postTrackPlay(id) {
+  try {
+    fetch(`/api/library/tracks/${encodeURIComponent(id)}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ type: 'play' }),
+    }).catch(() => {});
+  } catch (_) {
+    /* never throw from analytics */
+  }
+}
+
+/**
+ * Download every asset of a track as one ZIP. Requires sign-in.
+ *
+ * @returns {Promise<{blob: Blob, filename: string}>}
+ * @throws {LibraryApiError} on non-OK responses.
+ */
+export async function downloadLibraryTrackZip(id, getToken) {
+  const token = await getToken();
+  if (!token) throw new LibraryApiError('Sign in to download', 401);
+  const response = await fetch(`/api/library/tracks/${encodeURIComponent(id)}/download`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const detail = await parseErrorDetail(response);
+    throw new LibraryApiError(detail, response.status);
+  }
+  const blob = await response.blob();
+  const cd = response.headers.get('content-disposition') || '';
+  const match = cd.match(/filename="?([^";]+)"?/i);
+  return { blob, filename: match ? match[1] : `${id}.zip` };
+}

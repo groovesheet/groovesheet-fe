@@ -14,8 +14,8 @@ import PlaybackBar from './PlaybackBar';
 import SongSidebar from './SongSidebar';
 import CardRow from './CardRow';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
-import { fetchLibraryTrack, fetchLibraryTracks } from '../../utils/libraryApi';
-import { useAuth } from '../../auth';
+import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
+import { useAuth, useUser } from '../../auth';
 import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
@@ -198,6 +198,9 @@ function SongDetail({ onLoginClick }) {
   const navigate = useLocalizedNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
   const { getToken } = useAuth();
+  const { isSignedIn } = useUser();
+  const playSentRef = useRef(false);
+  const [zipDownloading, setZipDownloading] = useState(false);
 
   // --- track fetch -----------------------------------------------------------
   const [track, setTrack] = useState(null);
@@ -209,6 +212,9 @@ function SongDetail({ onLoginClick }) {
     setTrack(null);
     setTrackError(null);
     setTrackLoading(true);
+    // New song, new play credit — the component instance survives client-side
+    // navigation between songs, so the guard must reset here.
+    playSentRef.current = false;
     (async () => {
       try {
         // Pass the bearer (when signed in) so owners can open their own
@@ -601,8 +607,36 @@ function SongDetail({ onLoginClick }) {
     else {
       if (st.durationSec > 0 && st.positionSec >= st.durationSec) t.seek(0);
       t.play();
+      // Count one real play per page view (server dedupes per viewer/hour).
+      if (!playSentRef.current && track?.id) {
+        playSentRef.current = true;
+        postTrackPlay(track.id);
+      }
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id]);
+
+  const handleZipDownload = useCallback(async () => {
+    if (!track?.id || zipDownloading) return;
+    setZipDownloading(true);
+    try {
+      const { blob, filename } = await downloadLibraryTrackZip(track.id, getToken);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Track download failed:', err);
+      if ((err.status === 401 || err.status === 403) && onLoginClick) onLoginClick();
+    } finally {
+      setZipDownloading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id, zipDownloading, getToken, onLoginClick]);
 
   const onSeekFraction = useCallback((f) => {
     const t = transportRef.current;
@@ -854,6 +888,10 @@ function SongDetail({ onLoginClick }) {
                   stems={stems}
                   relatedTracks={related}
                   onSongClick={goToSong}
+                  isSignedIn={isSignedIn}
+                  onDownload={handleZipDownload}
+                  onLoginClick={onLoginClick}
+                  downloading={zipDownloading}
                 />
               </div>
             </div>
@@ -872,6 +910,10 @@ function SongDetail({ onLoginClick }) {
                     stems={stems}
                     relatedTracks={related}
                     onSongClick={goToSong}
+                    isSignedIn={isSignedIn}
+                    onDownload={handleZipDownload}
+                    onLoginClick={onLoginClick}
+                    downloading={zipDownloading}
                   />
                 </div>
               </>

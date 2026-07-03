@@ -1,7 +1,6 @@
 // Right sidebar for the song detail page — restored from the design prototype
-// (song-sidebar.jsx) but fed entirely with real library-track data. Engagement
-// numbers (views/likes/comments/rating/difficulty) are deterministic cosmetic
-// seeds from src/utils/cosmeticStats.js until the backend grows those fields.
+// (song-sidebar.jsx) but fed entirely with real library-track data, including
+// the real plays/downloads counters.
 import React, { useState } from 'react';
 import {
   DownloadSimple,
@@ -9,20 +8,9 @@ import {
   BookmarkSimple,
   Share,
   PencilSimple,
-  Eye,
-  ChatCircle,
-  Heart,
-  Star,
+  Play,
   SealCheck,
 } from '@phosphor-icons/react';
-import {
-  seededDifficulty,
-  seededViews,
-  seededLikes,
-  seededComments,
-  seededRating,
-  seededRatingCount,
-} from '../../utils/cosmeticStats';
 import { creatorHandleForTrack } from '../../utils/creatorApi';
 import { LocalizedLink } from '../../i18n/locale';
 
@@ -51,36 +39,6 @@ function fmtDate(iso) {
   } catch {
     return iso.slice(0, 10);
   }
-}
-
-/** 5-star block + numeric rating + count, ported from the design prototype. */
-function StarBlock({ rating, count }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        fontSize: 12,
-        color: 'var(--color-muted-foreground)',
-      }}
-    >
-      <span style={{ display: 'inline-flex', color: '#f59e0b' }}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            size={11}
-            weight={i < full || (i === full && half) ? 'fill' : 'regular'}
-            style={{ opacity: i < full ? 1 : i === full && half ? 0.6 : 0.35 }}
-          />
-        ))}
-      </span>
-      <strong style={{ color: 'var(--color-text)', fontWeight: 500 }}>{rating.toFixed(1)}</strong>
-      {count != null && <span>({fmtNum(count)})</span>}
-    </span>
-  );
 }
 
 /** Small row thumbnail: real cover art when available, gradient tile otherwise. */
@@ -115,7 +73,7 @@ function RowThumb({ track }) {
   );
 }
 
-function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
+function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn, onDownload, onLoginClick, downloading }) {
   const id = track.id;
   const durationSec = track.thumb_data?.duration_sec || track.duration_sec || 0;
 
@@ -130,10 +88,9 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
   if (formats.has('opus')) formatList.push('Opus');
   const formatLabel = formatList.length ? formatList.join(' · ') : 'Stems';
 
-  // Display-only selects: real stem names + a seeded difficulty.
+  // Display-only select: real stem names.
   const instruments = stems.map((s) => s.label);
   const [instrument, setInstrument] = useState(instruments[0] || '');
-  const [difficulty, setDifficulty] = useState(seededDifficulty(id));
 
   const subtitle = [
     track.album,
@@ -207,29 +164,25 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
           </p>
         )}
 
-        {/* Stats */}
+        {/* Stats — real engagement counters */}
         <div className="gs-statrow">
-          <span className="gs-stat">
-            <Eye size={13} />
-            <strong>{fmtNum(seededViews(id, Number(track.popularity) || 0))}</strong>
+          <span className="gs-stat" aria-label={`${track.plays || 0} plays`}>
+            <Play size={13} />
+            <strong>{fmtNum(track.plays || 0)}</strong>
+            <span style={{ opacity: 0.7 }}>plays</span>
           </span>
-          <span className="gs-stat">
-            <Heart size={13} weight="fill" style={{ color: '#ef4444' }} />
-            <strong>{fmtNum(seededLikes(id, Number(track.popularity) || 0))}</strong>
+          <span className="gs-stat" aria-label={`${track.downloads || 0} downloads`}>
+            <DownloadSimple size={13} />
+            <strong>{fmtNum(track.downloads || 0)}</strong>
+            <span style={{ opacity: 0.7 }}>downloads</span>
           </span>
-          <span className="gs-stat">
-            <ChatCircle size={13} />
-            <strong>{seededComments(id)}</strong>
-          </span>
-          <span style={{ flex: '1 0 auto' }} />
-          <StarBlock rating={seededRating(id)} count={seededRatingCount(id)} />
         </div>
 
         {/* Selects row */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: instruments.length ? '1fr 1fr' : '1fr',
+            gridTemplateColumns: '1fr',
             gap: 8,
             marginTop: 16,
           }}
@@ -246,22 +199,18 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
               ))}
             </select>
           )}
-          <select
-            className="gs-select"
-            aria-label="Difficulty"
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-          >
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
         </div>
 
         {/* Big CTA */}
-        <button className="gs-cta-download" type="button" disabled style={{ marginTop: 14 }}>
+        <button
+          className="gs-cta-download"
+          type="button"
+          disabled={downloading}
+          onClick={() => (isSignedIn ? onDownload && onDownload() : onLoginClick && onLoginClick())}
+          style={{ marginTop: 14, cursor: downloading ? 'wait' : 'pointer' }}
+        >
           <DownloadSimple size={18} weight="bold" />
-          Sign in to download
+          {downloading ? 'Preparing ZIP…' : isSignedIn ? 'Download All (ZIP)' : 'Sign in to Download'}
         </button>
         <div
           style={{
@@ -360,13 +309,11 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
                     <span style={{ fontFamily: 'var(--font-family-mono)' }}>
                       {fmtTime(t.thumb_data?.duration_sec || t.duration_sec)}
                     </span>
-                    <span>·</span>
-                    <span>{seededDifficulty(t.id)}</span>
                   </div>
                 </div>
                 <span className="gs-rs-row-rating">
-                  <Star size={11} weight="fill" style={{ color: '#f59e0b' }} />
-                  {seededRating(t.id).toFixed(1)}
+                  <Play size={11} weight="fill" />
+                  {fmtNum(t.plays || 0)}
                 </span>
               </div>
             ))}
