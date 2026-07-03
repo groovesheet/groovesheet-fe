@@ -16,6 +16,8 @@ import {
   checkUsernameAvailability,
   updateAccountName,
   updateUserEmail,
+  uploadAvatar,
+  exportAccountData,
   deleteAccount,
 } from '../utils/api';
 import config from '../config';
@@ -29,6 +31,8 @@ const LANGS = [
 ];
 const TIER_LABELS = { free: 'Free', lite: 'Lite', pro: 'Pro' };
 const TIER_MINUTES = { free: 30, lite: 120, pro: 300 };
+// Must match the backend whitelist (services/profile_common.ALLOWED_LINK_PLATFORMS).
+const LINK_PLATFORMS = ['Website', 'YouTube', 'Instagram', 'X', 'SoundCloud', 'TikTok'];
 const tierFamily = (t) => (t || 'free').split('_')[0];
 const tierLabel = (t) => TIER_LABELS[tierFamily(t)] || 'Free';
 
@@ -96,6 +100,9 @@ export const AccountProfile = () => {
   const origRef = useRef(null);
 
   const [emailDraft, setEmailDraft] = useState('');
+  const [namesOverride, setNamesOverride] = useState(null); // saved names until the session token refreshes
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef(null);
   const [activeSec, setActiveSec] = useState('sec-profile');
   const [langOpen, setLangOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -236,6 +243,8 @@ export const AccountProfile = () => {
 
   // ---- derived ----
   const email = user?.email || '';
+  const firstName = namesOverride?.first_name ?? user?.first_name ?? '';
+  const lastName = namesOverride?.last_name ?? user?.last_name ?? '';
   const displayName = profile?.display_name || user?.name || email.split('@')[0] || 'User';
   const username = profile?.username || email.split('@')[0] || 'user';
   const initials = initialsFrom(displayName, email);
@@ -264,9 +273,9 @@ export const AccountProfile = () => {
       username: profile?.username || '',
       displayName: profile?.display_name || '',
       bio: profile?.bio || '',
-      links: (profile?.links || []).map((l) => ({ label: l.label || l.platform || '', url: l.url || '' })),
-      firstName: user?.first_name || '',
-      lastName: user?.last_name || '',
+      links: (profile?.links || []).map((l) => ({ label: l.label || l.platform || 'Website', url: l.url || '' })),
+      firstName,
+      lastName,
     };
     origRef.current = snapshot(d);
     setDraft(d);
@@ -299,8 +308,9 @@ export const AccountProfile = () => {
       notify(err.message || 'Saving your profile is not available yet');
       return;
     }
-    // Legal name — best-effort; endpoint may not exist yet.
-    if (draft.firstName !== (user?.first_name || '') || draft.lastName !== (user?.last_name || '')) {
+    // Legal name — the session token is stale until refresh, so keep the
+    // saved values locally and render them instead of the token's copy.
+    if (draft.firstName !== firstName || draft.lastName !== lastName) {
       try {
         await updateAccountName(
           config.apiBaseUrl,
@@ -308,8 +318,11 @@ export const AccountProfile = () => {
           getToken,
           signOut
         );
-      } catch {
-        /* name endpoint optional */
+        setNamesOverride({ first_name: draft.firstName.trim(), last_name: draft.lastName.trim() });
+      } catch (err) {
+        if (handleAuthError(err)) return;
+        notify('Profile saved, but the name change failed — try again');
+        return;
       }
     }
     setEditing(false);
@@ -320,10 +333,47 @@ export const AccountProfile = () => {
     const v = (e.target.value || '').replace(/[^a-z0-9_]/gi, '').toLowerCase();
     setDraft((d) => ({ ...d, username: v }));
   };
-  const addLink = () => setDraft((d) => ({ ...d, links: [...d.links, { label: '', url: '' }] }));
+  const addLink = () => setDraft((d) => ({ ...d, links: [...d.links, { label: 'Website', url: '' }] }));
   const removeLink = (i) => setDraft((d) => ({ ...d, links: d.links.filter((_, j) => j !== i) }));
   const setLink = (i, field, v) =>
     setDraft((d) => ({ ...d, links: d.links.map((l, j) => (j === i ? { ...l, [field]: v } : l)) }));
+
+  const [exporting, setExporting] = useState(false);
+  const downloadExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const blob = await exportAccountData(config.apiBaseUrl, getToken, signOut);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'groovesheet-export.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      if (!handleAuthError(err)) notify(err.message || 'Could not export your data');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const onAvatarPick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const { avatar_url } = await uploadAvatar(config.apiBaseUrl, file, getToken, signOut);
+      setProfile((prev) => ({ ...prev, avatar_url }));
+      notify('Profile photo updated');
+    } catch (err) {
+      if (!handleAuthError(err)) notify(err.message || 'Could not upload photo');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const saveEmail = async () => {
     const next = emailDraft.trim();
@@ -411,9 +461,10 @@ export const AccountProfile = () => {
       connected,
       detail: connected ? email : 'Not connected',
       detailMono: connected,
-      btnLabel: connected ? 'Disconnect' : 'Connect',
     };
   });
+  // Which social provider manages the email (for the managed-email panel glyph).
+  const managedProvider = PROVIDERS.find((p) => providersSet.has(p.key)) || null;
 
   return (
     <div style={page}>
@@ -472,7 +523,24 @@ export const AccountProfile = () => {
               {/* Profile hero */}
               <section id="sec-profile" style={{ scrollMarginTop: 84 }}>
                 <div style={{ background: 'var(--color-panel1)', borderRadius: 11, padding: '26px 28px', display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
-                  <span aria-hidden="true" style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--color-primary)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 500, flex: 'none', boxShadow: 'inset 0 1px 1px rgba(255,255,255,.18)' }}>{initials}</span>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    aria-label="Change profile photo"
+                    title="Change profile photo"
+                    style={{ position: 'relative', width: 80, height: 80, borderRadius: '50%', border: 0, padding: 0, cursor: avatarUploading ? 'wait' : 'pointer', background: 'var(--color-primary)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 500, fontFamily: 'inherit', flex: 'none', overflow: 'visible', boxShadow: 'inset 0 1px 1px rgba(255,255,255,.18)' }}
+                  >
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block', opacity: avatarUploading ? 0.6 : 1 }} />
+                    ) : (
+                      <span aria-hidden="true">{initials}</span>
+                    )}
+                    <span aria-hidden="true" style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: '50%', background: 'var(--color-panel1)', border: '1px solid var(--color-border-lighter)', color: 'var(--color-foreground)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                    </span>
+                  </button>
+                  <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarPick} style={{ display: 'none' }} />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                       <h2 style={{ margin: 0, fontSize: 24, fontWeight: 500, color: 'var(--color-text)', letterSpacing: '-.3px' }}>{displayName}</h2>
@@ -503,7 +571,7 @@ export const AccountProfile = () => {
                     <div style={rowRead}>
                       <span style={{ fontSize: 13, color: muted }}>Profile URL</span>
                       <span style={{ fontSize: 14, fontFamily: MONO }}>
-                        <span style={{ color: muted }}>groovesheet.com/u/</span>
+                        <span style={{ color: muted }}>groovesheet.net/u/</span>
                         <span style={{ color: 'var(--color-text)' }}>{username}</span>
                       </span>
                     </div>
@@ -572,7 +640,9 @@ export const AccountProfile = () => {
                       <label style={label}>External links</label>
                       {draft.links.map((l, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <input className="aps-in" value={l.label} onChange={(e) => setLink(i, 'label', e.target.value)} placeholder="Label" style={{ ...input, width: 130 }} />
+                          <select className="aps-in" value={LINK_PLATFORMS.includes(l.label) ? l.label : 'Website'} onChange={(e) => setLink(i, 'label', e.target.value)} aria-label="Link platform" style={{ ...input, width: 130, cursor: 'pointer' }}>
+                            {LINK_PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                          </select>
                           <input className="aps-in" value={l.url} onChange={(e) => setLink(i, 'url', e.target.value)} placeholder="https://" style={{ ...input, flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 13 }} />
                           <button onClick={() => removeLink(i)} aria-label="Remove link" className="aps-icon-btn" style={{ width: 40, height: 40, flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 0, borderRadius: 6, color: muted, cursor: 'pointer' }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
@@ -595,11 +665,11 @@ export const AccountProfile = () => {
                   <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', borderTop: '1px solid var(--color-border-light)', padding: '14px 0' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 180 }}>
                       <span style={{ fontSize: 13, color: muted }}>First name</span>
-                      <span style={{ fontSize: 14, color: 'var(--color-text)' }}>{user?.first_name || '—'}</span>
+                      <span style={{ fontSize: 14, color: 'var(--color-text)' }}>{firstName || '—'}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 180 }}>
                       <span style={{ fontSize: 13, color: muted }}>Last name</span>
-                      <span style={{ fontSize: 14, color: 'var(--color-text)' }}>{user?.last_name || '—'}</span>
+                      <span style={{ fontSize: 14, color: 'var(--color-text)' }}>{lastName || '—'}</span>
                     </div>
                   </div>
                 ) : (
@@ -675,13 +745,11 @@ export const AccountProfile = () => {
                         <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)' }}>{p.name}</div>
                         <div style={{ fontSize: 12.5, color: muted, fontFamily: p.detailMono ? MONO : 'var(--font-family-sans)' }}>{p.detail}</div>
                       </div>
-                      <button
-                        onClick={() => notify(p.connected ? `Disconnecting ${p.name} is not available yet` : `Connecting ${p.name} is not available yet`)}
-                        className="aps-brighten"
-                        style={{ padding: '8px 16px', borderRadius: 6, fontFamily: 'inherit', fontSize: 13, fontWeight: 500, cursor: 'pointer', border: p.connected ? '1px solid var(--color-border-lighter)' : '1px solid transparent', background: p.connected ? 'transparent' : 'var(--color-primary)', color: p.connected ? 'var(--color-foreground)' : '#fff' }}
-                      >
-                        {p.btnLabel}
-                      </button>
+                      {/* Read-only until identity linking ships (Supabase linkIdentity). */}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 13px', borderRadius: 999, fontSize: 12.5, fontWeight: 500, border: '1px solid var(--color-border-light)', color: p.connected ? 'var(--color-success)' : muted, background: 'transparent', whiteSpace: 'nowrap' }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', opacity: p.connected ? 1 : 0.45 }} />
+                        {p.connected ? 'Connected' : 'Not connected'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -749,13 +817,32 @@ export const AccountProfile = () => {
                     </>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', background: 'var(--color-panel3)', borderRadius: 8 }}>
-                      <span style={{ width: 30, height: 30, borderRadius: 8, flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, background: '#fff', color: '#000' }}>G</span>
+                      <span style={{ width: 30, height: 30, borderRadius: 8, flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, fontFamily: managedProvider?.glyphFont || 'inherit', background: managedProvider?.glyphBg || '#fff', color: managedProvider?.glyphColor || '#000' }}>
+                        {managedProvider?.key === 'apple' ? (
+                          <svg width="15" height="15" viewBox="0 0 256 256" fill="#fff"><path d="M223.3 169.59a8.07 8.07 0 0 0-2.8-3.4C203.53 154.53 200 134.64 200 120c0-17.67 13.47-33.06 21.5-40.6a8 8 0 0 0 0-11.6C208.82 55.4 187.82 48 168 48a72.2 72.2 0 0 0-40 12.13A71.56 71.56 0 0 0 88 48a72.08 72.08 0 0 0-72 72c0 50.55 30.31 100.43 56 116.46a32 32 0 0 0 35.84-1.43 16 16 0 0 1 18.3 0A32 32 0 0 0 144 240a32.34 32.34 0 0 0 16.16-4.54C175 226.93 196.83 207 211.69 178a8 8 0 0 0 0-3.41ZM168 32a8 8 0 0 0 8-8 24 24 0 0 1 24-24 8 8 0 0 0 0-16 40 40 0 0 0-40 40 8 8 0 0 0 8 8Z" /></svg>
+                        ) : (managedProvider?.glyph || 'G')}
+                      </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, color: 'var(--color-text)' }}>{email}</div>
                         <div style={{ fontSize: 12.5, color: muted }}>Managed by your sign-in provider — change your email there.</div>
                       </div>
                     </div>
                   )}
+                </div>
+                {/* Data export — portability pair to account deletion */}
+                <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '16px 0', borderTop: '1px solid var(--color-border-light)', flexWrap: 'wrap' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)' }}>Download your data</div>
+                    <div style={{ fontSize: 12.5, color: muted, marginTop: 2 }}>A JSON export of your profile, usage history, and library metadata.</div>
+                  </div>
+                  <button
+                    onClick={downloadExport}
+                    disabled={exporting}
+                    className="aps-ghost"
+                    style={{ padding: '10px 18px', border: '1px solid var(--color-border-lighter)', borderRadius: 6, background: 'transparent', color: 'var(--color-foreground)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: exporting ? 'wait' : 'pointer', flex: 'none' }}
+                  >
+                    {exporting ? 'Preparing…' : 'Export Data'}
+                  </button>
                 </div>
                 {/* Danger zone */}
                 <div style={{ marginTop: 18, background: 'var(--color-panel3)', borderRadius: 12, padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>

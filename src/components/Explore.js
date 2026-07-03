@@ -10,6 +10,7 @@ import { STEM_INSTRUMENTS, capitalize, FORMAT_FILTER_MAP, lengthBucket } from '.
 import { seededDifficulty, seededViews } from '../utils/cosmeticStats';
 import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
+import usePageMeta from '../hooks/usePageMeta';
 import './Explore.css';
 
 const PAGE_LIMIT = 60;
@@ -25,18 +26,27 @@ function trackToCard(track) {
     length: (track.thumb_data && track.thumb_data.duration_sec) || track.duration_sec,
     year: track.year || null,
     coverUrl: track.cover_url || null,
+    thumbUrl: track.thumb_url || null,
     formats: track.formats || [],
     thumbData: track.thumb_data || null,
     // Capitalized for display + chip matching ('drums' → 'Drums').
     parts: Object.keys(stems).map(capitalize),
     popularity: track.popularity ?? 0,
     publishedAt: track.published_at || null,
+    plays: track.plays ?? 0,
+    downloads: track.downloads ?? 0,
+    owner: track.owner || null,
   };
 }
 
 export const Explore = ({ onLoginClick }) => {
   const navigate = useLocalizedNavigate();
   const handleCardClick = (track) => navigate(`/explore/${track.id}`);
+
+  usePageMeta(
+    'Explore',
+    'Browse AI transcriptions — sheet music, MIDI files, and isolated stems from the GrooveSheet community.'
+  );
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -51,6 +61,8 @@ export const Explore = ({ onLoginClick }) => {
     length: new Set(),
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const requestSeq = useRef(0);
 
   const toggleChip = (c) =>
@@ -75,15 +87,38 @@ export const Explore = ({ onLoginClick }) => {
       const data = await fetchLibraryTracks({ q, limit: PAGE_LIMIT });
       if (seq !== requestSeq.current) return; // stale response — a newer search won
       setTracks((data.tracks || []).map(trackToCard));
+      setNextCursor(data.next_cursor || null);
     } catch (err) {
       if (seq !== requestSeq.current) return;
       console.error('Failed to load library tracks:', err);
       setTracks([]);
+      setNextCursor(null);
       setError(err.message || 'Failed to load the library.');
     } finally {
       if (seq === requestSeq.current) setLoading(false);
     }
   }, []);
+
+  // Cursor pagination: append the next page. The catalog used to silently cap
+  // at the first 60 tracks because next_cursor was discarded.
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    const seq = requestSeq.current;
+    setLoadingMore(true);
+    try {
+      const data = await fetchLibraryTracks({ q: debouncedQuery, cursor: nextCursor, limit: PAGE_LIMIT });
+      if (seq !== requestSeq.current) return; // a new search reset the list
+      setTracks((prev) => {
+        const seen = new Set(prev.map((t) => t.id));
+        return [...prev, ...(data.tracks || []).map(trackToCard).filter((t) => !seen.has(t.id))];
+      });
+      setNextCursor(data.next_cursor || null);
+    } catch (err) {
+      console.error('Failed to load more tracks:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore, debouncedQuery]);
 
   useEffect(() => {
     loadTracks(debouncedQuery);
@@ -135,6 +170,7 @@ export const Explore = ({ onLoginClick }) => {
           title: 'Popular sheet music',
           subtitle: 'Engraved, downloadable as PDF and MusicXML.',
           variant: 'sheet',
+          filterLabel: 'Sheet Music',
           songs: byPopularity.filter((t) => t.formats.includes('musicxml')),
         },
         {
@@ -143,6 +179,7 @@ export const Explore = ({ onLoginClick }) => {
           title: 'Popular MIDI',
           subtitle: 'Multi-track .mid files. Drop into your DAW.',
           variant: 'midi',
+          filterLabel: 'MIDI',
           songs: byPopularity.filter((t) => t.formats.includes('midi')),
         },
         {
@@ -151,6 +188,7 @@ export const Explore = ({ onLoginClick }) => {
           title: 'Popular stems',
           subtitle: 'Isolated vocals, drums, bass, keys.',
           variant: 'stems',
+          filterLabel: 'Stems',
           songs: byPopularity.filter((t) => t.formats.includes('stem')),
         },
       ],
@@ -266,6 +304,9 @@ export const Explore = ({ onLoginClick }) => {
                   variant={s.variant}
                   songs={s.songs}
                   onCardClick={handleCardClick}
+                  onViewAll={() =>
+                    setFilters((f) => ({ ...f, format: new Set([s.filterLabel]) }))
+                  }
                 />
               ))}
 
@@ -288,6 +329,33 @@ export const Explore = ({ onLoginClick }) => {
                   onCardClick={handleCardClick}
                 />
               ))}
+
+              {/* Search results are rank-ordered while the cursor paginates by
+                  publish date, so Load More would skip/repeat rows mid-search —
+                  only offer it for the browse (no-query) view. */}
+              {nextCursor && !debouncedQuery && (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 32px' }}>
+                  <button
+                    type="button"
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    style={{
+                      padding: '12px 28px',
+                      borderRadius: 8,
+                      border: '1px solid var(--color-border)',
+                      background: 'transparent',
+                      color: 'var(--color-text)',
+                      fontFamily: 'var(--font-family-sans)',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: loadingMore ? 'wait' : 'pointer',
+                      opacity: loadingMore ? 0.6 : 1,
+                    }}
+                  >
+                    {loadingMore ? 'Loading…' : 'Load More'}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </main>

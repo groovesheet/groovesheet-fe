@@ -1,30 +1,93 @@
 // Right sidebar for the song detail page — restored from the design prototype
-// (song-sidebar.jsx) but fed entirely with real library-track data. Engagement
-// numbers (views/likes/comments/rating/difficulty) are deterministic cosmetic
-// seeds from src/utils/cosmeticStats.js until the backend grows those fields.
+// (song-sidebar.jsx) but fed entirely with real library-track data, including
+// the real plays/downloads counters.
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import {
   DownloadSimple,
   Printer,
   BookmarkSimple,
   Share,
-  PencilSimple,
-  Eye,
-  ChatCircle,
-  Heart,
-  Star,
+  Flag,
+  Play,
   SealCheck,
 } from '@phosphor-icons/react';
-import {
-  seededDifficulty,
-  seededViews,
-  seededLikes,
-  seededComments,
-  seededRating,
-  seededRatingCount,
-} from '../../utils/cosmeticStats';
 import { creatorHandleForTrack } from '../../utils/creatorApi';
+import { reportTrack } from '../../utils/libraryApi';
 import { LocalizedLink } from '../../i18n/locale';
+
+/** Report dialog — portal to <body> (LoginModal pattern). Launch DMCA path. */
+function ReportModal({ track, onClose }) {
+  const [reason, setReason] = useState('copyright');
+  const [details, setDetails] = useState('');
+  const [contact, setContact] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState(null);
+
+  const field = { width: '100%', background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 8, padding: '10px 13px', fontFamily: 'var(--font-family-sans)', fontSize: 14, color: 'var(--color-text)', outline: 'none' };
+  const label = { fontSize: 13, color: 'var(--color-muted-foreground)', marginBottom: 6, display: 'block' };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await reportTrack(track.id, {
+        reason,
+        details: details.trim() || undefined,
+        contact: contact.trim() || undefined,
+      });
+      setDone(true);
+    } catch (err) {
+      setError(err?.message || 'Could not send the report');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return ReactDOM.createPortal(
+    <div role="presentation" onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'rgba(0,0,0,.6)', display: 'grid', placeItems: 'center', padding: 20 }}>
+      <form role="dialog" aria-modal="true" aria-label="Report this track" onClick={(e) => e.stopPropagation()} onSubmit={submit} style={{ width: '100%', maxWidth: 420, background: 'var(--color-panel1)', borderRadius: 13, padding: 26, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 20px 60px rgba(0,0,0,.5)' }}>
+        <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>Report This Track</div>
+        {done ? (
+          <>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--color-muted-foreground)' }}>
+              Thanks — your report was received and this track has been flagged for review.
+              For formal DMCA notices, email <a href="mailto:support@groovesheet.net" style={{ color: 'var(--color-primary)' }}>support@groovesheet.net</a>.
+            </p>
+            <button type="button" className="gs-btn gs-btn-primary" onClick={onClose}>Done</button>
+          </>
+        ) : (
+          <>
+            {error && <p style={{ margin: 0, fontSize: 13, color: '#FF6B7A' }}>{error}</p>}
+            <div>
+              <label htmlFor="report-reason" style={label}>Reason</label>
+              <select id="report-reason" style={{ ...field, cursor: 'pointer' }} value={reason} onChange={(e) => setReason(e.target.value)}>
+                <option value="copyright">Copyright infringement</option>
+                <option value="inappropriate">Inappropriate content</option>
+                <option value="other">Something else</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="report-details" style={label}>Details (optional)</label>
+              <textarea id="report-details" style={{ ...field, height: 84, resize: 'vertical' }} value={details} onChange={(e) => setDetails(e.target.value)} maxLength={2000} placeholder="What's the issue? For copyright claims, tell us who owns the work." />
+            </div>
+            <div>
+              <label htmlFor="report-contact" style={label}>Contact email (optional, for follow-up)</label>
+              <input id="report-contact" type="email" style={field} value={contact} onChange={(e) => setContact(e.target.value)} maxLength={200} />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="button" className="gs-btn gs-btn-secondary" style={{ flex: 1 }} onClick={onClose} disabled={busy}>Cancel</button>
+              <button type="submit" className="gs-btn gs-btn-primary" style={{ flex: 1 }} disabled={busy}>{busy ? 'Sending…' : 'Send Report'}</button>
+            </div>
+          </>
+        )}
+      </form>
+    </div>,
+    document.body
+  );
+}
 
 function fmtNum(n) {
   if (n == null) return '—';
@@ -51,36 +114,6 @@ function fmtDate(iso) {
   } catch {
     return iso.slice(0, 10);
   }
-}
-
-/** 5-star block + numeric rating + count, ported from the design prototype. */
-function StarBlock({ rating, count }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        fontSize: 12,
-        color: 'var(--color-muted-foreground)',
-      }}
-    >
-      <span style={{ display: 'inline-flex', color: '#f59e0b' }}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            size={11}
-            weight={i < full || (i === full && half) ? 'fill' : 'regular'}
-            style={{ opacity: i < full ? 1 : i === full && half ? 0.6 : 0.35 }}
-          />
-        ))}
-      </span>
-      <strong style={{ color: 'var(--color-text)', fontWeight: 500 }}>{rating.toFixed(1)}</strong>
-      {count != null && <span>({fmtNum(count)})</span>}
-    </span>
-  );
 }
 
 /** Small row thumbnail: real cover art when available, gradient tile otherwise. */
@@ -115,7 +148,7 @@ function RowThumb({ track }) {
   );
 }
 
-function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
+function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn, onDownload, onLoginClick, downloading }) {
   const id = track.id;
   const durationSec = track.thumb_data?.duration_sec || track.duration_sec || 0;
 
@@ -130,10 +163,10 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
   if (formats.has('opus')) formatList.push('Opus');
   const formatLabel = formatList.length ? formatList.join(' · ') : 'Stems';
 
-  // Display-only selects: real stem names + a seeded difficulty.
+  // Display-only select: real stem names.
   const instruments = stems.map((s) => s.label);
   const [instrument, setInstrument] = useState(instruments[0] || '');
-  const [difficulty, setDifficulty] = useState(seededDifficulty(id));
+  const [reportOpen, setReportOpen] = useState(false);
 
   const subtitle = [
     track.album,
@@ -207,29 +240,25 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
           </p>
         )}
 
-        {/* Stats */}
+        {/* Stats — real engagement counters */}
         <div className="gs-statrow">
-          <span className="gs-stat">
-            <Eye size={13} />
-            <strong>{fmtNum(seededViews(id, Number(track.popularity) || 0))}</strong>
+          <span className="gs-stat" aria-label={`${track.plays || 0} plays`}>
+            <Play size={13} />
+            <strong>{fmtNum(track.plays || 0)}</strong>
+            <span style={{ opacity: 0.7 }}>plays</span>
           </span>
-          <span className="gs-stat">
-            <Heart size={13} weight="fill" style={{ color: '#ef4444' }} />
-            <strong>{fmtNum(seededLikes(id, Number(track.popularity) || 0))}</strong>
+          <span className="gs-stat" aria-label={`${track.downloads || 0} downloads`}>
+            <DownloadSimple size={13} />
+            <strong>{fmtNum(track.downloads || 0)}</strong>
+            <span style={{ opacity: 0.7 }}>downloads</span>
           </span>
-          <span className="gs-stat">
-            <ChatCircle size={13} />
-            <strong>{seededComments(id)}</strong>
-          </span>
-          <span style={{ flex: '1 0 auto' }} />
-          <StarBlock rating={seededRating(id)} count={seededRatingCount(id)} />
         </div>
 
         {/* Selects row */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: instruments.length ? '1fr 1fr' : '1fr',
+            gridTemplateColumns: '1fr',
             gap: 8,
             marginTop: 16,
           }}
@@ -246,22 +275,18 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
               ))}
             </select>
           )}
-          <select
-            className="gs-select"
-            aria-label="Difficulty"
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-          >
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
         </div>
 
         {/* Big CTA */}
-        <button className="gs-cta-download" type="button" disabled style={{ marginTop: 14 }}>
+        <button
+          className="gs-cta-download"
+          type="button"
+          disabled={downloading}
+          onClick={() => (isSignedIn ? onDownload && onDownload() : onLoginClick && onLoginClick())}
+          style={{ marginTop: 14, cursor: downloading ? 'wait' : 'pointer' }}
+        >
           <DownloadSimple size={18} weight="bold" />
-          Sign in to download
+          {downloading ? 'Preparing ZIP…' : isSignedIn ? 'Download All (ZIP)' : 'Sign in to Download'}
         </button>
         <div
           style={{
@@ -289,11 +314,12 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
             <Share size={14} />
             Share
           </button>
-          <button type="button">
-            <PencilSimple size={14} />
-            Open in editor
+          <button type="button" onClick={() => setReportOpen(true)}>
+            <Flag size={14} />
+            Report
           </button>
         </div>
+        {reportOpen && <ReportModal track={track} onClose={() => setReportOpen(false)} />}
       </div>
 
       {/* Score info */}
@@ -360,13 +386,11 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick }) {
                     <span style={{ fontFamily: 'var(--font-family-mono)' }}>
                       {fmtTime(t.thumb_data?.duration_sec || t.duration_sec)}
                     </span>
-                    <span>·</span>
-                    <span>{seededDifficulty(t.id)}</span>
                   </div>
                 </div>
                 <span className="gs-rs-row-rating">
-                  <Star size={11} weight="fill" style={{ color: '#f59e0b' }} />
-                  {seededRating(t.id).toFixed(1)}
+                  <Play size={11} weight="fill" />
+                  {fmtNum(t.plays || 0)}
                 </span>
               </div>
             ))}

@@ -29,8 +29,9 @@ const TIER_LABELS = {
 const tierFamily = (tier) => (tier || 'free').split('_')[0]; // free | lite | pro
 const tierLabel = (tier) => TIER_LABELS[tier] || 'Free';
 
-// Stripe checkout codes (see createCheckoutSession in api.js). Plan-family +
-// billing-mode -> checkout code. ⚠ unify with /billing/plans ids (gap doc).
+// Legacy fallback checkout codes, used only when /billing/plans is unavailable
+// (offline fallback cards). The live catalog carries the authoritative
+// `checkout_id` per plan/top-up — always prefer that.
 const CHECKOUT_CODE = {
   lite: { monthly: 'tier2', annual: 'tier2_annual' },
   pro: { monthly: 'tier3', annual: 'tier3_annual' },
@@ -263,8 +264,14 @@ export const AccountBilling = () => {
       tagText: isCurrent ? 'CURRENT PLAN' : 'MOST POPULAR',
       border: isCurrent || featured ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
       ctaLabel: (isFree ? 'Choose ' : family === 'lite' && fam === 'pro' ? 'Upgrade to ' : 'Switch to ') + fb.name,
-      onChoose: () =>
-        isCurrent ? openPortal() : startCheckout(CHECKOUT_CODE[fam][billingMode], `${fb.name} (${billingMode})`),
+      onChoose: () => {
+        if (isCurrent) return openPortal();
+        const liveForMode = catalog.plans.find(
+          (p) => tierFamily(p.id) === fam && p.id.endsWith(annual ? '_annual' : '_monthly')
+        );
+        const code = liveForMode?.checkout_id || CHECKOUT_CODE[fam][billingMode];
+        return startCheckout(code, `${fb.name} (${billingMode})`);
+      },
     };
   });
 
@@ -279,7 +286,7 @@ export const AccountBilling = () => {
     minutes: t.minutes,
     priority: t.priority_queue,
     priceText: `$${t.price_usd}`,
-    onBuy: () => startCheckout(t.id, `+${t.minutes} min top-up`),
+    onBuy: () => startCheckout(t.checkout_id || t.id, `+${t.minutes} min top-up`),
   }));
 
   // ---- styles ----

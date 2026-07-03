@@ -26,6 +26,7 @@ import {
 } from '../../utils/creatorApi';
 import { useUser, useAuth } from '../../auth';
 import { useLocalizedNavigate, LocalizedLink } from '../../i18n/locale';
+import usePageMeta from '../../hooks/usePageMeta';
 import './CreatorProfile.css';
 
 const SORTS = [
@@ -42,14 +43,6 @@ const INSTRUMENT_CHIPS = [
   ['vocals', 'Vocals'],
 ];
 
-/** Best-effort current-user handle, mirroring how the profile username is keyed. */
-function currentUserHandle(user) {
-  if (!user) return null;
-  return normalizeHandle(
-    user.user_metadata?.username || user.user_metadata?.user_name || (user.email || '').split('@')[0],
-  );
-}
-
 function CreatorProfile({ onLoginClick }) {
   const { username } = useParams();
   const navigate = useLocalizedNavigate();
@@ -59,6 +52,11 @@ function CreatorProfile({ onLoginClick }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  usePageMeta(
+    profile ? (profile.display_name || `@${profile.username}`) : null,
+    profile?.bio || (profile ? `Transcriptions published by ${profile.display_name || profile.username} on GrooveSheet.` : null)
+  );
 
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('newest');
@@ -122,25 +120,25 @@ function CreatorProfile({ onLoginClick }) {
     }
   };
 
-  const isOwner = useMemo(() => {
-    if (!profile) return false;
-    const me = currentUserHandle(user);
-    return !!me && me === normalizeHandle(profile.username);
-  }, [profile, user]);
+  // Ownership comes from the API (matched against the auth token) — deriving
+  // it client-side from the email local-part breaks the moment a user picks a
+  // username that differs from their email.
+  const isOwner = !!profile?.is_owner;
 
-  // Owner sees public + unlisted; visitors see public only.
-  const listed = useMemo(() => {
-    if (!profile) return [];
-    return profile.songs.filter((s) =>
-      isOwner ? s.visibility === 'public' || s.visibility === 'unlisted' : s.visibility === 'public',
-    );
-  }, [profile, isOwner]);
+  // The server already visibility-filters songs per caller (owner also gets
+  // unlisted; visitors get public only) — render what it returns.
+  const listed = useMemo(() => (profile ? profile.songs : []), [profile]);
 
+  // Prefer server-computed stats; recompute only as a fallback.
   const totals = useMemo(() => {
-    const plays = listed.reduce((a, s) => a + s.plays, 0);
-    const downloads = listed.reduce((a, s) => a + s.downloads, 0);
+    const s = profile?.stats;
+    if (s && typeof s.published_count === 'number') {
+      return { published: s.published_count, plays: s.total_plays || 0, downloads: s.total_downloads || 0 };
+    }
+    const plays = listed.reduce((a, x) => a + (x.plays || 0), 0);
+    const downloads = listed.reduce((a, x) => a + (x.downloads || 0), 0);
     return { published: listed.length, plays, downloads };
-  }, [listed]);
+  }, [profile, listed]);
 
   const cards = useMemo(() => {
     let out = listed;
