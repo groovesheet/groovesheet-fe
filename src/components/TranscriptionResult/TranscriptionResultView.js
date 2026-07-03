@@ -1,0 +1,608 @@
+// Full-screen transcription result — shown inside the Hero upload card once a
+// job completes. Mirrors the /explore/:songId viewer stack (PlaybackBar +
+// Sheet / Piano roll / Stems tabs on one shared transport) but is fed from
+// workflow/preview outputs instead of library assets.
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CheckCircle, DownloadSimple, File, X } from '@phosphor-icons/react';
+import { useAuth } from '../../auth';
+import { useTheme } from '../../context/ThemeContext';
+import config from '../../config';
+import { downloadWorkflowFile, fetchMidiArrayBuffer, fetchMusicXmlText } from '../../utils/api';
+import {
+  MIDI_KEY_BY_INSTRUMENT,
+  MUSICXML_KEY_BY_INSTRUMENT,
+  truncateMidiToSeconds,
+} from '../PreviewPanel/previewUtils';
+import { SheetMusicView, PianoRollView, StemsView } from '../song/SongViewers';
+import PlaybackBar from '../song/PlaybackBar';
+import { Icon } from '../song/icons';
+import StatusMessage from '../ui/StatusMessage';
+import { createTransport } from '../../player/transport';
+import { useTransport } from '../../player/transport-react';
+import { createStemEngine } from '../../player/stemEngine';
+import { createMidiEngine } from '../../player/midiEngine';
+import { createSheetSecMapper } from '../../player/syncMap';
+import '../song/Song.css';
+import './TranscriptionResult.css';
+
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+// Hero instrument value → BS-Roformer stem download key.
+const STEM_KEY_BY_INSTRUMENT = {
+  drums: 'bs_roformer_drums_stem',
+  piano: 'bs_roformer_piano_stem',
+  bass: 'bs_roformer_bass_stem',
+  jazz_bass: 'bs_roformer_bass_stem',
+  bass_separation: 'bs_roformer_bass_stem',
+  vocals: 'bs_roformer_vocals_stem',
+  guitar: 'bs_roformer_guitar_stem',
+  other: 'bs_roformer_other_stem',
+};
+
+// Hero instrument value → stem_name + display meta (Explore palette).
+const STEM_DISPLAY = {
+  drums: { name: 'drums', label: 'Drums', color: '#FF7BA9', sub: 'kit · percussion' },
+  piano: { name: 'piano', label: 'Piano', color: '#7AA2FF', sub: 'keys · harmonic' },
+  bass: { name: 'bass', label: 'Bass', color: '#FFC857', sub: 'sub · low end' },
+  jazz_bass: { name: 'bass', label: 'Bass', color: '#FFC857', sub: 'sub · low end' },
+  bass_separation: { name: 'bass', label: 'Bass', color: '#FFC857', sub: 'sub · low end' },
+  vocals: { name: 'vocals', label: 'Vocals', color: '#7CC4FF', sub: 'lead · voice' },
+  guitar: { name: 'guitar', label: 'Guitar', color: '#84F2A6', sub: 'strings · plucked' },
+  other: { name: 'other', label: 'Other', color: '#C9A0FF', sub: 'texture · residual' },
+};
+
+function ViewerToolbar({ view, onView, available }) {
+  const tab = (key, IconCmp, label, kbd) => {
+    const enabled = Boolean(available[key]);
+    return (
+      <button
+        className={view === key ? 'on' : ''}
+        onClick={() => enabled && onView(key)}
+        disabled={!enabled}
+        title={enabled ? undefined : 'Not available for this result'}
+        style={enabled ? undefined : { opacity: 0.4, cursor: 'not-allowed' }}
+      >
+        <IconCmp />
+        <span>{label}</span>
+        <span className="gs-seg-kbd">{kbd}</span>
+      </button>
+    );
+  };
+  return (
+    <div className="gs-viewer-toolbar">
+      <div className="gs-seg" role="tablist">
+        {tab('sheet', Icon.Sheet, 'Sheet music', '1')}
+        {tab('midi', Icon.Midi, 'Piano roll', '2')}
+        {tab('stems', Icon.Stems, 'Stem', '3')}
+      </div>
+    </div>
+  );
+}
+
+export default function TranscriptionResultView({
+  workflowId,
+  fileName,
+  selectedInstrument,
+  prefetchedFiles,
+  onDownloadTranscription,
+  onDownloadStem,
+  onDownloadMidi,
+  onReset,
+  downloadError,
+  isSignedIn,
+  onUpgradeToFull,
+  onSignUpToUnlock,
+}) {
+  const { getToken } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
+  const containerRef = useRef(null);
+
+  const isPreview = Boolean(workflowId && workflowId.startsWith('PRV'));
+  const midiKey = MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
+  const musicXmlKey = MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
+  const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
+  const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
+
+  const [upgrading, setUpgrading] = useState(false);
+
+  // --- shared transport ------------------------------------------------------
+  const transportRef = useRef(null);
+  if (!transportRef.current) transportRef.current = createTransport();
+  const transport = transportRef.current;
+  const tState = useTransport(transport);
+  useEffect(() => () => transportRef.current.pause(), []);
+
+  // --- volume (master gain across engines) ------------------------------------
+  const [volume, setVolume] = useState(78);
+  const [muted, setMuted] = useState(false);
+  const masterVolRef = useRef(0.78);
+  const stemEngineRef = useRef(null);
+  const midiEngineRef = useRef(null);
+  useEffect(() => {
+    const v = muted ? 0 : volume / 100;
+    masterVolRef.current = v;
+    if (stemEngineRef.current) stemEngineRef.current.setMasterVolume(v);
+    if (midiEngineRef.current) midiEngineRef.current.setMasterVolume(v);
+  }, [volume, muted]);
+
+  // --- MusicXML ---------------------------------------------------------------
+  const [musicXmlText, setMusicXmlText] = useState(null);
+  const [xmlLoading, setXmlLoading] = useState(true);
+  const [xmlError, setXmlError] = useState(null);
+
+  useEffect(() => {
+    if (!workflowId) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        setXmlLoading(true);
+        setXmlError(null);
+        const prefetched = prefetchedFiles?.[musicXmlKey] || prefetchedFiles?.musicxml;
+        let text = null;
+        if (prefetched?.blob) {
+          text = await prefetched.blob.text();
+        } else {
+          if (musicXmlKey) {
+            text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken, musicXmlKey);
+          }
+          if (!text) {
+            text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken);
+          }
+        }
+        if (!cancelled) setMusicXmlText(text);
+      } catch (err) {
+        if (!cancelled) setXmlError(err.message || 'Failed to load score');
+      } finally {
+        if (!cancelled) setXmlLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [workflowId, musicXmlKey, prefetchedFiles, getToken]);
+
+  // --- MIDI (buffer + soundfont engine) ----------------------------------------
+  const [midiBuffer, setMidiBuffer] = useState(null);
+  const [midiLoading, setMidiLoading] = useState(Boolean(midiKey));
+  const [midiError, setMidiError] = useState(null);
+
+  useEffect(() => {
+    if (!workflowId || !midiKey) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        setMidiLoading(true);
+        setMidiError(null);
+        const prefetched = prefetchedFiles?.[midiKey];
+        let buffer;
+        if (prefetched?.blob) {
+          buffer = await prefetched.blob.arrayBuffer();
+        } else {
+          buffer = await fetchMidiArrayBuffer(config.apiBaseUrl, workflowId, midiKey, getToken);
+        }
+        if (cancelled || !buffer) return;
+        // Preview outputs are already 10s server-side; the client cap is a
+        // safety net for previews only — full workflows show the whole song.
+        setMidiBuffer(isPreview ? truncateMidiToSeconds(buffer, 10) || buffer : buffer);
+      } catch (err) {
+        if (!cancelled) setMidiError(err.message || 'Failed to load MIDI');
+      } finally {
+        if (!cancelled) setMidiLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [workflowId, midiKey, prefetchedFiles, getToken, isPreview]);
+
+  useEffect(() => {
+    if (!midiBuffer) return undefined;
+    const t = transportRef.current;
+    const engine = createMidiEngine({
+      midiBuffer,
+      onError: (err) => setMidiError(err.message || 'Failed to parse MIDI'),
+    });
+    engine.setMasterVolume(masterVolRef.current);
+    midiEngineRef.current = engine;
+    t.attachEngine(engine);
+    // MIDI duration is the transport's source of truth for this result.
+    const dur = engine.getDuration();
+    if (dur > 0) t.setDuration(dur);
+    if (t.getActiveEngineId() === 'midi') {
+      const st = t.getState();
+      if (st.isPlaying) engine.play(st.positionSec);
+      else engine.seek(st.positionSec);
+    }
+    return () => {
+      t.detachEngine('midi');
+      engine.dispose();
+      if (midiEngineRef.current === engine) midiEngineRef.current = null;
+    };
+  }, [midiBuffer]);
+
+  // --- Stem audio (single separated stem → Web Audio engine) --------------------
+  const [stemStatus, setStemStatus] = useState(stemKey ? 'loading' : 'missing');
+  const [stemError, setStemError] = useState(null);
+
+  useEffect(() => {
+    if (!workflowId || !stemKey) return undefined;
+    let cancelled = false;
+    let engine = null;
+    let objectUrl = null;
+    const t = transportRef.current;
+    setStemStatus('loading');
+    setStemError(null);
+    (async () => {
+      try {
+        const prefetched = prefetchedFiles?.[stemKey];
+        const result = prefetched?.blob
+          ? prefetched
+          : await downloadWorkflowFile(config.apiBaseUrl, workflowId, stemKey, getToken);
+        if (cancelled) return;
+        if (!result?.blob) {
+          setStemStatus('missing');
+          return;
+        }
+        objectUrl = URL.createObjectURL(result.blob);
+        engine = createStemEngine({
+          assets: [
+            { asset_type: 'stem', stem_name: stemMeta.name, format: 'wav', stream_url: objectUrl },
+          ],
+          onError: (err) => {
+            setStemError(err.message || 'Failed to load stem audio');
+            setStemStatus('error');
+          },
+        });
+        engine.setMasterVolume(masterVolRef.current);
+        stemEngineRef.current = engine;
+        t.attachEngine(engine);
+        setStemStatus('ready');
+      } catch (err) {
+        if (!cancelled) {
+          setStemError(err.message || 'Failed to load stem audio');
+          setStemStatus('error');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      t.detachEngine('stems');
+      if (engine) engine.dispose();
+      if (stemEngineRef.current === engine) stemEngineRef.current = null;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowId, stemKey]);
+
+  const stems = useMemo(
+    () => [{ name: stemMeta.name, label: stemMeta.label, color: stemMeta.color, sub: stemMeta.sub, wave: null }],
+    [stemMeta]
+  );
+  const [stemState, setStemState] = useState({});
+  useEffect(() => {
+    setStemState({ [stemMeta.name]: { mute: false, solo: false, volume: 75 } });
+  }, [stemMeta.name]);
+  useEffect(() => {
+    const eng = stemEngineRef.current;
+    if (!eng) return;
+    Object.entries(stemState).forEach(([name, s]) => {
+      if (!s) return;
+      eng.setStemGain(name, s.volume / 100);
+      eng.setStemMuted(name, s.mute);
+    });
+  }, [stemState, stemStatus]);
+  const onStemChange = useCallback(
+    (name, patch) => setStemState((s) => ({ ...s, [name]: { ...(s[name] || {}), ...patch } })),
+    []
+  );
+
+  // --- OSMD (sheet) engine — same wiring as SongDetail/PreviewPanel -------------
+  const osmdRef = useRef(null);
+  const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
+  const osmdBaseRef = useRef(0);
+  const mapperRef = useRef(createSheetSecMapper({}));
+  const sheetDurRef = useRef(0);
+  const pendingOsmdSyncRef = useRef(false);
+  const osmdExpectRef = useRef(null); // { sheetSec, until } | null
+
+  const rebuildMapper = useCallback(() => {
+    mapperRef.current = createSheetSecMapper({ sheetDurationSec: sheetDurRef.current });
+  }, []);
+
+  // OSMD's playFromMs awaits pause() internally; serialize seek/play commands.
+  const osmdCmdQueueRef = useRef(Promise.resolve());
+  const commandOsmd = useCallback((sheetSec, andPlay) => {
+    if (!osmdRef.current) return;
+    osmdExpectRef.current = { sheetSec, until: nowMs() + 4000 };
+    osmdCmdQueueRef.current = osmdCmdQueueRef.current
+      .then(async () => {
+        const osmd = osmdRef.current;
+        if (!osmd) return;
+        try { await osmd.seekMs?.(sheetSec * 1000); } catch (e) { /* ignore */ }
+        osmdBaseRef.current = sheetSec;
+        const t = transportRef.current;
+        if (andPlay && t.getState().isPlaying && t.getActiveEngineId() === 'osmd') {
+          try { await osmd.play?.(); } catch (e) { /* ignore */ }
+        }
+        const expect = osmdExpectRef.current;
+        if (expect && expect.sheetSec === sheetSec) {
+          osmdExpectRef.current = { sheetSec, until: nowMs() + 1500 };
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const hasSheet = Boolean(musicXmlText);
+
+  useEffect(() => {
+    if (!hasSheet) return undefined;
+    const t = transportRef.current;
+    t.attachEngine({
+      id: 'osmd',
+      play: (atSec) => {
+        if (!osmdRef.current || !osmdSyncRef.current.ready) {
+          pendingOsmdSyncRef.current = true;
+          return;
+        }
+        commandOsmd(mapperRef.current.midiSecToSheetSec(atSec), true);
+      },
+      pause: () => {
+        try { osmdRef.current?.pause?.(); } catch (e) { /* ignore */ }
+      },
+      seek: (sec) => {
+        if (!osmdRef.current || !osmdSyncRef.current.ready) {
+          pendingOsmdSyncRef.current = true;
+          return;
+        }
+        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), false);
+      },
+      readTime: () => {
+        const s = osmdSyncRef.current;
+        if (!s.ready) return null;
+        const eff = osmdBaseRef.current + s.time;
+        const expect = osmdExpectRef.current;
+        if (expect) {
+          const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
+          if (!settled && nowMs() < expect.until) return null; // stale — self-advance
+          if (!settled) return null;
+          osmdExpectRef.current = null;
+        }
+        return mapperRef.current.sheetSecToMidiSec(eff);
+      },
+    });
+    return () => {
+      t.detachEngine('osmd');
+    };
+  }, [hasSheet, commandOsmd]);
+
+  const handleOsmdStateChange = useCallback(
+    (s) => {
+      const t = transportRef.current;
+      osmdSyncRef.current = { time: s.currentTime, playing: s.isPlaying, duration: s.duration, ready: true };
+      if (s.duration > 0 && sheetDurRef.current !== s.duration) {
+        sheetDurRef.current = s.duration;
+        rebuildMapper();
+        // No MIDI duration yet? Use the sheet's so the scrubber works.
+        if (!(transportRef.current.getState().durationSec > 0)) {
+          t.setDuration(mapperRef.current.sheetSecToMidiSec(s.duration));
+        }
+      }
+      if (pendingOsmdSyncRef.current && osmdRef.current && t.getActiveEngineId() === 'osmd') {
+        pendingOsmdSyncRef.current = false;
+        const st = t.getState();
+        commandOsmd(mapperRef.current.midiSecToSheetSec(st.positionSec), st.isPlaying);
+      }
+      // Reconcile: OSMD pauses itself at the end of the sheet.
+      if (t.getActiveEngineId() === 'osmd') {
+        const st = t.getState();
+        if (
+          st.isPlaying && !s.isPlaying && s.duration > 0 &&
+          osmdBaseRef.current + s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+        ) {
+          t.pause();
+        }
+      }
+    },
+    [rebuildMapper, commandOsmd]
+  );
+
+  // Cursor-follow while another engine drives the clock.
+  useEffect(() => {
+    if (!hasSheet) return undefined;
+    const t = transportRef.current;
+    return t.subscribe((st) => {
+      if (t.getActiveEngineId() === 'osmd') return;
+      const osmd = osmdRef.current;
+      if (!osmd) return;
+      try { osmd.syncCursorToTime?.(mapperRef.current.midiSecToSheetSec(st.positionSec)); } catch (e) { /* ignore */ }
+    });
+  }, [hasSheet]);
+
+  // --- tabs ----------------------------------------------------------------------
+  const available = useMemo(
+    () => ({
+      sheet: xmlLoading || Boolean(musicXmlText),
+      midi: midiLoading || Boolean(midiBuffer),
+      stems: stemStatus === 'loading' || stemStatus === 'ready',
+    }),
+    [xmlLoading, musicXmlText, midiLoading, midiBuffer, stemStatus]
+  );
+  const [view, setView] = useState('sheet');
+  useEffect(() => {
+    if (!available[view]) {
+      const first = ['sheet', 'midi', 'stems'].find((v) => available[v]);
+      if (first) setView(first);
+    }
+  }, [available, view]);
+
+  // Active engine follows the visible tab.
+  useEffect(() => {
+    const t = transportRef.current;
+    if (view === 'sheet') {
+      osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
+      pendingOsmdSyncRef.current = true;
+      t.setActiveEngine('osmd');
+    } else if (view === 'midi') {
+      t.setActiveEngine('midi');
+    } else if (view === 'stems') {
+      t.setActiveEngine('stems');
+    }
+  }, [view]);
+
+  // --- playback handlers -----------------------------------------------------------
+  const handlePlayPause = useCallback(() => {
+    const t = transportRef.current;
+    const st = t.getState();
+    if (st.isPlaying) t.pause();
+    else {
+      if (st.durationSec > 0 && st.positionSec >= st.durationSec) t.seek(0);
+      t.play();
+    }
+  }, []);
+
+  const onSeekFraction = useCallback((f) => {
+    const t = transportRef.current;
+    const dur = t.getState().durationSec;
+    if (dur > 0) t.seek(Math.max(0, Math.min(1, f)) * dur);
+  }, []);
+
+  // Keyboard shortcuts (space = play/pause, 1/2/3 = tabs).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target && /(input|textarea|select)/i.test(e.target.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        handlePlayPause();
+      }
+      if (e.key === '1' && available.sheet) setView('sheet');
+      if (e.key === '2' && available.midi) setView('midi');
+      if (e.key === '3' && available.stems) setView('stems');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [handlePlayPause, available]);
+
+  const handleUpgradeClick = useCallback(async () => {
+    if (!onUpgradeToFull || upgrading) return;
+    setUpgrading(true);
+    try {
+      await onUpgradeToFull();
+    } finally {
+      setUpgrading(false);
+    }
+  }, [onUpgradeToFull, upgrading]);
+
+  return (
+    <div ref={containerRef} className="gs-song-page tr-result">
+      {/* Header: status + downloads + preview CTA */}
+      <div className="tr-header">
+        <div className="tr-header-info">
+          <CheckCircle size={32} weight="fill" className="tr-check" />
+          <div className="tr-header-text">
+            <h2 className="tr-title">Transcription complete</h2>
+            <div className="tr-filename">
+              <File size={16} />
+              <span>{fileName || 'Unknown file'}</span>
+              {isPreview && <span className="tr-preview-badge">10-second preview</span>}
+            </div>
+          </div>
+        </div>
+        <div className="tr-header-actions">
+          {isPreview && (
+            isSignedIn ? (
+              <button className="tr-btn tr-btn-primary" onClick={handleUpgradeClick} disabled={upgrading}>
+                {upgrading ? 'Starting…' : 'Transcribe the full song'}
+              </button>
+            ) : (
+              <button className="tr-btn tr-btn-primary" onClick={onSignUpToUnlock}>
+                Sign up to unlock the full song
+              </button>
+            )
+          )}
+          <button className="tr-btn" onClick={onDownloadTranscription}>
+            <DownloadSimple size={18} weight="bold" />
+            <span>Score</span>
+          </button>
+          {midiKey && (
+            <button className="tr-btn" onClick={onDownloadMidi}>
+              <DownloadSimple size={18} weight="bold" />
+              <span>MIDI</span>
+            </button>
+          )}
+          {stemKey && (
+            <button className="tr-btn" onClick={onDownloadStem}>
+              <DownloadSimple size={18} weight="bold" />
+              <span>Stem</span>
+            </button>
+          )}
+          <button className="tr-close" onClick={onReset} aria-label="Close and start over">
+            <X size={22} weight="bold" />
+          </button>
+        </div>
+      </div>
+
+      {downloadError && <StatusMessage variant="error">{downloadError}</StatusMessage>}
+
+      {/* Sticky transport + tab switcher, same stack as /explore/:songId */}
+      <div className="tr-sticky">
+        <PlaybackBar
+          isPlaying={tState.isPlaying}
+          onPlayPause={handlePlayPause}
+          currentSec={tState.positionSec}
+          totalSec={tState.durationSec}
+          tempo={100}
+          onTempo={() => {}}
+          transpose={0}
+          onTranspose={() => {}}
+          loopMode="off"
+          onLoopMode={() => {}}
+          loopRegion={null}
+          volume={volume}
+          onVolume={setVolume}
+          muted={muted}
+          onMute={() => setMuted((m) => !m)}
+          metronome={false}
+          onMetronome={() => {}}
+          dark={isDarkMode}
+          onToggleTheme={toggleTheme}
+          onFullscreen={() => {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else containerRef.current?.requestFullscreen?.();
+          }}
+          onSeekFraction={onSeekFraction}
+          totalBeats={0}
+          disabledControls={{ tempo: true, transpose: true, metronome: true, loop: true }}
+        />
+        <ViewerToolbar view={view} onView={setView} available={available} />
+      </div>
+
+      {/* Viewer */}
+      <div className="gs-viewer">
+        {view === 'sheet' && (
+          <SheetMusicView
+            musicXmlText={musicXmlText}
+            loading={xmlLoading}
+            error={xmlError}
+            osmdRef={osmdRef}
+            onPlaybackStateChange={handleOsmdStateChange}
+          />
+        )}
+        {view === 'midi' && (
+          <PianoRollView
+            midiBuffer={midiBuffer}
+            transport={transport}
+            loading={midiLoading}
+            error={midiError}
+          />
+        )}
+        {view === 'stems' && (
+          <StemsView
+            stems={stems}
+            stemState={stemState}
+            onStemChange={onStemChange}
+            onSeek={onSeekFraction}
+            transport={transport}
+            statusText={stemError || (stemStatus === 'loading' ? 'Loading stem…' : null)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
