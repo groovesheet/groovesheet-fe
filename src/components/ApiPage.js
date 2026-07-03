@@ -259,6 +259,25 @@ function ApiPage({ onLoginClick }) {
       <Header onLoginClick={onLoginClick} />
 
       <div className="api-content">
+        {/* The public API is not live yet — this page previews the planned
+            developer surface. Be explicit so nobody codes against /v1. */}
+        <div
+          role="status"
+          style={{
+            maxWidth: '1190px',
+            margin: '18px auto 0',
+            padding: '12px 18px',
+            borderRadius: 8,
+            border: '1px solid var(--color-warning, #f59e0b)',
+            color: 'var(--color-warning, #f59e0b)',
+            background: 'rgba(245,158,11,.08)',
+            fontSize: 14,
+          }}
+        >
+          The GrooveSheet API is in private development and not yet live — the
+          endpoints below are a preview of what's coming. Want early access?
+          Email <a href="mailto:support@groovesheet.net" style={{ color: 'inherit' }}>support@groovesheet.net</a>.
+        </div>
         {/* ============ HERO ============ */}
         <section
           className="api-hero"
