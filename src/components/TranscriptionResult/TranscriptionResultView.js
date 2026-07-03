@@ -12,6 +12,7 @@ import {
   MIDI_KEY_BY_INSTRUMENT,
   MUSICXML_KEY_BY_INSTRUMENT,
   truncateMidiToSeconds,
+  truncateMusicXmlToMeasures,
 } from '../PreviewPanel/previewUtils';
 import { SheetMusicView, PianoRollView, StemsView } from '../song/SongViewers';
 import PlaybackBar from '../song/PlaybackBar';
@@ -149,6 +150,9 @@ export default function TranscriptionResultView({
             text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken);
           }
         }
+        // Previews show a teaser: cap the engraved score alongside the
+        // 10-second MIDI cap so every tab tells the same story.
+        if (text && isPreview) text = truncateMusicXmlToMeasures(text);
         if (!cancelled) setMusicXmlText(text);
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
@@ -157,7 +161,7 @@ export default function TranscriptionResultView({
       }
     })();
     return () => { cancelled = true; };
-  }, [workflowId, musicXmlKey, prefetchedFiles, getToken]);
+  }, [workflowId, musicXmlKey, prefetchedFiles, getToken, isPreview]);
 
   // --- MIDI (buffer + soundfont engine) ----------------------------------------
   const [midiBuffer, setMidiBuffer] = useState(null);
