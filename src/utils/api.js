@@ -146,9 +146,16 @@ export async function uploadFileAuthenticated(
  * @returns {Promise<Array>} - Array of workflow objects
  * @throws {AuthError} - Throws AuthError for 401/403 responses
  */
-export async function fetchWorkflowList(baseUrl, getToken, signOut = null) {
+export async function fetchWorkflowList(baseUrl, getToken, signOut = null, params = null) {
+  // With { limit, offset } the backend returns enriched card items
+  // ({ items, total }) so the Library page renders from one request;
+  // without params it returns the legacy { workflow_ids } shape.
+  const search = new URLSearchParams();
+  if (params?.limit != null) search.set('limit', String(params.limit));
+  if (params?.offset != null) search.set('offset', String(params.offset));
+  const qs = search.toString();
   const response = await authenticatedFetch(
-    `${baseUrl}/workflow/list`,
+    `${baseUrl}/workflow/list${qs ? `?${qs}` : ''}`,
     {
       method: 'GET',
       headers: {
@@ -183,9 +190,30 @@ export async function fetchWorkflowList(baseUrl, getToken, signOut = null) {
  */
 export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToken) {
   // Preview previews carry IDs prefixed with `PRV` and live under /preview/...
-  const prefix = workflowId && workflowId.startsWith('PRV') ? '/preview' : '/workflow';
+  const isPreview = workflowId && workflowId.startsWith('PRV');
+  const prefix = isPreview ? '/preview' : '/workflow';
   const url = `${baseUrl}${prefix}/download/${workflowId}/${fileKey}`;
-  const res = await authenticatedFetch(url, {}, getToken);
+  let res;
+  if (isPreview) {
+    // Previews are anonymous-capable via the gs_anon cookie — attach the
+    // bearer only when a session exists instead of throwing without one
+    // (authenticatedFetch requires a token, which anonymous visitors lack).
+    const headers = {};
+    if (getToken) {
+      try {
+        const token = await getToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch {
+        /* anonymous fallback */
+      }
+    }
+    res = await fetch(url, { headers, credentials: 'include' });
+    if (res.status === 401 || res.status === 403) {
+      throw new AuthError('This preview belongs to a different session', res.status);
+    }
+  } else {
+    res = await authenticatedFetch(url, {}, getToken);
+  }
   if (!res.ok) {
     if (res.status === 404) return null;
     throw new Error(`Download failed: ${res.status}`);
@@ -245,6 +273,7 @@ export function resolveDisplayName(workflow) {
 
   // Ordered list of candidate values – first truthy string wins
   const candidates = [
+    workflow.title, // user-edited title from the linked library track
     workflow.original_filename,
     workflow.filename,
     workflow.file_name,
