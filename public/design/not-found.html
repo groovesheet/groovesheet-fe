@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found &middot; GrooveSheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hubot+Sans:ital,wght@0,200..900;1,200..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    --font-family-mono: 'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+  .gs-mono { font-family: var(--font-family-mono); }
+
+  html, body { margin: 0; background: #171717; }
+  @keyframes gs404-spin { to { transform: rotate(360deg); } }
+  @keyframes gs404-spin-rev { from { transform: rotate(0deg); } 15% { transform: rotate(-38deg); } 30% { transform: rotate(12deg); } 100% { transform: rotate(360deg); } }
+  @keyframes gs404-drift {
+    0%   { transform: translateY(20px) translateX(0) rotate(0deg); opacity: 0; }
+    12%  { opacity: 0.9; }
+    88%  { opacity: 0.9; }
+    100% { transform: translateY(-660px) translateX(var(--gs-dx, 24px)) rotate(var(--gs-rot, 18deg)); opacity: 0; }
+  }
+  @keyframes gs404-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  @keyframes gs404-eq {
+    0%,100% { transform: scaleY(0.28); }
+    50%     { transform: scaleY(1); }
+  }
+  @keyframes gs404-fadeup {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes gs404-glitch {
+    0%   { transform: translate(0,0); }
+    15%  { transform: translate(-7px, 2px) skewX(-4deg); }
+    30%  { transform: translate(6px, -3px) skewX(3deg); }
+    45%  { transform: translate(-4px, 1px); }
+    60%  { transform: translate(5px, 2px) skewX(-2deg); }
+    75%  { transform: translate(-3px, -2px); }
+    100% { transform: translate(0,0); }
+  }
+  @keyframes gs404-pulsehint { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+  .gs404-cta { transition: background-color .2s ease, transform .2s ease, border-color .2s ease, color .2s ease; }
+  .gs404-cta:hover { transform: translateY(-2px); }
+  .gs404-primary:hover { background: #0139c7 !important; }
+  .gs404-primary:active { background: #0138c0 !important; transform: translateY(0); }
+  .gs404-outline:hover { background: rgba(255,255,255,0.05) !important; }
+  .gs404-navlink { transition: color .2s ease; }
+  .gs404-navlink:hover { color: #ffffff !important; }
+  .gs404-disc { cursor: pointer; }
+  .gs404-glitching { animation: gs404-glitch .5s steps(2, end) 1 !important; }
+  .gs404-glitching .gs404-vinyl { animation: gs404-spin-rev 1.4s cubic-bezier(.2,.8,.2,1) 1 !important; }
+</style>
+</head>
+<body>
+<div style="position: relative; min-height: 100vh; width: 100%; overflow: hidden; background: #171717; font-family: var(--font-family-sans);">
+
+  <!-- signature dot grid -->
+  <div style="position: absolute; inset: 0; background-image: radial-gradient(circle, #171E43 1.5px, transparent 1.5px); background-size: 43px 43px; opacity: 0.55; pointer-events: none;"></div>
+  <!-- soft cobalt glow behind hero -->
+  <div style="position: absolute; top: 42%; left: 50%; width: 900px; height: 900px; transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(1,47,167,0.28) 0%, rgba(1,47,167,0.06) 40%, transparent 68%); pointer-events: none; filter: blur(4px);"></div>
+
+  <!-- floating notes layer -->
+  <div style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;">
+    <div style="position:absolute; bottom:-40px; left:8%;  --gs-dx:40px;  --gs-rot:22deg;  color:#012FA7; animation: gs404-drift 11s linear -1s infinite;"><svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="33" rx="8" ry="6" transform="rotate(-20 8 33)" fill="currentColor"/><rect x="15" y="6" width="2.6" height="27" fill="currentColor"/><path d="M17 6c6 2 9 6 8 13-1-5-5-7-8-7z" fill="currentColor"/></svg></div>
+    <div style="position:absolute; bottom:-40px; left:20%; --gs-dx:-30px; --gs-rot:-16deg; color:rgba(255,255,255,0.22); animation: gs404-drift 14s linear -5s infinite;"><svg width="46" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="34" rx="7.5" ry="5.5" transform="rotate(-20 8 34)" fill="currentColor"/><ellipse cx="34" cy="30" rx="7.5" ry="5.5" transform="rotate(-20 34 30)" fill="currentColor"/><rect x="14.5" y="8" width="2.6" height="26" fill="currentColor"/><rect x="40.5" y="4" width="2.6" height="26" fill="currentColor"/><path d="M15 8 L43 4 L43 11 L15 15 Z" fill="currentColor"/></svg></div>
+    <div style="position:absolute; bottom:-40px; left:33%; --gs-dx:26px;  --gs-rot:14deg;  color:#012FA7; animation: gs404-drift 9s linear -3s infinite;"><svg width="26" height="40" viewBox="0 0 26 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="31" rx="8" ry="6" transform="rotate(-20 8 31)" fill="currentColor"/><rect x="15" y="4" width="2.6" height="27" fill="currentColor"/></svg></div>
+    <div style="position:absolute; bottom:-40px; left:62%; --gs-dx:-42px; --gs-rot:-24deg; color:rgba(255,255,255,0.18); animation: gs404-drift 13s linear -7s infinite;"><svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="33" rx="8" ry="6" transform="rotate(-20 8 33)" fill="currentColor"/><rect x="15" y="6" width="2.6" height="27" fill="currentColor"/><path d="M17 6c6 2 9 6 8 13-1-5-5-7-8-7z" fill="currentColor"/></svg></div>
+    <div style="position:absolute; bottom:-40px; left:74%; --gs-dx:34px;  --gs-rot:20deg;  color:#012FA7; animation: gs404-drift 10.5s linear -2s infinite;"><svg width="26" height="40" viewBox="0 0 26 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="31" rx="8" ry="6" transform="rotate(-20 8 31)" fill="currentColor"/><rect x="15" y="4" width="2.6" height="27" fill="currentColor"/></svg></div>
+    <div style="position:absolute; bottom:-40px; left:88%; --gs-dx:-24px; --gs-rot:-12deg; color:rgba(255,255,255,0.22); animation: gs404-drift 12.5s linear -9s infinite;"><svg width="46" height="44" viewBox="0 0 46 44" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="34" rx="7.5" ry="5.5" transform="rotate(-20 8 34)" fill="currentColor"/><ellipse cx="34" cy="30" rx="7.5" ry="5.5" transform="rotate(-20 34 30)" fill="currentColor"/><rect x="14.5" y="8" width="2.6" height="26" fill="currentColor"/><rect x="40.5" y="4" width="2.6" height="26" fill="currentColor"/><path d="M15 8 L43 4 L43 11 L15 15 Z" fill="currentColor"/></svg></div>
+    <div style="position:absolute; bottom:-40px; left:46%; --gs-dx:30px;  --gs-rot:16deg;  color:rgba(1,47,167,0.65); animation: gs404-drift 15s linear -11s infinite;"><svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="33" rx="8" ry="6" transform="rotate(-20 8 33)" fill="currentColor"/><rect x="15" y="6" width="2.6" height="27" fill="currentColor"/><path d="M17 6c6 2 9 6 8 13-1-5-5-7-8-7z" fill="currentColor"/></svg></div>
+  </div>
+
+  <!-- header -->
+  <header style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; max-width: 1414px; margin: 0 auto; padding: 32px 40px;">
+    <a href="/" target="_top" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: #012FA7;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V6l10-2v12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="#fff"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg></span>
+      <span style="font-size: 20px; font-weight: 500; letter-spacing: -0.3px; color: #F4F4F4;">GrooveSheet</span>
+    </a>
+    <nav style="display: flex; align-items: center; gap: 32px;">
+      <a href="/pricing" target="_top" class="gs404-navlink" style="font-size: 15px; color: #8D8C8D; text-decoration: none;">Pricing</a>
+      <a href="/about" target="_top" class="gs404-navlink" style="font-size: 15px; color: #8D8C8D; text-decoration: none;">About</a>
+      <a href="/" target="_top" style="font-size: 14px; font-weight: 500; color: #F4F4F4; text-decoration: none; padding: 10px 20px; border-radius: 120px; border: 1px solid rgba(255,255,255,0.18);" target="_top">Sign in</a>
+    </nav>
+  </header>
+
+  <!-- main -->
+  <main style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 40px 20px 90px; max-width: 720px; margin: 0 auto;">
+
+    <!-- eyebrow -->
+    <div style="opacity: 0; animation: gs404-fadeup .6s ease .05s forwards; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 34px; padding: 7px 14px 7px 12px; border-radius: 120px; background: #212121;">
+      <span style="width: 8px; height: 8px; border-radius: 50%; background: #FF6B6B; box-shadow: 0 0 10px rgba(255,107,107,0.7); animation: gs404-pulsehint 1.6s ease-in-out infinite;"></span>
+      <span class="gs-mono" style="font-size: 12px; letter-spacing: 1.5px; color: #8D8C8D;">ERROR&nbsp;404&nbsp;·&nbsp;TRACK&nbsp;NOT&nbsp;FOUND</span>
+    </div>
+
+    <!-- 404 with staff + vinyl -->
+    <div style="position: relative; width: 100%; max-width: 620px; height: 300px; margin-bottom: 14px;">
+      <!-- staff lines -->
+      <div style="position: absolute; top: 50%; left: -60px; right: -60px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 26px;">
+        <div style="height: 1px; background: rgba(255,255,255,0.12);"></div>
+        <div style="height: 1px; background: rgba(255,255,255,0.12);"></div>
+        <div style="height: 1px; background: rgba(255,255,255,0.12);"></div>
+        <div style="height: 1px; background: rgba(255,255,255,0.12);"></div>
+        <div style="height: 1px; background: rgba(255,255,255,0.12);"></div>
+      </div>
+      <!-- treble clef sitting on staff -->
+      <div style="position: absolute; top: 50%; left: 6px; transform: translateY(-52%); color: rgba(255,255,255,0.16);"><svg width="60" height="150" viewBox="0 0 60 150" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31 6c-9 6-13 17-11 28l1 6c-12 5-19 15-16 27 3 12 16 17 26 12 3-1 5-3 7-5l3 17c1 9-4 15-11 15-4 0-7-2-8-5 5 1 9-2 9-7 0-4-3-7-7-7-5 0-8 4-7 9 1 7 8 11 15 10 10-1 16-9 14-20l-3-17c9-4 13-13 10-22-2-8-10-13-18-11l-2-11c6-5 11-12 10-21-1-6-4-10-8-11h-4zm4 8c2 1 3 4 3 8 1 6-2 11-6 15l-2-11c-1-6 1-11 5-12zm-6 42 3 17c-6 3-13 1-15-5-2-7 3-13 12-12zm11 3c5-1 9 2 10 7 2 6-1 11-6 13l-4-20z" fill="currentColor"/></svg></div>
+
+      <!-- 404 -->
+      <div class="gs404-number" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span style="font-size: 240px; line-height: 1; font-weight: 500; color: #F4F4F4; letter-spacing: -8px; text-shadow: 0 12px 40px rgba(0,0,0,0.5);">4</span>
+        <!-- vinyl as the 0 -->
+        <div class="gs404-disc" title="Give it a spin" style="position: relative; width: 196px; height: 196px; display: flex; align-items: center; justify-content: center;">
+          <div class="gs404-vinyl" style="width: 196px; height: 196px; animation: gs404-spin 6s linear infinite; transform-origin: center;"><svg width="196" height="196" viewBox="0 0 196 196" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="98" cy="98" r="96" fill="#0d0d0d"/><circle cx="98" cy="98" r="96" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/><circle cx="98" cy="98" r="80" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><circle cx="98" cy="98" r="68" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><circle cx="98" cy="98" r="56" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><path d="M98 98 L98 6 A92 92 0 0 1 176 52 Z" fill="rgba(255,255,255,0.035)"/><circle cx="98" cy="98" r="40" fill="#012FA7"/><circle cx="98" cy="98" r="40" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/><circle cx="98" cy="66" r="2.4" fill="rgba(255,255,255,0.6)"/><circle cx="98" cy="98" r="7" fill="#171717"/></svg></div>
+          <!-- floating quarter note bobbing above the disc -->
+          <div style="position: absolute; top: -46px; right: -14px; color: #012FA7; animation: gs404-bob 2.4s ease-in-out infinite; filter: drop-shadow(0 6px 12px rgba(1,47,167,0.5));"><svg width="26" height="40" viewBox="0 0 26 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="31" rx="8" ry="6" transform="rotate(-20 8 31)" fill="currentColor"/><rect x="15" y="4" width="2.6" height="27" fill="currentColor"/></svg></div>
+        </div>
+        <span style="font-size: 240px; line-height: 1; font-weight: 500; color: #F4F4F4; letter-spacing: -8px; text-shadow: 0 12px 40px rgba(0,0,0,0.5);">4</span>
+      </div>
+    </div>
+
+    <!-- copy -->
+    <h1 style="opacity: 0; animation: gs404-fadeup .6s ease .12s forwards; font-size: 44px; line-height: 1.15; font-weight: 400; letter-spacing: -0.8px; color: #FFFFFF; margin: 0 0 16px;">This track skipped a&nbsp;beat.</h1>
+    <p style="opacity: 0; animation: gs404-fadeup .6s ease .2s forwards; font-size: 19px; line-height: 1.55; font-weight: 400; color: #8D8C8D; margin: 0 0 38px; max-width: 520px;">We searched every bar of the staff, but the page you're after isn't in the mix. Let's get you back to the downbeat.</p>
+
+    <!-- CTAs -->
+    <div style="opacity: 0; animation: gs404-fadeup .6s ease .28s forwards; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;">
+      <a href="/" target="_top" class="gs404-cta gs404-primary" style="display: inline-flex; align-items: center; gap: 9px; padding: 15px 26px; border-radius: 6px; background: #012FA7; color: #FFFFFF; font-size: 15px; font-weight: 500; text-decoration: none; box-shadow: 0 4px 12px rgba(1,47,167,0.3);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11l9-8 9 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v10h14V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to Home</a>
+      <a href="/" target="_top" class="gs404-cta gs404-outline" style="display: inline-flex; align-items: center; gap: 9px; padding: 15px 26px; border-radius: 6px; background: transparent; color: #F4F4F4; font-size: 15px; font-weight: 500; text-decoration: none; border: 1px solid rgba(255,255,255,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16V4m0 0L7 9m5-5l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17v3h16v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Upload a Track</a>
+    </div>
+
+    <!-- equalizer -->
+    <div style="opacity: 0; animation: gs404-fadeup .6s ease .36s forwards; display: flex; align-items: flex-end; gap: 5px; height: 44px; margin-top: 56px;">
+      <div style="width:5px; height:100%; border-radius:3px; background:#012FA7; transform-origin: bottom; animation: gs404-eq .9s ease-in-out -0.1s infinite;"></div>
+      <div style="width:5px; height:100%; border-radius:3px; background:#0139C7; transform-origin: bottom; animation: gs404-eq .7s ease-in-out -0.4s infinite;"></div>
+      <div style="width:5px; height:100%; border-radius:3px; background:#012FA7; transform-origin: bottom; animation: gs404-eq 1.1s ease-in-out -0.2s infinite;"></div>
+      <!-- the flatlined bar -->
+      <div style="width:5px; height:100%; border-radius:3px; background:#3D3B3E; transform-origin: bottom; transform: scaleY(0.14);"></div>
+      <div style="width:5px; height:100%; border-radius:3px; background:#0139C7; transform-origin: bottom; animation: gs404-eq .8s ease-in-out -0.5s infinite;"></div>
+      <div style="width:5px; height:100%; border-radius:3px; background:#012FA7; transform-origin: bottom; animation: gs404-eq 1s ease-in-out -0.15s infinite;"></div>
+      <div style="width:5px; height:100%; border-radius:3px; background:#0139C7; transform-origin: bottom; animation: gs404-eq .75s ease-in-out -0.35s infinite;"></div>
+    </div>
+    <p class="gs-mono" style="opacity: 0; animation: gs404-fadeup .6s ease .44s forwards; font-size: 12px; letter-spacing: 0.5px; color: #5F5E60; margin: 16px 0 0;">tip: give the record a spin &nbsp;↻</p>
+
+  </main>
+</div>
+<script>
+  (function () {
+    var disc = document.querySelector('.gs404-disc');
+    var number = document.querySelector('.gs404-number');
+    if (disc && number) {
+      disc.addEventListener('click', function () {
+        if (number.classList.contains('gs404-glitching')) return;
+        number.classList.add('gs404-glitching');
+        setTimeout(function () { number.classList.remove('gs404-glitching'); }, 1400);
+      });
+    }
+  })();
+</script>
+</body>
+</html>

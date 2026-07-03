@@ -1,69 +1,30 @@
 import React from 'react';
-import Header from './layout/Header';
-import Footer from './layout/Footer';
-import Button from './ui/Button';
-import { useLocalizedNavigate, LocalizedLink } from '../i18n/locale';
-import './NotFound.css';
 
-function NotFound({ onLoginClick }) {
-  const navigate = useLocalizedNavigate();
-
+/**
+ * 404 Not Found — catch-all route.
+ *
+ * Embeds the finished Claude Design (404.dc.html) as a self-contained static
+ * page at public/design/not-found.html. It's rendered in an iframe so the
+ * design's own typography and animations are fully isolated from the app's
+ * global CSS (App.css forces `font-family !important` and a 1.2s `transition`
+ * on every element, which would otherwise override the design).
+ *
+ * Links inside the design use target="_top" so they navigate the parent window.
+ */
+function NotFound() {
   return (
-    <div className="notfound-page">
-      <div className="dot-grid" aria-hidden="true"></div>
-
-      <Header onLoginClick={onLoginClick} />
-
-      <main className="notfound-container">
-        <div className="notfound-content">
-          {/* Hand-stroked currentColor illustration — same outline language as the
-              homepage features and empty states. A note knocked off the staff. */}
-          <div className="notfound-ill" aria-hidden="true">
-            <svg
-              viewBox="0 0 96 96"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 30h44" />
-              <path d="M12 42h30" />
-              <path d="M64 42h20" />
-              <path d="M12 54h72" />
-              <path d="M12 66h72" />
-              <ellipse cx="60" cy="64" rx="9" ry="7" transform="rotate(-20 60 64)" />
-              <path d="M68 62V34l14-5v9" />
-            </svg>
-          </div>
-
-          <p className="notfound-code">404</p>
-          <h1 className="notfound-title">This Page Hit a Wrong Note</h1>
-          <p className="notfound-desc">
-            The page you're looking for doesn't exist or was moved. Let's get you back in tune.
-          </p>
-
-          <div className="notfound-actions">
-            <Button variant="primary" size="medium" onClick={() => navigate('/')}>
-              Back to Home
-            </Button>
-            <Button variant="outline" size="medium" onClick={() => navigate('/explore')}>
-              Explore Transcriptions
-            </Button>
-          </div>
-
-          <div className="notfound-links">
-            <LocalizedLink to="/pricing">Pricing</LocalizedLink>
-            <span className="notfound-links-sep" aria-hidden="true">·</span>
-            <LocalizedLink to="/explore">Explore</LocalizedLink>
-            <span className="notfound-links-sep" aria-hidden="true">·</span>
-            <LocalizedLink to="/help">Search the FAQ</LocalizedLink>
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+    <iframe
+      title="Page not found"
+      src={`${process.env.PUBLIC_URL}/design/not-found.html`}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        display: 'block',
+      }}
+    />
   );
 }
 
