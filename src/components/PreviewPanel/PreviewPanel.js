@@ -160,8 +160,14 @@ export default function PreviewPanel({
           buffer = await fetchMidiArrayBuffer(config.apiBaseUrl, workflowId, midiKey, getToken);
         }
         if (cancelled || !buffer) return;
-        const truncated = truncateMidiToSeconds(buffer, 10);
-        setMidiBuffer(truncated || buffer);
+        // Only preview (PRV*) jobs are capped at 10 seconds; full workflows
+        // must show the entire song (the sheet tab already does).
+        if (workflowId.startsWith('PRV')) {
+          const truncated = truncateMidiToSeconds(buffer, 10);
+          setMidiBuffer(truncated || buffer);
+        } else {
+          setMidiBuffer(buffer);
+        }
       } catch (err) {
         if (!cancelled) setMidiError(err.message || 'Failed to load MIDI');
       } finally {
