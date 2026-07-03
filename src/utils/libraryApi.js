@@ -168,3 +168,22 @@ export async function downloadLibraryTrackZip(id, getToken) {
   const match = cd.match(/filename="?([^";]+)"?/i);
   return { blob, filename: match ? match[1] : `${id}.zip` };
 }
+
+/**
+ * Report a published track (copyright / abuse). Anonymous-capable.
+ *
+ * @param {string} id - Track UUID.
+ * @param {{reason: string, details?: string, contact?: string}} payload
+ */
+export async function reportTrack(id, payload) {
+  const response = await fetch(`/api/library/tracks/${encodeURIComponent(id)}/report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const detail = await parseErrorDetail(response);
+    throw new LibraryApiError(detail, response.status);
+  }
+  return response.json();
+}
