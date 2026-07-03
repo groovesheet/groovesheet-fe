@@ -3,7 +3,7 @@ import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import SongCard from './SongCard';
 import './Section.css';
 
-function Section({ eyebrow, title, subtitle, songs, variant, accent, onCardClick }) {
+function Section({ eyebrow, title, subtitle, songs, variant, accent, onCardClick, onViewAll }) {
   const ref = useRef(null);
   const [canL, setCanL] = useState(false);
   const [canR, setCanR] = useState(true);
@@ -46,9 +46,18 @@ function Section({ eyebrow, title, subtitle, songs, variant, accent, onCardClick
           {subtitle && <p className="es-subtitle">{subtitle}</p>}
         </div>
         <div className="es-controls">
-          <a href="#" className="es-view-all" onClick={(e) => e.preventDefault()}>
-            View all
-          </a>
+          {onViewAll && (
+            <a
+              href="#view-all"
+              className="es-view-all"
+              onClick={(e) => {
+                e.preventDefault();
+                onViewAll();
+              }}
+            >
+              View all
+            </a>
+          )}
           <button
             className="es-arrow-btn"
             disabled={!canL}
