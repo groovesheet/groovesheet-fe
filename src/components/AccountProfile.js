@@ -503,7 +503,7 @@ export const AccountProfile = () => {
                     <div style={rowRead}>
                       <span style={{ fontSize: 13, color: muted }}>Profile URL</span>
                       <span style={{ fontSize: 14, fontFamily: MONO }}>
-                        <span style={{ color: muted }}>groovesheet.com/u/</span>
+                        <span style={{ color: muted }}>groovesheet.net/u/</span>
                         <span style={{ color: 'var(--color-text)' }}>{username}</span>
                       </span>
                     </div>
