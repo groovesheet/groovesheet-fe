@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
 import { useAuth, useAuthActions } from '../auth';
@@ -13,6 +14,7 @@ import {
   resolveDisplayName,
   resolveAvailableOutputs,
   updateWorkflowVisibility,
+  updateWorkflowMetadata,
   deleteWorkflow,
 } from '../utils/api';
 import config from '../config';
@@ -36,11 +38,20 @@ const SORT_OPTIONS = [
 
 const STATUS_CHIPS = [
   { id: 'all', label: 'All' },
-  { id: 'published', label: 'Published' },
+  { id: 'public', label: 'Published' },
   { id: 'unlisted', label: 'Unlisted' },
   { id: 'private', label: 'Private' },
 ];
 const INSTRUMENT_CHIPS = ['all', 'drums', 'piano', 'bass', 'vocals'];
+
+// Backend status vocabulary: initializing/started/processing/worker_processing
+// are active; completed and failed are terminal. (pending/running/success are
+// legacy tokens kept for old payloads.)
+const PROCESSING_STATES = ['initializing', 'started', 'processing', 'worker_processing', 'pending', 'running'];
+const COMPLETED_STATES = ['completed', 'success'];
+const isProcessing = (w) => PROCESSING_STATES.includes(w.status);
+const isCompleted = (w) => COMPLETED_STATES.includes(w.status);
+const isFailed = (w) => w.status === 'failed';
 
 const fileParts = (full) => {
   const i = full.lastIndexOf('.');
@@ -56,6 +67,67 @@ const fmtDuration = (secs) => {
 };
 
 const visibilityOf = (w) => w.visibility || 'private';
+
+// Edit-details modal. Portal to <body> so it escapes header stacking contexts
+// (same pattern as LoginModal / AccountIcon).
+const EditDetailsModal = ({ workflow, onClose, onSave }) => {
+  const [title, setTitle] = useState(workflow.title || '');
+  const [artist, setArtist] = useState(workflow.original_artist || workflow.metadata?.artist || '');
+  const [tags, setTags] = useState(Array.isArray(workflow.genre_tags) ? workflow.genre_tags.join(', ') : '');
+  const [description, setDescription] = useState(workflow.description || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const field = { width: '100%', height: 44, background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 8, padding: '0 13px', fontFamily: 'var(--font-family-sans)', fontSize: 14, color: 'var(--color-text)', outline: 'none' };
+  const label = { fontSize: 13, color: 'var(--color-muted-foreground)', marginBottom: 6, display: 'block' };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave({
+        title: title.trim() || null,
+        original_artist: artist.trim() || null,
+        genre_tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        description: description.trim() || null,
+      });
+    } catch (err) {
+      setError(err?.message || 'Could not save details');
+      setSaving(false);
+    }
+  };
+
+  return ReactDOM.createPortal(
+    <div role="presentation" onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'rgba(0,0,0,.6)', display: 'grid', placeItems: 'center', padding: 20 }}>
+      <form role="dialog" aria-modal="true" aria-label="Edit details" onClick={(e) => e.stopPropagation()} onSubmit={submit} style={{ width: '100%', maxWidth: 440, background: 'var(--color-panel1)', borderRadius: 13, padding: 26, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 20px 60px rgba(0,0,0,.5)' }}>
+        <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>Edit Details</div>
+        {error && <StatusMessage variant="error">{error}</StatusMessage>}
+        <div>
+          <label htmlFor="edit-title" style={label}>Title</label>
+          <input id="edit-title" style={field} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={resolveDisplayName(workflow)} maxLength={120} />
+        </div>
+        <div>
+          <label htmlFor="edit-artist" style={label}>Original artist</label>
+          <input id="edit-artist" style={field} value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Who recorded the song" maxLength={120} />
+        </div>
+        <div>
+          <label htmlFor="edit-tags" style={label}>Genre tags (comma separated)</label>
+          <input id="edit-tags" style={field} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="jazz, fusion" maxLength={160} />
+        </div>
+        <div>
+          <label htmlFor="edit-desc" style={label}>Description</label>
+          <textarea id="edit-desc" style={{ ...field, height: 88, padding: '10px 13px', resize: 'vertical' }} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+          <button type="button" className="gs-btn gs-btn-secondary" style={{ flex: 1 }} onClick={onClose} disabled={saving}>Cancel</button>
+          <button type="submit" className="gs-btn gs-btn-primary" style={{ flex: 1 }} disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</button>
+        </div>
+      </form>
+    </div>,
+    document.body
+  );
+};
 
 export const TranscriptionHistory = () => {
   const navigate = useNavigate();
@@ -75,6 +147,7 @@ export const TranscriptionHistory = () => {
 
   const [menuFor, setMenuFor] = useState(null); // workflow_id with open kebab
   const [popFor, setPopFor] = useState(null); // { id, kind: 'publish' | 'delete' }
+  const [editFor, setEditFor] = useState(null); // workflow object being edited
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
 
@@ -89,22 +162,28 @@ export const TranscriptionHistory = () => {
     (async () => {
       try {
         setLoading(true);
-        const listData = await fetchWorkflowList(config.apiBaseUrl, getToken, signOut);
-        let ids = [];
-        if (listData && Array.isArray(listData.workflow_ids)) ids = listData.workflow_ids;
-        else if (Array.isArray(listData)) ids = listData;
-        if (ids.length) {
-          const statuses = await Promise.all(
-            ids.map((id) =>
-              fetchWorkflowStatus(config.apiBaseUrl, id, getToken, signOut).catch((err) => {
-                if (err.isAuthError) throw err;
-                return null;
-              })
-            )
-          );
-          if (!cancelled) setWorkflows(statuses.filter(Boolean));
-        } else if (!cancelled) {
-          setWorkflows([]);
+        // Enriched list: one request returns full card items. Falls back to
+        // the legacy bare-ids shape (one status call per id) for old backends.
+        const listData = await fetchWorkflowList(config.apiBaseUrl, getToken, signOut, { limit: 100, offset: 0 });
+        if (listData && Array.isArray(listData.items)) {
+          if (!cancelled) setWorkflows(listData.items);
+        } else {
+          let ids = [];
+          if (listData && Array.isArray(listData.workflow_ids)) ids = listData.workflow_ids;
+          else if (Array.isArray(listData)) ids = listData;
+          if (ids.length) {
+            const statuses = await Promise.all(
+              ids.map((id) =>
+                fetchWorkflowStatus(config.apiBaseUrl, id, getToken, signOut).catch((err) => {
+                  if (err.isAuthError) throw err;
+                  return null;
+                })
+              )
+            );
+            if (!cancelled) setWorkflows(statuses.filter(Boolean));
+          } else if (!cancelled) {
+            setWorkflows([]);
+          }
         }
         if (!cancelled) setError(null);
       } catch (err) {
@@ -124,6 +203,35 @@ export const TranscriptionHistory = () => {
       cancelled = true;
     };
   }, [getToken, signOut, navigate]);
+
+  // Poll active jobs so "Processing" cards advance without a manual reload.
+  const workflowsRef = useRef(workflows);
+  workflowsRef.current = workflows;
+  const hasActive = workflows.some(isProcessing);
+  useEffect(() => {
+    if (!hasActive) return undefined;
+    let cancelled = false;
+    const tick = async () => {
+      const active = workflowsRef.current.filter(isProcessing);
+      const updates = await Promise.all(
+        active.map((w) =>
+          fetchWorkflowStatus(config.apiBaseUrl, w.workflow_id, getToken, signOut).catch(() => null)
+        )
+      );
+      if (cancelled) return;
+      const byId = {};
+      updates.filter(Boolean).forEach((u) => { byId[u.workflow_id] = u; });
+      if (Object.keys(byId).length) {
+        setWorkflows((ws) => ws.map((w) => (byId[w.workflow_id] ? { ...w, ...byId[w.workflow_id] } : w)));
+      }
+    };
+    const interval = setInterval(tick, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActive, getToken, signOut]);
 
   const handleDownload = async (workflowId, fileKey, filename) => {
     setMenuFor(null);
@@ -155,14 +263,24 @@ export const TranscriptionHistory = () => {
   const setVisibility = async (workflowId, visibility) => {
     setPopFor(null);
     setMenuFor(null);
-    // Optimistic local update; revert silently if the endpoint is missing.
+    const previous = workflows.find((w) => w.workflow_id === workflowId)?.visibility || 'private';
+    // Optimistic local update; reverted with the real error message on failure.
     setWorkflows((ws) => ws.map((w) => (w.workflow_id === workflowId ? { ...w, visibility } : w)));
     try {
       await updateWorkflowVisibility(config.apiBaseUrl, workflowId, visibility, getToken, signOut);
       notify(visibility === 'private' ? 'Unpublished' : `Published as ${visibility}`);
-    } catch {
-      notify('Publishing is not available yet');
+    } catch (err) {
+      setWorkflows((ws) => ws.map((w) => (w.workflow_id === workflowId ? { ...w, visibility: previous } : w)));
+      notify(err?.message || 'Could not change visibility');
     }
+  };
+
+  const saveDetails = async (workflowId, patch) => {
+    const saved = await updateWorkflowMetadata(config.apiBaseUrl, workflowId, patch, getToken, signOut);
+    setWorkflows((ws) => ws.map((w) => (
+      w.workflow_id === workflowId ? { ...w, title: saved?.title ?? patch.title ?? w.title } : w
+    )));
+    notify('Details saved');
   };
 
   const doDelete = async (workflowId) => {
@@ -172,8 +290,8 @@ export const TranscriptionHistory = () => {
       await deleteWorkflow(config.apiBaseUrl, workflowId, getToken, signOut);
       setWorkflows((ws) => ws.filter((w) => w.workflow_id !== workflowId));
       notify('Transcription deleted');
-    } catch {
-      notify('Deleting is not available yet');
+    } catch (err) {
+      notify(err?.message || 'Could not delete transcription');
     }
   };
 
@@ -185,14 +303,14 @@ export const TranscriptionHistory = () => {
   const visible = all.filter((w) => {
     if (!matchesQuery(w)) return false;
     if (instrFilter !== 'all' && instrOf(w) !== instrFilter) return false;
-    const isProc = ['processing', 'pending', 'running'].includes(w.status);
-    if (statusFilter !== 'all' && !isProc && visibilityOf(w) !== statusFilter) return false;
-    if (statusFilter !== 'all' && isProc) return false;
+    if (statusFilter !== 'all' && isProcessing(w)) return false;
+    if (statusFilter !== 'all' && !isProcessing(w) && visibilityOf(w) !== statusFilter) return false;
     return true;
   });
 
-  const processing = visible.filter((w) => ['processing', 'pending', 'running'].includes(w.status));
-  const completed = visible.filter((w) => ['completed', 'success'].includes(w.status));
+  const processing = visible.filter(isProcessing);
+  const completed = visible.filter(isCompleted);
+  const failed = visible.filter(isFailed);
 
   const sorted = [...completed].sort((a, b) => {
     if (sort === 'title') return resolveDisplayName(a).localeCompare(resolveDisplayName(b));
@@ -293,7 +411,7 @@ export const TranscriptionHistory = () => {
             Unpublish
           </button>
         )}
-        <button role="menuitem" style={item('var(--color-text)')} onClick={() => { setMenuFor(null); notify('Editing details is not available yet'); }}>
+        <button role="menuitem" style={item('var(--color-text)')} onClick={() => { setMenuFor(null); setEditFor(w); }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><path d="M13.5 6.5l4 4" stroke="currentColor" strokeWidth="2" /></svg>
           Edit details
         </button>
@@ -371,7 +489,8 @@ export const TranscriptionHistory = () => {
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
-    const href = `/explore/${w.workflow_id}`;
+    // The public song page resolves library-track UUIDs, not workflow ids.
+    const href = w.library_track_id ? `/explore/${w.library_track_id}` : undefined;
     const open = menuFor === w.workflow_id;
     const pop = popFor && popFor.id === w.workflow_id ? popFor.kind : null;
     return (
@@ -395,10 +514,12 @@ export const TranscriptionHistory = () => {
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{InstrBadges(w)}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto', paddingTop: 14, borderTop: '1px solid var(--color-border)' }}>
-            <a href={href} className="gs-btn gs-btn-secondary" style={{ flex: 1 }}>
-              Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </a>
-            <div style={{ position: 'relative' }}>
+            {href && (
+              <a href={href} className="gs-btn gs-btn-secondary" style={{ flex: 1 }}>
+                Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </a>
+            )}
+            <div style={{ position: 'relative', marginLeft: href ? 0 : 'auto' }}>
               <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
               </button>
@@ -417,7 +538,8 @@ export const TranscriptionHistory = () => {
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
-    const href = `/explore/${w.workflow_id}`;
+    // The public song page resolves library-track UUIDs, not workflow ids.
+    const href = w.library_track_id ? `/explore/${w.library_track_id}` : undefined;
     const open = menuFor === w.workflow_id;
     const pop = popFor && popFor.id === w.workflow_id ? popFor.kind : null;
     return (
@@ -434,9 +556,11 @@ export const TranscriptionHistory = () => {
         <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>{fmtDate(ds)}</div>
         <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>{dur || '—'}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', position: 'relative' }}>
-          <a href={href} aria-label={`Open ${name}`} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', textDecoration: 'none' }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </a>
+          {href && (
+            <a href={href} aria-label={`Open ${name}`} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', textDecoration: 'none' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </a>
+          )}
           <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
           </button>
@@ -606,6 +730,43 @@ export const TranscriptionHistory = () => {
               </section>
             )}
 
+            {/* Failed */}
+            {failed.length > 0 && (
+              <section style={{ marginBottom: 56 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#FF6B7A' }} />
+                  <h2 style={groupTitle}>Failed</h2>
+                  <span style={{ fontSize: 16, color: 'var(--color-muted-foreground)' }}>{failed.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {failed.map((w) => {
+                    const name = resolveDisplayName(w);
+                    const { base, ext } = fileParts(name);
+                    const ds = w.failed_at || w.created_at || new Date().toISOString();
+                    return (
+                      <div key={w.workflow_id} style={{ background: 'var(--color-panel2)', borderRadius: 13, padding: '22px 24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: 14, minWidth: 0 }}>
+                          <span style={{ width: 38, height: 38, borderRadius: 9, background: 'rgba(255,107,122,.14)', color: '#FF6B7A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v5M12 16.5v.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                            <div style={{ fontSize: 17, color: 'var(--color-text)' }}><span style={{ fontWeight: 500 }}>{base}</span><span style={{ color: 'var(--color-muted-foreground)' }}>{ext}</span></div>
+                            <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)' }}>
+                              {fmtDate(ds)} · {w.error || 'Processing failed'}. Your minutes for this run were refunded automatically.
+                            </div>
+                          </div>
+                        </div>
+                        <button className="gs-btn gs-btn-secondary" onClick={() => setPopFor({ id: w.workflow_id, kind: 'delete' })} style={{ whiteSpace: 'nowrap' }}>Remove</button>
+                        <div style={{ position: 'relative' }}>
+                          {popFor && popFor.id === w.workflow_id && popFor.kind === 'delete' && DeletePopover(w, false)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {/* Year groups */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
               {years.map((y) => (
@@ -634,6 +795,17 @@ export const TranscriptionHistory = () => {
       </main>
 
       <Footer />
+
+      {editFor && (
+        <EditDetailsModal
+          workflow={editFor}
+          onClose={() => setEditFor(null)}
+          onSave={async (patch) => {
+            await saveDetails(editFor.workflow_id, patch);
+            setEditFor(null);
+          }}
+        />
+      )}
 
       {toast && (
         <div role="status" style={{ position: 'fixed', left: 24, bottom: 24, zIndex: 70, background: 'rgba(20,20,22,.96)', color: '#fff', border: '1px solid rgba(255,255,255,.12)', borderRadius: 10, padding: '12px 18px', fontFamily: 'var(--font-family-alt)', fontSize: 14, boxShadow: '0 10px 40px rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', gap: 10 }}>
