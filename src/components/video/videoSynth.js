@@ -137,15 +137,18 @@ export function createSynth(kind = 'piano') {
     }
   }
 
-  function drum(midi) {
+  function drum(midi, vel = 1) {
     const t0 = ctx.currentTime;
     const v = drumVoice(midi);
+    // velocity (0-1, from MIDI) scales hit loudness; floor keeps ghost notes
+    // audible and vel=1 (workers without velocity, e.g. adtof) sounds as before.
+    const dyn = 0.35 + 0.65 * Math.max(0, Math.min(1, vel));
     if (v === 'kick') {
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
       osc.frequency.setValueAtTime(150, t0);
       osc.frequency.exponentialRampToValueAtTime(45, t0 + 0.12);
-      env(g, t0, 0.9, 0.004, 0.18);
+      env(g, t0, 0.9 * dyn, 0.004, 0.18);
       osc.connect(g); g.connect(master);
       osc.start(t0); osc.stop(t0 + 0.24);
     } else if (v === 'snare') {
@@ -153,13 +156,13 @@ export function createSynth(kind = 'piano') {
       const hp = ctx.createBiquadFilter();
       hp.type = 'highpass'; hp.frequency.value = 1400;
       const g = ctx.createGain();
-      env(g, t0, 0.5, 0.002, 0.16);
+      env(g, t0, 0.5 * dyn, 0.002, 0.16);
       n.connect(hp); hp.connect(g); g.connect(master);
       // a bit of tonal body
       const osc = ctx.createOscillator();
       osc.type = 'triangle'; osc.frequency.value = 200;
       const g2 = ctx.createGain();
-      env(g2, t0, 0.18, 0.002, 0.1);
+      env(g2, t0, 0.18 * dyn, 0.002, 0.1);
       osc.connect(g2); g2.connect(master);
       n.start(t0); n.stop(t0 + 0.22);
       osc.start(t0); osc.stop(t0 + 0.14);
@@ -169,7 +172,7 @@ export function createSynth(kind = 'piano') {
       hp.type = 'highpass'; hp.frequency.value = 7000;
       const g = ctx.createGain();
       const rel = v === 'openhat' ? 0.3 : 0.05;
-      env(g, t0, 0.22, 0.001, rel);
+      env(g, t0, 0.22 * dyn, 0.001, rel);
       n.connect(hp); hp.connect(g); g.connect(master);
       n.start(t0); n.stop(t0 + rel + 0.05);
     } else if (v === 'tom') {
@@ -177,7 +180,7 @@ export function createSynth(kind = 'piano') {
       const g = ctx.createGain();
       osc.frequency.setValueAtTime(220, t0);
       osc.frequency.exponentialRampToValueAtTime(110, t0 + 0.18);
-      env(g, t0, 0.5, 0.004, 0.22);
+      env(g, t0, 0.5 * dyn, 0.004, 0.22);
       osc.connect(g); g.connect(master);
       osc.start(t0); osc.stop(t0 + 0.3);
     } else { // crash / ride
@@ -186,7 +189,7 @@ export function createSynth(kind = 'piano') {
       hp.type = 'highpass'; hp.frequency.value = 5000;
       const g = ctx.createGain();
       const rel = v === 'ride' ? 0.4 : 0.7;
-      env(g, t0, 0.3, 0.002, rel);
+      env(g, t0, 0.3 * dyn, 0.002, rel);
       n.connect(hp); hp.connect(g); g.connect(master);
       n.start(t0); n.stop(t0 + rel + 0.1);
     }
@@ -202,7 +205,7 @@ export function createSynth(kind = 'piano') {
       if (muted || !note) return;
       if (ctx.state === 'suspended') return; // wait for a gesture
       try {
-        if (note.drum) drum(note.midi);
+        if (note.drum) drum(note.midi, note.velocity == null ? 1 : note.velocity);
         else pitched(note.midi, note.duration);
       } catch (e) { /* never let audio crash the render loop */ }
     },

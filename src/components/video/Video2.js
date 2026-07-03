@@ -192,7 +192,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
         const drum = kind === 'drums';
         const out = midi.tracks
           .flatMap((t) => t.notes)
-          .map((n) => ({ time: n.time, duration: n.duration, midi: n.midi, drum }));
+          .map((n) => ({ time: n.time, duration: n.duration, midi: n.midi, drum, velocity: n.velocity }));
         durRef.current = Math.max(durRef.current, midi.duration || 0);
         setNotes(out);
         // MIDI-only worker (no sheet): nothing to wait on — go live now.
