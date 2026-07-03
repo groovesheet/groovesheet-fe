@@ -33,6 +33,7 @@ import ServiceStatus from './components/ServiceStatus';
 import Video2Tabs from './components/video/Video2Tabs';
 import BillingSuccess from './components/BillingSuccess';
 import PricingPage from './components/PricingPage';
+import NotFound from './components/NotFound';
 import AccountBilling from './components/AccountBilling';
 import AccountProfile from './components/AccountProfile';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -226,6 +227,7 @@ function App() {
       <Route path="video2" element={<Video2Tabs />} />
       <Route path="service-status" element={<ServiceStatus />} />
       <Route path="billing/success" element={<BillingSuccess />} />
+      <Route path="*" element={<NotFound onLoginClick={openLoginModal} />} />
     </Routes>
   );
 
