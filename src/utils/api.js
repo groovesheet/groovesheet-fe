@@ -325,7 +325,9 @@ const SCORE_KEYS = {
  */
 export function resolveAvailableOutputs(workflow) {
   const instrument = workflow.metadata?.instrument || 'drums';
-  const outputs = workflow.outputs || workflow.files || null;
+  // The status payload nests file keys under outputs.files (outputs also
+  // carries a metadata block); older payloads used a flat files map.
+  const outputs = workflow.outputs?.files || workflow.files || null;
 
   const stemKey = STEM_KEYS[instrument] || STEM_KEYS.drums;
   const midiKey = MIDI_KEYS[instrument] || MIDI_KEYS.drums;
