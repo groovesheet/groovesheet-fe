@@ -15,6 +15,7 @@ import SongSidebar from './SongSidebar';
 import CardRow from './CardRow';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import { fetchLibraryTrack, fetchLibraryTracks } from '../../utils/libraryApi';
+import { useAuth } from '../../auth';
 import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
@@ -196,6 +197,7 @@ function SongDetail({ onLoginClick }) {
   const { songId } = useParams();
   const navigate = useLocalizedNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
+  const { getToken } = useAuth();
 
   // --- track fetch -----------------------------------------------------------
   const [track, setTrack] = useState(null);
@@ -209,7 +211,9 @@ function SongDetail({ onLoginClick }) {
     setTrackLoading(true);
     (async () => {
       try {
-        const data = await fetchLibraryTrack(songId);
+        // Pass the bearer (when signed in) so owners can open their own
+        // private/unlisted tracks; visitors stay anonymous.
+        const data = await fetchLibraryTrack(songId, getToken);
         if (!cancelled) setTrack(data);
       } catch (err) {
         if (!cancelled) setTrackError({ status: err.status, message: err.message });
