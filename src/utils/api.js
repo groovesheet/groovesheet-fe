@@ -845,3 +845,22 @@ export async function deleteWorkflow(baseUrl, workflowId, getToken, signOut = nu
   }
   return response.json().catch(() => ({}));
 }
+
+/**
+ * Download a JSON export of everything stored about the signed-in user
+ * (GDPR portability pair to deleteAccount).
+ * @returns {Promise<Blob>}
+ */
+export async function exportAccountData(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/account/export`,
+    { method: 'GET', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Export failed: ${response.statusText}`);
+  }
+  return response.blob();
+}

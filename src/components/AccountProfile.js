@@ -17,6 +17,7 @@ import {
   updateAccountName,
   updateUserEmail,
   uploadAvatar,
+  exportAccountData,
   deleteAccount,
 } from '../utils/api';
 import config from '../config';
@@ -336,6 +337,27 @@ export const AccountProfile = () => {
   const removeLink = (i) => setDraft((d) => ({ ...d, links: d.links.filter((_, j) => j !== i) }));
   const setLink = (i, field, v) =>
     setDraft((d) => ({ ...d, links: d.links.map((l, j) => (j === i ? { ...l, [field]: v } : l)) }));
+
+  const [exporting, setExporting] = useState(false);
+  const downloadExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const blob = await exportAccountData(config.apiBaseUrl, getToken, signOut);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'groovesheet-export.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      if (!handleAuthError(err)) notify(err.message || 'Could not export your data');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const onAvatarPick = async (e) => {
     const file = e.target.files?.[0];
@@ -806,6 +828,21 @@ export const AccountProfile = () => {
                       </div>
                     </div>
                   )}
+                </div>
+                {/* Data export — portability pair to account deletion */}
+                <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '16px 0', borderTop: '1px solid var(--color-border-light)', flexWrap: 'wrap' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)' }}>Download your data</div>
+                    <div style={{ fontSize: 12.5, color: muted, marginTop: 2 }}>A JSON export of your profile, usage history, and library metadata.</div>
+                  </div>
+                  <button
+                    onClick={downloadExport}
+                    disabled={exporting}
+                    className="aps-ghost"
+                    style={{ padding: '10px 18px', border: '1px solid var(--color-border-lighter)', borderRadius: 6, background: 'transparent', color: 'var(--color-foreground)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: exporting ? 'wait' : 'pointer', flex: 'none' }}
+                  >
+                    {exporting ? 'Preparing…' : 'Export Data'}
+                  </button>
                 </div>
                 {/* Danger zone */}
                 <div style={{ marginTop: 18, background: 'var(--color-panel3)', borderRadius: 12, padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
