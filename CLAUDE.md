@@ -24,10 +24,11 @@
 - File keys from BE follow `{worker}_{instrument}_{type}` convention:
   - Demucs stems: `demucs_drums_stem`, `demucs_bass_stem`, `demucs_vocals_stem`, `demucs_other_stem`
   - ADToF: `adtof_drums_midi`, `adtof_drums_musicxml`
+  - ADToF+ (7-voice + velocity): `adtof_plus_drums_midi`, `adtof_plus_drums_musicxml`
   - Transkun-v2: `transkun_v2_piano_midi`, `transkun_v2_piano_musicxml`
   - FCPE: `fcpe_bass_midi`, `fcpe_bass_musicxml`
   - BassUNet: `bassunet_jazz_bass_midi`, `bassunet_jazz_bass_musicxml`, `bassunet_jazz_bass_f0_csv`, `bassunet_jazz_bass_notes_csv`, `bassunet_jazz_bass_metadata_json`
-  - midi2score (via orchestrator output_key_mapping): `midi2score_drums_musicxml`, `midi2score_piano_musicxml`, `midi2score_bass_musicxml`, `midi2score_jazz_bass_musicxml`
+  - midi2score (via orchestrator output_key_mapping): `midi2score_drums_musicxml`, `midi2score_drums_v2_musicxml` (adtof+ chain), `midi2score_piano_musicxml`, `midi2score_bass_musicxml`, `midi2score_jazz_bass_musicxml`
 
 ## Design System
 

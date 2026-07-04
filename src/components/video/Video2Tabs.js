@@ -30,6 +30,7 @@ const WORKERS = [
   { id: 'transkun-piano-quantized-before', kind: 'piano', label: 'Piano', sub: 'midi2score ✗ before', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
   { id: 'transkun-piano-quantized', kind: 'piano', label: 'Piano', sub: 'midi2score ✓ after', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
   { id: 'adtof-drums', kind: 'drums', label: 'Drums', sub: 'adtof', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
+  { id: 'adtof-plus-drums', kind: 'drums', label: 'Drums', sub: 'adtof+ 7-voice', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
   { id: 'bassunet-bass', kind: 'bass', label: 'Bass', sub: 'bassunet', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
   { id: 'fcpe-bass', kind: 'bass', label: 'Bass', sub: 'fcpe', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
   { id: 'guitar', kind: 'guitar', label: 'Guitar', sub: 'falling fretboard', cta: 'Guitar Transcription', icon: `${ICONS}/Guitar.svg` },
@@ -55,6 +56,7 @@ const SONGS = {
   'im-still-standing': { title: "I'm Still Standing", artist: 'Elton John', year: 1983 },
   'vienna': { title: 'Vienna', artist: 'Billy Joel', year: 1977 },
   'dont-stop-me-now': { title: "Don't Stop Me Now", artist: 'Queen', year: 1978 },
+  'cant-stop': { title: "Can't Stop", artist: 'Red Hot Chili Peppers', year: 2002 },
   // video2_piano pipeline runs (shipped artifacts — debugging the live render bugs)
   'wonderwall': { title: 'Wonderwall', artist: 'Oasis', year: 1995 },
   'wake-me-up-september-ends': { title: 'Wake Me Up When September Ends', artist: 'Green Day', year: 2004 },

@@ -1,15 +1,6 @@
 [
   {
     "song": "night-in-tunisia",
-    "worker": "adtof-drums",
-    "kind": "drums",
-    "status": "completed",
-    "source": "cloud",
-    "xml": "ADTd7ec6498cf47_drum_transcription.musicxml",
-    "midi": "ADTd7ec6498cf47_drum_transcription.mid"
-  },
-  {
-    "song": "night-in-tunisia",
     "worker": "transkun-piano",
     "kind": "piano",
     "status": "completed",
@@ -34,15 +25,6 @@
     "source": "cloud",
     "xml": null,
     "midi": "BAS63e585e0fe3e_bass_notes.mid"
-  },
-  {
-    "song": "ado-mirror",
-    "worker": "adtof-drums",
-    "kind": "drums",
-    "status": "completed",
-    "source": "cloud",
-    "xml": "ADTf431be7b7600_drum_transcription.musicxml",
-    "midi": "ADTf431be7b7600_drum_transcription.mid"
   },
   {
     "song": "ado-mirror",
@@ -457,5 +439,65 @@
     "source": "raw transkun-v2 + pitch-split grand staff (C4), raw rhythm, tuplet brackets/numbers hidden",
     "xml": "split_grand_staff.musicxml",
     "midi": null
+  },
+  {
+    "song": "night-in-tunisia",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFc856bf65d761",
+    "xml": "ADTfa88d256e0ac_drum_transcription.musicxml",
+    "midi": "ADTfa88d256e0ac_drum_transcription.mid"
+  },
+  {
+    "song": "night-in-tunisia",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF6b70e186af14",
+    "xml": "ADP44b5ee9df0a6_drum_transcription.musicxml",
+    "midi": "ADP44b5ee9df0a6_drum_transcription.mid"
+  },
+  {
+    "song": "ado-mirror",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF77e8cbf5c66a",
+    "xml": "ADT250444bafd56_drum_transcription.musicxml",
+    "midi": "ADT250444bafd56_drum_transcription.mid"
+  },
+  {
+    "song": "ado-mirror",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFa77ed03dd014",
+    "xml": "ADP8962377fd12c_drum_transcription.musicxml",
+    "midi": "ADP8962377fd12c_drum_transcription.mid"
+  },
+  {
+    "song": "cant-stop",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFfca9654f06cd",
+    "xml": "ADT867f971b230e_drum_transcription.musicxml",
+    "midi": "ADT867f971b230e_drum_transcription.mid"
+  },
+  {
+    "song": "cant-stop",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF496721b64587",
+    "xml": "ADP61c3e564bfff_drum_transcription.musicxml",
+    "midi": "ADP61c3e564bfff_drum_transcription.mid"
   }
 ]
