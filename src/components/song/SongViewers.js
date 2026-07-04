@@ -14,6 +14,13 @@ import StatusMessage from '../ui/StatusMessage';
 // 1) Sheet Music — OSMD
 // =================================================================
 export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange }) {
+  // A score with no sounding notes (e.g. piano transcription of a track that
+  // has no piano) makes OSMD's cursor init throw inside render() — never
+  // mount the viewer for one, show an explanatory empty state instead.
+  const hasNotes = useMemo(
+    () => !musicXmlText || /<pitch[\s>]|<unpitched[\s>]/.test(musicXmlText),
+    [musicXmlText]
+  );
   return (
     <div
       className="gs-sheet-scroll"
@@ -34,7 +41,15 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
           {error}
         </div>
       )}
-      {!loading && !error && musicXmlText && (
+      {!loading && !error && musicXmlText && !hasNotes && (
+        <div style={{ maxWidth: 560, margin: '48px auto 0' }}>
+          <StatusMessage variant="info" title="No notes detected">
+            We couldn&apos;t find any piano in this section of the audio. Try a
+            recording where the piano is clearly audible.
+          </StatusMessage>
+        </div>
+      )}
+      {!loading && !error && musicXmlText && hasNotes && (
         <div className="gs-sheet-page" style={{ maxWidth: 860, margin: '0 auto' }}>
           <OSMDViewer
             ref={osmdRef}
