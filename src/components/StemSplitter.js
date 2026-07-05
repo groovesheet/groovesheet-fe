@@ -15,6 +15,7 @@ import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
+import HeroBackground from './HeroBackground';
 import Features from './Features';
 import Pricing from './Pricing';
 import Element from './Element';
@@ -663,6 +664,7 @@ function StemSplitter({ onLoginClick }) {
   return (
     <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-background)' }}>
       <div className="dot-grid"></div>
+      <HeroBackground />
       <Header onLoginClick={onLoginClick} />
       <section className="hero" style={{ flex: 1, position: 'relative', zIndex: 10 }}>
         <div className="hero-container">
