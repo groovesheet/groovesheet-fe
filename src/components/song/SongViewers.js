@@ -295,7 +295,15 @@ export function PianoRollView({ midiBuffer, transport, loading, error }) {
 // variable (--gs-prog, a percentage) on the list element, and each row's
 // bright-waveform clip + playhead line are pure CSS off that variable — no
 // React re-render per frame.
-export function StemsView({ stems, stemState, onStemChange, onSeek, transport, statusText }) {
+export function StemsView({
+  stems,
+  stemState,
+  onStemChange,
+  onSeek,
+  transport,
+  statusText,
+  separatorName = 'GrooveSheet BS-Roformer',
+}) {
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -344,7 +352,7 @@ export function StemsView({ stems, stemState, onStemChange, onSeek, transport, s
       >
         <span>
           Sources: {stems.length} stems · separated by{' '}
-          <strong style={{ color: 'var(--color-text)' }}>GrooveSheet Demucs-v4</strong>.
+          <strong style={{ color: 'var(--color-text)' }}>{separatorName}</strong>.
         </span>
         {statusText && <span>{statusText}</span>}
       </div>
