@@ -4,7 +4,7 @@ GrooveSheet is an AI-powered music transcription web app. You upload an audio fi
 
 The brand reads as **studio-grade tooling for working musicians** — confident, technical, and a little playful. Brand color is a single, saturated cobalt blue (`#012FA7`) sitting on a near-black canvas, with one signature flourish: a soft blue dot-grid pattern that runs through every dark surface like sheet music staff lines.
 
-> Internally the codebase still references its previous name "DrumScore" in some files (e.g. the footer copyright). The user-facing brand is **GrooveSheet** everywhere new is built.
+> The user-facing brand is **GrooveSheet** everywhere. (The only remaining internal references to the old "DrumScore" name are backend API workflow tokens like `separate_to_drumscore_full`, which are part of the API contract and must not be renamed.)
 
 ---
 
@@ -237,5 +237,5 @@ ui_kits/
 ## ⚠️ Caveats
 
 - **Hubot Sans:** the official variable font ships locally from `assets/fonts/HubotSans-VariableFont_wdth_wght.ttf` (and italic). `colors_and_type.css` declares `@font-face` rules with weight 200–900 and width 75–125%, so all weights and widths are available — including italic.
-- **The codebase still says "DrumScore"** in `README.md` and the footer copyright. We've used **GrooveSheet** everywhere in this design system per the brand assets. Flag if a different convention is wanted.
+- **Brand name is GrooveSheet** everywhere user-facing (README, footer copyright, logo alt text, i18n strings). The only leftover "DrumScore" strings are backend API workflow tokens (e.g. `separate_to_drumscore_full`) — API contract, do not rename.
 - **Hand-rolled feature illustrations** are kept inline in source. If you need them as standalone SVGs in `assets/`, ask and we'll extract.

@@ -23,7 +23,7 @@ Site-wide footer. Three-column main row, two-row bottom bar.
         <div.language-selector> En ⌄
     <div.footer-bottom>
       <div.footer-bottom-left>
-        <Link.copyright> © 2025 DrumScore       ← links to /business-information
+        <Link.copyright> © {{year}} GrooveSheet ← links to /business-information
         <div.footer-legal> Terms / Privacy / Refund
 ```
 
@@ -47,15 +47,15 @@ Facebook, Instagram, X, YouTube, TikTok, Reddit, GitHub, LinkedIn, Discord, Dev.
 
 - Column headings in **Title Case** ("Explore", "Apps")
 - Link text in Title Case ("Pricing", "Desktop App")
-- Copyright reads `© 2025 DrumScore` — legacy brand name, intentional, links to `/business-information`
+- Copyright reads `© {{year}} GrooveSheet` (i18n key `footer.copyright`), links to `/business-information`
 
 ## Do / Don't
 
 - **Do** add new social platforms by appending to the `socialIcons` array with `name`, `component` (Phosphor export name), and `href`.
 - **Do** keep `weight="fill"` for socials. UI-chrome icons elsewhere use `weight="regular"`.
-- **Don't** rename the copyright string casually. "DrumScore" is intentional legacy branding here.
+- **Don't** hardcode the copyright — it's the i18n string `footer.copyright` (`© {{year}} GrooveSheet`).
 - **Don't** add a background color — Footer sits on the same canvas as Header.
 
 ## Drift from generated spec
 
-`VISUAL_GUIDE.md` says the footer is "simple" with logo + 16 social icons + two columns + language; current FE matches that. The legacy copyright "DrumScore" is the documented divergence between brand (`GrooveSheet`) and codebase footer text.
+`VISUAL_GUIDE.md` says the footer is "simple" with logo + 16 social icons + two columns + language; current FE matches that. No divergence — the copyright now reads `GrooveSheet` (rebranded from the legacy "DrumScore" string).

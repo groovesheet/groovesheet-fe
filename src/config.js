@@ -7,7 +7,7 @@
 
 const config = {
   // Application Configuration
-  appName: process.env.REACT_APP_NAME || 'DrumScore',
+  appName: process.env.REACT_APP_NAME || 'GrooveSheet',
   appUrl: process.env.REACT_APP_URL || 'http://localhost:3000',
 
   // API Configuration

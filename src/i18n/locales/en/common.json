@@ -38,7 +38,7 @@
     "desktopApp": "Desktop App",
     "iosApp": "iOS App",
     "androidApp": "Android App",
-    "copyright": "© {{year}} DrumScore",
+    "copyright": "© {{year}} GrooveSheet",
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
     "refund": "Refund Policy"
@@ -250,10 +250,10 @@
     }
   },
   "login": {
-    "welcome": "Welcome to DrumScore",
+    "welcome": "Welcome to GrooveSheet",
     "continueWith": "Continue with",
-    "subscribeLong": "Subscribe to DrumScore updates and never miss a beat!",
-    "subscribeShort": "Subscribe to DrumScore updates",
+    "subscribeLong": "Subscribe to GrooveSheet updates and never miss a beat!",
+    "subscribeShort": "Subscribe to GrooveSheet updates",
     "google": "Google",
     "facebook": "Facebook",
     "apple": "Apple",
