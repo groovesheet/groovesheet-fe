@@ -38,7 +38,7 @@
     "desktopApp": "桌面版",
     "iosApp": "iOS 應用程式",
     "androidApp": "Android 應用程式",
-    "copyright": "© {{year}} DrumScore",
+    "copyright": "© {{year}} GrooveSheet",
     "terms": "服務條款",
     "privacy": "隱私政策",
     "refund": "退款政策"
@@ -250,10 +250,10 @@
     }
   },
   "login": {
-    "welcome": "歡迎使用 DrumScore",
+    "welcome": "歡迎使用 GrooveSheet",
     "continueWith": "以下列方式繼續",
-    "subscribeLong": "訂閱 DrumScore 更新,不錯過任何節奏!",
-    "subscribeShort": "訂閱 DrumScore 更新",
+    "subscribeLong": "訂閱 GrooveSheet 更新,不錯過任何節奏!",
+    "subscribeShort": "訂閱 GrooveSheet 更新",
     "google": "Google",
     "facebook": "Facebook",
     "apple": "Apple",

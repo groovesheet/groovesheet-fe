@@ -65,6 +65,6 @@ The site-wide top navigation. Transparent over the dot grid; floats in document 
 
 ## Drift from generated spec
 
-- Logo `alt` text reads **"DrumScore Logo"** in source (legacy name); brand is GrooveSheet everywhere new is written. Don't rely on alt text for branding.
+- Logo `alt` text reads **"GrooveSheet Logo"** in source. Don't rely on alt text for branding.
 - `preview/component-menu.html` shows a single horizontal nav strip; the real header has a parallel mobile menu portal that matters for any nav change.
 - Generated visual guide describes "the brand mark" but Header swaps PNG logos by theme — no SVG mark used here. Production logos live in `public/images/Logo_White.png` and `public/images/Logo_Dark.png`, **not** in `design-system/assets/logos/`.

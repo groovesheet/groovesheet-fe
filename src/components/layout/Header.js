@@ -76,7 +76,7 @@ function Header({ onLoginClick }) {
             <LocalizedLink to="/" className="logo">
               <img
                 src={isDarkMode ? '/images/Logo_White.png' : '/images/Logo_Dark.png'}
-                alt="DrumScore Logo"
+                alt="GrooveSheet Logo"
                 className="logo-image"
               />
             </LocalizedLink>

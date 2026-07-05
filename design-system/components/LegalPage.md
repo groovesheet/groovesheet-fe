@@ -54,7 +54,7 @@ Four sibling pages (`/privacy-policy`, `/refund-policy`, `/terms`, `/business-in
 
 - **Do** mirror the structure exactly when adding a new legal page (e.g., Cookie Policy). Copy `PrivacyPolicy.js` as the template.
 - **Do** consider extracting a shared `<LegalPage title="...">{children}</LegalPage>` component if a 5th legal page lands — the four current files duplicate Header/Footer/main wrapping logic.
-- **Don't** rebrand legacy entity names ("DrumScore" footer copyright, etc.) without legal review.
+- **Don't** alter the registered legal entity name (`USEFOOL TECHNOLOGY PRIVATE LIMITED`) or business-registration details on the Business Information page without legal review.
 - **Don't** mix the numbered-section style with plain-paragraph style on a single page (Privacy uses numbered; Business uses plain — pick one).
 
 ## Drift from generated spec

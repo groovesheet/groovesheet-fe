@@ -1,4 +1,4 @@
-# DrumScore Frontend
+# GrooveSheet Frontend
 
 High-quality drum notation generation with AI-powered technology.
 

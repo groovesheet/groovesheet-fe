@@ -24,7 +24,7 @@ const IMG_W = 1200;
 const IMG_H = 562;
 
 const HOLD_SEC = 0.09; // overlay stays solid blue for this long after a hit
-const FLASH_SEC = 0.26; // total flash length (hold + fade-out)
+const FLASH_SEC = 0.16; // total flash length (hold + fade-out)
 const MIN_ALPHA = 0.0; // overlays fully invisible at rest
 
 // One entry per kit piece. GM channel-10 note numbers → piece, mirroring the

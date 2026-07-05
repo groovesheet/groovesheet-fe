@@ -6,7 +6,7 @@
 export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 // Application metadata
-export const APP_NAME = 'DrumScore';
+export const APP_NAME = 'GrooveSheet';
 export const APP_DESCRIPTION = 'High-quality drum notation generation with AI-powered technology';
 
 // Navigation links
@@ -19,10 +19,10 @@ export const NAV_LINKS = [
 
 // Social media links
 export const SOCIAL_LINKS = {
-  twitter: 'https://twitter.com/drumscore',
-  facebook: 'https://facebook.com/drumscore',
-  instagram: 'https://instagram.com/drumscore',
-  linkedin: 'https://linkedin.com/company/drumscore',
+  twitter: 'https://twitter.com/groovesheet',
+  facebook: 'https://facebook.com/groovesheet',
+  instagram: 'https://instagram.com/groovesheet',
+  linkedin: 'https://linkedin.com/company/groovesheet',
 };
 
 // Pricing tiers (example - update with actual data)
