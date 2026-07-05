@@ -31,6 +31,7 @@ import PreviewDemo from './components/PreviewDemo';
 import Video1 from './components/video/Video1';
 import ServiceStatus from './components/ServiceStatus';
 import Video2Tabs from './components/video/Video2Tabs';
+import Video2Drums from './components/video/Video2Drums';
 import BillingSuccess from './components/BillingSuccess';
 import PricingPage from './components/PricingPage';
 import NotFound from './components/NotFound';
@@ -211,6 +212,7 @@ function App() {
       <Route path="preview1" element={<PreviewDemo />} />
       <Route path="video1" element={<Video1 />} />
       <Route path="video2" element={<Video2Tabs />} />
+      <Route path="video2fordrums" element={<Video2Drums />} />
       <Route path="service-status" element={<ServiceStatus />} />
       <Route path="billing/success" element={<BillingSuccess />} />
       <Route path="*" element={<NotFound onLoginClick={openLoginModal} />} />
