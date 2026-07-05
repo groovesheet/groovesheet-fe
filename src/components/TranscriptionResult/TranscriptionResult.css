@@ -1,0 +1,162 @@
+/* TranscriptionResultView — explore-style viewer inside the expanded Hero card.
+   Reuses the .gs-song-page scoped styles from song/Song.css for the playbar,
+   viewer toolbar, viewer shell and stems list. Only result-specific chrome
+   lives here. */
+
+.tr-result {
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+/* Header row ---------------------------------------------------------------- */
+.tr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 6px 0;
+}
+
+.tr-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tr-check {
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.tr-header-text {
+  min-width: 0;
+}
+
+.tr-title {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 26px;
+  color: var(--color-text);
+}
+
+.tr-filename {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-family-sans);
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  min-width: 0;
+}
+
+.tr-filename span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-preview-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface-light);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--color-text);
+}
+
+/* Header actions -------------------------------------------------------------- */
+.tr-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface-light);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tr-btn:hover {
+  border-color: var(--color-border-lighter);
+  background: var(--color-surface-lighter);
+}
+
+.tr-btn-primary {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-button-light);
+}
+
+.tr-btn-primary:hover {
+  background: var(--color-primary);
+  filter: brightness(1.15);
+}
+
+.tr-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tr-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.tr-close:hover {
+  background: var(--color-surface-light);
+}
+
+/* Sticky transport + tabs ------------------------------------------------------ */
+.tr-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+/* The gs-viewer-toolbar spec adds outer margins meant for the song page shell —
+   tighten inside the card. */
+.tr-result .gs-viewer-toolbar {
+  margin: 8px 0;
+}
+
+@media (max-width: 768px) {
+  .tr-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tr-header-actions {
+    width: 100%;
+  }
+}

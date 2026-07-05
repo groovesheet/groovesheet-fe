@@ -30,13 +30,20 @@
   transition: gap 0.3s ease;
 }
 
+/* Success: the hero copy collapses away and the card claims the full width. */
 .hero-container.success-expanded {
   justify-content: center;
   gap: 0;
+  max-width: 100%;
 }
 
 .hero-container.success-expanded .hero-content {
-  display: none;
+  max-width: 0;
+  min-height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -49,6 +56,7 @@
   height: auto;
   padding: 20px 0;
   box-sizing: border-box;
+  transition: max-width 0.45s ease, opacity 0.3s ease, padding 0.45s ease;
 }
 
 .hero-text {
@@ -566,9 +574,20 @@
 
 /* Drag and Drop States */
 .upload-area.state-uploading,
-.upload-area.state-processing,
-.upload-area.state-success {
+.upload-area.state-processing {
   justify-content: center;
+}
+
+/* Success: card expands leftward to fill the screen and hosts the
+   explore-style transcription viewer. */
+.upload-area.state-success {
+  justify-content: flex-start;
+  max-width: 100%;
+  min-height: calc(100vh - 160px);
+}
+
+.upload-area.state-success:hover {
+  transform: none;
 }
 
 .upload-area.dragging {
@@ -953,11 +972,9 @@
   }
 }
 
-/* Full-width success layout — VisualizationPanel takes over */
-.hero-container-success {
-  flex-direction: column;
-  max-width: 100%;
-  gap: 0;
+/* Hide the mobile disclaimer while the expanded result view is on screen */
+.hero-container.success-expanded .hero-disclaimer-mobile {
+  display: none;
 }
 
 /* Success State Specific Styles */

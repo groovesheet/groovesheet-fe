@@ -119,20 +119,6 @@ function LandingPage({ onLoginClick }) {
 
   return (
     <div className="app-container">
-      <img
-        src="/overlay.svg"
-        alt=""
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: '60px',
-          width: 'calc(100% - 120px)',
-          height: 'auto',
-          zIndex: 2147483647,
-          pointerEvents: 'none',
-        }}
-      />
       <div className="dot-grid"></div>
       <div
         ref={backgroundRef}

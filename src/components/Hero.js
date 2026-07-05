@@ -3,16 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
-import { previewFetch, startPreview, setPendingPreviewId } from '../utils/previewApi';
+import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '../utils/previewApi';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import { useWorkflowPersistence } from '../hooks/useWorkflowPersistence';
-import DownloadSection from './visualization/DownloadSection';
-import './visualization/VisualizationPanel.css';
-import PreviewPanel from './PreviewPanel/PreviewPanel';
+import TranscriptionResultView from './TranscriptionResult/TranscriptionResultView';
 import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
@@ -47,6 +45,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = config.apiBaseUrl;
 
+// TODO(launch): only piano is production-ready today. The other instruments are
+// temporarily hidden from the picker — add them back here once their pipelines ship.
+const VISIBLE_INSTRUMENTS = ['piano'];
+
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
 // When changing download logic here, update those files too.
@@ -79,19 +81,6 @@ const MagicWandIcon = () => (
   </svg>
 );
 
-const CheckCircleIcon = () => (
-  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="32" cy="32" r="28" fill="white" stroke="white" strokeWidth="4"/>
-    <path d="M20 32L28 40L44 24" stroke="#171717" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M27 9L9 27M9 9L27 27" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 const ServerIcon = () => (
   <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="12" y="8" width="40" height="16" rx="3" stroke="white" strokeWidth="3"/>
@@ -116,7 +105,7 @@ const BassIcon = () => (
   </svg>
 );
 
-function Hero({ onLoginRequired: _onLoginRequired }) {
+function Hero({ onLoginRequired }) {
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
@@ -132,7 +121,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
-  const [selectedInstrument, setSelectedInstrument] = useState('drums');
+  const [selectedInstrument, setSelectedInstrument] = useState('piano');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const fileInputRef = useRef(null);
@@ -156,7 +145,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     setJobId(saved.jobId);
     setStatus(saved.status);
     setProgress(saved.progress || 0);
-    setSelectedInstrument(saved.instrument || 'drums');
+    setSelectedInstrument(saved.instrument || 'piano');
     if (saved.fileName) {
       // Create a minimal file-like object with just the name
       setFile({ name: saved.fileName });
@@ -822,15 +811,45 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
+  // Promote a signed-in user's preview to a full run (no re-upload).
+  const handleUpgradeToFull = async () => {
+    if (!jobId || !jobId.startsWith('PRV')) return;
+    try {
+      const result = await upgradeToFull(API_BASE_URL, jobId, getToken);
+      if (result && result.workflow_id) {
+        // Replace the preview result with the new full workflow's polling.
+        prefetchedFilesRef.current = {};
+        if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+        setDownloadUrl(null);
+        setDownloadFilename(null);
+        setJobId(result.workflow_id);
+        setStatus('processing');
+        setProgress(0);
+        simulateProgress();
+        persist({ jobId: result.workflow_id, status: 'processing', progress: 0, instrument: selectedInstrument, fileName: file?.name });
+        setTimeout(() => pollStatus(result.workflow_id), 1000);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to start full song processing.');
+    }
+  };
+
+  // preview_id is already stashed in localStorage at upload time; after
+  // signup the app-level hook claims it via /preview/{id}/claim.
+  const handleSignUpToUnlock = () => {
+    if (onLoginRequired) onLoginRequired();
+  };
+
   // Handle browse button click — allow anonymous uploads for preview
   const handleBrowseClick = () => {
     if (!isLoaded) return;
     fileInputRef.current?.click();
   };
 
-  // Drag and drop handlers
+  // Drag and drop handlers — inert while a finished result is on screen.
   const handleDragOver = (e) => {
     e.preventDefault();
+    if (getUIState() === 'success') return;
     setIsDragging(true);
   };
 
@@ -842,6 +861,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
+    if (getUIState() === 'success') return;
 
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
@@ -901,7 +921,7 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
           { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
           { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon }
-        ].map((instrument) => {
+        ].filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value)).map((instrument) => {
           const IconComp = instrument.icon;
           const isSelected = selectedInstrument === instrument.value;
           return (
@@ -1031,35 +1051,13 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
     </>
   );
 
-  // Success state: render DownloadSection + PreviewPanel (mirror /preview1)
-  if (uiState === 'success') {
-    return (
-      <section className="hero">
-        <div className="hero-container hero-container-success">
-          <div className="viz-panel">
-            <DownloadSection
-              fileName={file?.name}
-              selectedInstrument={selectedInstrument}
-              onDownloadTranscription={handleManualDownload}
-              onDownloadStem={handleDownloadStem}
-              onDownloadMidi={handleDownloadMidi}
-              onReset={resetUpload}
-              downloadError={downloadError}
-            />
-            <PreviewPanel
-              workflowId={jobId}
-              selectedInstrument={selectedInstrument}
-              prefetchedFiles={{}}
-            />
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // On success the upload card expands over the hero copy and fills the
+  // viewport, showing the /explore-style viewer for the fresh transcription.
+  const isSuccess = uiState === 'success';
 
   return (
     <section className="hero">
-      <div className="hero-container">
+      <div className={`hero-container ${isSuccess ? 'success-expanded' : ''}`}>
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">{t('hero.title')}</h1>
@@ -1097,6 +1095,22 @@ function Hero({ onLoginRequired: _onLoginRequired }) {
           {uiState === 'uploading' && renderUploadingState()}
           {uiState === 'cold_starting' && renderColdStartState()}
           {uiState === 'processing' && renderProcessingState()}
+          {isSuccess && (
+            <TranscriptionResultView
+              workflowId={jobId}
+              fileName={file?.name || downloadFilename}
+              selectedInstrument={selectedInstrument}
+              prefetchedFiles={prefetchedFilesRef.current}
+              onDownloadTranscription={handleManualDownload}
+              onDownloadStem={handleDownloadStem}
+              onDownloadMidi={handleDownloadMidi}
+              onReset={resetUpload}
+              downloadError={downloadError}
+              isSignedIn={isSignedIn}
+              onUpgradeToFull={handleUpgradeToFull}
+              onSignUpToUnlock={handleSignUpToUnlock}
+            />
+          )}
 
           {/* Error message overlay */}
           {error && (
