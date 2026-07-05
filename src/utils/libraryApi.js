@@ -30,7 +30,16 @@ async function parseErrorDetail(response) {
   let detail = response.statusText || `Request failed (${response.status})`;
   try {
     const data = await response.clone().json();
-    detail = data.detail || data.message || detail;
+    const raw = data.detail || data.message;
+    if (typeof raw === 'string') {
+      detail = raw;
+    } else if (Array.isArray(raw)) {
+      // FastAPI validation errors: [{loc, msg, type}, ...] — surface the
+      // messages, not "[object Object]".
+      detail = raw.map((e) => (e && e.msg) || JSON.stringify(e)).join('; ') || detail;
+    } else if (raw) {
+      detail = JSON.stringify(raw);
+    }
   } catch (_) {
     // Non-JSON error body — keep the status text.
   }

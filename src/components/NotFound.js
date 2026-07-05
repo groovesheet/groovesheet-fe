@@ -10,12 +10,20 @@ import React from 'react';
  * on every element, which would otherwise override the design).
  *
  * Links inside the design use target="_top" so they navigate the parent window.
+ *
+ * `title`/`body` override the page's headline and copy (passed as query
+ * params; the design reads them with textContent, so plain text only) —
+ * lets routes like /explore/:songId reuse this page for "Track not found".
  */
-function NotFound() {
+function NotFound({ title, body }) {
+  const params = new URLSearchParams();
+  if (title) params.set('title', title);
+  if (body) params.set('body', body);
+  const query = params.toString();
   return (
     <iframe
       title="Page not found"
-      src={`${process.env.PUBLIC_URL}/design/not-found.html`}
+      src={`${process.env.PUBLIC_URL}/design/not-found.html${query ? `?${query}` : ''}`}
       style={{
         position: 'fixed',
         inset: 0,
