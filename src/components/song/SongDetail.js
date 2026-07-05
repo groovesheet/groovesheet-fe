@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
+import NotFound from '../NotFound';
 import { useTheme } from '../../context/ThemeContext';
 import { useLocalizedNavigate } from '../../i18n/locale';
 import { Icon } from './icons';
@@ -766,7 +767,13 @@ function SongDetail({ onLoginClick }) {
       </span>
     ) : null;
 
-  const notFound = trackError && (trackError.status === 404 || trackError.status === 422);
+  // Only a real 404 means "track gone" — anything else (422, 5xx) is a bug or
+  // outage and must surface as a load error, not masquerade as a missing track.
+  const notFound = trackError && trackError.status === 404;
+
+  if (notFound) {
+    return <NotFound title="Track not found" body="It may have been removed from the library. Let's get you back to the downbeat." />;
+  }
 
   return (
     <div className="gs-song-page">
@@ -782,8 +789,8 @@ function SongDetail({ onLoginClick }) {
 
         {trackError && (
           <CenteredNotice
-            title={notFound ? 'Track not found' : 'Could not load this track'}
-            body={notFound ? 'It may have been removed from the library.' : trackError.message}
+            title="Could not load this track"
+            body={trackError.message}
             actionLabel="Back to explore"
             onAction={() => navigate('/explore')}
           />

@@ -148,6 +148,22 @@
 </div>
 <script>
   (function () {
+    // Optional ?title= / ?body= overrides so app routes (e.g. a missing
+    // library track) can reuse this page with their own copy. textContent
+    // only — query params must never become markup.
+    var params = new URLSearchParams(window.location.search);
+    var titleParam = params.get('title');
+    var bodyParam = params.get('body');
+    if (titleParam) {
+      var h1 = document.querySelector('main h1');
+      if (h1) h1.textContent = titleParam;
+      document.title = titleParam + ' · GrooveSheet';
+    }
+    if (bodyParam) {
+      var copy = document.querySelector('main h1 + p');
+      if (copy) copy.textContent = bodyParam;
+    }
+
     var disc = document.querySelector('.gs404-disc');
     var number = document.querySelector('.gs404-number');
     if (disc && number) {
