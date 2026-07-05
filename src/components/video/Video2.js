@@ -3,6 +3,7 @@ import { Midi } from '@tonejs/midi';
 import OSMDViewer from '../PreviewPanel/OSMDViewer';
 import VideoPianoRoll from './VideoPianoRoll';
 import VideoFretboardRoll from './VideoFretboardRoll';
+import VideoDrumKit from './VideoDrumKit';
 import { createSynth } from './videoSynth';
 
 /**
@@ -109,9 +110,10 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
  * @param {string} [props.xmlUrl]       MusicXML for the sheet band (OSMD). Omit for MIDI-only workers.
  * @param {string} [props.midiUrl]      MIDI for the roll + audio (preferred source when present).
  * @param {'piano'|'bass'|'drums'} [props.kind]  drives roll mode + drum audio voices
+ * @param {'lanes'|'kit'} [props.rollVariant]  drums only: falling lanes (default) or the top-down kit photo whose pieces flash on each hit
  * @param {object} [props.metaOverride] partial overrides for the editable frame metadata
  */
-export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind = 'piano', metaOverride } = {}) {
+export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind = 'piano', rollVariant = 'lanes', metaOverride } = {}) {
   const m = { ...meta, ...(metaOverride || {}) };
   const hasSheet = !!xmlUrl;
   // Piano WITH a sheet: drive the roll + audio from the SAME OSMD-parsed sheet
@@ -430,6 +432,10 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
   }, [ready, view, restartAndPlay, pauseAtStart]);
 
   const isCover = view === 'cover';
+  // Kit layout: the drum photo owns the bottom of the frame, so the logo and
+  // legal text move up to sit right below the sheet band instead of the footer.
+  const isKit = rollMode === 'drums' && rollVariant === 'kit';
+  const brandY = isKit ? ROLL_Y + 24 : FOOTER_Y;
 
   return (
     <div
@@ -515,17 +521,19 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
         <div style={{ position: 'absolute', top: ROLL_Y, left: 0, width: FRAME_W, height: ROLL_H, background: '#0c100c', overflow: 'hidden' }}>
           {notes && (rollMode === 'guitar'
             ? <VideoFretboardRoll notes={notes} timeRef={timeRef} />
-            : <VideoPianoRoll notes={notes} timeRef={timeRef} mode={rollMode} />)}
+            : rollMode === 'drums' && rollVariant === 'kit'
+              ? <VideoDrumKit notes={notes} timeRef={timeRef} />
+              : <VideoPianoRoll notes={notes} timeRef={timeRef} mode={rollMode} />)}
         </div>
 
-        {/* Footer: logo bottom-left */}
-        <div style={{ position: 'absolute', top: FOOTER_Y + 10, left: 57, height: 93, display: 'flex', alignItems: 'center', zIndex: 3 }}>
+        {/* Footer: logo bottom-left (kit layout: just below the sheet band) */}
+        <div style={{ position: 'absolute', top: brandY + 10, left: 57, height: 93, display: 'flex', alignItems: 'center', zIndex: 3 }}>
           <img src={m.logo} alt="GrooveSheet" style={{ height: 70, width: 'auto' }} />
         </div>
 
-        {/* Footer: legal bottom-right (hidden under the cover sidebar) */}
+        {/* Footer: legal bottom-right (kit layout: just below the sheet band; hidden under the cover sidebar) */}
         {!isCover && (
-          <div style={{ position: 'absolute', top: FOOTER_Y, left: 3120, width: 660, height: 93, color: '#fff', fontSize: 24, lineHeight: '31px', textAlign: 'right', zIndex: 3 }}>
+          <div style={{ position: 'absolute', top: brandY, left: 3120, width: 660, height: 93, color: '#fff', fontSize: 24, lineHeight: '31px', textAlign: 'right', zIndex: 3 }}>
             {m.legal}
           </div>
         )}
