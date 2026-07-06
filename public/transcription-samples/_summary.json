@@ -499,5 +499,85 @@
     "workflow_id": "WF496721b64587",
     "xml": "ADP61c3e564bfff_drum_transcription.musicxml",
     "midi": "ADP61c3e564bfff_drum_transcription.mid"
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFe4aa006878ec",
+    "xml": "ADT6c76a4d539ea_drum_transcription.musicxml",
+    "midi": "ADT6c76a4d539ea_drum_transcription.mid"
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFe741970ccc8f",
+    "xml": "ADP95c20b7a085c_drum_transcription.musicxml",
+    "midi": "ADP95c20b7a085c_drum_transcription.mid"
+  },
+  {
+    "song": "sweet-home-alabama",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF9de35709b4fb",
+    "xml": "ADTc6dacfe60f6a_drum_transcription.musicxml",
+    "midi": "ADTc6dacfe60f6a_drum_transcription.mid"
+  },
+  {
+    "song": "sweet-home-alabama",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFe7c7592361c3",
+    "xml": "ADP0a513eaa76fa_drum_transcription.musicxml",
+    "midi": "ADP0a513eaa76fa_drum_transcription.mid"
+  },
+  {
+    "song": "everybody-wants-to-rule-the-world",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF7f981ba807f1",
+    "xml": "ADT85b7e2129d61_drum_transcription.musicxml",
+    "midi": "ADT85b7e2129d61_drum_transcription.mid"
+  },
+  {
+    "song": "everybody-wants-to-rule-the-world",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF276b69b63867",
+    "xml": "ADP5f001eff15c0_drum_transcription.musicxml",
+    "midi": "ADP5f001eff15c0_drum_transcription.mid"
+  },
+  {
+    "song": "the-adults-are-talking",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFf3a7888623cf",
+    "xml": "ADTd5f0b426a7b8_drum_transcription.musicxml",
+    "midi": "ADTd5f0b426a7b8_drum_transcription.mid"
+  },
+  {
+    "song": "the-adults-are-talking",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFef3329935ff2",
+    "xml": "ADP3e99556ab3c5_drum_transcription.musicxml",
+    "midi": "ADP3e99556ab3c5_drum_transcription.mid"
   }
 ]

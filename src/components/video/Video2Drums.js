@@ -19,6 +19,11 @@ const ICONS = `${PUB}/video-assets/icons`;
 const SONGS = {
   'night-in-tunisia': { title: 'Night In Tunisia', artist: 'Jesús Molina', year: 2018 },
   'ado-mirror': { title: 'MIRROR', artist: 'Ado', year: 2024 },
+  'cant-stop': { title: "Can't Stop", artist: 'Red Hot Chili Peppers', year: 2002 },
+  'sweet-home-alabama': { title: 'Sweet Home Alabama', artist: 'Lynyrd Skynyrd', year: 1974 },
+  'everybody-wants-to-rule-the-world': { title: 'Everybody Wants To Rule The World', artist: 'Tears For Fears', year: 1985 },
+  'the-adults-are-talking': { title: 'The Adults Are Talking', artist: 'The Strokes', year: 2020 },
+  'dont-stop-me-now': { title: "Don't Stop Me Now", artist: 'Queen', year: 1978 },
 };
 
 export default function Video2Drums() {
