@@ -24,6 +24,11 @@ const SONGS = {
   'everybody-wants-to-rule-the-world': { title: 'Everybody Wants To Rule The World', artist: 'Tears For Fears', year: 1985 },
   'the-adults-are-talking': { title: 'The Adults Are Talking', artist: 'The Strokes', year: 2020 },
   'dont-stop-me-now': { title: "Don't Stop Me Now", artist: 'Queen', year: 1978 },
+  'uptown-girl': { title: 'Uptown Girl', artist: 'Billy Joel', year: 1983 },
+  'everybody-talks': { title: 'Everybody Talks', artist: 'Neon Trees', year: 2011 },
+  'come-a-little-closer': { title: 'Come A Little Closer', artist: 'Cage The Elephant', year: 2013 },
+  'tongue-tied': { title: 'Tongue Tied', artist: 'GROUPLOVE', year: 2011 },
+  'starman': { title: 'Starman', artist: 'David Bowie', year: 1972 },
 };
 
 export default function Video2Drums() {

@@ -579,5 +579,105 @@
     "workflow_id": "WFef3329935ff2",
     "xml": "ADP3e99556ab3c5_drum_transcription.musicxml",
     "midi": "ADP3e99556ab3c5_drum_transcription.mid"
+  },
+  {
+    "song": "uptown-girl",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF01c09b4549c7",
+    "xml": "ADT9a169d905c9e_drum_transcription.musicxml",
+    "midi": "ADT9a169d905c9e_drum_transcription.mid"
+  },
+  {
+    "song": "uptown-girl",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFe90df0582837",
+    "xml": "ADPfec346723afb_drum_transcription.musicxml",
+    "midi": "ADPfec346723afb_drum_transcription.mid"
+  },
+  {
+    "song": "everybody-talks",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF2f726384fa83",
+    "xml": "ADT4bb86042b3c2_drum_transcription.musicxml",
+    "midi": "ADT4bb86042b3c2_drum_transcription.mid"
+  },
+  {
+    "song": "everybody-talks",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF5a69629fe1e0",
+    "xml": "ADP25cbb7848acd_drum_transcription.musicxml",
+    "midi": "ADP25cbb7848acd_drum_transcription.mid"
+  },
+  {
+    "song": "come-a-little-closer",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFde79919924f5",
+    "xml": "ADT82613974df5b_drum_transcription.musicxml",
+    "midi": "ADT82613974df5b_drum_transcription.mid"
+  },
+  {
+    "song": "come-a-little-closer",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF09d8a173b979",
+    "xml": "ADPdbd651617978_drum_transcription.musicxml",
+    "midi": "ADPdbd651617978_drum_transcription.mid"
+  },
+  {
+    "song": "tongue-tied",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF218189ffe972",
+    "xml": "ADTbf91b70f7585_drum_transcription.musicxml",
+    "midi": "ADTbf91b70f7585_drum_transcription.mid"
+  },
+  {
+    "song": "tongue-tied",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF840cc87472d9",
+    "xml": "ADPe3e487b78a23_drum_transcription.musicxml",
+    "midi": "ADPe3e487b78a23_drum_transcription.mid"
+  },
+  {
+    "song": "starman",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFfdb41b1b6ea2",
+    "xml": "ADTcec3a7a3147d_drum_transcription.musicxml",
+    "midi": "ADTcec3a7a3147d_drum_transcription.mid"
+  },
+  {
+    "song": "starman",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WFb880a87051b4",
+    "xml": "ADPa490cb14da6f_drum_transcription.musicxml",
+    "midi": "ADPa490cb14da6f_drum_transcription.mid"
   }
 ]
