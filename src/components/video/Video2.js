@@ -169,7 +169,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
     let cancelled = false;
     (async () => {
       try {
-        const xmlRes = await fetch(xmlUrl);
+        const xmlRes = await fetch(xmlUrl, { cache: 'no-store' });
         if (!xmlRes.ok) throw new Error(`XML ${xmlRes.status}`);
         const xmlText = await xmlRes.text();
         if (!cancelled) setXml(xmlText);
@@ -186,7 +186,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(midiUrl);
+        const res = await fetch(midiUrl, { cache: 'no-store' });
         if (!res.ok) throw new Error(`MIDI ${res.status}`);
         const buf = await res.arrayBuffer();
         if (cancelled) return;

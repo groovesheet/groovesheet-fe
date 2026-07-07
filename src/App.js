@@ -33,6 +33,7 @@ import Video1 from './components/video/Video1';
 import ServiceStatus from './components/ServiceStatus';
 import Video2Tabs from './components/video/Video2Tabs';
 import Video2Drums from './components/video/Video2Drums';
+import { Video2Guitar, Video2Bass } from './components/video/Video2Instrument';
 import BillingSuccess from './components/BillingSuccess';
 import PricingPage from './components/PricingPage';
 import NotFound from './components/NotFound';
@@ -156,8 +157,10 @@ function App() {
       <Route path="sso-callback" element={<SSOCallback />} />
       <Route path="preview1" element={<PreviewDemo />} />
       <Route path="video1" element={<Video1 />} />
-      <Route path="video2" element={<Video2Tabs />} />
+      <Route path="video2forpiano" element={<Video2Tabs />} />
       <Route path="video2fordrums" element={<Video2Drums />} />
+      <Route path="video2forguitar" element={<Video2Guitar />} />
+      <Route path="video2forbass" element={<Video2Bass />} />
       <Route path="service-status" element={<ServiceStatus />} />
       <Route path="billing/success" element={<BillingSuccess />} />
       <Route path="*" element={<NotFound onLoginClick={openLoginModal} />} />

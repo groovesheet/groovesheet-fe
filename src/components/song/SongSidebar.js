@@ -10,7 +10,6 @@ import {
   Share,
   Flag,
   Play,
-  SealCheck,
 } from '@phosphor-icons/react';
 import { creatorHandleForTrack } from '../../utils/creatorApi';
 import { reportTrack } from '../../utils/libraryApi';
@@ -148,7 +147,7 @@ function RowThumb({ track }) {
   );
 }
 
-function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn, onDownload, onLoginClick, downloading }) {
+function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn, onDownload, onLoginClick, downloading, instrumentOptions = [], instrument, onInstrument }) {
   const id = track.id;
   const durationSec = track.thumb_data?.duration_sec || track.duration_sec || 0;
 
@@ -163,9 +162,6 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
   if (formats.has('opus')) formatList.push('Opus');
   const formatLabel = formatList.length ? formatList.join(' · ') : 'Stems';
 
-  // Display-only select: real stem names.
-  const instruments = stems.map((s) => s.label);
-  const [instrument, setInstrument] = useState(instruments[0] || '');
   const [reportOpen, setReportOpen] = useState(false);
 
   const subtitle = [
@@ -193,32 +189,57 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
     <aside className="gs-rsidebar">
       {/* Header / hero block */}
       <div className="gs-rs-section">
-        <div className="gs-rs-publisher">
-          <SealCheck size={13} weight="fill" style={{ color: 'var(--color-primary)' }} />
-          <span>GrooveSheet</span>
-          {track.source && (
-            <span style={{ opacity: 0.65 }}>
-              · {track.source === 'social_pipeline' ? 'auto-transcription' : track.source}
-            </span>
-          )}
-          {(() => {
-            // Prefer the real publisher (owner) from the track payload; fall
-            // back to the deterministic handle for unattributed tracks.
-            const handle = (track.owner && track.owner.username) || creatorHandleForTrack(track);
-            if (!handle) return null;
-            return (
-              <span style={{ opacity: 0.65 }}>
-                {' · by '}
-                <LocalizedLink
-                  to={`/u/${handle}`}
-                  style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+        {(() => {
+          // Publisher row: circular profile picture + linked handle. Prefer
+          // the real owner from the track payload; fall back to the
+          // deterministic handle for unattributed tracks.
+          const handle = (track.owner && track.owner.username) || creatorHandleForTrack(track);
+          if (!handle) return null;
+          const avatarUrl = track.owner && track.owner.avatar_url;
+          const displayName = (track.owner && track.owner.display_name) || handle;
+          return (
+            <LocalizedLink
+              to={`/u/${handle}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                textDecoration: 'none',
+                marginBottom: 10,
+              }}
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={`@${handle} profile`}
+                  style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }}
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: '50%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: 15,
+                    fontWeight: 500,
+                    color: '#fff',
+                    background: 'linear-gradient(135deg, #0139C7, var(--color-primary))',
+                  }}
                 >
-                  @{handle}
-                </LocalizedLink>
+                  {displayName.trim().charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span style={{ fontSize: 15, color: 'var(--color-text)', fontWeight: 500 }}>
+                @{handle}
               </span>
-            );
-          })()}
-        </div>
+            </LocalizedLink>
+          );
+        })()}
         <h1
           style={{
             fontSize: 22,
@@ -263,15 +284,19 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
             marginTop: 16,
           }}
         >
-          {instruments.length > 0 && (
+          {/* Two-way synced with the viewer toolbar's instrument dropdown —
+              both write the same page-level state, so no extra wiring. */}
+          {instrumentOptions.length > 0 && onInstrument && (
             <select
               className="gs-select"
               aria-label="Instrument"
-              value={instrument}
-              onChange={(e) => setInstrument(e.target.value)}
+              value={instrument || instrumentOptions[0].name}
+              onChange={(e) => onInstrument(e.target.value)}
             >
-              {instruments.map((name) => (
-                <option key={name}>{name}</option>
+              {instrumentOptions.map((o) => (
+                <option key={o.name} value={o.name}>
+                  {o.label}
+                </option>
               ))}
             </select>
           )}

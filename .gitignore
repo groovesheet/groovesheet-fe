@@ -30,3 +30,6 @@ yarn-error.log*
 # Claude Code — personal overrides only
 .claude/settings.local.json
 .vercel
+
+# Raw stem audio downloaded by run_multiinstrument_benchmark.py — intermediate inputs, not app assets
+public/transcription-samples/*/_*_stem.*

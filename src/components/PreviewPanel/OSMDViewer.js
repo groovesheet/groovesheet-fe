@@ -403,8 +403,17 @@ const OSMDViewer = forwardRef(function OSMDViewer(
               for (const note of (ve.Notes || [])) {
                 if (!note || !note.Pitch) continue; // skip rests
                 if (note.isRest && note.isRest()) continue;
+                // tied notes: sound once — skip continuations, give the start
+                // note the full tied duration
+                if (note.NoteTie && note.NoteTie.StartNote !== note) continue;
                 let durMs = 0;
                 try { durMs = settings.getDurationInMilliseconds(note.Length); } catch (e) { durMs = 0; }
+                if (note.NoteTie && Array.isArray(note.NoteTie.Notes)) {
+                  try {
+                    durMs = note.NoteTie.Notes.reduce(
+                      (s, n) => s + settings.getDurationInMilliseconds(n.Length), 0);
+                  } catch (e) { /* keep single-note duration */ }
+                }
                 const ht = (typeof note.halfTone === 'number')
                   ? note.halfTone
                   : note.Pitch.getHalfTone?.();

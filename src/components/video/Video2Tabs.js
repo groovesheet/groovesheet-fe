@@ -1,50 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Video2 from './Video2';
+import { orderSongIds, isBenchmark, BENCHMARK_BORDER } from './benchmarkSongs';
 
 /**
- * Video2Tabs — quality-comparison harness for the transcription workers.
+ * Video2Tabs — /video2forpiano: quality-comparison harness for the piano
+ * transcription workers.
  *
  * Renders the Video2 animated frame, but lets you switch between the MusicXML
- * produced by each transcription worker (transkun=piano, adtof=drums,
- * bassunet=bass, fcpe=bass) for each test song. The per-worker outputs are
- * produced by groovesheet-be/development-related/local-tools/run_transcription_test.py
+ * produced by each piano worker (transkun variants) for each test song. Drums
+ * live at /video2fordrums. The per-worker outputs are produced by
+ * groovesheet-be/development-related/local-tools/run_transcription_test.py
  * and land under public/transcription-samples/<song>/<worker>/. That script also
  * writes _summary.json, which this component reads to discover what's available.
  *
  * Until the cloud jobs finish (or if the summary is missing) it falls back to
- * the bundled piano sample so /video2 still renders.
+ * the bundled piano sample so /video2forpiano still renders.
  */
 
 const PUB = process.env.PUBLIC_URL || '';
 const SAMPLES = `${PUB}/transcription-samples`;
 const ICONS = `${PUB}/video-assets/icons`;
 const SAMPLE_XML = `${PUB}/sample-preview/sample.musicxml`;
-// guitar demo reuses the bundled piano MIDI; notes outside guitar range are
-// skipped by the fretboard placement, the rest land on the neck.
-const SAMPLE_GUITAR_MIDI = `${PUB}/sample-preview/sample.mid`;
 
-// one tab per worker (user choice: compare engines directly)
+// one tab per piano worker (user choice: compare engines directly)
 const WORKERS = [
   { id: 'transkun-piano', kind: 'piano', label: 'Piano', sub: 'transkun-v2', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
   { id: 'transkun-piano-split', kind: 'piano', label: 'Piano', sub: 'raw + grand staff', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
   { id: 'transkun-piano-quantized-before', kind: 'piano', label: 'Piano', sub: 'midi2score ✗ before', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
   { id: 'transkun-piano-quantized', kind: 'piano', label: 'Piano', sub: 'midi2score ✓ after', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
-  { id: 'adtof-drums', kind: 'drums', label: 'Drums', sub: 'adtof', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
-  { id: 'adtof-plus-drums', kind: 'drums', label: 'Drums', sub: 'adtof+ 7-voice', cta: 'Drum Transcription', icon: `${ICONS}/Drums.svg` },
-  { id: 'bassunet-bass', kind: 'bass', label: 'Bass', sub: 'bassunet', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
-  { id: 'fcpe-bass', kind: 'bass', label: 'Bass', sub: 'fcpe', cta: 'Bass Transcription', icon: `${ICONS}/Bass.svg` },
-  { id: 'guitar', kind: 'guitar', label: 'Guitar', sub: 'falling fretboard', cta: 'Guitar Transcription', icon: `${ICONS}/Guitar.svg` },
+  { id: 'piano-conventions', kind: 'piano', label: 'Piano', sub: 'midi2score + conventions', cta: 'Keyboard Transcription', icon: `${ICONS}/Keyboard.svg` },
 ];
-
-// Guitar has no transcription worker yet, so the tab always renders a bundled
-// guitar MIDI on the fretboard visualiser. Once a real guitar worker writes to
-// transcription-samples/<song>/guitar/ (kind: 'guitar'), summary discovery below
-// picks it up automatically and overrides this.
-const GUITAR_SAMPLE = {
-  xmlUrl: null,
-  midiUrl: SAMPLE_GUITAR_MIDI,
-  kind: 'guitar',
-};
 
 // display metadata for the test songs (cover art falls back to the default)
 const SONGS = {
@@ -56,6 +41,9 @@ const SONGS = {
   'im-still-standing': { title: "I'm Still Standing", artist: 'Elton John', year: 1983 },
   'vienna': { title: 'Vienna', artist: 'Billy Joel', year: 1977 },
   'dont-stop-me-now': { title: "Don't Stop Me Now", artist: 'Queen', year: 1978 },
+  'sweet-home-alabama': { title: 'Sweet Home Alabama', artist: 'Lynyrd Skynyrd', year: 1974 },
+  'uptown-girl': { title: 'Uptown Girl', artist: 'Billy Joel', year: 1983 },
+  'everybody-wants-to-rule-the-world': { title: 'Everybody Wants To Rule The World', artist: 'Tears For Fears', year: 1985 },
   'cant-stop': { title: "Can't Stop", artist: 'Red Hot Chili Peppers', year: 2002 },
   // video2_piano pipeline runs (shipped artifacts — debugging the live render bugs)
   'wonderwall': { title: 'Wonderwall', artist: 'Oasis', year: 1995 },
@@ -98,14 +86,15 @@ export default function Video2Tabs() {
 
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
-  // song -> worker -> { xmlUrl, midiUrl, kind }, from completed jobs only.
+  // song -> worker -> { xmlUrl, midiUrl, kind }, from completed piano jobs only
+  // (this page is piano-only; drums live at /video2fordrums).
   // A worker is renderable if it produced a sheet (xml) OR roll/audio (midi).
   const available = useMemo(() => {
     const map = {};
     const url = (song, worker, file) =>
       file ? `${SAMPLES}/${song}/${worker}/${encodeURIComponent(file)}` : null;
     (summary || [])
-      .filter((e) => e.status === 'completed' && (e.xml || e.midi))
+      .filter((e) => (e.kind || 'piano') === 'piano' && e.status === 'completed' && (e.xml || e.midi))
       .forEach((e) => {
         map[e.song] = map[e.song] || {};
         map[e.song][e.worker] = {
@@ -117,7 +106,7 @@ export default function Video2Tabs() {
     return map;
   }, [summary]);
 
-  const songIds = Object.keys(available);
+  const songIds = orderSongIds(Object.keys(available));
 
   // pick a sensible default song once data lands
   useEffect(() => {
@@ -126,12 +115,10 @@ export default function Video2Tabs() {
 
   // build the active frame: real output if present, else sample fallback
   const active = useMemo(() => {
-    let src = songId && available[songId] && available[songId][workerId];
-    // guitar tab: fall back to the bundled fretboard demo when no worker output.
-    if (!src && workerId === 'guitar') src = GUITAR_SAMPLE;
+    const src = songId && available[songId] && available[songId][workerId];
     if (!src) return SAMPLE_FALLBACK;
     const w = WORKERS.find((x) => x.id === workerId) || WORKERS[0];
-    const s = SONGS[songId] || { title: songId || 'Guitar Sample', artist: 'GrooveSheet', year: '' };
+    const s = SONGS[songId] || { title: songId, artist: 'GrooveSheet', year: '' };
     return {
       key: `${songId}|${workerId}`,
       songId,
@@ -143,8 +130,7 @@ export default function Video2Tabs() {
     };
   }, [songId, workerId, available]);
 
-  // guitar always renders (bundled fretboard demo); other workers need real output.
-  const hasWorker = (wid) => wid === 'guitar' || !!(songId && available[songId] && available[songId][wid]);
+  const hasWorker = (wid) => !!(songId && available[songId] && available[songId][wid]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#000' }}>
@@ -167,7 +153,7 @@ export default function Video2Tabs() {
             </span>
           )}
           {songIds.map((sid) => (
-            <button key={sid} onClick={() => setSongId(sid)} style={songBtn(sid === songId)}>
+            <button key={sid} onClick={() => setSongId(sid)} style={songBtn(sid === songId, isBenchmark(sid))}>
               {(SONGS[sid] && SONGS[sid].title) || sid}
             </button>
           ))}
@@ -270,13 +256,13 @@ function tabBtn(active, enabled) {
   };
 }
 
-function songBtn(active) {
+function songBtn(active, special) {
   return {
     flexShrink: 0,
     whiteSpace: 'nowrap',
     padding: '7px 12px',
     borderRadius: 9,
-    border: `1px solid ${active ? '#012FA7' : '#3a3a3d'}`,
+    border: `1px solid ${active ? '#012FA7' : special ? BENCHMARK_BORDER : '#3a3a3d'}`,
     background: active ? '#012FA7' : '#222',
     color: '#fff',
     fontSize: 13,

@@ -13,7 +13,7 @@ import StatusMessage from '../ui/StatusMessage';
 // =================================================================
 // 1) Sheet Music — OSMD
 // =================================================================
-export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange }) {
+export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange, partLabel }) {
   // A score with no sounding notes (e.g. piano transcription of a track that
   // has no piano) makes OSMD's cursor init throw inside render() — never
   // mount the viewer for one, show an explanatory empty state instead.
@@ -51,6 +51,21 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
       )}
       {!loading && !error && musicXmlText && hasNotes && (
         <div className="gs-sheet-page" style={{ maxWidth: 860, margin: '0 auto' }}>
+          {partLabel && (
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '1.4px',
+                textTransform: 'uppercase',
+                color: 'var(--color-muted-foreground)',
+                padding: '2px 0 10px',
+                textAlign: 'center',
+              }}
+            >
+              {partLabel}
+            </div>
+          )}
           <OSMDViewer
             ref={osmdRef}
             xmlString={musicXmlText}
@@ -85,11 +100,14 @@ function fmtClock(s) {
   return `${m}:${ss}`;
 }
 
-export function PianoRollView({ midiBuffer, transport, loading, error }) {
+// `ghosts` — other pitched instruments' MIDI, rendered faint behind the
+// selected one so switching instruments keeps musical context:
+//   [{ name, color, buffer: ArrayBuffer }]
+export function PianoRollView({ midiBuffer, transport, loading, error, ghosts }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const transportRef = useRef(transport);
-  const parsedRef = useRef(null); // { notes, minPitch, maxPitch, duration, trackCount }
+  const parsedRef = useRef(null); // { notes, ghostNotes, minPitch, maxPitch, duration, trackCount }
   const [parseError, setParseError] = useState(null);
 
   useEffect(() => { transportRef.current = transport; }, [transport]);
@@ -116,9 +134,25 @@ export function PianoRollView({ midiBuffer, transport, loading, error }) {
         }))
       )
       .sort((a, b) => a.time - b.time);
+    // Non-selected instruments' notes, drawn first at very low opacity.
+    const ghostNotes = [];
+    (ghosts || []).forEach((g) => {
+      if (!g || !g.buffer) return;
+      let gm;
+      try {
+        gm = new Midi(g.buffer);
+      } catch (e) {
+        return; // a bad ghost file never blocks the main roll
+      }
+      gm.tracks.forEach((t) => {
+        (t.notes || []).forEach((n) => {
+          ghostNotes.push({ time: n.time, duration: n.duration, midi: n.midi, color: g.color || '#8d8c8d' });
+        });
+      });
+    });
     let minPitch = 108;
     let maxPitch = 21;
-    notes.forEach((n) => {
+    notes.concat(ghostNotes).forEach((n) => {
       if (n.midi < minPitch) minPitch = n.midi;
       if (n.midi > maxPitch) maxPitch = n.midi;
     });
@@ -129,7 +163,7 @@ export function PianoRollView({ midiBuffer, transport, loading, error }) {
       if (minPitch > 0) minPitch -= 1;
       if (maxPitch < 127) maxPitch += 1;
     }
-    parsedRef.current = { notes, minPitch, maxPitch, duration: midi.duration || 0, trackCount: tracks.length };
+    parsedRef.current = { notes, ghostNotes, minPitch, maxPitch, duration: midi.duration || 0, trackCount: tracks.length };
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -207,8 +241,21 @@ export function PianoRollView({ midiBuffer, transport, loading, error }) {
         }
       }
 
-      // notes
+      // ghost notes — other instruments, faint, under the selected one
       const rightTime = leftTime + ROLL_WINDOW_SEC;
+      (parsed.ghostNotes || []).forEach((n) => {
+        if (n.time + n.duration < leftTime || n.time > rightTime) return;
+        const x = rollX + (n.time - leftTime) * pxPerSec;
+        const nw = Math.max(2, n.duration * pxPerSec - 1);
+        const y = rollY + (parsed.maxPitch - n.midi) * pitchH;
+        const nh = Math.max(3, pitchH - 1);
+        ctx.fillStyle = n.color;
+        ctx.globalAlpha = 0.09;
+        ctx.fillRect(Math.max(rollX, x), y, nw - Math.max(0, rollX - x), nh);
+        ctx.globalAlpha = 1;
+      });
+
+      // notes
       parsed.notes.forEach((n) => {
         if (n.time + n.duration < leftTime || n.time > rightTime) return;
         const x = rollX + (n.time - leftTime) * pxPerSec;
@@ -247,7 +294,7 @@ export function PianoRollView({ midiBuffer, transport, loading, error }) {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
     };
-  }, [midiBuffer]);
+  }, [midiBuffer, ghosts]);
 
   const onClickSeek = useCallback((e) => {
     const t = transportRef.current;
