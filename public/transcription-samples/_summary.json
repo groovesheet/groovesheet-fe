@@ -180,15 +180,6 @@
     "midi": "TKVa91fd63d900b_transkun_v2_transcription.mid"
   },
   {
-    "song": "dont-stop-me-now",
-    "worker": "transkun-piano-quantized",
-    "kind": "piano",
-    "status": "completed",
-    "source": "cloud",
-    "xml": "dont-stop-me-now_quantized_score.musicxml",
-    "midi": "TKVdd0f280a1d0f_transkun_v2_transcription.mid"
-  },
-  {
     "song": "piano-man",
     "worker": "transkun-piano-quantized-before",
     "kind": "piano",
@@ -679,5 +670,106 @@
     "workflow_id": "WFb880a87051b4",
     "xml": "ADPa490cb14da6f_drum_transcription.musicxml",
     "midi": "ADPa490cb14da6f_drum_transcription.mid"
+  },
+  {
+    "song": "im-still-standing",
+    "worker": "adtof-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF54ee1a7c9adf",
+    "xml": "M2S1eb5fba4d32d_score.musicxml",
+    "midi": "ADT31b8fc677d53_drum_transcription.mid"
+  },
+  {
+    "song": "im-still-standing",
+    "worker": "adtof-plus-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "cloud",
+    "workflow_id": "WF3f9aa23f807c",
+    "xml": "M2S12f7212bf4c6_score.musicxml",
+    "midi": "ADPd1601c5e8094_drum_transcription.mid"
+  },
+  {
+    "song": "come-a-little-closer",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "dont-stop-me-now",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "everybody-talks",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "everybody-wants-to-rule-the-world",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "starman",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "sweet-home-alabama",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "the-adults-are-talking",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "tongue-tied",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
+  },
+  {
+    "song": "uptown-girl",
+    "worker": "quantized-drums",
+    "kind": "drums",
+    "status": "completed",
+    "source": "local",
+    "xml": "quantized_drum_transcription.musicxml",
+    "midi": "quantized_drum_transcription.mid"
   }
 ]

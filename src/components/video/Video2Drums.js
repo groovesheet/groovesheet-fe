@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Video2 from './Video2';
+import { orderSongIds, isBenchmark, BENCHMARK_BORDER } from './benchmarkSongs';
 
 /**
  * Video2Drums — /video2fordrums: the drums cut of the Video2 frame.
@@ -8,7 +9,8 @@ import Video2 from './Video2';
  * swapped for the top-down drum-kit visualiser (VideoDrumKit): the sheet from
  * the worker's MusicXML on top, the kit photo below with each piece flashing
  * on its hits. Songs come from the same transcription-samples/_summary.json
- * the /video2 harness reads — any completed drums worker output shows up here.
+ * the /video2forpiano harness reads — any completed drums worker output shows
+ * up here, with tabs to compare adtof vs adtof+ (7-voice) per song.
  */
 
 const PUB = process.env.PUBLIC_URL || '';
@@ -31,10 +33,18 @@ const SONGS = {
   'starman': { title: 'Starman', artist: 'David Bowie', year: 1972 },
 };
 
+// drum workers to compare, in display order
+const DRUM_WORKERS = [
+  { id: 'adtof-drums', label: 'adtof' },
+  { id: 'adtof-plus-drums', label: 'adtof+ 7-voice' },
+  { id: 'quantized-drums', label: 'adtof+ beat-tracked' },
+];
+
 export default function Video2Drums() {
   const [summary, setSummary] = useState(null);
   const [loadState, setLoadState] = useState('loading'); // loading | ready | empty
   const [songId, setSongId] = useState(null);
+  const [workerId, setWorkerId] = useState('adtof-plus-drums');
 
   useEffect(() => {
     fetch(`${SAMPLES}/_summary.json`, { cache: 'no-store' })
@@ -43,14 +53,14 @@ export default function Video2Drums() {
       .catch(() => { setSummary(null); setLoadState('empty'); });
   }, []);
 
-  // song -> { xmlUrl, midiUrl } from completed drums workers (first worker wins)
+  // song -> worker -> { xmlUrl, midiUrl } from completed drums workers
   const drumSongs = useMemo(() => {
     const map = {};
     (summary || [])
       .filter((e) => e.kind === 'drums' && e.status === 'completed' && e.midi)
       .forEach((e) => {
-        if (map[e.song]) return;
-        map[e.song] = {
+        map[e.song] = map[e.song] || {};
+        map[e.song][e.worker] = {
           xmlUrl: e.xml ? `${SAMPLES}/${e.song}/${e.worker}/${encodeURIComponent(e.xml)}` : null,
           midiUrl: `${SAMPLES}/${e.song}/${e.worker}/${encodeURIComponent(e.midi)}`,
         };
@@ -58,19 +68,24 @@ export default function Video2Drums() {
     return map;
   }, [summary]);
 
-  const songIds = Object.keys(drumSongs);
+  const songIds = orderSongIds(Object.keys(drumSongs));
   useEffect(() => {
     if (songId == null && songIds.length) setSongId(songIds[0]);
   }, [songIds, songId]);
 
-  const active = songId && drumSongs[songId];
+  const songWorkers = (songId && drumSongs[songId]) || {};
+  // if the selected worker has no output for this song, fall back to any that does
+  const activeWorkerId = songWorkers[workerId]
+    ? workerId
+    : (DRUM_WORKERS.find((w) => songWorkers[w.id]) || {}).id;
+  const active = activeWorkerId && songWorkers[activeWorkerId];
   const s = SONGS[songId] || { title: songId || 'Drums', artist: 'GrooveSheet', year: '' };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#000' }}>
       {active && (
         <Video2
-          key={songId}
+          key={`${songId}|${activeWorkerId}`}
           xmlUrl={active.xmlUrl}
           midiUrl={active.midiUrl}
           kind="drums"
@@ -93,14 +108,33 @@ export default function Video2Drums() {
         </div>
       )}
 
-      {/* song picker — pinned bottom-center like the /video2 tab bar */}
-      {songIds.length > 1 && (
+      {/* song + worker picker — pinned bottom-center like the /video2forpiano tab bar */}
+      {songIds.length > 0 && (
         <div style={barWrap}>
-          {songIds.map((sid) => (
-            <button key={sid} onClick={() => setSongId(sid)} style={songBtn(sid === songId)}>
-              {(SONGS[sid] && SONGS[sid].title) || sid}
-            </button>
-          ))}
+          <div style={rowWrap}>
+            {songIds.map((sid) => (
+              <button key={sid} onClick={() => setSongId(sid)} style={songBtn(sid === songId, isBenchmark(sid))}>
+                {(SONGS[sid] && SONGS[sid].title) || sid}
+              </button>
+            ))}
+          </div>
+          <div style={{ height: 1, alignSelf: 'stretch', background: '#333', margin: '2px 0' }} />
+          <div style={rowWrap}>
+            {DRUM_WORKERS.map((w) => {
+              const enabled = !!songWorkers[w.id];
+              return (
+                <button
+                  key={w.id}
+                  disabled={!enabled}
+                  onClick={() => enabled && setWorkerId(w.id)}
+                  title={enabled ? '' : 'not transcribed yet'}
+                  style={{ ...songBtn(w.id === activeWorkerId), cursor: enabled ? 'pointer' : 'not-allowed', opacity: enabled ? 1 : 0.5 }}
+                >
+                  {w.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -112,16 +146,25 @@ const barWrap = {
   bottom: 16,
   left: '50%',
   transform: 'translateX(-50%)',
+  maxWidth: 'calc(100vw - 24px)',
   zIndex: 20,
   display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
+  flexDirection: 'column',
+  alignItems: 'center',
   gap: 6,
   padding: '8px 12px',
   background: 'rgba(20,20,22,0.92)',
   border: '1px solid #333',
   borderRadius: 12,
   backdropFilter: 'blur(6px)',
+};
+
+const rowWrap = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
 };
 
 const emptyHint = {
@@ -135,13 +178,13 @@ const emptyHint = {
   maxWidth: 520,
 };
 
-function songBtn(active) {
+function songBtn(active, special) {
   return {
     flexShrink: 0,
     whiteSpace: 'nowrap',
     padding: '7px 12px',
     borderRadius: 9,
-    border: `1px solid ${active ? '#012FA7' : '#3a3a3d'}`,
+    border: `1px solid ${active ? '#012FA7' : special ? BENCHMARK_BORDER : '#3a3a3d'}`,
     background: active ? '#012FA7' : '#222',
     color: '#fff',
     fontSize: 13,
