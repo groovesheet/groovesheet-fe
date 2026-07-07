@@ -98,6 +98,17 @@ const OSMDViewer = forwardRef(function OSMDViewer(
       // let our paging move the line into the band.
       cursorsOptions: [{ type: 0, color: '#4D9CFF', alpha: 0.4, follow: false }],
     });
+    // Dense transcriptions (16th runs, multi-voice bass) render congested at
+    // OSMD's default note spacing — stems collide with adjacent noteheads.
+    // Widen inter-note spacing so voices/beam groups get horizontal room.
+    try {
+      const r = osmd.EngravingRules;
+      if (r) {
+        if ('VoiceSpacingMultiplierVexflow' in r) r.VoiceSpacingMultiplierVexflow = 1.6;
+        if ('VoiceSpacingAddendVexflow' in r) r.VoiceSpacingAddendVexflow = 8.0;
+        if ('SpacingBetweenNotesFactor' in r) r.SpacingBetweenNotesFactor = 1.6;
+      }
+    } catch (e) { /* older OSMD without these rules: ignore */ }
     osmdRef.current = osmd;
 
     const handleClick = (ev) => {

@@ -37,6 +37,10 @@ const SHEET_H = 825; // top band (Figma)
 const ROLL_Y = 825;
 const ROLL_H = FRAME_H - ROLL_Y; // 1335
 const FOOTER_Y = 1657;
+// Fretboard layouts (guitar/bass) draw the wooden board across the bottom of the
+// roll band, so the logo + legal move up to sit in the dark falling area above
+// the board (and above the fret-number ruler) instead of overlapping the neck.
+const FRETBOARD_FOOTER_Y = 1545;
 const SHEET_ZOOM = 2.6;
 const SHEET_BARS_PER_ROW = 4; // measures per visible line
 const SHEET_ROW_GAP = 18.0; // OSMD units between systems (rows of bars); default ~7
@@ -123,7 +127,11 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
   // only for drums/bass (it carries instruments the flattened XML loses) or when
   // there is no sheet at all.
   const useMidi = !!midiUrl && !(kind === 'piano' && hasSheet);
-  const rollMode = kind === 'drums' ? 'drums' : kind === 'guitar' ? 'guitar' : 'piano';
+  // guitar and bass both render as a falling-notes fretboard (VideoFretboardRoll);
+  // the board tuning/string-count is picked per-kind inside that component.
+  const rollMode = kind === 'drums' ? 'drums'
+    : (kind === 'guitar' || kind === 'bass') ? 'fretboard'
+    : 'piano';
 
   const [view, setView] = useState('video'); // 'video' | 'cover'
   const [xml, setXml] = useState(null);
@@ -169,7 +177,11 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
     let cancelled = false;
     (async () => {
       try {
-        const xmlRes = await fetch(xmlUrl, { cache: 'no-store' });
+        // benchmark mockup: files are regenerated in place under the same URL,
+        // so defeat the browser cache with both no-store AND a per-load version
+        // param — otherwise a stale copy hides every regeneration.
+        const bust = (u) => u + (u.includes('?') ? '&' : '?') + '_v=' + Date.now();
+        const xmlRes = await fetch(bust(xmlUrl), { cache: 'no-store' });
         if (!xmlRes.ok) throw new Error(`XML ${xmlRes.status}`);
         const xmlText = await xmlRes.text();
         if (!cancelled) setXml(xmlText);
@@ -186,7 +198,8 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(midiUrl, { cache: 'no-store' });
+        const bustMidi = (u) => u + (u.includes('?') ? '&' : '?') + '_v=' + Date.now();
+        const res = await fetch(bustMidi(midiUrl), { cache: 'no-store' });
         if (!res.ok) throw new Error(`MIDI ${res.status}`);
         const buf = await res.arrayBuffer();
         if (cancelled) return;
@@ -435,7 +448,7 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
   // Kit layout: the drum photo owns the bottom of the frame, so the logo and
   // legal text move up to sit right below the sheet band instead of the footer.
   const isKit = rollMode === 'drums' && rollVariant === 'kit';
-  const brandY = isKit ? ROLL_Y + 24 : FOOTER_Y;
+  const brandY = isKit ? ROLL_Y + 24 : rollMode === 'fretboard' ? FRETBOARD_FOOTER_Y : FOOTER_Y;
 
   return (
     <div
@@ -492,8 +505,9 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
       )}
 
       <div style={{ width: FRAME_W, height: FRAME_H, transform: `scale(${scale})`, transformOrigin: 'center center', flexShrink: 0, position: 'relative', background: '#171717', fontFamily: 'Hubot Sans, Inter, system-ui, sans-serif', overflow: 'hidden' }}>
-        {/* Sheet band */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: FRAME_W, height: SHEET_H, background: hasSheet ? '#fff' : '#0c100c', overflow: 'hidden' }}>
+        {/* Sheet band — sits ABOVE the roll (z:2) so fretboard notes can spawn
+            behind it and emerge from underneath the score. */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: FRAME_W, height: SHEET_H, background: hasSheet ? '#fff' : '#0c100c', overflow: 'hidden', zIndex: 2 }}>
           {hasSheet && xml && (
             <OSMDViewer
               ref={osmdRef}
@@ -517,10 +531,15 @@ export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind =
           )}
         </div>
 
-        {/* Roll band */}
-        <div style={{ position: 'absolute', top: ROLL_Y, left: 0, width: FRAME_W, height: ROLL_H, background: '#0c100c', overflow: 'hidden' }}>
-          {notes && (rollMode === 'guitar'
-            ? <VideoFretboardRoll notes={notes} timeRef={timeRef} />
+        {/* Roll band. Fretboard modes extend the canvas up to the full frame and
+            sit behind the sheet (z:1) so notes fall from the very top, hidden
+            behind the score, and emerge below it. Other rolls stay in the lower
+            band as before. */}
+        <div style={rollMode === 'fretboard'
+          ? { position: 'absolute', top: 0, left: 0, width: FRAME_W, height: FRAME_H, background: '#0c100c', overflow: 'hidden', zIndex: 1 }
+          : { position: 'absolute', top: ROLL_Y, left: 0, width: FRAME_W, height: ROLL_H, background: '#0c100c', overflow: 'hidden' }}>
+          {notes && (rollMode === 'fretboard'
+            ? <VideoFretboardRoll notes={notes} timeRef={timeRef} kind={kind} />
             : rollMode === 'drums' && rollVariant === 'kit'
               ? <VideoDrumKit notes={notes} timeRef={timeRef} />
               : <VideoPianoRoll notes={notes} timeRef={timeRef} mode={rollMode} />)}
