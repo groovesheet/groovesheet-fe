@@ -120,13 +120,16 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
 export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind = 'piano', rollVariant = 'lanes', metaOverride } = {}) {
   const m = { ...meta, ...(metaOverride || {}) };
   const hasSheet = !!xmlUrl;
-  // Piano WITH a sheet: drive the roll + audio from the SAME OSMD-parsed sheet
-  // so they share one timeline with the cursor and cannot drift. The piano MIDI
-  // (raw transkun) is a *different* timeline from the quantized/beamed MusicXML
-  // the score is rendered from, so mixing them desyncs roll vs cursor. Keep MIDI
-  // only for drums/bass (it carries instruments the flattened XML loses) or when
-  // there is no sheet at all.
-  const useMidi = !!midiUrl && !(kind === 'piano' && hasSheet);
+  // Piano/guitar WITH a sheet: drive the roll + audio from the SAME OSMD-parsed
+  // sheet so they share one timeline with the cursor and cannot drift. The raw
+  // MIDI (transkun/fcpe) is a *different* timeline from the quantized/beamed
+  // MusicXML the score is rendered from — mixing them desyncs roll vs cursor
+  // (the fcpe guitar bug: fretboard notes lag/lead the staff). The guitar score
+  // is a single-instrument midi2score render, so its sounding pitches match the
+  // MIDI and the fretboard maps correctly from getNotes(). Keep MIDI for
+  // drums/bass (it carries instruments the flattened XML loses) or when there is
+  // no sheet at all.
+  const useMidi = !!midiUrl && !((kind === 'piano' || kind === 'guitar') && hasSheet);
   // guitar and bass both render as a falling-notes fretboard (VideoFretboardRoll);
   // the board tuning/string-count is picked per-kind inside that component.
   const rollMode = kind === 'drums' ? 'drums'
