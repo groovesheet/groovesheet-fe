@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
 import { fetchBillingPlans, createCheckoutSession } from '../utils/api';
+import { startProviderCheckout } from '../utils/airwallex';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
 
@@ -99,13 +100,8 @@ function Pricing({ onLoginClick }) {
       const planKey = resolvePlanKey(plan);
       const data = await createCheckoutSession('/api', planKey, getToken, signOut);
 
-      if (!data?.url) {
-        setError('Checkout session was created but no redirect URL was returned.');
-        return;
-      }
-
-      // Hand off to Stripe-hosted Checkout
-      window.location.assign(data.url);
+      // Hand off to the provider's hosted checkout (Stripe URL or Airwallex SDK).
+      await startProviderCheckout(data);
     } catch (err) {
       console.error('Error creating checkout session:', err);
       setError(err.message || 'Unexpected error starting checkout');

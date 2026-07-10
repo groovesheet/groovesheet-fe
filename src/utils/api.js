@@ -612,6 +612,25 @@ export async function createBillingPortalSession(baseUrl, getToken, signOut = nu
   return response.json();
 }
 
+/**
+ * Cancel the signed-in user's subscription (Airwallex in-app cancel path;
+ * Airwallex has no hosted billing portal). Stripe users cancel via the portal.
+ * @returns {Promise<{ status: string }>}
+ */
+export async function cancelSubscription(baseUrl, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/billing/cancel-subscription`,
+    { method: 'POST', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to cancel subscription: ${response.statusText}`);
+  }
+  return response.json();
+}
+
 /* ------------------------------------------------------------------ *
  * Account / Profile  (⚠ several of these hit endpoints the backend
  * does not implement yet — see docs/BACKEND_GAPS.md). Handlers call

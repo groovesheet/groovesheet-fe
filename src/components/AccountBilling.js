@@ -13,7 +13,9 @@ import {
   fetchPaymentMethod,
   createCheckoutSession,
   createBillingPortalSession,
+  cancelSubscription,
 } from '../utils/api';
+import { startProviderCheckout } from '../utils/airwallex';
 import config from '../config';
 
 const PAGE_SIZE = 20;
@@ -74,7 +76,7 @@ export const AccountBilling = () => {
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState(null);
 
-  const [catalog, setCatalog] = useState({ plans: [], topups: [] });
+  const [catalog, setCatalog] = useState({ plans: [], topups: [], provider: 'stripe' });
   const [payment, setPayment] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
@@ -127,7 +129,7 @@ export const AccountBilling = () => {
     })();
     // Public catalog (no auth).
     fetchBillingPlans(config.apiBaseUrl)
-      .then((c) => !cancelled && setCatalog({ plans: c?.plans || [], topups: c?.topups || [] }))
+      .then((c) => !cancelled && setCatalog({ plans: c?.plans || [], topups: c?.topups || [], provider: c?.provider || 'stripe' }))
       .catch(() => {});
     // Payment method is best-effort — section hides if the endpoint is missing.
     fetchPaymentMethod(config.apiBaseUrl, getToken, signOut)
@@ -185,11 +187,10 @@ export const AccountBilling = () => {
   };
 
   const startCheckout = async (planCode, label) => {
-    notify(`Opening Stripe Checkout — ${label}`);
+    notify(`Opening checkout — ${label}`);
     try {
-      const { url } = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut);
-      if (url) window.location.assign(url);
-      else notify("Couldn't start checkout. Please try again.");
+      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut);
+      await startProviderCheckout(data);
     } catch (err) {
       if (!handleAuthError(err)) notify("Couldn't start checkout. Please try again.");
     }
@@ -228,6 +229,31 @@ export const AccountBilling = () => {
   const rangeEnd = Math.min((page + 1) * PAGE_SIZE, total);
 
   const annual = billingMode === 'annual';
+  const isAirwallex = catalog.provider === 'airwallex';
+
+  // Airwallex has no hosted billing portal, so "manage" = cancel in-app, and
+  // "update card" = re-run the recurring checkout for the current plan (the
+  // backend cancels the old subscription and re-subscribes with the new card).
+  const cancelPlan = async () => {
+    if (!window.confirm('Cancel your subscription? You keep access until the end of the current billing period.')) return;
+    notify('Requesting cancellation…');
+    try {
+      await cancelSubscription(config.apiBaseUrl, getToken, signOut);
+      notify('Cancellation requested — your plan will not renew.');
+    } catch (err) {
+      if (!handleAuthError(err)) notify("Couldn't cancel. Please try again.");
+    }
+  };
+  const manageSubscription = () => (isAirwallex ? cancelPlan() : openPortal());
+  const updateCard = () => {
+    if (!isAirwallex) return openPortal('Opening Stripe billing portal to update payment…');
+    const liveForMode = catalog.plans.find(
+      (p) => tierFamily(p.id) === family && p.id.endsWith(annual ? '_annual' : '_monthly')
+    );
+    const code = liveForMode?.checkout_id || CHECKOUT_CODE[family]?.[billingMode];
+    if (!code) return notify('No active plan to update.');
+    return startCheckout(code, `Update card — ${tierLabel(tier)}`);
+  };
 
   // Build the two plan cards (Lite, Pro) from the live catalog, with fallbacks.
   const PLAN_FALLBACK = {
@@ -265,7 +291,7 @@ export const AccountBilling = () => {
       border: isCurrent || featured ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
       ctaLabel: (isFree ? 'Choose ' : family === 'lite' && fam === 'pro' ? 'Upgrade to ' : 'Switch to ') + fb.name,
       onChoose: () => {
-        if (isCurrent) return openPortal();
+        if (isCurrent) return manageSubscription();
         const liveForMode = catalog.plans.find(
           (p) => tierFamily(p.id) === fam && p.id.endsWith(annual ? '_annual' : '_monthly')
         );
@@ -426,7 +452,7 @@ export const AccountBilling = () => {
                     <div style={{ fontSize: 16, color: 'var(--color-text)', fontWeight: 500 }}>We couldn't process your latest payment</div>
                     <div style={{ ...muted, marginTop: 3 }}>Update your payment method to keep your plan active. Your minutes won't refill until billing is restored.</div>
                   </div>
-                  <button className="gs-btn gs-btn-primary" style={{ flex: '0 0 auto' }} onClick={() => openPortal('Opening Stripe billing portal to update payment…')}>
+                  <button className="gs-btn gs-btn-primary" style={{ flex: '0 0 auto' }} onClick={updateCard}>
                     Update payment
                   </button>
                 </div>
@@ -472,7 +498,7 @@ export const AccountBilling = () => {
                   <span style={label}>Plan actions</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
                     {isInactive && (
-                      <button className="gs-btn gs-btn-primary gs-btn-full" onClick={() => openPortal('Opening Stripe billing portal to update payment…')}>
+                      <button className="gs-btn gs-btn-primary gs-btn-full" onClick={updateCard}>
                         Update payment
                       </button>
                     )}
@@ -487,8 +513,8 @@ export const AccountBilling = () => {
                       </button>
                     )}
                     {isPaid && (
-                      <button className="gs-btn gs-btn-secondary gs-btn-full" disabled={portalLoading} onClick={() => openPortal()}>
-                        {portalLoading ? 'Opening…' : 'Manage subscription'}
+                      <button className="gs-btn gs-btn-secondary gs-btn-full" disabled={portalLoading} onClick={manageSubscription}>
+                        {portalLoading ? 'Opening…' : isAirwallex ? 'Cancel subscription' : 'Manage subscription'}
                       </button>
                     )}
                   </div>
@@ -591,10 +617,10 @@ export const AccountBilling = () => {
                       </div>
                       <div>
                         <div style={{ fontSize: 16, color: 'var(--color-foreground)' }}>{payment.brand} ending in {payment.last4}</div>
-                        <div style={{ ...muted, fontSize: 14, marginTop: 2 }}>Expires {payment.exp} · managed securely in Stripe</div>
+                        <div style={{ ...muted, fontSize: 14, marginTop: 2 }}>Expires {payment.exp} · managed securely</div>
                       </div>
                     </div>
-                    <button className="gs-btn gs-btn-secondary" onClick={() => openPortal()}>Manage payment method</button>
+                    <button className="gs-btn gs-btn-secondary" onClick={updateCard}>{isAirwallex ? 'Update card' : 'Manage payment method'}</button>
                   </div>
                 </div>
               )}
