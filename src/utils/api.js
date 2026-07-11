@@ -322,24 +322,40 @@ const STEM_KEYS = {
 };
 
 const MIDI_KEYS = {
-  drums: 'adtof_drums_midi',
+  // Prefer the ADToF+ quantized MIDI: it matches the displayed beat-tracked score.
+  drums: ['adtof_plus_drums_quantized_midi', 'adtof_plus_drums_midi', 'adtof_drums_midi'],
   piano: 'transkun_v2_piano_midi',
   bass: 'fcpe_bass_midi',
   jazz_bass: 'bassunet_jazz_bass_midi',
 };
 
 const TRANSCRIPTION_KEYS = {
-  drums: 'adtof_drums_musicxml',
+  drums: ['adtof_plus_drums_musicxml', 'adtof_drums_musicxml'],
   piano: 'transkun_v2_piano_musicxml',
   bass: 'fcpe_bass_musicxml',
   jazz_bass: 'bassunet_jazz_bass_musicxml',
 };
 
 const SCORE_KEYS = {
-  drums: 'midi2score_drums_musicxml',
+  drums: ['midi2score_drums_v2_musicxml', 'midi2score_drums_musicxml'],
   piano: 'midi2score_piano_musicxml',
   bass: 'midi2score_bass_musicxml',
   jazz_bass: 'midi2score_jazz_bass_musicxml',
+};
+
+const asKeyList = (value) => (Array.isArray(value) ? value : [value]).filter(Boolean);
+
+const selectOutputKey = (keyMap, instrument, outputs, workflowName = '') => {
+  const fallback = keyMap[instrument] || keyMap.drums;
+  const keys = asKeyList(fallback);
+  if (outputs && typeof outputs === 'object') {
+    return keys.find((key) => outputs[key]) || keys[0];
+  }
+  if (instrument === 'drums' && !workflowName.includes('_v2')) {
+    // Legacy v1 drum workflows (no outputs metadata) predate the ADToF+ keys.
+    return keys.find((key) => !key.includes('_plus') && !key.includes('_v2')) || keys[0];
+  }
+  return keys[0];
 };
 
 /**
@@ -357,11 +373,12 @@ export function resolveAvailableOutputs(workflow) {
   // The status payload nests file keys under outputs.files (outputs also
   // carries a metadata block); older payloads used a flat files map.
   const outputs = workflow.outputs?.files || workflow.files || null;
+  const workflowName = workflow.workflow_name || '';
 
   const stemKey = STEM_KEYS[instrument] || STEM_KEYS.drums;
-  const midiKey = MIDI_KEYS[instrument] || MIDI_KEYS.drums;
-  const transcriptionKey = TRANSCRIPTION_KEYS[instrument] || TRANSCRIPTION_KEYS.drums;
-  const scoreKey = SCORE_KEYS[instrument] || SCORE_KEYS.drums;
+  const midiKey = selectOutputKey(MIDI_KEYS, instrument, outputs, workflowName);
+  const transcriptionKey = selectOutputKey(TRANSCRIPTION_KEYS, instrument, outputs, workflowName);
+  const scoreKey = selectOutputKey(SCORE_KEYS, instrument, outputs, workflowName);
 
   if (outputs && typeof outputs === 'object') {
     // Backend explicitly lists available output keys
@@ -382,18 +399,24 @@ export function resolveAvailableOutputs(workflow) {
   }
 
   // Fallback: infer from workflow_name when no explicit outputs metadata
-  const workflowName = workflow.workflow_name || '';
-  const isSeparationOnly = workflowName.includes('separate') && !workflowName.includes('full');
+  const stemOnlyWorkflows = new Set([
+    'bs_roformer_separate',
+    'demucs_separate',
+    'separate_to_guitar_stem',
+    'compress_stems',
+  ]);
+  const isStemOnlyWorkflow = stemOnlyWorkflows.has(workflowName);
+  const isTranscriptionInstrument = ['drums', 'jazz_bass', 'bass', 'piano'].includes(instrument);
   const isFullWorkflow = workflowName.includes('_full');
 
   return {
     instrument: { available: true, fileKey: stemKey },
-    transcription: isSeparationOnly
-      ? { available: false }
-      : { available: true, fileKey: transcriptionKey },
-    midi: isSeparationOnly
-      ? { available: false }
-      : { available: true, fileKey: midiKey },
+    transcription: isTranscriptionInstrument && !isStemOnlyWorkflow
+      ? { available: true, fileKey: transcriptionKey }
+      : { available: false },
+    midi: isTranscriptionInstrument && !isStemOnlyWorkflow
+      ? { available: true, fileKey: midiKey }
+      : { available: false },
     score: isFullWorkflow
       ? { available: true, fileKey: scoreKey }
       : { available: false },
