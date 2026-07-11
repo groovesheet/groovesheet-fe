@@ -649,6 +649,7 @@ export default function TranscriptionResultView({
             <DrumKitView
               midiBuffer={midiBuffer}
               transport={transport}
+              syncPairsRef={syncPairsRef}
               loading={midiLoading}
               error={midiError}
             />

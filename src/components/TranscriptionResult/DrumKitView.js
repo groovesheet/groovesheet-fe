@@ -10,6 +10,14 @@
 // hand it a getter that reads the SHARED transport's position each frame —
 // the same clock the stem-audio engine drives — and the flashes line up with
 // the audio without any extra animation loop here.
+//
+// Origin shift: the quantized MIDI is on SCORE time (t=0 is the score's first
+// downbeat), while the transport plays the full-length stem on REAL time — on
+// songs whose drums enter late the origins differ by that intro (~15 s on
+// some songs). The drums sync map's first anchor is the score origin in real
+// seconds, so the clock getter subtracts it; both timelines run at real
+// tempo, making the constant shift exact. No sync map → 0, which matches the
+// v1 ADToF MIDI (real-time aligned already).
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Midi } from '@tonejs/midi';
 import VideoDrumKit from '../video/VideoDrumKit';
@@ -39,20 +47,29 @@ function parseDrumHits(midiBuffer) {
   return hits;
 }
 
-export default function DrumKitView({ midiBuffer, transport, loading, error }) {
+export default function DrumKitView({ midiBuffer, transport, syncPairsRef, loading, error }) {
   const transportRef = useRef(transport);
   useEffect(() => {
     transportRef.current = transport;
   }, [transport]);
 
   // Live clock for VideoDrumKit: a ref-shaped object whose `current` getter
-  // reads the shared transport position, so every rAF frame inside the kit
-  // sees the same time the audio engines are at.
+  // reads the shared transport position (shifted onto score time via the sync
+  // map's first anchor — see header comment), so every rAF frame inside the
+  // kit sees the same time the audio engines are at. Reading the offset
+  // lazily from the ref means a late-arriving sync map needs no re-render.
+  const syncRef = useRef(syncPairsRef);
+  useEffect(() => {
+    syncRef.current = syncPairsRef;
+  }, [syncPairsRef]);
   const timeRef = useMemo(
     () => ({
       get current() {
         const t = transportRef.current;
-        return t ? t.getPosition() : 0;
+        if (!t) return 0;
+        const pairs = syncRef.current?.current;
+        const origin = pairs && pairs.length ? pairs[0][1] : 0;
+        return t.getPosition() - origin;
       },
     }),
     []
