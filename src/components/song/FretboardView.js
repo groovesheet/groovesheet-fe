@@ -9,7 +9,7 @@ import VideoFretboardRoll from '../video/VideoFretboardRoll';
 import SkeletonPanel from '../ui/SkeletonPanel';
 import StatusMessage from '../ui/StatusMessage';
 
-function FretboardView({ midiBuffer, transport, loading, error }) {
+function FretboardView({ midiBuffer, transport, loading, error, kind = 'guitar' }) {
   const transportRef = useRef(transport);
 
   useEffect(() => { transportRef.current = transport; }, [transport]);
@@ -56,7 +56,7 @@ function FretboardView({ midiBuffer, transport, loading, error }) {
       )}
       {!loading && !error && !parseError && midiBuffer && (
         <div style={{ width: '100%', height: 460, background: '#08091a' }}>
-          <VideoFretboardRoll notes={notes} timeRef={timeRef} />
+          <VideoFretboardRoll notes={notes} timeRef={timeRef} kind={kind} />
         </div>
       )}
     </div>

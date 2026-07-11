@@ -1008,6 +1008,7 @@ function SongDetail({ onLoginClick }) {
                       transport={transport}
                       loading={midiLoading}
                       error={midiError}
+                      kind={instrument}
                     />
                   )}
                   {view === 'midi' && hasMidi && noteView === 'roll' && (
