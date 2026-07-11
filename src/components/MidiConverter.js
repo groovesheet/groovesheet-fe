@@ -238,7 +238,7 @@ function MidiConverter({ onLoginClick }) {
   // or /preview prefix — the upload helper picks based on auth state).
   const workflowNameFor = (instrument) => {
     switch (instrument) {
-      case 'drums': return 'separate_to_drumscore';
+      case 'drums': return 'separate_to_drumscore_v2';
       case 'jazz_bass': return 'separate_to_jazz_bass_score';
       case 'bass': return 'separate_to_bass_score';
       case 'piano': return 'separate_to_piano_score_full';
@@ -423,7 +423,7 @@ function MidiConverter({ onLoginClick }) {
       other: 'bs_roformer_other_stem',
     };
     const midiKeyMap = {
-      drums: 'adtof_drums_midi',
+      drums: 'adtof_plus_drums_quantized_midi',
       jazz_bass: 'bassunet_jazz_bass_midi',
       bass: 'fcpe_bass_midi',
       piano: 'transkun_v2_piano_midi',
@@ -451,7 +451,7 @@ function MidiConverter({ onLoginClick }) {
   // Same download logic as home page Hero
   const downloadInstrumentFile = async (id) => {
     const midiKeyMap = {
-      drums: 'adtof_drums_midi',
+      drums: 'adtof_plus_drums_quantized_midi',
       jazz_bass: 'bassunet_jazz_bass_midi',
       bass: 'fcpe_bass_midi',
       piano: 'transkun_v2_piano_midi',
@@ -571,7 +571,7 @@ function MidiConverter({ onLoginClick }) {
   // Download MIDI (only for transcription instruments)
   const handleDownloadMidi = () => {
     const midiKeyMap = {
-      drums: 'adtof_drums_midi',
+      drums: 'adtof_plus_drums_quantized_midi',
       jazz_bass: 'bassunet_jazz_bass_midi',
       bass: 'fcpe_bass_midi',
       piano: 'transkun_v2_piano_midi',

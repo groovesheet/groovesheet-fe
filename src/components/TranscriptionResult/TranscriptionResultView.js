@@ -4,6 +4,7 @@
 // workflow/preview outputs instead of library assets.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle, DownloadSimple, File, X } from '@phosphor-icons/react';
+import { Drum } from 'lucide-react';
 import { useAuth } from '../../auth';
 import { useTheme } from '../../context/ThemeContext';
 import config from '../../config';
@@ -15,6 +16,7 @@ import {
   truncateMusicXmlToMeasures,
 } from '../PreviewPanel/previewUtils';
 import { SheetMusicView, PianoRollView, StemsView } from '../song/SongViewers';
+import DrumKitView from './DrumKitView';
 import PlaybackBar from '../song/PlaybackBar';
 import { Icon } from '../song/icons';
 import StatusMessage from '../ui/StatusMessage';
@@ -22,11 +24,19 @@ import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine } from '../../player/stemEngine';
 import { createMidiEngine } from '../../player/midiEngine';
-import { createSheetSecMapper } from '../../player/syncMap';
+import { createSheetSecMapper, parseSyncMap } from '../../player/syncMap';
 import '../song/Song.css';
 import './TranscriptionResult.css';
 
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+// Drums viewer outputs — the beat-tracked ADToF+ chain. The engraved score
+// carries per-bar hidden tempo marks that OSMD ignores, so cursor sync runs
+// through the sync map below; the quantized MIDI is aligned to the real audio.
+// TODO: consolidate into api.js key maps
+const DRUMS_MUSICXML_KEY = 'adtof_plus_drums_musicxml';
+const DRUMS_MIDI_KEY = 'adtof_plus_drums_quantized_midi';
+const DRUMS_SYNC_MAP_KEY = 'adtof_plus_drums_sync_map';
 
 // Hero instrument value → BS-Roformer stem download key.
 const STEM_KEY_BY_INSTRUMENT = {
@@ -52,7 +62,10 @@ const STEM_DISPLAY = {
   other: { name: 'other', label: 'Other', color: '#C9A0FF', sub: 'texture · residual' },
 };
 
-function ViewerToolbar({ view, onView, available }) {
+// Lucide instrument icon sized to match the inline tab icons.
+const DrumKitTabIcon = (p) => <Drum size={14} strokeWidth={2} aria-hidden="true" {...p} />;
+
+function ViewerToolbar({ view, onView, available, drums }) {
   const tab = (key, IconCmp, label, kbd) => {
     const enabled = Boolean(available[key]);
     return (
@@ -73,7 +86,7 @@ function ViewerToolbar({ view, onView, available }) {
     <div className="gs-viewer-toolbar">
       <div className="gs-seg" role="tablist">
         {tab('sheet', Icon.Sheet, 'Sheet music', '1')}
-        {tab('midi', Icon.Midi, 'Piano roll', '2')}
+        {drums ? tab('midi', DrumKitTabIcon, 'Drum Kit', '2') : tab('midi', Icon.Midi, 'Piano roll', '2')}
         {tab('stems', Icon.Stems, 'Stem', '3')}
       </div>
     </div>
@@ -99,8 +112,12 @@ export default function TranscriptionResultView({
   const containerRef = useRef(null);
 
   const isPreview = Boolean(workflowId && workflowId.startsWith('PRV'));
-  const midiKey = MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
-  const musicXmlKey = MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
+  // Drums route to the beat-tracked ADToF+ outputs; every drums-specific
+  // branch below gates on this flag so the default (piano/bass/…) path is
+  // untouched.
+  const isDrums = selectedInstrument === 'drums';
+  const midiKey = isDrums ? DRUMS_MIDI_KEY : MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
+  const musicXmlKey = isDrums ? DRUMS_MUSICXML_KEY : MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
 
@@ -301,13 +318,52 @@ export default function TranscriptionResultView({
   const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
   const osmdBaseRef = useRef(0);
   const mapperRef = useRef(createSheetSecMapper({}));
+  const syncPairsRef = useRef(null);
   const sheetDurRef = useRef(0);
   const pendingOsmdSyncRef = useRef(false);
   const osmdExpectRef = useRef(null); // { sheetSec, until } | null
 
   const rebuildMapper = useCallback(() => {
-    mapperRef.current = createSheetSecMapper({ sheetDurationSec: sheetDurRef.current });
+    // pairs stay null unless a drums sync map loaded, in which case the mapper
+    // composes midi-sec ↔ score-qn with the sheet's own clock (same wiring as
+    // SongDetail). Null pairs → identity, the pre-drums behavior.
+    mapperRef.current = createSheetSecMapper({
+      pairs: syncPairsRef.current,
+      sheetDurationSec: sheetDurRef.current,
+    });
   }, []);
+
+  // Drums sheet↔audio sync map. The ADToF+ score is beat-tracked with per-bar
+  // hidden tempo marks that OSMD ignores, so without this map the playback
+  // cursor drifts ahead of the audio. Missing or invalid file → keep the
+  // identity mapping (graceful degradation, no crash). Previews are skipped:
+  // the sheet is truncated client-side, which would break the full-song map's
+  // qn → sheet-seconds scale.
+  useEffect(() => {
+    if (!workflowId || !isDrums || isPreview) return undefined;
+    let cancelled = false;
+    syncPairsRef.current = null; // drop any previous workflow's map while fetching
+    rebuildMapper();
+    (async () => {
+      try {
+        const prefetched = prefetchedFiles?.[DRUMS_SYNC_MAP_KEY];
+        const result = prefetched?.blob
+          ? prefetched
+          : await downloadWorkflowFile(config.apiBaseUrl, workflowId, DRUMS_SYNC_MAP_KEY, getToken);
+        if (cancelled || !result?.blob) return;
+        const pairs = parseSyncMap(await result.blob.text()).pairs;
+        if (cancelled) return;
+        syncPairsRef.current = pairs;
+        rebuildMapper();
+      } catch (e) {
+        if (!cancelled) {
+          syncPairsRef.current = null; // absent/bad sync map → identity mapping
+          rebuildMapper();
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [workflowId, isDrums, isPreview, prefetchedFiles, getToken, rebuildMapper]);
 
   // OSMD's playFromMs awaits pause() internally; serialize seek/play commands.
   const osmdCmdQueueRef = useRef(Promise.resolve());
@@ -574,7 +630,7 @@ export default function TranscriptionResultView({
           totalBeats={0}
           disabledControls={{ tempo: true, transpose: true, metronome: true, loop: true }}
         />
-        <ViewerToolbar view={view} onView={setView} available={available} />
+        <ViewerToolbar view={view} onView={setView} available={available} drums={isDrums} />
       </div>
 
       {/* Viewer */}
@@ -589,12 +645,22 @@ export default function TranscriptionResultView({
           />
         )}
         {view === 'midi' && (
-          <PianoRollView
-            midiBuffer={midiBuffer}
-            transport={transport}
-            loading={midiLoading}
-            error={midiError}
-          />
+          isDrums ? (
+            <DrumKitView
+              midiBuffer={midiBuffer}
+              transport={transport}
+              syncPairsRef={syncPairsRef}
+              loading={midiLoading}
+              error={midiError}
+            />
+          ) : (
+            <PianoRollView
+              midiBuffer={midiBuffer}
+              transport={transport}
+              loading={midiLoading}
+              error={midiError}
+            />
+          )
         )}
         {view === 'stems' && (
           <StemsView

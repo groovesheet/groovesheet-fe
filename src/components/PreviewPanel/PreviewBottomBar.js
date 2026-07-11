@@ -12,12 +12,23 @@ import {
   CaretDown,
 } from '@phosphor-icons/react';
 
-const SOURCES = [
-  { id: 'transcription', label: 'Transcription', Icon: MusicNotes },
-  { id: 'midi', label: 'MIDI', Icon: Equalizer },
-  { id: 'piano_stem', label: 'Piano Stem', Icon: GitMerge },
-  { id: 'original', label: 'Original', Icon: FileIcon },
-];
+// Stem-source label per instrument; anything unlisted keeps the historical
+// piano wording so existing surfaces render byte-identically.
+const STEM_SOURCE_LABEL_BY_INSTRUMENT = {
+  drums: 'Drums Stem',
+  bass: 'Bass Stem',
+  jazz_bass: 'Bass Stem',
+};
+
+function buildSources(instrument) {
+  const stemLabel = STEM_SOURCE_LABEL_BY_INSTRUMENT[instrument] || 'Piano Stem';
+  return [
+    { id: 'transcription', label: 'Transcription', Icon: MusicNotes },
+    { id: 'midi', label: 'MIDI', Icon: Equalizer },
+    { id: 'piano_stem', label: stemLabel, Icon: GitMerge },
+    { id: 'original', label: 'Original', Icon: FileIcon },
+  ];
+}
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -42,7 +53,9 @@ export default function PreviewBottomBar({
   onChangeSpeed,
   activeSource: activeSourceProp,
   onChangeSource,
+  instrument,
 }) {
+  const sources = buildSources(instrument);
   const [localPlaying, setLocalPlaying] = useState(isPlaying);
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
   const [localSource, setLocalSource] = useState('transcription');
@@ -61,7 +74,7 @@ export default function PreviewBottomBar({
     if (onChangeSpeed) onChangeSpeed(s);
     setSpeedOpen(false);
   };
-  const activeLabel = SOURCES.find((s) => s.id === activeSource)?.label || 'Audio Source';
+  const activeLabel = sources.find((s) => s.id === activeSource)?.label || 'Audio Source';
   const node = (
     <div className="preview-bottom-bar">
       <div className="preview-bottom-bar-left">
@@ -124,7 +137,7 @@ export default function PreviewBottomBar({
       <div className="preview-bottom-bar-right">
         {sourcesExpanded ? (
           <div className="preview-bottom-bar-sources" role="radiogroup" aria-label="Audio source">
-            {SOURCES.map(({ id, label, Icon }) => {
+            {sources.map(({ id, label, Icon }) => {
               const isActive = id === activeSource;
               return (
                 <button
