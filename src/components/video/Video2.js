@@ -17,10 +17,10 @@ import { createSynth } from './videoSynth';
  * Sources are decoupled so every worker renders well:
  *   - SHEET (top band) comes from MusicXML via OSMD. Each line is fit-scaled to
  *     the band height, so dense transcriptions no longer overflow it.
- *   - ROLL + AUDIO come from MIDI when a `midiUrl` is given (drums and bass MIDI
- *     carry the real instruments the flattened MusicXML loses), otherwise from
- *     the same parsed OSMD sheet (pitched piano/bass XML) so roll and staff
- *     share one timeline.
+ *   - ROLL + AUDIO come from the same parsed OSMD sheet as the staff whenever a
+ *     sheet is present (pitched piano/guitar/bass XML), so roll and staff share
+ *     one timeline and stay locked to the cursor. Only DRUMS (percussion voices
+ *     the pitched sheet can't carry) or sheet-less workers fall back to MIDI.
  *
  * A single master clock (0..dur, looping) drives the roll, one-line paging, the
  * OSMD cursor, and the Web Audio synth (videoSynth.js).
@@ -120,16 +120,17 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
 export default function Video2({ xmlUrl = SAMPLE_XML_URL, midiUrl = null, kind = 'piano', rollVariant = 'lanes', metaOverride } = {}) {
   const m = { ...meta, ...(metaOverride || {}) };
   const hasSheet = !!xmlUrl;
-  // Piano/guitar WITH a sheet: drive the roll + audio from the SAME OSMD-parsed
-  // sheet so they share one timeline with the cursor and cannot drift. The raw
-  // MIDI (transkun/fcpe) is a *different* timeline from the quantized/beamed
-  // MusicXML the score is rendered from — mixing them desyncs roll vs cursor
-  // (the fcpe guitar bug: fretboard notes lag/lead the staff). The guitar score
-  // is a single-instrument midi2score render, so its sounding pitches match the
-  // MIDI and the fretboard maps correctly from getNotes(). Keep MIDI for
-  // drums/bass (it carries instruments the flattened XML loses) or when there is
-  // no sheet at all.
-  const useMidi = !!midiUrl && !((kind === 'piano' || kind === 'guitar') && hasSheet);
+  // A pitched instrument (piano/guitar/bass) WITH a sheet drives the roll +
+  // audio from the SAME OSMD-parsed sheet, so they share one timeline with the
+  // cursor and cannot drift. The raw MIDI (transkun/fcpe/bassunet) is a
+  // *different* timeline from the quantized/beamed MusicXML the score renders
+  // from — mixing them desyncs roll vs cursor (the fcpe guitar/bass bug:
+  // fretboard notes lag/lead the staff). Each of these scores is a
+  // single-instrument midi2score render, so its sounding pitches match the MIDI
+  // and the fretboard/roll map correctly from getNotes(). Only DRUMS keep MIDI
+  // (percussion voices are unpitched and don't survive the pitched getNotes()),
+  // or when there is no sheet at all.
+  const useMidi = !!midiUrl && (kind === 'drums' || !hasSheet);
   // guitar and bass both render as a falling-notes fretboard (VideoFretboardRoll);
   // the board tuning/string-count is picked per-kind inside that component.
   const rollMode = kind === 'drums' ? 'drums'
