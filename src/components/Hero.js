@@ -45,9 +45,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = config.apiBaseUrl;
 
-// TODO(launch): only piano is production-ready today. The other instruments are
-// temporarily hidden from the picker — add them back here once their pipelines ship.
-const VISIBLE_INSTRUMENTS = ['piano'];
+// TODO(launch): only piano and bass are production-ready today. The other
+// instruments are temporarily hidden from the picker — add them back here once
+// their pipelines ship.
+const VISIBLE_INSTRUMENTS = ['piano', 'bass'];
 
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
