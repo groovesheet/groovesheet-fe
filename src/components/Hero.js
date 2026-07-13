@@ -45,10 +45,10 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = config.apiBaseUrl;
 
-// TODO(launch): only piano and bass are production-ready today. The other
+// TODO(launch): piano, drums and bass are production-ready today. The other
 // instruments are temporarily hidden from the picker — add them back here once
 // their pipelines ship.
-const VISIBLE_INSTRUMENTS = ['piano', 'bass'];
+const VISIBLE_INSTRUMENTS = ['piano', 'drums', 'bass'];
 
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
@@ -426,7 +426,7 @@ function Hero({ onLoginRequired }) {
       // Workflow name selection
       let workflowName = 'bs_roformer_separate';
       if (selectedInstrument === 'drums') {
-        workflowName = 'separate_to_drumscore_full';
+        workflowName = 'separate_to_drumscore_v2_full';
       } else if (selectedInstrument === 'jazz_bass') {
         workflowName = 'separate_to_jazz_bass_score_full';
       } else if (selectedInstrument === 'bass') {
@@ -636,7 +636,7 @@ function Hero({ onLoginRequired }) {
       other: 'bs_roformer_other_stem',
     };
     const midiKeyMap = {
-      drums: 'adtof_drums_midi',
+      drums: 'adtof_plus_drums_quantized_midi',
       jazz_bass: 'bassunet_jazz_bass_midi',
       bass: 'fcpe_bass_midi',
       piano: 'transkun_v2_piano_midi',
@@ -802,7 +802,7 @@ function Hero({ onLoginRequired }) {
   // Download MIDI using backend descriptive keys
   const handleDownloadMidi = () => {
     const midiKeyMap = {
-      drums: 'adtof_drums_midi',
+      drums: 'adtof_plus_drums_quantized_midi',
       jazz_bass: 'bassunet_jazz_bass_midi',
       bass: 'fcpe_bass_midi',
       piano: 'transkun_v2_piano_midi',

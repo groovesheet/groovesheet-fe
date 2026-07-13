@@ -8,7 +8,7 @@ import SkeletonPanel from '../ui/SkeletonPanel';
 const API_BASE_URL = config.apiBaseUrl;
 
 const MIDI_KEY_MAP = {
-  drums: 'adtof_drums_midi',
+  drums: 'adtof_plus_drums_quantized_midi',
   piano: 'transkun_v2_piano_midi',
   bass: 'fcpe_bass_midi',
   jazz_bass: 'bassunet_jazz_bass_midi',

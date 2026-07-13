@@ -1,0 +1,15 @@
+/* DrumKitView — "Drum Kit" tab inside the transcription result viewer.
+   The stage matches PianoRollView's 460px canvas height and the sheet tab's
+   translucent well so the three tabs read as one surface in both themes. */
+
+.tr-drumkit {
+  position: relative;
+}
+
+.tr-drumkit-stage {
+  height: 460px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+}

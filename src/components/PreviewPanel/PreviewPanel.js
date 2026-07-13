@@ -1,14 +1,19 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../auth';
-import { fetchMidiArrayBuffer, fetchMusicXmlText } from '../../utils/api';
+import { downloadWorkflowFile, fetchMidiArrayBuffer, fetchMusicXmlText } from '../../utils/api';
 import config from '../../config';
 import PreviewTabs from './PreviewTabs';
 import PreviewControls from './PreviewControls';
 import PreviewBottomBar from './PreviewBottomBar';
-import { MIDI_KEY_BY_INSTRUMENT, MUSICXML_KEY_BY_INSTRUMENT, truncateMidiToSeconds } from './previewUtils';
+import {
+  MIDI_KEY_BY_INSTRUMENT,
+  MUSICXML_KEY_BY_INSTRUMENT,
+  SYNC_MAP_KEY_BY_INSTRUMENT,
+  truncateMidiToSeconds,
+} from './previewUtils';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
-import { createSheetSecMapper } from '../../player/syncMap';
+import { createSheetSecMapper, parseSyncMap } from '../../player/syncMap';
 import StatusMessage from '../ui/StatusMessage';
 import SkeletonPanel from '../ui/SkeletonPanel';
 import './PreviewPanel.css';
@@ -94,6 +99,7 @@ export default function PreviewPanel({
   const isTranscriptionInstrument = isDemoMode || TRANSCRIPTION_INSTRUMENTS.includes(selectedInstrument);
   const midiKey = MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
   const musicXmlKey = MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
+  const syncMapKey = SYNC_MAP_KEY_BY_INSTRUMENT[selectedInstrument];
 
   const rebuildMapper = useCallback(() => {
     mapperRef.current = createSheetSecMapper({
@@ -106,6 +112,37 @@ export default function PreviewPanel({
     syncMapRef.current = preloadedSyncMap || null;
     rebuildMapper();
   }, [preloadedSyncMap, rebuildMapper]);
+
+  // Fetch the per-instrument sync map when the chain emits one (currently
+  // drums only — SYNC_MAP_KEY_BY_INSTRUMENT). Best-effort: a missing or
+  // invalid map leaves the identity mapping in place, so the OSMD cursor
+  // simply follows the score's own timing. Instruments without a sync map
+  // key skip this entirely.
+  useEffect(() => {
+    if (isDemoMode || !workflowId || !syncMapKey) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const prefetched = prefetchedFiles?.[syncMapKey];
+        let text;
+        if (prefetched?.blob) {
+          text = await prefetched.blob.text();
+        } else {
+          const result = await downloadWorkflowFile(config.apiBaseUrl, workflowId, syncMapKey, getToken);
+          text = result ? await result.blob.text() : null;
+        }
+        if (cancelled || !text) return;
+        const map = parseSyncMap(text);
+        if (cancelled) return;
+        syncMapRef.current = map;
+        rebuildMapper();
+      } catch (err) {
+        // Degrade gracefully — no sync map, cursor uses OSMD default timing.
+        console.warn('Preview sync map unavailable:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [workflowId, syncMapKey, prefetchedFiles, getToken, isDemoMode, rebuildMapper]);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -506,6 +543,7 @@ export default function PreviewPanel({
         onSkipBack={handleSkipBack}
         speed={speed}
         onChangeSpeed={handleChangeSpeed}
+        instrument={selectedInstrument}
       />
     </div>
   );
