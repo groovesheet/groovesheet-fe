@@ -15,6 +15,7 @@ import {
   truncateMusicXmlToMeasures,
 } from '../PreviewPanel/previewUtils';
 import { SheetMusicView, PianoRollView, StemsView } from '../song/SongViewers';
+import FretboardView from '../song/FretboardView';
 import PlaybackBar from '../song/PlaybackBar';
 import { Icon } from '../song/icons';
 import StatusMessage from '../ui/StatusMessage';
@@ -52,7 +53,13 @@ const STEM_DISPLAY = {
   other: { name: 'other', label: 'Other', color: '#C9A0FF', sub: 'texture · residual' },
 };
 
-function ViewerToolbar({ view, onView, available }) {
+// Tab 2's view follows the transcribed stem, mirroring SongDetail's
+// viewForStem: drums -> kit grid (still the roll here), guitar/bass ->
+// fretboard, everything else -> piano roll.
+const viewForStem = (name) =>
+  name === 'drums' ? 'drums' : name === 'guitar' || name === 'bass' ? 'fretboard' : 'roll';
+
+function ViewerToolbar({ view, onView, available, midiLabel }) {
   const tab = (key, IconCmp, label, kbd) => {
     const enabled = Boolean(available[key]);
     return (
@@ -73,7 +80,7 @@ function ViewerToolbar({ view, onView, available }) {
     <div className="gs-viewer-toolbar">
       <div className="gs-seg" role="tablist">
         {tab('sheet', Icon.Sheet, 'Sheet music', '1')}
-        {tab('midi', Icon.Midi, 'Piano roll', '2')}
+        {tab('midi', Icon.Midi, midiLabel, '2')}
         {tab('stems', Icon.Stems, 'Stem', '3')}
       </div>
     </div>
@@ -103,6 +110,10 @@ export default function TranscriptionResultView({
   const musicXmlKey = MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
+  // Same label rule as SongDetail; drums keep the roll (and its label) here
+  // until the kit grid is wired into the result view.
+  const noteView = viewForStem(stemMeta.name);
+  const midiTabLabel = noteView === 'fretboard' ? 'Fretboard Notes' : 'Piano roll';
 
   const [upgrading, setUpgrading] = useState(false);
 
@@ -574,7 +585,7 @@ export default function TranscriptionResultView({
           totalBeats={0}
           disabledControls={{ tempo: true, transpose: true, metronome: true, loop: true }}
         />
-        <ViewerToolbar view={view} onView={setView} available={available} />
+        <ViewerToolbar view={view} onView={setView} available={available} midiLabel={midiTabLabel} />
       </div>
 
       {/* Viewer */}
@@ -588,7 +599,16 @@ export default function TranscriptionResultView({
             onPlaybackStateChange={handleOsmdStateChange}
           />
         )}
-        {view === 'midi' && (
+        {view === 'midi' && noteView === 'fretboard' && (
+          <FretboardView
+            midiBuffer={midiBuffer}
+            transport={transport}
+            loading={midiLoading}
+            error={midiError}
+            kind={stemMeta.name}
+          />
+        )}
+        {view === 'midi' && noteView !== 'fretboard' && (
           <PianoRollView
             midiBuffer={midiBuffer}
             transport={transport}
