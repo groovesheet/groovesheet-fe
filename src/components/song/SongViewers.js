@@ -71,7 +71,9 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
             xmlString={musicXmlText}
             theme="light"
             zoom={0.8}
-            drawTitle={false}
+            drawTitle
+            drawComposer
+            drawCredits
             drawMetronomeMarks={false}
             onPlaybackStateChange={onPlaybackStateChange}
             containerStyle={{ minHeight: 600 }}

@@ -26,6 +26,7 @@ import { useTransport } from '../../player/transport-react';
 import { createStemEngine } from '../../player/stemEngine';
 import { createMidiEngine } from '../../player/midiEngine';
 import { createSheetSecMapper, parseSyncMap } from '../../player/syncMap';
+import { applyMusicXmlMetadata, titleFromFilename } from '../../utils/musicXmlMetadata';
 import '../song/Song.css';
 import './TranscriptionResult.css';
 
@@ -127,6 +128,8 @@ export default function TranscriptionResultView({
   const musicXmlKey = isDrums ? DRUMS_MUSICXML_KEY : MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
+  const scoreTitle = titleFromFilename(fileName);
+  const scoreArtist = 'Transcribed by GrooveSheet';
   // Same label rule as SongDetail; drums keep the roll (and its label) here
   // until the kit grid is wired into the result view.
   const noteView = viewForStem(stemMeta.name);
@@ -181,6 +184,7 @@ export default function TranscriptionResultView({
         // Previews show a teaser: cap the engraved score alongside the
         // 10-second MIDI cap so every tab tells the same story.
         if (text && isPreview) text = truncateMusicXmlToMeasures(text);
+        if (text) text = applyMusicXmlMetadata(text, { title: scoreTitle, artist: scoreArtist });
         if (!cancelled) setMusicXmlText(text);
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
@@ -189,7 +193,7 @@ export default function TranscriptionResultView({
       }
     })();
     return () => { cancelled = true; };
-  }, [workflowId, musicXmlKey, prefetchedFiles, getToken, isPreview]);
+  }, [workflowId, musicXmlKey, prefetchedFiles, getToken, isPreview, scoreTitle, scoreArtist]);
 
   // --- MIDI (buffer + soundfont engine) ----------------------------------------
   const [midiBuffer, setMidiBuffer] = useState(null);
