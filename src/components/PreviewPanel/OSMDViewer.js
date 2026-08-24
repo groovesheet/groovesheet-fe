@@ -48,6 +48,30 @@ function forceStems(xmlString) {
   }
 }
 
+// OSMD estimates composer width using its engraving font metrics. Browser font
+// substitution can make the rendered label a few pixels wider, clipping long
+// credits at the right page edge. Keep the exact composer label inside the SVG
+// viewBox after engraving without changing the score's MusicXML metadata.
+function keepComposerInsidePage(container, composerString) {
+  const value = composerString?.trim();
+  if (!container || !value) return;
+  const label = Array.from(container.querySelectorAll('svg text'))
+    .find((node) => node.textContent?.trim() === value);
+  if (!label) return;
+  try {
+    const svg = label.ownerSVGElement;
+    const bounds = label.getBBox();
+    const viewBox = svg?.viewBox?.baseVal;
+    if (!viewBox) return;
+    const rightLimit = viewBox.x + viewBox.width - 12;
+    const overflow = bounds.x + bounds.width - rightLimit;
+    const x = Number(label.getAttribute('x'));
+    if (overflow > 0 && Number.isFinite(x)) label.setAttribute('x', String(x - overflow));
+  } catch (_) {
+    // A missing SVG geometry API should never prevent the score from loading.
+  }
+}
+
 const OSMDViewer = forwardRef(function OSMDViewer(
   {
     xmlString,
@@ -184,6 +208,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
         }
         osmd.zoom = zoom;
         osmd.render();
+        keepComposerInsidePage(containerRef.current, osmd.Sheet?.ComposerString);
         try { osmd.enableOrDisableCursors(true); } catch (e) {}
         const cursor = osmd.cursors?.[0] || osmd.cursor;
         if (cursor) {
