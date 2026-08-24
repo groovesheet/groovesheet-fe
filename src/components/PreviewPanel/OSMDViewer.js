@@ -52,24 +52,24 @@ function forceStems(xmlString) {
 // substitution can make the rendered label a few pixels wider, clipping long
 // credits at the right page edge. Keep the exact composer label inside the SVG
 // viewBox after engraving without changing the score's MusicXML metadata.
-function keepComposerInsidePage(container, composerString) {
-  const value = composerString?.trim();
-  if (!container || !value) return;
-  const label = Array.from(container.querySelectorAll('svg text'))
-    .find((node) => node.textContent?.trim() === value);
-  if (!label) return;
-  try {
-    const svg = label.ownerSVGElement;
-    const bounds = label.getBBox();
-    const viewBox = svg?.viewBox?.baseVal;
-    if (!viewBox) return;
-    const rightLimit = viewBox.x + viewBox.width - 12;
-    const overflow = bounds.x + bounds.width - rightLimit;
-    const x = Number(label.getAttribute('x'));
-    if (overflow > 0 && Number.isFinite(x)) label.setAttribute('x', String(x - overflow));
-  } catch (_) {
-    // A missing SVG geometry API should never prevent the score from loading.
-  }
+function keepScoreHeaderInsidePage(container) {
+  if (!container) return;
+  Array.from(container.querySelectorAll('#osmdSvgPage1 text')).forEach((label) => {
+    const y = Number(label.getAttribute('y'));
+    if (!Number.isFinite(y) || y > 150) return;
+    try {
+      const svg = label.ownerSVGElement;
+      const bounds = label.getBBox();
+      const viewBox = svg?.viewBox?.baseVal;
+      if (!viewBox) return;
+      const rightLimit = viewBox.x + viewBox.width - 24;
+      const overflow = bounds.x + bounds.width - rightLimit;
+      const x = Number(label.getAttribute('x'));
+      if (overflow > 0 && Number.isFinite(x)) label.setAttribute('x', String(x - overflow));
+    } catch (_) {
+      // A missing SVG geometry API should never prevent the score from loading.
+    }
+  });
 }
 
 const OSMDViewer = forwardRef(function OSMDViewer(
@@ -126,6 +126,17 @@ const OSMDViewer = forwardRef(function OSMDViewer(
     });
     osmdRef.current = osmd;
 
+    let headerAdjustRaf = null;
+    const scheduleHeaderAdjustment = () => {
+      if (headerAdjustRaf) cancelAnimationFrame(headerAdjustRaf);
+      headerAdjustRaf = requestAnimationFrame(() => {
+        headerAdjustRaf = null;
+        keepScoreHeaderInsidePage(containerRef.current);
+      });
+    };
+    const headerObserver = new MutationObserver(scheduleHeaderAdjustment);
+    headerObserver.observe(containerRef.current, { childList: true, subtree: true });
+
     const handleClick = (ev) => {
       const osmdInst = osmdRef.current;
       if (!osmdInst || !osmdInst.GraphicSheet || !readyRef.current) return;
@@ -155,6 +166,8 @@ const OSMDViewer = forwardRef(function OSMDViewer(
     containerRef.current.addEventListener('click', handleClick);
 
     return () => {
+      headerObserver.disconnect();
+      if (headerAdjustRaf) cancelAnimationFrame(headerAdjustRaf);
       containerRef.current?.removeEventListener('click', handleClick);
       if (stateRafRef.current) cancelAnimationFrame(stateRafRef.current);
       try { playbackRef.current?.pause(); } catch (e) {}
@@ -208,7 +221,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
         }
         osmd.zoom = zoom;
         osmd.render();
-        keepComposerInsidePage(containerRef.current, osmd.Sheet?.ComposerString);
+        keepScoreHeaderInsidePage(containerRef.current);
         try { osmd.enableOrDisableCursors(true); } catch (e) {}
         const cursor = osmd.cursors?.[0] || osmd.cursor;
         if (cursor) {
