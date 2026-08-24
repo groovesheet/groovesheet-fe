@@ -331,10 +331,6 @@ function SongDetail({ onLoginClick }) {
       null,
     [xmlAssets, instrument]
   );
-  const sheetStemName = xmlAsset?.stem_name || null;
-  const sheetPartLabel = sheetStemName
-    ? `${STEM_META[sheetStemName]?.label || sheetStemName} part`
-    : null;
   const syncMapAsset = useMemo(
     () => (track?.assets || []).find((a) => a.asset_type === 'sync_map') || null,
     [track]
@@ -985,7 +981,6 @@ function SongDetail({ onLoginClick }) {
                       error={xmlError}
                       osmdRef={osmdRef}
                       onPlaybackStateChange={handleOsmdStateChange}
-                      partLabel={sheetPartLabel}
                     />
                   )}
                   {view === 'midi' && hasMidi && noteView !== 'roll' && !midiAsset && (
