@@ -5,8 +5,6 @@
  * to the backend with Bearer tokens from Supabase.
  */
 
-import { trackWorkflowStarted } from './analytics';
-
 /**
  * Sanitize a filename to be safe for HTTP headers (ASCII-only).
  * Normalizes Unicode (e.g. combining accents) and replaces non-ASCII chars.
@@ -137,14 +135,12 @@ export async function uploadFileAuthenticated(
     throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
   }
 
-  const started = await response.json();
-  // Activation step of the funnel: the user's first real transcription. Fired
-  // here because every workflow start goes through this upload, and only after
-  // the backend accepted it. Never-throw.
-  trackWorkflowStarted(started?.workflow_name || endpoint.replace(/^\//, ''), {
-    workflow_id: started?.workflow_id,
-  });
-  return started;
+  // NOTE: no workflow_started event here. Nothing in the app calls this
+  // helper - Hero, StemSplitter and MidiConverter each POST to /workflow/*
+  // through authenticatedFetch directly, and that is where the event fires.
+  // Emitting it here as well would be dead code today and a double count the
+  // day someone starts using this helper.
+  return response.json();
 }
 
 /**
