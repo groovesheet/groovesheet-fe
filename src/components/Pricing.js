@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
-import { fetchBillingPlans, createCheckoutSession } from '../utils/api';
+import { createCheckoutSession } from '../utils/api';
+import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import { startProviderCheckout } from '../utils/airwallex';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
 
 /**
- * Format a USD amount the way the static copy did ($0, $10, $7.5) — drop a
- * trailing ".0" but keep meaningful cents. Returns null for non-numbers so the
- * caller can fall back to its static text.
+ * Prices in the catalog's own currency, falling back to the USD fields so an
+ * older/cached API response still renders.
  */
-const formatPrice = (value) => {
-  if (value == null || Number.isNaN(Number(value))) return null;
-  const num = Number(value);
-  // Up to 2 decimals, but strip insignificant trailing zeros (10.00 -> 10, 7.50 -> 7.5).
-  const trimmed = parseFloat(num.toFixed(2));
-  return `$${trimmed}`;
-};
+const planMonthly = (plan) => plan?.price_monthly ?? plan?.price_monthly_usd;
+const planAnnual = (plan) => plan?.price_annual ?? plan?.price_annual_usd;
+const topupAmount = (topup) => topup?.price ?? topup?.price_usd;
 
 /**
  * Format a minute count as a clean integer when whole (120 -> "120"), else keep
@@ -38,30 +34,13 @@ function Pricing({ onLoginClick }) {
   const [activeTab, setActiveTab] = useState('plans');
   const [billingMode, setBillingMode] = useState('annual');
 
-  // Public pricing catalog from the backend (single source of truth for numbers).
-  const [catalog, setCatalog] = useState(null);
-  const [catalogLoading, setCatalogLoading] = useState(true);
+  // Public pricing catalog from the backend (single source of truth for
+  // numbers) plus the currency it quoted this visitor in.
+  const { catalog, loading: catalogLoading, currency } = useBillingCatalog();
+  const formatPrice = (value) => formatMoney(value, currency);
 
   // "Checkout canceled" notice — shown when Stripe returns the user to /pricing?canceled.
   const [showCanceled, setShowCanceled] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await fetchBillingPlans('/api');
-        if (!cancelled) setCatalog(data);
-      } catch (err) {
-        // Never block the page — fall back to the static copy already in the markup.
-        console.warn('Failed to load billing plans; using static fallback values.', err);
-      } finally {
-        if (!cancelled) setCatalogLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -98,7 +77,9 @@ function Pricing({ onLoginClick }) {
     setLoading(plan);
     try {
       const planKey = resolvePlanKey(plan);
-      const data = await createCheckoutSession('/api', planKey, getToken, signOut);
+      // Send back the currency the user was actually quoted, so the price on
+      // Stripe Checkout can't differ from the price on the card they clicked.
+      const data = await createCheckoutSession('/api', planKey, getToken, signOut, currency);
 
       // Hand off to the provider's hosted checkout (Stripe URL or Airwallex SDK).
       await startProviderCheckout(data);
@@ -121,14 +102,16 @@ function Pricing({ onLoginClick }) {
   const powerTopup = topupById('power');
 
   // Per-month price for Lite: monthly plan's monthly price, or annual/12 in annual mode.
+  const liteAnnualTotal = planAnnual(liteAnnual);
+  const proAnnualTotal = planAnnual(proAnnual);
   const litePrice =
     billingMode === 'monthly'
-      ? formatPrice(liteMonthly?.price_monthly_usd)
-      : formatPrice(liteAnnual?.price_annual_usd != null ? liteAnnual.price_annual_usd / 12 : null);
+      ? formatPrice(planMonthly(liteMonthly))
+      : formatPrice(liteAnnualTotal != null ? liteAnnualTotal / 12 : null);
   const proPrice =
     billingMode === 'monthly'
-      ? formatPrice(proMonthly?.price_monthly_usd)
-      : formatPrice(proAnnual?.price_annual_usd != null ? proAnnual.price_annual_usd / 12 : null);
+      ? formatPrice(planMonthly(proMonthly))
+      : formatPrice(proAnnualTotal != null ? proAnnualTotal / 12 : null);
 
   // Minutes (per month for plans, one-time for top-ups).
   const freeMinutes = formatMinutes(free?.minutes_per_month);
@@ -138,9 +121,9 @@ function Pricing({ onLoginClick }) {
   const powerMinutes = formatMinutes(powerTopup?.minutes);
 
   // Top-up one-time prices.
-  const starterPrice = formatPrice(starterTopup?.price_usd);
-  const plusPrice = formatPrice(plusTopup?.price_usd);
-  const powerPrice = formatPrice(powerTopup?.price_usd);
+  const starterPrice = formatPrice(topupAmount(starterTopup));
+  const plusPrice = formatPrice(topupAmount(plusTopup));
+  const powerPrice = formatPrice(topupAmount(powerTopup));
 
   return (
     <section className="pricing" aria-busy={catalogLoading}>
@@ -204,7 +187,7 @@ function Pricing({ onLoginClick }) {
                   <span className="plan-badge">{t('pricing.plans.free.badge')}</span>
                 </div>
                 <div className="pricing-card-price">
-                  <span className="price">$0</span>
+                  <span className="price">{formatPrice(0)}</span>
                   <span className="period">{t('pricing.perMonth')}</span>
                 </div>
                 <button className="pricing-btn outline" onClick={() => handlePlanClick('free')} disabled={loading === 'free'}>

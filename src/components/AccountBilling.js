@@ -76,7 +76,7 @@ export const AccountBilling = () => {
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState(null);
 
-  const [catalog, setCatalog] = useState({ plans: [], topups: [], provider: 'stripe' });
+  const [catalog, setCatalog] = useState({ plans: [], topups: [], provider: 'stripe', currency: 'usd' });
   const [payment, setPayment] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
@@ -186,10 +186,20 @@ export const AccountBilling = () => {
     }
   };
 
+  // Currency the backend quoted this visitor in ("usd", or "cny" for
+  // mainland-China traffic). The fallback cards below are USD-only, so they
+  // stay in dollars if the catalog never loads.
+  const currency = catalog.currency || 'usd';
+  const money = (value) => `${currency === 'cny' ? '¥' : '$'}${value}`;
+  // Prefer the catalog's currency-specific fields, falling back to the USD
+  // ones so a cached response from an older backend still renders.
+  const planMonthly = (p) => p?.price_monthly ?? p?.price_monthly_usd;
+  const planAnnual = (p) => p?.price_annual ?? p?.price_annual_usd;
+
   const startCheckout = async (planCode, label) => {
     notify(`Opening checkout — ${label}`);
     try {
-      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut);
+      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut, currency);
       await startProviderCheckout(data);
     } catch (err) {
       if (!handleAuthError(err)) notify("Couldn't start checkout. Please try again.");
@@ -263,9 +273,10 @@ export const AccountBilling = () => {
   const planCards = ['lite', 'pro'].map((fam) => {
     const fb = PLAN_FALLBACK[fam];
     const live = catalog.plans.find((p) => tierFamily(p.id) === fam);
-    const monthly = live?.price_monthly_usd ?? fb.monthly;
-    const annualP = live?.price_annual_usd ? Math.round((live.price_annual_usd / 12) * 100) / 100 : fb.annual;
-    const annualBilled = live?.price_annual_usd ?? fb.annualBilled;
+    const monthly = planMonthly(live) ?? fb.monthly;
+    const liveAnnual = planAnnual(live);
+    const annualP = liveAnnual ? Math.round((liveAnnual / 12) * 100) / 100 : fb.annual;
+    const annualBilled = liveAnnual ?? fb.annualBilled;
     const price = annual ? annualP : monthly;
     const isCurrent = isPaid && family === fam;
     const featured = fam === 'lite';
@@ -281,9 +292,9 @@ export const AccountBilling = () => {
       name: fb.name,
       badge: fb.badge,
       subtitle: fb.subtitle,
-      priceText: `$${price}`,
+      priceText: money(price),
       period: annual ? '/mo, billed yearly' : '/month',
-      billedNote: annual ? `Billed $${annualBilled} per year` : '',
+      billedNote: annual ? `Billed ${money(annualBilled)} per year` : '',
       features,
       isCurrent,
       showTag: isCurrent || featured,
@@ -311,7 +322,7 @@ export const AccountBilling = () => {
     name: t.display_name,
     minutes: t.minutes,
     priority: t.priority_queue,
-    priceText: `$${t.price_usd}`,
+    priceText: money(t.price ?? t.price_usd),
     onBuy: () => startCheckout(t.checkout_id || t.id, `+${t.minutes} min top-up`),
   }));
 

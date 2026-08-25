@@ -6,6 +6,7 @@ import Pricing from './Pricing';
 import Testimonials from './Testimonials';
 import { useUser } from '../auth';
 import { LocalizedLink } from '../i18n/locale';
+import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import './FAQ.css';
 import './PricingPage.css';
 
@@ -69,6 +70,21 @@ function PricingPage({ onLoginClick }) {
   const { isSignedIn } = useUser();
   const [openFaq, setOpenFaq] = useState('minute');
 
+  // The comparison table quotes "from" prices, which must agree with the plan
+  // cards rendered by <Pricing /> below — including the currency, since
+  // mainland-China visitors are quoted in yuan. Both read the same cached
+  // catalog, so this costs no extra request.
+  const { catalog, currency } = useBillingCatalog();
+  const planById = (id) => catalog?.plans?.find((p) => p.id === id);
+  // "From" = the cheapest way to get the plan, i.e. the annual price per month.
+  const monthlyEquivalent = (id, fallback) => {
+    const plan = planById(id);
+    const annual = plan?.price_annual ?? plan?.price_annual_usd;
+    return annual ? formatMoney(annual / 12, currency) : fallback;
+  };
+  const liteFrom = monthlyEquivalent('lite_annual', '$7.5');
+  const proFrom = monthlyEquivalent('pro_annual', '$15');
+
   const toggleFaq = (id) => setOpenFaq((cur) => (cur === id ? null : id));
 
   return (
@@ -113,21 +129,21 @@ function PricingPage({ onLoginClick }) {
                       <div className="pp-plan-h">
                         <span className="pp-plan-tag">Hobbyist</span>
                         <span className="pp-plan-name">Free</span>
-                        <span className="pp-plan-price">$0 / month</span>
+                        <span className="pp-plan-price">{formatMoney(0, currency)} / month</span>
                       </div>
                     </th>
                     <th scope="col" className="is-pop">
                       <div className="pp-plan-h">
                         <span className="pp-plan-tag">Most popular</span>
                         <span className="pp-plan-name">Lite</span>
-                        <span className="pp-plan-price">from $7.5 / month</span>
+                        <span className="pp-plan-price">from {liteFrom} / month</span>
                       </div>
                     </th>
                     <th scope="col">
                       <div className="pp-plan-h">
                         <span className="pp-plan-tag">Enterprise</span>
                         <span className="pp-plan-name">Pro</span>
-                        <span className="pp-plan-price">from $15 / user</span>
+                        <span className="pp-plan-price">from {proFrom} / user</span>
                       </div>
                     </th>
                   </tr>

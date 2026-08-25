@@ -4,6 +4,28 @@ import i18n, { SUPPORTED_LOCALES, DEFAULT_LOCALE } from './index';
 
 const LocaleContext = createContext(DEFAULT_LOCALE);
 
+// Set once the visitor picks a language for themselves. Vercel's edge
+// redirects in vercel.json only fire when this cookie is absent, so an
+// explicit choice permanently overrides the country-based guess — including a
+// visitor in China deliberately choosing English.
+export const LOCALE_COOKIE = 'gs_locale';
+const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // one year
+
+export function rememberLocaleChoice(locale) {
+  if (typeof document === 'undefined') return;
+  if (!SUPPORTED_LOCALES.includes(locale)) return;
+  const secure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  document.cookie = [
+    `${LOCALE_COOKIE}=${encodeURIComponent(locale)}`,
+    'path=/',
+    `max-age=${LOCALE_COOKIE_MAX_AGE}`,
+    'SameSite=Lax',
+    secure ? 'Secure' : '',
+  ]
+    .filter(Boolean)
+    .join('; ');
+}
+
 export function useLocale() {
   return useContext(LocaleContext);
 }

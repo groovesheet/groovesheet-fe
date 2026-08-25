@@ -1,4 +1,94 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": {
+            "eq": "CN"
+          }
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "gs_locale"
+        }
+      ],
+      "destination": "/zh-CN",
+      "permanent": false
+    },
+    {
+      "source": "/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": {
+            "eq": "CN"
+          }
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "gs_locale"
+        }
+      ],
+      "destination": "/zh-CN/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": {
+            "inc": [
+              "TW",
+              "HK",
+              "MO"
+            ]
+          }
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "gs_locale"
+        }
+      ],
+      "destination": "/zh-TW",
+      "permanent": false
+    },
+    {
+      "source": "/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": {
+            "inc": [
+              "TW",
+              "HK",
+              "MO"
+            ]
+          }
+        }
+      ],
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "gs_locale"
+        }
+      ],
+      "destination": "/zh-TW/:path*",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",

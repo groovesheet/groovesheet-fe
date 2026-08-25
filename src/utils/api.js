@@ -603,13 +603,22 @@ export async function fetchUserSubscription(baseUrl, getToken, signOut = null) {
  * @param {Function} [signOut]
  * @returns {Promise<{ session_id: string, url: string }>}
  */
-export async function createCheckoutSession(baseUrl, plan, getToken, signOut = null) {
+export async function createCheckoutSession(
+  baseUrl,
+  plan,
+  getToken,
+  signOut = null,
+  currency = null
+) {
   const response = await authenticatedFetch(
     `${baseUrl}/billing/create-checkout-session`,
     {
       method: 'POST',
       headers: { accept: 'application/json', 'content-type': 'application/json' },
-      body: JSON.stringify({ plan }),
+      // `currency` echoes back what the user was quoted (see /billing/plans),
+      // so the Stripe Checkout total matches the price they clicked. Omitted,
+      // the backend re-derives it from the caller's country.
+      body: JSON.stringify(currency ? { plan, currency } : { plan }),
     },
     getToken,
     signOut
