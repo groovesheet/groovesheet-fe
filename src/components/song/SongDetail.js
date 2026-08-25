@@ -100,26 +100,6 @@ function hashId(id) {
   return h;
 }
 
-function Breadcrumb({ title, artist, navigate }) {
-  return (
-    <div className="gs-breadcrumb">
-      <a
-        href="/explore"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate('/explore');
-        }}
-      >
-        Explore
-      </a>
-      <span className="sep">/</span>
-      <span style={{ color: 'var(--color-muted-foreground)' }}>{artist}</span>
-      <span className="sep">/</span>
-      <span className="current">{title}</span>
-    </div>
-  );
-}
-
 function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, instrumentUi }) {
   const tab = (key, IconCmp, label, kbd) => {
     const enabled = Boolean(available[key]);
@@ -916,8 +896,6 @@ function SongDetail({ onLoginClick }) {
 
         {!trackError && !trackLoading && track && (
           <>
-            <Breadcrumb title={track.title} artist={track.artist} navigate={navigate} />
-
             <div className="gs-song-shell">
               {/* Main column */}
               <div style={{ minWidth: 0 }}>

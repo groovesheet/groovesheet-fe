@@ -61,7 +61,7 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
             drawCredits
             drawMetronomeMarks={false}
             onPlaybackStateChange={onPlaybackStateChange}
-            containerStyle={{ minHeight: 600 }}
+            containerStyle={{ minHeight: 600, padding: 0 }}
           />
         </div>
       )}
