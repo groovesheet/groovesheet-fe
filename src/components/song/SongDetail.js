@@ -686,17 +686,25 @@ function SongDetail({ onLoginClick }) {
     if (!track || !view) return;
     const t = transportRef.current;
     if (view === 'sheet') {
-      // SheetMusicView remounts OSMD; not-ready until its first state tick.
-      osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
-      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
-      pendingOsmdSyncRef.current = true;
-      t.setActiveEngine('osmd');
+      if (hasMidi) {
+        // Social videos render their soundtrack from the aligned MIDI (GM
+        // channel 10 for drums), not from MusicXML. Use that same asset as the
+        // Sheet tab's audio/clock and let OSMD only draw/follow the cursor.
+        pendingOsmdSyncRef.current = false;
+        t.setActiveEngine('midi');
+      } else {
+        // A score without MIDI still falls back to OSMD playback.
+        osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+        osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
+        pendingOsmdSyncRef.current = true;
+        t.setActiveEngine('osmd');
+      }
     } else if (view === 'midi') {
       t.setActiveEngine('midi');
     } else if (view === 'stems') {
       t.setActiveEngine('stems');
     }
-  }, [view, track]);
+  }, [view, track, hasMidi, midiAsset]);
 
   // --- playback handlers ---------------------------------------------------------
   const handlePlayPause = useCallback(() => {

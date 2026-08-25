@@ -57,6 +57,7 @@ export function createTransport() {
   let activeId = null;
   let rafId = null;
   let disposed = false;
+  let lastEngineTime = null;
 
   // Anchor for the self-advancing clock (used when no engine reports time).
   let anchorPos = 0;
@@ -94,7 +95,16 @@ export function createTransport() {
     if (eng && typeof eng.readTime === 'function') {
       try {
         const r = eng.readTime();
-        if (typeof r === 'number' && Number.isFinite(r)) t = r;
+        if (typeof r === 'number' && Number.isFinite(r)) {
+          // Audio engines can briefly report their reset/default zero while an
+          // async seek or internal timing update settles. Playback is monotonic
+          // unless transport.seek() explicitly changes it, so ignore a large
+          // backwards sample instead of rewinding the shared UI clock.
+          if (lastEngineTime == null || r >= lastEngineTime - 0.25) {
+            t = r;
+            lastEngineTime = r;
+          }
+        }
       } catch (e) { /* treat as unknown */ }
     }
     if (t == null) {
@@ -127,6 +137,7 @@ export function createTransport() {
       if (disposed || state.isPlaying) return;
       state.isPlaying = true;
       anchor(state.positionSec);
+      lastEngineTime = state.positionSec;
       const eng = activeEngine();
       if (eng) { try { eng.play(state.positionSec); } catch (e) { /* ignore */ } }
       startLoop();
@@ -149,6 +160,7 @@ export function createTransport() {
       if (state.durationSec > 0) target = Math.min(target, state.durationSec);
       state.positionSec = target;
       anchor(target);
+      lastEngineTime = target;
       const eng = activeEngine();
       if (eng) { try { eng.seek(target); } catch (e) { /* ignore */ } }
       notify();
@@ -192,6 +204,7 @@ export function createTransport() {
       if (activeId === id) {
         activeId = null;
         anchor(state.positionSec);
+        lastEngineTime = null;
       }
     },
 
@@ -203,6 +216,7 @@ export function createTransport() {
       if (old) { try { old.pause(); } catch (e) { /* ignore */ } }
       activeId = nextId;
       anchor(state.positionSec);
+      lastEngineTime = state.positionSec;
       const eng = activeEngine();
       if (eng) {
         // Single command: play(at) already implies the seek; seek(at) when
