@@ -25,7 +25,7 @@ import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine } from '../../player/stemEngine';
 import { createMidiEngine } from '../../player/midiEngine';
-import { createSheetSecMapper, parseSyncMap } from '../../player/syncMap';
+import { createSheetSecMapper, parseSyncMap, musicXmlHasVariableTempo } from '../../player/syncMap';
 import { applyMusicXmlMetadata, titleFromFilename } from '../../utils/musicXmlMetadata';
 import '../song/Song.css';
 import './TranscriptionResult.css';
@@ -165,6 +165,7 @@ export default function TranscriptionResultView({
   const [musicXmlText, setMusicXmlText] = useState(null);
   const [xmlLoading, setXmlLoading] = useState(true);
   const [xmlError, setXmlError] = useState(null);
+  const scoreHasOwnTimingRef = useRef(false);
 
   useEffect(() => {
     if (!workflowId) return undefined;
@@ -195,7 +196,10 @@ export default function TranscriptionResultView({
             sourceCredit: scoreSourceCredit,
           });
         }
-        if (!cancelled) setMusicXmlText(text);
+        if (!cancelled) {
+          scoreHasOwnTimingRef.current = musicXmlHasVariableTempo(text);
+          setMusicXmlText(text);
+        }
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
       } finally {
@@ -341,7 +345,6 @@ export default function TranscriptionResultView({
   // --- OSMD (sheet) engine — same wiring as SongDetail/PreviewPanel -------------
   const osmdRef = useRef(null);
   const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
-  const osmdBaseRef = useRef(0);
   const mapperRef = useRef(createSheetSecMapper({}));
   const syncPairsRef = useRef(null);
   const sheetDurRef = useRef(0);
@@ -355,13 +358,17 @@ export default function TranscriptionResultView({
     mapperRef.current = createSheetSecMapper({
       pairs: syncPairsRef.current,
       sheetDurationSec: sheetDurRef.current,
+      preferIdentity: scoreHasOwnTimingRef.current,
     });
   }, []);
 
-  // Drums sheet↔audio sync map. The ADToF+ score is beat-tracked with per-bar
-  // hidden tempo marks that OSMD ignores, so without this map the playback
-  // cursor drifts ahead of the audio. Missing or invalid file → keep the
-  // identity mapping (graceful degradation, no crash). Previews are skipped:
+  useEffect(() => {
+    rebuildMapper();
+  }, [musicXmlText, rebuildMapper]);
+
+  // Legacy drums sheet↔audio sync map. New ADToF+ scores carry their varying
+  // beat-tracked tempi directly, so rebuildMapper deliberately keeps those on
+  // identity timing and avoids applying the same warp twice. Previews skip it:
   // the sheet is truncated client-side, which would break the full-song map's
   // qn → sheet-seconds scale.
   useEffect(() => {
@@ -400,7 +407,6 @@ export default function TranscriptionResultView({
         const osmd = osmdRef.current;
         if (!osmd) return;
         try { await osmd.seekMs?.(sheetSec * 1000); } catch (e) { /* ignore */ }
-        osmdBaseRef.current = sheetSec;
         const t = transportRef.current;
         if (andPlay && t.getState().isPlaying && t.getActiveEngineId() === 'osmd') {
           try { await osmd.play?.(); } catch (e) { /* ignore */ }
@@ -440,7 +446,7 @@ export default function TranscriptionResultView({
       readTime: () => {
         const s = osmdSyncRef.current;
         if (!s.ready) return null;
-        const eff = osmdBaseRef.current + s.time;
+        const eff = s.time;
         const expect = osmdExpectRef.current;
         if (expect) {
           const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
@@ -478,7 +484,7 @@ export default function TranscriptionResultView({
         const st = t.getState();
         if (
           st.isPlaying && !s.isPlaying && s.duration > 0 &&
-          osmdBaseRef.current + s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+          s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
         ) {
           t.pause();
         }
@@ -521,7 +527,6 @@ export default function TranscriptionResultView({
     const t = transportRef.current;
     if (view === 'sheet') {
       osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
-      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
       pendingOsmdSyncRef.current = true;
       t.setActiveEngine('osmd');
     } else if (view === 'midi') {

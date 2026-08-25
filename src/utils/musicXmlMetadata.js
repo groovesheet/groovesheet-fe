@@ -1,4 +1,79 @@
-/** Replace worker placeholder metadata with the track's real title and credit. */
+const PERCUSSION_BY_NOTATION = {
+  'F4:normal': [36, 'Bass Drum 1'],
+  'C5:normal': [38, 'Acoustic Snare'],
+  'C5:x': [37, 'Side Stick'],
+  'G5:x': [42, 'Closed Hi-Hat'],
+  'G5:circle-x': [46, 'Open Hi-Hat'],
+  'A5:x': [49, 'Crash Cymbal 1'],
+  'F5:x': [51, 'Ride Cymbal 1'],
+  'E5:normal': [50, 'High Tom'],
+  'D5:normal': [47, 'Low-Mid Tom'],
+  'A4:normal': [43, 'High Floor Tom'],
+};
+
+function addPercussionPlaybackMetadata(doc) {
+  const root = doc.documentElement;
+  root.querySelectorAll('part-list > score-part').forEach((scorePart) => {
+    const label = scorePart.querySelector(':scope > part-name')?.textContent?.trim().toLowerCase() || '';
+    if (!label.includes('percussion') && !label.includes('drum')) return;
+    const partId = scorePart.getAttribute('id');
+    const part = Array.from(root.querySelectorAll(':scope > part'))
+      .find((node) => node.getAttribute('id') === partId);
+    if (!part) return;
+
+    const used = new Map();
+    part.querySelectorAll('note').forEach((note) => {
+      if (note.querySelector(':scope > instrument')) return;
+      const unpitched = note.querySelector(':scope > unpitched');
+      if (!unpitched) return;
+      const step = unpitched.querySelector(':scope > display-step')?.textContent?.trim();
+      const octave = unpitched.querySelector(':scope > display-octave')?.textContent?.trim();
+      const head = note.querySelector(':scope > notehead')?.textContent?.trim() || 'normal';
+      const definition = PERCUSSION_BY_NOTATION[`${step}${octave}:${head}`]
+        || PERCUSSION_BY_NOTATION[`${step}${octave}:normal`];
+      if (!definition) return;
+      const [midiKey, name] = definition;
+      const instrumentId = `${partId}-GS-I${midiKey + 1}`;
+      used.set(instrumentId, { midiKey, name });
+      const instrument = doc.createElement('instrument');
+      instrument.setAttribute('id', instrumentId);
+      const before = note.querySelector(':scope > voice, :scope > type, :scope > dot, :scope > accidental, :scope > time-modification, :scope > stem, :scope > notehead, :scope > staff, :scope > beam, :scope > notations, :scope > lyric');
+      if (before) note.insertBefore(instrument, before); else note.appendChild(instrument);
+    });
+
+    if (!used.size) return;
+    let midiDevice = scorePart.querySelector(':scope > midi-device');
+    if (!midiDevice) {
+      midiDevice = doc.createElement('midi-device');
+      midiDevice.setAttribute('port', '1');
+      const firstMidi = scorePart.querySelector(':scope > midi-instrument');
+      if (firstMidi) scorePart.insertBefore(midiDevice, firstMidi); else scorePart.appendChild(midiDevice);
+    }
+    used.forEach(({ midiKey, name }, instrumentId) => {
+      if (!scorePart.querySelector(`:scope > score-instrument[id="${instrumentId}"]`)) {
+        const scoreInstrument = doc.createElement('score-instrument');
+        scoreInstrument.setAttribute('id', instrumentId);
+        const instrumentName = doc.createElement('instrument-name');
+        instrumentName.textContent = name;
+        scoreInstrument.appendChild(instrumentName);
+        scorePart.insertBefore(scoreInstrument, midiDevice);
+      }
+      if (!scorePart.querySelector(`:scope > midi-instrument[id="${instrumentId}"]`)) {
+        const midiInstrument = doc.createElement('midi-instrument');
+        midiInstrument.setAttribute('id', instrumentId);
+        [['midi-channel', '10'], ['midi-program', '1'], ['midi-unpitched', String(midiKey + 1)]]
+          .forEach(([tag, value]) => {
+            const child = doc.createElement(tag);
+            child.textContent = value;
+            midiInstrument.appendChild(child);
+          });
+        scorePart.appendChild(midiInstrument);
+      }
+    });
+  });
+}
+
+/** Replace worker placeholder metadata and repair legacy percussion playback. */
 export function applyMusicXmlMetadata(xmlString, { title, artist, sourceCredit } = {}) {
   if (!xmlString || typeof DOMParser === 'undefined') return xmlString;
   try {
@@ -36,6 +111,7 @@ export function applyMusicXmlMetadata(xmlString, { title, artist, sourceCredit }
     };
     upsertCreator('composer', artist);
     upsertCreator('lyricist', sourceCredit);
+    addPercussionPlaybackMetadata(doc);
     return new XMLSerializer().serializeToString(doc);
   } catch (_) {
     return xmlString;

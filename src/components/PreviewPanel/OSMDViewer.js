@@ -5,6 +5,11 @@ import {
   LinearTimingSource,
   BasicAudioPlayer,
 } from 'osmd-extended';
+import {
+  advancePlaybackClock,
+  createPlaybackClock,
+  seekPlaybackClock,
+} from './osmdPlaybackClock';
 
 // Rewrite every note's stem direction with a hybrid clef + voice rule.
 // midi2score gives each clef its own part and splits dense polyphony into
@@ -99,6 +104,8 @@ const OSMDViewer = forwardRef(function OSMDViewer(
   const readyRef = useRef(false);
   const stateRafRef = useRef(null);
   const originalBpmRef = useRef(120);
+  const playbackRateRef = useRef(1);
+  const playbackClockRef = useRef(createPlaybackClock());
   const cursorStepsRef = useRef(null); // [sec] natural time at each cursor step
   const cursorIdxRef = useRef(0); // index the cursor currently sits on
   const onPlayNoteRef = useRef(onPlayNote);
@@ -160,6 +167,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
           const ts = note.getAbsoluteTimestamp?.();
           if (ts && pm.timingSource?.Settings) {
             const ms = pm.timingSource.Settings.getDurationInMilliseconds(ts);
+            seekPlaybackClock(playbackClockRef.current, ms * playbackRateRef.current);
             pm.playFromMs(ms, false);
           }
         } catch (e) {}
@@ -256,6 +264,8 @@ const OSMDViewer = forwardRef(function OSMDViewer(
         playbackManager.initialize(osmd.Sheet.musicPartManager);
         if (cursor) playbackManager.addListener(cursor);
         playbackManager.reset();
+        playbackRateRef.current = 1;
+        seekPlaybackClock(playbackClockRef.current, 0);
         osmd.PlaybackManager = playbackManager;
         playbackRef.current = playbackManager;
         timingRef.current = timingSource;
@@ -266,9 +276,19 @@ const OSMDViewer = forwardRef(function OSMDViewer(
           const pm = playbackRef.current;
           const ts = timingRef.current;
           if (pm && ts) {
-            const ms = ts.getCurrentTimeInMs() || 0;
-            const durMs = pm.getSheetDurationInMs?.() || 0;
+            // PlaybackManager owns both audio and cursor. Its LinearTimingSource
+            // intentionally resets its local counter when a score tempo changes,
+            // so expose an absolute observer clock instead of that resettable
+            // counter to the page transport.
             const isPlaying = pm.RunningState === 1;
+            const rate = playbackRateRef.current || 1;
+            const durMs = (pm.getSheetDurationInMs?.() || 0) * rate;
+            const ms = advancePlaybackClock(playbackClockRef.current, {
+              isPlaying,
+              nowMs: performance.now(),
+              rate,
+              durationMs: durMs,
+            });
             if (onPlaybackStateChangeRef.current) {
               onPlaybackStateChangeRef.current({
                 currentTime: ms / 1000,
@@ -298,24 +318,42 @@ const OSMDViewer = forwardRef(function OSMDViewer(
   useImperativeHandle(ref, () => ({
     play: async () => {
       const pm = playbackRef.current;
+      playbackClockRef.current.lastNowMs = null;
       if (pm) { try { await pm.play(); } catch (e) {} }
     },
     pause: async () => {
       const pm = playbackRef.current;
-      if (pm) { try { await pm.pause(); } catch (e) {} }
+      if (pm) {
+        advancePlaybackClock(playbackClockRef.current, {
+          isPlaying: pm.RunningState === 1,
+          nowMs: performance.now(),
+          rate: playbackRateRef.current,
+        });
+        playbackClockRef.current.lastNowMs = null;
+        try { await pm.pause(); } catch (e) {}
+      }
     },
     seekMs: async (ms) => {
       const pm = playbackRef.current;
-      if (pm) { try { await pm.playFromMs(ms, false); } catch (e) {} }
+      const naturalMs = Math.max(0, Number(ms) || 0);
+      seekPlaybackClock(playbackClockRef.current, naturalMs);
+      if (pm) {
+        const rate = playbackRateRef.current || 1;
+        try { await pm.playFromMs(naturalMs / rate, false); } catch (e) {}
+      }
     },
     setSpeed: (factor) => {
       const pm = playbackRef.current;
       if (!pm) return;
-      const newBpm = (originalBpmRef.current || 120) * factor;
+      const rate = Math.max(0.25, Number(factor) || 1);
+      playbackRateRef.current = rate;
+      playbackClockRef.current.lastNowMs = null;
+      const newBpm = (originalBpmRef.current || 120) * rate;
       try { pm.bpmChanged(newBpm, true); } catch (e) {}
     },
     reset: () => {
       const pm = playbackRef.current;
+      seekPlaybackClock(playbackClockRef.current, 0);
       if (pm) { try { pm.reset(); } catch (e) {} }
     },
     rerender: () => {

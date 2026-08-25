@@ -26,7 +26,7 @@ import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
 import { createMidiEngine } from '../../player/midiEngine';
-import { parseSyncMap, createSheetSecMapper } from '../../player/syncMap';
+import { parseSyncMap, createSheetSecMapper, musicXmlHasVariableTempo } from '../../player/syncMap';
 import { applyMusicXmlMetadata } from '../../utils/musicXmlMetadata';
 import './Song.css';
 
@@ -511,11 +511,9 @@ function SongDetail({ onLoginClick }) {
 
   const osmdRef = useRef(null);
   const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
-  // OSMD's LinearTimingSource reports elapsed ms since the last seek/reset,
-  // EXCLUDING the seek offset. Effective sheet position = base + reported.
-  const osmdBaseRef = useRef(0);
   const mapperRef = useRef(createSheetSecMapper({}));
   const syncPairsRef = useRef(null);
+  const scoreHasOwnTimingRef = useRef(false);
   const sheetDurRef = useRef(0);
   const pendingOsmdSyncRef = useRef(false);
   // After commanding OSMD to seek, its clock reports stale time for a few
@@ -526,6 +524,7 @@ function SongDetail({ onLoginClick }) {
     mapperRef.current = createSheetSecMapper({
       pairs: syncPairsRef.current,
       sheetDurationSec: sheetDurRef.current,
+      preferIdentity: scoreHasOwnTimingRef.current,
     });
   }, []);
 
@@ -536,6 +535,7 @@ function SongDetail({ onLoginClick }) {
     setXmlError(null);
     setXmlLoading(true);
     syncPairsRef.current = null;
+    scoreHasOwnTimingRef.current = false;
     sheetDurRef.current = 0;
     rebuildMapper();
     (async () => {
@@ -547,6 +547,7 @@ function SongDetail({ onLoginClick }) {
             : Promise.resolve(null),
         ]);
         if (cancelled) return;
+        scoreHasOwnTimingRef.current = musicXmlHasVariableTempo(xmlText);
         if (syncJson) {
           try {
             syncPairsRef.current = parseSyncMap(syncJson).pairs;
@@ -582,8 +583,6 @@ function SongDetail({ onLoginClick }) {
         const osmd = osmdRef.current; // re-read: instance may have remounted
         if (!osmd) return;
         try { await osmd.seekMs?.(sheetSec * 1000); } catch (e) { /* ignore */ }
-        // The seek reset OSMD's elapsed counter to 0 at this position.
-        osmdBaseRef.current = sheetSec;
         // Re-check at execution time: the user may have paused or switched
         // tabs while this command sat in the queue.
         const t = transportRef.current;
@@ -624,7 +623,7 @@ function SongDetail({ onLoginClick }) {
       readTime: () => {
         const s = osmdSyncRef.current;
         if (!s.ready) return null;
-        const eff = osmdBaseRef.current + s.time;
+        const eff = s.time;
         const expect = osmdExpectRef.current;
         if (expect) {
           const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
@@ -659,7 +658,7 @@ function SongDetail({ onLoginClick }) {
         const st = t.getState();
         if (
           st.isPlaying && !s.isPlaying && s.duration > 0 &&
-          osmdBaseRef.current + s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+          s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
         ) {
           t.pause();
         }
@@ -686,25 +685,17 @@ function SongDetail({ onLoginClick }) {
     if (!track || !view) return;
     const t = transportRef.current;
     if (view === 'sheet') {
-      if (hasMidi) {
-        // Social videos render their soundtrack from the aligned MIDI (GM
-        // channel 10 for drums), not from MusicXML. Use that same asset as the
-        // Sheet tab's audio/clock and let OSMD only draw/follow the cursor.
-        pendingOsmdSyncRef.current = false;
-        t.setActiveEngine('midi');
-      } else {
-        // A score without MIDI still falls back to OSMD playback.
-        osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
-        osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
-        pendingOsmdSyncRef.current = true;
-        t.setActiveEngine('osmd');
-      }
+      // Native OSMD playback advances its audio and cursor from one
+      // PlaybackManager. MIDI remains available only on the visualizer tab.
+      osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
+      pendingOsmdSyncRef.current = true;
+      t.setActiveEngine('osmd');
     } else if (view === 'midi') {
       t.setActiveEngine('midi');
     } else if (view === 'stems') {
       t.setActiveEngine('stems');
     }
-  }, [view, track, hasMidi, midiAsset]);
+  }, [view, track]);
 
   // --- playback handlers ---------------------------------------------------------
   const handlePlayPause = useCallback(() => {

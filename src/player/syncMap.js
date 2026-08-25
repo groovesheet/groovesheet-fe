@@ -126,7 +126,14 @@ export function identityMapper(durationSec = 0) {
  * sheet). Otherwise the mapping is identity — with the backend tempo fix the
  * sheet and MIDI clocks already agree.
  */
-export function createSheetSecMapper({ pairs, sheetDurationSec } = {}) {
+export function createSheetSecMapper({ pairs, sheetDurationSec, preferIdentity = false } = {}) {
+  if (preferIdentity) {
+    return {
+      isIdentity: true,
+      midiSecToSheetSec: (sec) => sec,
+      sheetSecToMidiSec: (sec) => sec,
+    };
+  }
   const usable =
     Array.isArray(pairs) &&
     pairs.length >= 2 &&
@@ -156,6 +163,16 @@ export function createSheetSecMapper({ pairs, sheetDurationSec } = {}) {
     midiSecToSheetSec: (sec) => mapper.midiSecToScoreQn(sec) * sheetSecPerQn,
     sheetSecToMidiSec: (sheetSec) => mapper.scoreQnToMidiSec(sheetSec / sheetSecPerQn),
   };
+}
+
+/** Beat-tracked GrooveSheet scores carry their real timing as varying tempo instructions. */
+export function musicXmlHasVariableTempo(xmlString) {
+  if (typeof xmlString !== 'string') return false;
+  const values = Array.from(xmlString.matchAll(/<sound\b[^>]*\btempo=["']([^"']+)["']/gi))
+    .map((match) => Number(match[1]))
+    .filter(Number.isFinite);
+  if (values.length < 2) return false;
+  return values.some((value) => Math.abs(value - values[0]) > 0.01);
 }
 
 export default createMapper;
