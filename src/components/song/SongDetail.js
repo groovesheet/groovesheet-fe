@@ -780,8 +780,9 @@ function SongDetail({ onLoginClick }) {
   const handleZipDownload = useCallback(async () => {
     if (!track?.id || zipDownloading) return;
     // Intent fires before the request, so a download that ends at the sign-in
-    // prompt is still measured as intent.
-    trackDownloadIntent(track, { authenticated: Boolean(getToken) });
+    // prompt is still measured as intent. `getToken` is always a function, so
+    // the signed-in flag has to come from the auth state, not from its presence.
+    trackDownloadIntent(track, { authenticated: Boolean(isSignedIn) });
     setZipDownloading(true);
     try {
       const { blob, filename } = await downloadLibraryTrackZip(track.id, getToken);
@@ -804,7 +805,7 @@ function SongDetail({ onLoginClick }) {
       setZipDownloading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track?.id, zipDownloading, getToken, onLoginClick]);
+  }, [track?.id, zipDownloading, getToken, onLoginClick, isSignedIn]);
 
   const onSeekFraction = useCallback((f) => {
     const t = transportRef.current;

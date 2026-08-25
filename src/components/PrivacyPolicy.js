@@ -72,7 +72,35 @@ function PrivacyPolicy({ onLoginClick }) {
             </div>
 
             <div className="legal-section">
-              <h2 className="legal-heading">9. YouTube Integration &amp; Google API Services</h2>
+              <h2 className="legal-heading">9. Campaign attribution &amp; analytics</h2>
+              <p className="legal-text">
+                Links in our YouTube and bilibili video descriptions carry campaign parameters
+                (<em>utm_source</em>, <em>utm_medium</em>, <em>utm_campaign</em>, <em>utm_content</em> and a video
+                identifier). When you arrive from one of those links we store those parameters in your browser&apos;s
+                local storage so we can understand which videos bring people to GrooveSheet, and we include them with
+                the analytics events described below.
+              </p>
+              <p className="legal-text">
+                We record which of these values first brought you to the site and do not overwrite it on later visits.
+                We do not store your IP address for this purpose, and we do not attempt to identify you across
+                devices or rebuild profiles from other signals.
+              </p>
+              <p className="legal-text">
+                We use Google Analytics 4, loaded through Google Tag Manager, to measure a small set of product events:
+                viewing a track page, starting playback, viewing a score, soloing a stem, starting or completing a
+                download, creating an account, starting a transcription, and completing a purchase. These events carry
+                the track identifier and the campaign values above. They never carry your IP address, session cookie
+                values, access tokens, or the contents of files you upload.
+              </p>
+              <p className="legal-text">
+                You can clear this data at any time by clearing your browser&apos;s site data for groovesheet.net, and
+                you can block the analytics tags with any standard content or tracking blocker. Doing so does not
+                affect playback, downloads, sign-up, or purchases.
+              </p>
+            </div>
+
+            <div className="legal-section">
+              <h2 className="legal-heading">10. YouTube Integration &amp; Google API Services</h2>
               <p className="legal-text">
                 GrooveSheet operates an automated publishing pipeline that uploads stem-separation videos to a YouTube channel we
                 own and operate (<a href="https://www.youtube.com/@groovesheet_ai" rel="noopener noreferrer" target="_blank">@groovesheet_ai</a>).
