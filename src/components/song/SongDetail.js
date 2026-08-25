@@ -98,6 +98,8 @@ function trackToCard(t) {
     rating: seededRating(t.id),
     views: seededViews(t.id, Number(t.popularity) || 0),
     dur: fmtDur(t.thumb_data?.duration_sec || t.duration_sec),
+    previewUrls: t.preview_urls || {},
+    thumbUrl: t.thumb_url || null,
   };
 }
 

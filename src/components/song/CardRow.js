@@ -6,29 +6,28 @@ import { fmtNum } from '../../mocks/songDetailData';
 
 function SmallThumb({ song, flavor }) {
   const id = song.id;
-  if (flavor === 'sheet') {
+  const [imageFailed, setImageFailed] = useState(false);
+  const previewUrl = song.previewUrls?.[flavor] || (flavor === 'midi' ? song.thumbUrl : null);
+  if (previewUrl && !imageFailed) {
     return (
-      <svg viewBox="0 0 240 130" preserveAspectRatio="none" width="100%" height="100%" style={{ background: '#fbfaf4' }}>
-        {[20, 38, 56, 74, 92, 110]
-          .map((y, i) =>
-            Array.from({ length: 5 }).map((_, j) => (
-              <line key={`${i}-${j}`} x1={10} x2={230} y1={y - 6 + j * 3} y2={y - 6 + j * 3} stroke="#111" strokeWidth="0.4" opacity="0.7" />
-            ))
-          )
-          .flat()}
-        {[30, 60, 90, 120, 150, 180, 210].map((x) => (
-          <line key={x} x1={x} x2={x} y1={14} y2={119} stroke="#111" strokeWidth="0.3" opacity="0.5" />
-        ))}
-        {[20, 38, 56, 74, 92, 110]
-          .map((y, i) =>
-            Array.from({ length: 8 }).map((_, k) => {
-              const seed = (id.charCodeAt(0) + i * 7 + k * 3) % 5;
-              return <ellipse key={`n-${i}-${k}`} cx={30 + k * 25} cy={y + (seed - 2)} rx="2" ry="1.3" fill="#111" />;
-            })
-          )
-          .flat()}
-      </svg>
+      <img
+        src={previewUrl}
+        alt={`${song.title} ${flavor} preview`}
+        loading="lazy"
+        onError={() => setImageFailed(true)}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: flavor === 'sheet' ? 'contain' : 'cover',
+          objectPosition: flavor === 'sheet' ? 'top center' : 'center',
+          background: flavor === 'sheet' ? '#fff' : 'transparent',
+          display: 'block',
+        }}
+      />
     );
+  }
+  if (flavor === 'sheet') {
+    return <div style={{ width: '100%', height: '100%', background: '#fff' }} />;
   }
   if (flavor === 'midi') {
     const rand = (i) => (Math.sin(id.charCodeAt(1) + i * 1.7) + 1) / 2;

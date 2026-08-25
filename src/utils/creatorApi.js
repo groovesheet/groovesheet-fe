@@ -76,6 +76,7 @@ function songToCard(track) {
     length: (track.thumb_data && track.thumb_data.duration_sec) || track.duration_sec,
     year: track.year || null,
     coverUrl: track.cover_url || null,
+    previewUrls: track.preview_urls || {},
     formats: track.formats || [],
     thumbData: track.thumb_data || null,
     parts,

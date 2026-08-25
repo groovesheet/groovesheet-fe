@@ -27,6 +27,7 @@ function trackToCard(track) {
     year: track.year || null,
     coverUrl: track.cover_url || null,
     thumbUrl: track.thumb_url || null,
+    previewUrls: track.preview_urls || {},
     formats: track.formats || [],
     thumbData: track.thumb_data || null,
     // Capitalized for display + chip matching ('drums' → 'Drums').
