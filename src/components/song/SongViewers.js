@@ -58,6 +58,7 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
             zoom={0.8}
             drawTitle
             drawComposer
+            drawLyricist
             drawCredits
             drawMetronomeMarks={false}
             onPlaybackStateChange={onPlaybackStateChange}

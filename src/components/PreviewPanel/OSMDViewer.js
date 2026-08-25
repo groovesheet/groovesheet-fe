@@ -85,6 +85,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
     systemDistance,
     drawTitle = true,
     drawComposer = false,
+    drawLyricist = false,
     drawCredits = false,
     drawMetronomeMarks = true,
     forceStemByStaff = false,
@@ -114,6 +115,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
       drawMetronomeMarks,
       drawSubtitle: false,
       drawComposer,
+      drawLyricist,
       drawCredits,
       drawPartNames: false,
       autoResize: true,
@@ -218,6 +220,17 @@ const OSMDViewer = forwardRef(function OSMDViewer(
             osmd.EngravingRules.MinimumDistanceBetweenSystems = systemDistance;
             osmd.EngravingRules.MinSkyBottomDistBetweenSystems = systemDistance;
           } catch (e) {}
+        }
+        if ((drawComposer || drawLyricist) && osmd.EngravingRules) {
+          // Keep the first stave comfortably below both header credits.
+          osmd.EngravingRules.SystemComposerDistance = Math.max(
+            osmd.EngravingRules.SystemComposerDistance || 0,
+            5
+          );
+          osmd.EngravingRules.SystemLyricistDistance = Math.max(
+            osmd.EngravingRules.SystemLyricistDistance || 0,
+            5
+          );
         }
         osmd.zoom = zoom;
         osmd.render();

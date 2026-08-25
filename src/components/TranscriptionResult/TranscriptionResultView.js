@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle, DownloadSimple, File, X } from '@phosphor-icons/react';
 import { Drum } from 'lucide-react';
-import { useAuth } from '../../auth';
+import { useAuth, useUser } from '../../auth';
 import { useTheme } from '../../context/ThemeContext';
 import config from '../../config';
 import { downloadWorkflowFile, fetchMidiArrayBuffer, fetchMusicXmlText } from '../../utils/api';
@@ -116,6 +116,7 @@ export default function TranscriptionResultView({
   onSignUpToUnlock,
 }) {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const { isDarkMode, toggleTheme } = useTheme();
   const containerRef = useRef(null);
 
@@ -130,6 +131,9 @@ export default function TranscriptionResultView({
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
   const scoreTitle = titleFromFilename(fileName);
   const scoreArtist = 'Transcribed by GrooveSheet';
+  const authName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
+  const safeAccountName = user?.name && !user.name.includes('@') ? user.name.trim() : '';
+  const scoreSourceCredit = `Uploaded by ${safeAccountName || authName || (isSignedIn ? 'GrooveSheet user' : 'Guest')}`;
   // Same label rule as SongDetail; drums keep the roll (and its label) here
   // until the kit grid is wired into the result view.
   const noteView = viewForStem(stemMeta.name);
@@ -184,7 +188,13 @@ export default function TranscriptionResultView({
         // Previews show a teaser: cap the engraved score alongside the
         // 10-second MIDI cap so every tab tells the same story.
         if (text && isPreview) text = truncateMusicXmlToMeasures(text);
-        if (text) text = applyMusicXmlMetadata(text, { title: scoreTitle, artist: scoreArtist });
+        if (text) {
+          text = applyMusicXmlMetadata(text, {
+            title: scoreTitle,
+            artist: scoreArtist,
+            sourceCredit: scoreSourceCredit,
+          });
+        }
         if (!cancelled) setMusicXmlText(text);
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
@@ -193,7 +203,7 @@ export default function TranscriptionResultView({
       }
     })();
     return () => { cancelled = true; };
-  }, [workflowId, musicXmlKey, prefetchedFiles, getToken, isPreview, scoreTitle, scoreArtist]);
+  }, [workflowId, musicXmlKey, prefetchedFiles, getToken, isPreview, scoreTitle, scoreArtist, scoreSourceCredit]);
 
   // --- MIDI (buffer + soundfont engine) ----------------------------------------
   const [midiBuffer, setMidiBuffer] = useState(null);

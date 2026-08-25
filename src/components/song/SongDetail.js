@@ -27,6 +27,7 @@ import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
 import { createMidiEngine } from '../../player/midiEngine';
 import { parseSyncMap, createSheetSecMapper } from '../../player/syncMap';
+import { applyMusicXmlMetadata } from '../../utils/musicXmlMetadata';
 import './Song.css';
 
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -554,7 +555,11 @@ function SongDetail({ onLoginClick }) {
           }
           rebuildMapper();
         }
-        setMusicXmlText(xmlText);
+        setMusicXmlText(applyMusicXmlMetadata(xmlText, {
+          title: track.title,
+          artist: 'Transcribed by GrooveSheet',
+          sourceCredit: track.artist ? `Song by ${track.artist}` : undefined,
+        }));
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
       } finally {

@@ -1,5 +1,5 @@
 /** Replace worker placeholder metadata with the track's real title and credit. */
-export function applyMusicXmlMetadata(xmlString, { title, artist } = {}) {
+export function applyMusicXmlMetadata(xmlString, { title, artist, sourceCredit } = {}) {
   if (!xmlString || typeof DOMParser === 'undefined') return xmlString;
   try {
     const doc = new DOMParser().parseFromString(xmlString, 'application/xml');
@@ -22,17 +22,20 @@ export function applyMusicXmlMetadata(xmlString, { title, artist } = {}) {
       ensureChild(work, 'work-title').textContent = title.trim();
       ensureChild(root, 'movement-title', 'identification, defaults, part-list').textContent = title.trim();
     }
-    if (artist && artist.trim()) {
+    const upsertCreator = (type, value) => {
+      if (!value || !value.trim()) return;
       const identification = ensureChild(root, 'identification', 'defaults, part-list');
       let creator = Array.from(identification.querySelectorAll(':scope > creator'))
-        .find((node) => node.getAttribute('type') === 'composer');
+        .find((node) => node.getAttribute('type') === type);
       if (!creator) {
         creator = doc.createElement('creator');
-        creator.setAttribute('type', 'composer');
+        creator.setAttribute('type', type);
         identification.insertBefore(creator, identification.firstChild);
       }
-      creator.textContent = artist.trim();
-    }
+      creator.textContent = value.trim();
+    };
+    upsertCreator('composer', artist);
+    upsertCreator('lyricist', sourceCredit);
     return new XMLSerializer().serializeToString(doc);
   } catch (_) {
     return xmlString;

@@ -8,11 +8,16 @@ describe('MusicXML metadata', () => {
   </score-partwise>`;
 
   it('replaces worker placeholders and adds a work title', () => {
-    const result = applyMusicXmlMetadata(source, { title: 'Real Song', artist: 'Transcribed by GrooveSheet' });
+    const result = applyMusicXmlMetadata(source, {
+      title: 'Real Song',
+      artist: 'Transcribed by GrooveSheet',
+      sourceCredit: 'Song by Real Artist',
+    });
     const doc = new DOMParser().parseFromString(result, 'application/xml');
     expect(doc.querySelector('work-title').textContent).toBe('Real Song');
     expect(doc.querySelector('movement-title').textContent).toBe('Real Song');
     expect(doc.querySelector('creator[type="composer"]').textContent).toBe('Transcribed by GrooveSheet');
+    expect(doc.querySelector('creator[type="lyricist"]').textContent).toBe('Song by Real Artist');
   });
 
   it('derives a clean title from a common upload filename', () => {
