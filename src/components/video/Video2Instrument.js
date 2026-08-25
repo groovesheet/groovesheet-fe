@@ -26,6 +26,11 @@ const SONGS = {
   'night-in-tunisia': { title: 'Night In Tunisia', artist: 'Jesús Molina', year: 2018 },
   'ado-mirror': { title: 'MIRROR', artist: 'Ado', year: 2024 },
   'cant-stop': { title: "Can't Stop", artist: 'Red Hot Chili Peppers', year: 2002 },
+  'forty-six-and-two': { title: 'Forty Six & 2', artist: 'Tool', year: 1996 },
+  'walk-pantera': { title: 'Walk', artist: 'Pantera', year: 1992 },
+  'misery-business': { title: 'Misery Business', artist: 'Paramore', year: 2007 },
+  'from-the-start': { title: 'From The Start', artist: 'Laufey', year: 2023 },
+  'just-funky': { title: 'Just Funky', artist: 'Tomo Fujita', year: 2007 },
 };
 
 export default function Video2Instrument({ kind, workers, defaultWorkerId, ctaLabel, ctaIcon, rollVariant }) {

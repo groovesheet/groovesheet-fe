@@ -1137,5 +1137,105 @@
     "source": "local",
     "xml": "clean_score.musicxml",
     "midi": "TKV9d71cdf2ac09_transkun_v2_transcription.mid"
+  },
+  {
+    "song": "forty-six-and-two",
+    "worker": "bassunet-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WFcc5e30461d60",
+    "xml": "M2Sb173a7150101_score.musicxml",
+    "midi": "BASa92f2de81148_bass_notes.mid"
+  },
+  {
+    "song": "forty-six-and-two",
+    "worker": "fcpe-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WFe8cd1df5018a",
+    "xml": "M2S57e9fe711f19_score.musicxml",
+    "midi": "FCPc36d9632e4de_bass_transcription.mid"
+  },
+  {
+    "song": "walk-pantera",
+    "worker": "bassunet-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WFed2f553a4668",
+    "xml": "M2Se801dd739555_score.musicxml",
+    "midi": "BASa86f97792a83_bass_notes.mid"
+  },
+  {
+    "song": "walk-pantera",
+    "worker": "fcpe-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WFb29c940ae3a0",
+    "xml": "M2S7435b25b67a4_score.musicxml",
+    "midi": "FCP6297b5c87bb3_bass_transcription.mid"
+  },
+  {
+    "song": "misery-business",
+    "worker": "bassunet-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WF1bb65574cb2d",
+    "xml": "M2Scfbed1dd229c_score.musicxml",
+    "midi": "BAS062689723f57_bass_notes.mid"
+  },
+  {
+    "song": "misery-business",
+    "worker": "fcpe-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WF6ab32708faef",
+    "xml": "M2Sf8198af4becd_score.musicxml",
+    "midi": "FCPc165d9963e64_bass_transcription.mid"
+  },
+  {
+    "song": "from-the-start",
+    "worker": "bassunet-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WF5d6a19ff1836",
+    "xml": "M2S0bfd742527f0_score.musicxml",
+    "midi": "BASe6742f89b6b9_bass_notes.mid"
+  },
+  {
+    "song": "from-the-start",
+    "worker": "fcpe-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WFd3dcc5c82d87",
+    "xml": "M2S11fb08686cea_score.musicxml",
+    "midi": "FCP74faf1f70b70_bass_transcription.mid"
+  },
+  {
+    "song": "just-funky",
+    "worker": "bassunet-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WF16de0a8dfaa8",
+    "xml": "M2S7de485ae5af8_score.musicxml",
+    "midi": "BAS309c9104cd89_bass_notes.mid"
+  },
+  {
+    "song": "just-funky",
+    "worker": "fcpe-bass",
+    "kind": "bass",
+    "status": "completed",
+    "source": "cloud (full mix)",
+    "workflow_id": "WF356dc35957b0",
+    "xml": "M2Sf9daacd4cff9_score.musicxml",
+    "midi": "FCP871d0427e032_bass_transcription.mid"
   }
 ]
