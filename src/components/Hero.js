@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
+import { trackWorkflowStarted } from '../utils/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '../utils/previewApi';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
@@ -477,6 +478,15 @@ function Hero({ onLoginRequired }) {
       if (!workflowId) {
         throw new Error('No workflow_id returned from server');
       }
+
+      // Activation step of the funnel. Fired after the backend accepted the
+      // job, on both the preview and the authenticated path, so an anonymous
+      // first transcription counts too. Never-throw.
+      trackWorkflowStarted(workflowName, {
+        workflow_id: workflowId,
+        instrument: selectedInstrument,
+        is_preview: Boolean(usePreview),
+      });
 
       // Stash preview ID for post-signup claim if anonymous
       if (usePreview && workflowId.startsWith('PRV')) {
