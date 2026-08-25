@@ -19,6 +19,14 @@ import DrumGridView from './DrumGridView';
 import FretboardView from './FretboardView';
 import InstrumentDropdown from './InstrumentDropdown';
 import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
+import {
+  trackExploreView,
+  trackPlay,
+  trackDownloadIntent,
+  trackDownload,
+  trackScoreView,
+  trackStemSolo,
+} from '../../utils/analytics';
 import { useAuth, useUser } from '../../auth';
 import usePageMeta from '../../hooks/usePageMeta';
 import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
@@ -189,6 +197,16 @@ function SongDetail({ onLoginClick }) {
   const { getToken } = useAuth();
   const { isSignedIn } = useUser();
   const playSentRef = useRef(false);
+  // One explore_track_view per resolved song, reset on client-side navigation
+  // to another song (the component instance survives that).
+  const viewSentRef = useRef(false);
+  // Score engagement is reported once per song, on the first time the sheet
+  // or notation tab is actually shown.
+  const scoreViewSentRef = useRef(false);
+  // Lets the stable onStemChange callback report the current track without
+  // taking `track` as a dependency (which would re-create the handler and
+  // remount the mixer rows on every track refresh).
+  const trackRef = useRef(null);
   const [zipDownloading, setZipDownloading] = useState(false);
 
   // --- track fetch (declared below); page meta reads it once loaded --------
@@ -211,12 +229,28 @@ function SongDetail({ onLoginClick }) {
     // New song, new play credit — the component instance survives client-side
     // navigation between songs, so the guard must reset here.
     playSentRef.current = false;
+    viewSentRef.current = false;
+    scoreViewSentRef.current = false;
     (async () => {
       try {
         // Pass the bearer (when signed in) so owners can open their own
         // private/unlisted tracks; visitors stay anonymous.
         const data = await fetchLibraryTrack(songId, getToken);
-        if (!cancelled) setTrack(data);
+        if (!cancelled) {
+          setTrack(data);
+          // Funnel landing. Fires once per resolved track, after resolution
+          // succeeds, so a 404 never counts as a view. `resolved_by` records
+          // whether the visitor arrived on the stable slug or the raw UUID.
+          if (!viewSentRef.current) {
+            viewSentRef.current = true;
+            trackExploreView(data, {
+              resolved_by: data?.slug && String(songId) === String(data.slug) ? 'slug' : 'uuid',
+              has_musicxml: (data?.assets || []).some((a) => a.asset_type === 'musicxml'),
+              has_midi: (data?.assets || []).some((a) => a.asset_type === 'midi'),
+              stem_count: (data?.assets || []).filter((a) => a.asset_type === 'stem').length,
+            });
+          }
+        }
       } catch (err) {
         if (!cancelled) setTrackError({ status: err.status, message: err.message });
       } finally {
@@ -333,6 +367,22 @@ function SongDetail({ onLoginClick }) {
     setView(first);
   }, [track, available]);
 
+  // Mirror the resolved track into a ref for the stable mixer callback.
+  useEffect(() => {
+    trackRef.current = track;
+  }, [track]);
+
+  // score_view: first time this song's notation is actually on screen.
+  useEffect(() => {
+    if (!track || scoreViewSentRef.current) return;
+    if (view !== 'sheet' && view !== 'midi') return;
+    scoreViewSentRef.current = true;
+    trackScoreView(track, {
+      note_view: noteView,
+      asset_format: view === 'sheet' ? 'musicxml' : 'midi',
+    });
+  }, [track, view, noteView]);
+
   // --- shared transport -------------------------------------------------------
   const transportRef = useRef(null);
   if (!transportRef.current) transportRef.current = createTransport();
@@ -414,7 +464,17 @@ function SongDetail({ onLoginClick }) {
   }, [stemState, track]);
 
   const onStemChange = useCallback(
-    (name, patch) => setStemState((s) => ({ ...s, [name]: { ...(s[name] || {}), ...patch } })),
+    (name, patch) => {
+      // Solo is the stem-engagement signal in the funnel; mute and volume are
+      // ordinary mixing and are deliberately not reported.
+      if (patch && typeof patch.solo === 'boolean') {
+        trackStemSolo(trackRef.current, {
+          stem_name: name,
+          action: patch.solo ? 'on' : 'off',
+        });
+      }
+      setStemState((s) => ({ ...s, [name]: { ...(s[name] || {}), ...patch } }));
+    },
     []
   );
 
@@ -709,16 +769,27 @@ function SongDetail({ onLoginClick }) {
       if (!playSentRef.current && track?.id) {
         playSentRef.current = true;
         postTrackPlay(track.id);
+        // GA4 alongside the existing backend counter, not instead of it: the
+        // backend number stays the authority for the public play count.
+        trackPlay(track, { view_mode: view });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track?.id]);
+  }, [track?.id, view]);
 
   const handleZipDownload = useCallback(async () => {
     if (!track?.id || zipDownloading) return;
+    // Intent fires before the request, so a download that ends at the sign-in
+    // prompt is still measured as intent. `getToken` is always a function, so
+    // the signed-in flag has to come from the auth state, not from its presence.
+    trackDownloadIntent(track, { authenticated: Boolean(isSignedIn) });
     setZipDownloading(true);
     try {
       const { blob, filename } = await downloadLibraryTrackZip(track.id, getToken);
+      trackDownload(track, {
+        asset_count: (track.assets || []).length,
+        bytes: blob?.size || 0,
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -734,7 +805,7 @@ function SongDetail({ onLoginClick }) {
       setZipDownloading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track?.id, zipDownloading, getToken, onLoginClick]);
+  }, [track?.id, zipDownloading, getToken, onLoginClick, isSignedIn]);
 
   const onSeekFraction = useCallback((f) => {
     const t = transportRef.current;
