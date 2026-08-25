@@ -5,6 +5,8 @@
  * to the backend with Bearer tokens from Supabase.
  */
 
+import { trackWorkflowStarted } from './analytics';
+
 /**
  * Sanitize a filename to be safe for HTTP headers (ASCII-only).
  * Normalizes Unicode (e.g. combining accents) and replaces non-ASCII chars.
@@ -135,7 +137,14 @@ export async function uploadFileAuthenticated(
     throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
   }
 
-  return response.json();
+  const started = await response.json();
+  // Activation step of the funnel: the user's first real transcription. Fired
+  // here because every workflow start goes through this upload, and only after
+  // the backend accepted it. Never-throw.
+  trackWorkflowStarted(started?.workflow_name || endpoint.replace(/^\//, ''), {
+    workflow_id: started?.workflow_id,
+  });
+  return started;
 }
 
 /**
