@@ -1,0 +1,1063 @@
+/* Campaign signup page (/signup/:code).
+ *
+ * Dark-only by design: this is a single cohesive marketing surface whose
+ * colours come straight from the design, and the site defaults to dark. It
+ * does not follow the light/dark toggle — the tokens below are literal.
+ *
+ * Sized in container query units (cqi) against .campaign-page so the whole
+ * page scales off its own width rather than the viewport's. Most of this
+ * page's traffic is a phone opened from a group chat.
+ */
+
+.campaign-page {
+  container-type: inline-size;
+  font-family: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: #171717;
+  background-image: radial-gradient(circle, #171e43 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+  color: #ffffff;
+  overflow-x: hidden;
+  min-height: 100vh;
+
+  /* Header.css and Footer.css put a 20px gutter on an OUTER element and cap an
+   * INNER one at 1414px, so the real content column is 1414px sitting inside
+   * 20px of padding. Folding the gutter into max-width reproduces that exactly,
+   * at every width, without adding wrapper elements to every section here. */
+  --cmp-content: 1414px;
+  --cmp-gutter: 20px;
+  --cmp-max: calc(var(--cmp-content) + 2 * var(--cmp-gutter));
+}
+
+/* ------------------------------------------------------------- primitives */
+
+/* Every section lines up with the nav and the footer. */
+.campaign-page .cmp-section {
+  max-width: var(--cmp-max);
+  margin: 0 auto;
+  padding: 0 var(--cmp-gutter) clamp(48px, 7cqi, 88px);
+}
+
+.campaign-page .cmp-h1 {
+  margin: 0;
+  font-size: clamp(31px, 7cqi, 60px);
+  line-height: 1.14;
+  letter-spacing: -0.9px;
+  font-weight: 400;
+  color: #ffffff;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.campaign-page .cmp-h2 {
+  margin: 0;
+  font-size: clamp(23px, 3.2cqi, 34px);
+  line-height: 1.22;
+  letter-spacing: -0.5px;
+  font-weight: 400;
+  color: #ffffff;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-h2-lg {
+  font-size: clamp(25px, 3.6cqi, 40px);
+  letter-spacing: -0.8px;
+  margin-bottom: clamp(20px, 2.6cqi, 30px);
+}
+
+.campaign-page .cmp-center { text-align: center; }
+
+.campaign-page .cmp-sub {
+  margin: clamp(16px, 2.2cqi, 26px) 0 0;
+  font-size: clamp(16px, 2cqi, 22px);
+  line-height: 1.55;
+  color: #8d8c8d;
+  max-width: 34em;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-body {
+  margin: 12px 0 0;
+  font-size: clamp(14px, 1.6cqi, 17px);
+  line-height: 1.6;
+  color: #8d8c8d;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-body-bright { color: #c9c8c9; font-size: clamp(15px, 1.7cqi, 19px); }
+
+.campaign-page .cmp-kicker {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8d8c8d;
+  margin-bottom: 10px;
+}
+
+/* StatusMessage owns error styling; this only spaces it inside the cards. */
+.campaign-page .gs-statusmsg { margin-top: 14px; }
+
+.campaign-page .cmp-primary-btn {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: #012fa7;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  padding: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.campaign-page .cmp-primary-btn:hover:not(:disabled) { background: #0139c7; }
+.campaign-page .cmp-primary-btn:disabled { opacity: 0.6; cursor: default; }
+
+.campaign-page .cmp-inline-btn {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 26px;
+  font-size: 15px;
+}
+
+.campaign-page .cmp-inline-btn:hover:not(:disabled) { transform: translateY(-2px); }
+
+.campaign-page .cmp-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  color: #f4f4f4;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 15px 26px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+
+.campaign-page .cmp-ghost-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+.campaign-page .cmp-invert-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  color: #012fa7;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 16px 30px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.16s ease;
+}
+
+.campaign-page .cmp-invert-btn:hover { transform: translateY(-2px); }
+
+/* ------------------------------------------------------------------ hero */
+
+.campaign-page .cmp-hero {
+  max-width: var(--cmp-max);
+  margin: 0 auto;
+  padding: clamp(20px, 3cqi, 40px) var(--cmp-gutter) clamp(48px, 7cqi, 88px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 4cqi, 56px);
+  align-items: flex-start;
+  /* Both columns are max-width capped, so in the full 1414px column they would
+   * otherwise float in the middle and leave the signup card short of the right
+   * edge the nav and footer sit on. */
+  justify-content: space-between;
+}
+
+.campaign-page .cmp-hero-copy { flex: 1 1 380px; max-width: 720px; min-width: 0; }
+
+.campaign-page .cmp-assurances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: clamp(20px, 2.6cqi, 30px);
+}
+
+.campaign-page .cmp-assurances span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(14px, 1.5cqi, 16px);
+  color: #f4f4f4;
+}
+
+.campaign-page .cmp-assurances svg { color: #22c55e; flex: none; }
+
+/* Campaign logo beside the GrooveSheet wordmark. Campaign logos arrive as
+ * black-on-white PNGs, so invert + screen lifts them onto the dark ground
+ * without asking each group for a white-on-transparent version. */
+.campaign-page .cmp-lockup {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.8cqi, 20px);
+  margin-top: clamp(24px, 3.2cqi, 40px);
+}
+
+.campaign-page .cmp-lockup-logo {
+  height: clamp(58px, 7cqi, 91px);
+  width: auto;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  flex: none;
+}
+
+.campaign-page .cmp-lockup-rule {
+  flex: none;
+  width: 1px;
+  height: clamp(40px, 5cqi, 58px);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.campaign-page .cmp-lockup-wordmark {
+  height: clamp(22px, 2.6cqi, 33px);
+  width: auto;
+  flex: none;
+  opacity: 0.85;
+}
+
+/* ------------------------------------------------------------- auth card */
+
+.campaign-page .cmp-auth-card {
+  flex: 1 1 340px;
+  max-width: 520px;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 16px;
+  padding: clamp(18px, 2.2cqi, 26px);
+  /* Solid panel, not glass: glass morphism is reserved for the Hero upload
+   * card (see CLAUDE.md). Keeps the design's gradient lift and shadow. */
+  background: linear-gradient(180deg, #3a383b, #323033);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+.campaign-page .cmp-code-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  margin-bottom: 16px;
+}
+
+.campaign-page .cmp-code-chip-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  color: #8d8c8d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campaign-page .cmp-code-chip-label svg { color: #22c55e; flex: none; }
+
+.campaign-page .cmp-code-chip code {
+  flex: none;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 9px;
+  border-radius: 4px;
+}
+
+.campaign-page .cmp-auth-title {
+  font-size: clamp(18px, 2cqi, 22px);
+  font-weight: 400;
+  color: #ffffff;
+  margin-bottom: 14px;
+}
+
+.campaign-page .cmp-auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.campaign-page .cmp-auth-tile {
+  position: relative;
+  border: none;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #232226;
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 0 100vmax rgba(0, 0, 0, 0.22);
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: clamp(88px, 11cqi, 116px);
+  color: #ffffff;
+  cursor: pointer;
+  transition: filter 0.16s ease, transform 0.16s ease;
+}
+
+.campaign-page .cmp-auth-tile.is-dark {
+  background-color: #000000;
+  box-shadow: none;
+}
+
+.campaign-page .cmp-auth-tile:hover { filter: brightness(1.12); transform: translateY(-2px); }
+.campaign-page .cmp-auth-tile.is-dark:hover { filter: brightness(1.25); }
+
+.campaign-page .cmp-auth-tile-label {
+  font-family: inherit;
+  font-size: clamp(15px, 1.8cqi, 20px);
+  font-weight: 500;
+}
+
+.campaign-page .cmp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: #f4f4f4;
+  cursor: pointer;
+}
+
+.campaign-page .cmp-auth-prompt {
+  margin: 0 0 16px;
+  font-size: clamp(17px, 1.9cqi, 21px);
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+.campaign-page .cmp-email-echo {
+  font-size: 14px;
+  color: #8d8c8d;
+  margin: -10px 0 16px;
+  overflow-wrap: anywhere;
+}
+
+.campaign-page .cmp-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #232226;
+  border: 1px solid #3d3b3e;
+  border-radius: 6px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  padding: 14px 16px;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.campaign-page .cmp-input:focus { border-color: #012fa7; }
+
+.campaign-page .cmp-digits { display: flex; gap: 8px; margin-bottom: 12px; }
+
+.campaign-page .cmp-digit {
+  flex: 1;
+  min-width: 0;
+  background: #232226;
+  border: 1px solid #3d3b3e;
+  border-radius: 6px;
+  text-align: center;
+  font-family: inherit;
+  /* 16px floor stops iOS Safari zooming the page on focus. */
+  font-size: max(16px, clamp(20px, 2.6cqi, 28px));
+  padding: 12px 0;
+  color: #ffffff;
+  outline: none;
+}
+
+.campaign-page .cmp-digit:focus { border-color: #012fa7; }
+
+.campaign-page .cmp-optin {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.45;
+  color: #f4f4f4;
+  cursor: pointer;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-checkbox {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.campaign-page .cmp-checkbox.is-on { background: #5f5e60; }
+
+.campaign-page .cmp-disclaimer {
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #a4a3a4;
+  margin: 12px 0 0;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-disclaimer a { color: #a4a3a4; text-decoration: underline; }
+
+/* --------------------------------------------------------- account card */
+
+.campaign-page .cmp-account {
+  max-width: var(--cmp-max);
+  margin: 0 auto;
+  padding: clamp(24px, 4cqi, 56px) var(--cmp-gutter) clamp(48px, 7cqi, 88px);
+}
+
+.campaign-page .cmp-account-card {
+  max-width: 760px;
+  margin: 0 auto;
+  border-radius: 16px;
+  padding: clamp(22px, 3cqi, 40px);
+  background: #323033;
+}
+
+.campaign-page .cmp-account-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(16px, 2cqi, 22px);
+}
+
+.campaign-page .cmp-status-icon {
+  flex: none;
+  width: clamp(42px, 5cqi, 54px);
+  height: clamp(42px, 5cqi, 54px);
+  border-radius: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.campaign-page .cmp-account-logo {
+  height: 34px;
+  width: auto;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  flex: none;
+}
+
+.campaign-page .cmp-account-title {
+  margin: 0;
+  font-size: clamp(26px, 4.4cqi, 42px);
+  line-height: 1.16;
+  letter-spacing: -0.7px;
+  font-weight: 400;
+  color: #ffffff;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.campaign-page .cmp-account-body {
+  margin: 14px 0 0;
+  font-size: clamp(15px, 1.7cqi, 19px);
+  line-height: 1.6;
+  color: #8d8c8d;
+  max-width: 44em;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(20px, 2.6cqi, 28px);
+}
+
+.campaign-page .cmp-stat {
+  flex: 1 1 200px;
+  border-radius: 13px;
+  padding: 18px 20px;
+  background: #1a1a1a;
+}
+
+.campaign-page .cmp-stat-label { font-size: 13px; color: #8d8c8d; margin-bottom: 6px; }
+
+.campaign-page .cmp-stat-value {
+  font-size: clamp(34px, 4.6cqi, 48px);
+  font-weight: 300;
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.campaign-page .cmp-stat-sub { font-size: 13px; color: #8d8c8d; margin-top: 6px; }
+
+.campaign-page .cmp-account-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(22px, 2.8cqi, 32px);
+}
+
+.campaign-page .cmp-next { margin-top: clamp(26px, 3.2cqi, 38px); }
+.campaign-page .cmp-next .cmp-kicker { margin-bottom: 14px; }
+
+.campaign-page .cmp-next-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.campaign-page .cmp-next-step {
+  flex: 1 1 180px;
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: #1a1a1a;
+}
+
+.campaign-page .cmp-next-step svg { color: #012fa7; }
+
+.campaign-page .cmp-next-step-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #f4f4f4;
+  margin-top: 10px;
+}
+
+.campaign-page .cmp-next-step-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8d8c8d;
+  margin-top: 4px;
+}
+
+/* -------------------------------------------------------- proof + feature */
+
+.campaign-page .cmp-proof {
+  border-radius: 16px;
+  padding: clamp(18px, 2.4cqi, 30px);
+  background: #212121;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(18px, 2.6cqi, 34px);
+  align-items: center;
+}
+
+.campaign-page .cmp-proof-copy { flex: 1 1 300px; min-width: 0; }
+
+.campaign-page .cmp-feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(12px, 1.6cqi, 20px);
+}
+
+.campaign-page .cmp-feature {
+  flex: 1 1 260px;
+  min-width: 0;
+  border-radius: 13px;
+  padding: clamp(18px, 2.2cqi, 26px);
+  background: #212121;
+}
+
+.campaign-page .cmp-feature svg { color: #012fa7; }
+
+.campaign-page .cmp-feature-title {
+  font-size: clamp(18px, 2cqi, 24px);
+  font-weight: 500;
+  line-height: 1.3;
+  color: #f4f4f4;
+  margin-top: 14px;
+}
+
+.campaign-page .cmp-feature p {
+  margin: 10px 0 0;
+  font-size: clamp(14px, 1.5cqi, 17px);
+  line-height: 1.6;
+  color: #8d8c8d;
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------- credit section */
+
+.campaign-page .cmp-credit {
+  border-radius: 16px;
+  padding: clamp(20px, 2.8cqi, 36px);
+  background: #323033;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(20px, 3cqi, 44px);
+}
+
+.campaign-page .cmp-credit-copy { flex: 1 1 300px; min-width: 0; }
+
+.campaign-page .cmp-refund {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 0;
+  font-size: clamp(14px, 1.5cqi, 16px);
+  line-height: 1.55;
+  color: #8d8c8d;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-refund svg { color: #22c55e; flex: none; margin-top: 2px; }
+
+.campaign-page .cmp-credit-meter {
+  flex: 1 1 280px;
+  min-width: 0;
+  border-radius: 13px;
+  padding: clamp(18px, 2.2cqi, 26px);
+  background: #1a1a1a;
+}
+
+.campaign-page .cmp-credit-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.campaign-page .cmp-credit-figure strong {
+  font-size: clamp(40px, 5.4cqi, 60px);
+  font-weight: 300;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.campaign-page .cmp-credit-figure span {
+  font-size: clamp(15px, 1.7cqi, 19px);
+  color: #8d8c8d;
+}
+
+/* One block per whole song the grant buys — the count comes from the campaign,
+ * so a 60-minute campaign simply draws more of them. */
+.campaign-page .cmp-song-blocks {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 12px;
+  height: 34px;
+}
+
+.campaign-page .cmp-song-blocks span {
+  flex: 1;
+  min-width: 2px;
+  background: #012fa7;
+  border-radius: 4px;
+}
+
+.campaign-page .cmp-songs-line {
+  font-size: clamp(15px, 1.7cqi, 18px);
+  font-weight: 500;
+  color: #f4f4f4;
+}
+
+.campaign-page .cmp-songs-note {
+  font-size: clamp(13px, 1.4cqi, 15px);
+  line-height: 1.55;
+  color: #8d8c8d;
+  margin-top: 6px;
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------------- FAQ */
+
+.campaign-page .cmp-faq-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(28px, 4cqi, 60px);
+}
+
+.campaign-page .cmp-faq-section .cmp-h2-lg { margin-bottom: 0; }
+
+.campaign-page .cmp-faq {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  border-top: 1px solid #f4f4f4;
+}
+
+.campaign-page .cmp-faq-aside {
+  flex: 1 1 240px;
+  max-width: 349px;
+  padding: clamp(24px, 3cqi, 32px) 20px clamp(8px, 3cqi, 32px) 0;
+}
+
+.campaign-page .cmp-faq-aside h3 {
+  margin: 0;
+  font-size: clamp(18px, 2.2cqi, 24px);
+  line-height: 1.33;
+  font-weight: 400;
+  color: #f4f4f4;
+}
+
+.campaign-page .cmp-faq-list {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.campaign-page .cmp-faq-item { width: 100%; border-top: 1px solid #f4f4f4; }
+
+.campaign-page .cmp-faq-q {
+  width: 100%;
+  padding: clamp(20px, 2.8cqi, 28px) 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  font-size: clamp(17px, 2.2cqi, 24px);
+  line-height: 1.33;
+  font-weight: 400;
+  color: #f4f4f4;
+  cursor: pointer;
+  text-wrap: pretty;
+}
+
+.campaign-page .cmp-faq-q svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: #f4f4f4;
+  transition: transform 0.18s ease;
+}
+
+.campaign-page .cmp-faq-q svg.is-open { transform: rotate(180deg); }
+
+.campaign-page .cmp-faq-a {
+  margin: 0;
+  padding: 0 0 24px;
+  font-size: clamp(15px, 1.8cqi, 20px);
+  line-height: 1.5;
+  color: #8d8c8d;
+  max-width: 44em;
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------ bottom CTA */
+
+.campaign-page .cmp-bottom-cta {
+  border-radius: 16px;
+  padding: clamp(24px, 3.4cqi, 48px);
+  background: #012fa7;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.campaign-page .cmp-bottom-cta > div { flex: 1 1 300px; min-width: 0; }
+
+.campaign-page .cmp-bottom-body {
+  margin: 10px 0 0;
+  font-size: clamp(14px, 1.6cqi, 17px);
+  line-height: 1.55;
+  color: #c9d8ff;
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------- skeleton */
+
+.campaign-page .cmp-skeleton .cmp-hero-copy,
+.campaign-page .cmp-skeleton .cmp-auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.campaign-page .cmp-skeleton .skeleton-panel-group { display: contents; }
+.campaign-page .cmp-skeleton .cmp-auth-grid .skeleton-panel-group { display: block; }
+
+/* ------------------------------------------------------ pipeline animation
+ *
+ * One shared 11s timeline: drop zone → file lands → waveform + progress →
+ * MIDI roll → notation, with the format pills lighting in step. Every layer
+ * runs the same duration and carves out its own slice with keyframe
+ * percentages, which keeps them in sync without any JS. */
+
+.campaign-page .cmp-anim {
+  flex: 1 1 320px;
+  min-width: 0;
+  position: relative;
+  border-radius: 13px;
+  background: #1a1a1a;
+  overflow: hidden;
+  height: clamp(250px, 30cqi, 290px);
+}
+
+.campaign-page .cmp-anim-stage {
+  position: absolute;
+  left: clamp(14px, 1.8cqi, 22px);
+  right: clamp(14px, 1.8cqi, 22px);
+  top: clamp(14px, 1.8cqi, 22px);
+  bottom: clamp(52px, 7cqi, 64px);
+}
+
+.campaign-page .cmp-anim-zone {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 2.842px dashed rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #5f5e60;
+  animation: cmp-zone 11s linear infinite;
+}
+
+.campaign-page .cmp-anim-zone-hot {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 2.842px solid #012fa7;
+  background: rgba(1, 47, 167, 0.14);
+  opacity: 0;
+  animation: cmp-zone-hot 11s linear infinite;
+}
+
+.campaign-page .cmp-anim-file {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -25px 0 0 -95px;
+  width: 190px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 8px;
+  border-radius: 8px;
+  background: #323033;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  opacity: 0;
+  animation: cmp-file 11s linear infinite;
+}
+
+.campaign-page .cmp-anim-file-art {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #012fa7, #171e43);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c9d8ff;
+}
+
+.campaign-page .cmp-anim-file-meta { min-width: 0; display: block; }
+
+.campaign-page .cmp-anim-file-name {
+  display: block;
+  font-size: 12px;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campaign-page .cmp-anim-file-size { display: block; font-size: 10px; color: #8d8c8d; }
+
+.campaign-page .cmp-anim-cursor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -2px 0 0 -2px;
+  opacity: 0;
+  animation: cmp-cursor 11s linear infinite;
+}
+
+.campaign-page .cmp-anim-wave,
+.campaign-page .cmp-anim-midi {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+}
+
+.campaign-page .cmp-anim-wave { gap: 12px; animation: cmp-stage-wave 11s linear infinite; }
+.campaign-page .cmp-anim-midi { gap: 6px; animation: cmp-stage-midi 11s linear infinite; }
+
+.campaign-page .cmp-anim-bars { display: flex; align-items: center; gap: 3px; height: 76px; }
+
+.campaign-page .cmp-anim-bars span { flex: 1; background: #012fa7; border-radius: 2px; }
+
+.campaign-page .cmp-anim-progress {
+  height: 6px;
+  border-radius: 120px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.campaign-page .cmp-anim-progress span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 120px;
+  background: linear-gradient(90deg, #012fa7, #0139c7);
+  animation: cmp-bar 11s linear infinite;
+}
+
+.campaign-page .cmp-anim-midi-row { display: flex; gap: 4px; height: 15px; }
+.campaign-page .cmp-anim-midi-row span { display: block; }
+.campaign-page .cmp-anim-midi-row .is-note { border-radius: 3px; }
+.campaign-page .cmp-anim-midi-row .tone-1 { background: #012fa7; }
+.campaign-page .cmp-anim-midi-row .tone-2 { background: #0139c7; }
+
+.campaign-page .cmp-anim-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 20px 14px 16px;
+  opacity: 0;
+  animation: cmp-stage-sheet 11s linear infinite;
+}
+
+.campaign-page .cmp-anim-sheet-meta {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: #8d8c8d;
+  margin-bottom: 10px;
+}
+
+.campaign-page .cmp-anim-sheet svg { width: 100%; height: auto; display: block; }
+
+.campaign-page .cmp-anim-pills {
+  position: absolute;
+  left: clamp(14px, 1.8cqi, 22px);
+  right: clamp(14px, 1.8cqi, 22px);
+  bottom: clamp(16px, 2cqi, 22px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #3d3b3e;
+}
+
+.campaign-page .cmp-anim-pill {
+  padding: 5px 11px;
+  border-radius: 120px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: #8d8c8d;
+}
+
+.campaign-page .cmp-anim-pill.p1 { animation: cmp-pill-1 11s linear infinite; }
+.campaign-page .cmp-anim-pill.p2 { animation: cmp-pill-2 11s linear infinite; }
+.campaign-page .cmp-anim-pill.p3 { animation: cmp-pill-3 11s linear infinite; }
+
+@keyframes cmp-cursor {
+  0% { opacity: 0; transform: translate(120px, 96px); }
+  3% { opacity: 1; transform: translate(120px, 96px); }
+  17% { transform: translate(4px, 10px); }
+  20% { transform: translate(4px, 13px); }
+  24% { transform: translate(4px, 10px); }
+  30% { opacity: 1; transform: translate(96px, 104px); }
+  34%, 100% { opacity: 0; }
+}
+
+@keyframes cmp-file {
+  0% { opacity: 0; transform: translate(118px, 92px) scale(0.94); }
+  3% { opacity: 1; }
+  17% { transform: translate(0, 0) scale(1); }
+  21% { transform: translate(0, 3px) scale(0.96); }
+  26% { opacity: 1; transform: translate(0, 0) scale(1); }
+  31% { opacity: 0; transform: translate(0, -8px) scale(0.9); }
+  100% { opacity: 0; }
+}
+
+@keyframes cmp-zone { 0%, 26% { opacity: 1; } 33%, 96% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes cmp-zone-hot { 0%, 15% { opacity: 0; } 18%, 26% { opacity: 1; } 33%, 100% { opacity: 0; } }
+@keyframes cmp-stage-wave { 0%, 31% { opacity: 0; } 36%, 49% { opacity: 1; } 54%, 100% { opacity: 0; } }
+@keyframes cmp-bar { 0%, 34% { width: 0%; } 50% { width: 100%; } 54%, 100% { width: 100%; } }
+@keyframes cmp-stage-midi { 0%, 50% { opacity: 0; } 55%, 67% { opacity: 1; } 71%, 100% { opacity: 0; } }
+@keyframes cmp-stage-sheet { 0%, 72% { opacity: 0; } 78%, 94% { opacity: 1; } 99%, 100% { opacity: 0; } }
+
+@keyframes cmp-pill-1 {
+  0%, 30% { background: rgba(1, 47, 167, 0.35); color: #c9d8ff; }
+  36%, 100% { background: rgba(255, 255, 255, 0.06); color: #8d8c8d; }
+}
+
+@keyframes cmp-pill-2 {
+  0%, 50% { background: rgba(255, 255, 255, 0.06); color: #8d8c8d; }
+  55%, 68% { background: rgba(1, 47, 167, 0.35); color: #c9d8ff; }
+  73%, 100% { background: rgba(255, 255, 255, 0.06); color: #8d8c8d; }
+}
+
+@keyframes cmp-pill-3 {
+  0%, 69% { background: rgba(255, 255, 255, 0.06); color: #8d8c8d; }
+  75%, 94% { background: rgba(1, 47, 167, 0.35); color: #c9d8ff; }
+  99%, 100% { background: rgba(255, 255, 255, 0.06); color: #8d8c8d; }
+}
+
+/* The animation is decoration, not information — the pills and the copy
+ * already say MP3 → MIDI → sheet music. Freeze it on the notation frame. */
+@media (prefers-reduced-motion: reduce) {
+  .campaign-page .cmp-anim-zone,
+  .campaign-page .cmp-anim-zone-hot,
+  .campaign-page .cmp-anim-file,
+  .campaign-page .cmp-anim-cursor,
+  .campaign-page .cmp-anim-wave,
+  .campaign-page .cmp-anim-midi,
+  .campaign-page .cmp-anim-progress span,
+  .campaign-page .cmp-anim-pill {
+    animation: none;
+  }
+  .campaign-page .cmp-anim-zone,
+  .campaign-page .cmp-anim-zone-hot,
+  .campaign-page .cmp-anim-file,
+  .campaign-page .cmp-anim-cursor,
+  .campaign-page .cmp-anim-wave,
+  .campaign-page .cmp-anim-midi { opacity: 0; }
+  .campaign-page .cmp-anim-sheet { animation: none; opacity: 1; }
+}

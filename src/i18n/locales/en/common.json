@@ -266,5 +266,138 @@
     "confirm": "Confirm",
     "codePrompt": "Please enter your 6-digit verification code:",
     "closeAria": "Close modal"
+  },
+  "campaign": {
+    "fallbackGroup": "your group",
+    "hero": {
+      "title": "{{minutes}} Free Minutes For {{name}}.",
+      "sub": "Create an account and {{minutes}} minutes of processing credit lands in it right away: about {{lo}}–{{hi}} full songs. No card, no trial.",
+      "subWithInviter": "{{inviter}} invited you to create an account. {{minutes}} minutes of processing credit lands in it right away: about {{lo}}–{{hi}} full songs. No card, no trial."
+    },
+    "assurance": {
+      "noCard": "No credit card",
+      "instant": "Granted on signup",
+      "noCharge": "Never auto-charges"
+    },
+    "codeApplied": "Promo code applied",
+    "continueWith": "Continue with",
+    "email": "Email",
+    "back": "Back",
+    "emailPrompt": "We will send a 6-digit code to your email. No password to remember.",
+    "emailPlaceholder": "you@school.edu",
+    "sendCode": "Send Code",
+    "sending": "Sending…",
+    "codePrompt": "Enter your 6-digit code",
+    "digitAria": "Digit {{n}} of 6",
+    "confirm": "Confirm",
+    "confirming": "Confirming…",
+    "claiming": "Claiming…",
+    "optIn": "Subscribe to GrooveSheet updates and never miss a beat!",
+    "disclaimerA": "By continuing you agree to our ",
+    "disclaimerB": " and ",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "errors": {
+      "badEmail": "Enter a valid email address.",
+      "sendFailed": "We couldn't send the code. Check the address and try again.",
+      "shortCode": "Enter all six digits.",
+      "badCode": "That code didn't work. Check it or request a new one.",
+      "authFailed": "Sign-in didn't complete. Try again.",
+      "claimFailed": "We couldn't add the credit. Your account is fine — try again in a moment."
+    },
+    "balanceLabel": "Processing credit",
+    "balanceSub": "available now",
+    "grantedLabel": "Roughly",
+    "grantedSub": "at 4 minutes per song",
+    "success": {
+      "title": "{{minutes}} Minutes Are In Your Account.",
+      "body": "Granted from the {{name}} link. It does not expire, and nothing will auto-charge you when it runs out.",
+      "cta": "Upload A Song",
+      "cta2": "View Account"
+    },
+    "signedIn": {
+      "title": "You're Signed In. Claim Your {{minutes}} Minutes.",
+      "body": "Signed in as {{email}}. This link adds {{minutes}} minutes to your account: one claim per account.",
+      "cta": "Claim {{minutes}} Minutes",
+      "cta2": "Use A Different Account",
+      "bodyNoEmail": "This link adds {{minutes}} minutes to your account: one claim per account."
+    },
+    "ineligible": {
+      "title": "Your Plan Already Covers This.",
+      "body": "Campaign credit is for accounts on the free tier. You're on a paid plan, which already includes a monthly minute allowance, so there is nothing to claim here. Forward the link to anyone in {{name}} who has not signed up yet.",
+      "cta": "Go To Your Workspace",
+      "cta2": "Copy Link To Share"
+    },
+    "redeemed": {
+      "title": "You Have Already Claimed This One.",
+      "body": "The {{name}} credit has already landed in this account. It is one claim per account, but whatever you have left is still there to spend.",
+      "cta": "Upload A Song",
+      "cta2": "See Top-Up Packs"
+    },
+    "next": {
+      "title": "What to do first",
+      "s1": "Pick a track",
+      "s1b": "MP3, WAV, FLAC or OGG, up to 32 MB.",
+      "s2": "Choose an instrument",
+      "s2b": "Drums, piano, bass or guitar, or split the stems first.",
+      "s3": "Take the chart away",
+      "s3b": "PDF, MusicXML and MIDI on every result."
+    },
+    "proof": {
+      "kicker": "What you get back",
+      "title": "Upload the song your band is covering. Get the chart.",
+      "body": "Drop in an MP3, pick an instrument, and a few seconds later there is real notation on screen: tempo, time signature, every hit. Export as PDF, MusicXML or MIDI."
+    },
+    "what": {
+      "title": "Three Things It Does",
+      "f1": "Transcription",
+      "f1b": "Audio in, notated sheet music out: drums, piano, bass or guitar.",
+      "f2": "Stem separation",
+      "f2b": "Split a mixed track into isolated instruments, so you can practise along with just the bass.",
+      "f3": "MIDI generation",
+      "f3b": "Get MIDI you can open in a DAW or a notation editor and fix note by note."
+    },
+    "credit": {
+      "title": "What {{minutes}} Minutes Buys You",
+      "body": "One pool of credit, measured in minutes of audio. Spend it on transcription, stem separation, MIDI, or any mix of the three. A 4-minute song costs 4 minutes, whichever service you use.",
+      "refund": "Jobs that fail are refunded automatically, so errors never eat your credit.",
+      "unit": "minutes of audio",
+      "songs": "≈ {{lo}}–{{hi}} full songs",
+      "note": "The same {{minutes}} minutes as our paid $4 Starter pack. The free tier grants no credit at all: only a 10-second preview."
+    },
+    "faq": {
+      "title": "FAQ",
+      "section": "Before you sign up",
+      "q1": "Does it work for my instrument?",
+      "a1": "Drums, piano, bass and guitar today. Studio recordings give the cleanest notation; live phone recordings work but results vary.",
+      "q2": "What files can I upload?",
+      "a2": "MP3, WAV, FLAC and OGG, up to 32 MB per file.",
+      "q3": "What happens when the {{minutes}} minutes run out?",
+      "a3": "Nothing. No charge, no expiring account. You stay on the free tier with 10-second previews, and you can top up whenever you want.",
+      "q4": "Can I export to MuseScore?",
+      "a4": "Yes: every result downloads as PDF, MusicXML and MIDI, so MuseScore, Sibelius and any DAW will open it."
+    },
+    "bottom": {
+      "title": "Claim your {{minutes}} minutes.",
+      "body": "Takes about twenty seconds. No card, no trial that bills you later.",
+      "cta": "Back To Signup"
+    },
+    "invalid": {
+      "title": "That Code Didn't Match Anything.",
+      "sub": "The link may have been typed by hand, or cut short in a chat message. Worth checking with whoever shared it. You can still create a free account below and try GrooveSheet on a 10-second preview.",
+      "bottomTitle": "You can still start without a code.",
+      "bottomBody": "A free account previews any song for 10 seconds. Top up whenever you need full length."
+    },
+    "expired": {
+      "title": "The {{name}} Offer Has Closed.",
+      "sub": "This campaign has ended, so the {{minutes}} free minutes are no longer being granted. You can still create a free account below, and if your CCA wants a code of its own, ask us.",
+      "bottomTitle": "Want a code for your CCA?",
+      "bottomBody": "Tell us the group name and roughly how many members, and we will set one up.",
+      "bottomCta": "Get In Touch"
+    },
+    "anim": {
+      "drop": "Drag in an MP3",
+      "sheet": "Sheet music"
+    }
   }
 }

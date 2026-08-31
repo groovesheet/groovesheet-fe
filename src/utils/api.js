@@ -920,3 +920,107 @@ export async function exportAccountData(baseUrl, getToken, signOut = null) {
   }
   return response.blob();
 }
+
+/* ---------------------------------------------------------------------------
+ * Campaign signup codes (/signup/:code)
+ *
+ * The pending-code handoff mirrors previewApi's pending-preview handoff: OAuth
+ * bounces the browser out to Google/Apple/Facebook and back through
+ * /sso-callback, so the code the visitor arrived with has to survive in
+ * localStorage across that round trip. Without it, everyone who signs up with
+ * a social button lands back on the site with no credit.
+ * ------------------------------------------------------------------------- */
+
+const PENDING_CAMPAIGN_CODE_KEY = 'gs_pending_campaign_code';
+
+export function setPendingCampaignCode(code) {
+  try {
+    if (code) localStorage.setItem(PENDING_CAMPAIGN_CODE_KEY, code);
+  } catch (_) {
+    // Private mode / storage disabled. The in-page email flow still works
+    // because the code never leaves the URL there.
+  }
+}
+
+export function getPendingCampaignCode() {
+  try {
+    return localStorage.getItem(PENDING_CAMPAIGN_CODE_KEY);
+  } catch (_) {
+    return null;
+  }
+}
+
+export function clearPendingCampaignCode() {
+  try {
+    localStorage.removeItem(PENDING_CAMPAIGN_CODE_KEY);
+  } catch (_) {}
+}
+
+/**
+ * Fetch a campaign so the signup page can pick its state. Auth is optional:
+ * pass getToken when signed in and the response also reports whether this
+ * account may still claim. Never throws on an unknown code — the backend
+ * answers `{status: 'invalid'}` so the page can render its soft landing.
+ * @param {string} baseUrl - Base URL for the API (default: '/api')
+ * @returns {Promise<{ status: 'default'|'invalid'|'expired'|'signed_in'|'signed_in_ineligible'|'redeemed', code: string, campaign: object|null, balance_seconds?: number }>}
+ */
+export async function fetchCampaign(baseUrl = '/api', code, getToken = null) {
+  const headers = { accept: 'application/json' };
+  try {
+    if (getToken) {
+      const token = await getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch (_) {
+    // No session — the lookup is still valid anonymously.
+  }
+  const response = await fetch(`${baseUrl}/campaign/${encodeURIComponent(code)}`, { headers });
+  if (!response.ok) {
+    const error = new Error(`Failed to fetch campaign: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return response.json();
+}
+
+/**
+ * Grant a campaign's minutes to the signed-in account. Idempotent: a repeat
+ * call returns `already_claimed` rather than granting twice.
+ * @returns {Promise<{ status: 'granted'|'already_claimed', credits_granted: number, balance_seconds: number }>}
+ */
+export async function claimCampaign(baseUrl, code, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/campaign/${encodeURIComponent(code)}/claim`,
+    { method: 'POST', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const error = new Error(errorData.detail || `Claim failed: ${response.statusText}`);
+    error.status = response.status;
+    throw error;
+  }
+  return response.json();
+}
+
+/**
+ * Claim whatever campaign the visitor arrived with, if any. Called once after
+ * sign-in completes, from anywhere in the app — the OAuth callback does not
+ * necessarily return to the campaign page, and the grant must not depend on
+ * where the visitor lands. Clears the pending code on any terminal outcome so
+ * a stale code can't retry forever.
+ */
+export async function claimPendingCampaignIfAny(baseUrl, getToken) {
+  const code = getPendingCampaignCode();
+  if (!code) return null;
+  try {
+    const result = await claimCampaign(baseUrl, code, getToken);
+    clearPendingCampaignCode();
+    return { ...result, code };
+  } catch (err) {
+    // 404 unknown, 409 ineligible, 410 ended — none get better on a retry.
+    if ([404, 409, 410].includes(err.status)) clearPendingCampaignCode();
+    throw err;
+  }
+}
