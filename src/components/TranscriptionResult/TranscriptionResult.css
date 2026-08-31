@@ -160,3 +160,22 @@
     width: 100%;
   }
 }
+
+/* Page variant — /transcription-history/:workflowId ------------------------- */
+/* Same viewer stack as the Hero overlay, but standing on its own page instead
+   of inside the upload card, so it needs the page's own width and padding. */
+.tr-result-page {
+  max-width: 1414px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+  gap: 16px;
+}
+
+.tr-result-page .tr-header {
+  padding: 4px 0 0;
+}
+
+.tr-result-page .tr-title {
+  font-size: 28px;
+  line-height: 34px;
+}

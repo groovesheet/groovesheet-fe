@@ -4,6 +4,7 @@
 
 .creator-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-background);
   color: var(--color-text);
   display: flex;

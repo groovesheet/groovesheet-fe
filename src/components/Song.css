@@ -3,6 +3,7 @@
 
 .song-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-background);
   color: var(--color-text);
   display: flex;
@@ -128,6 +129,7 @@
   top: 0;
   align-self: start;
   max-height: 100vh;
+  max-height: 100dvh;
   overflow-y: auto;
 }
 
@@ -545,7 +547,7 @@
   background: var(--color-surface-light);
   border: 1px solid var(--color-border-light);
 }
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .gs-stem-row {
     grid-template-columns: 1fr;
     gap: 10px;

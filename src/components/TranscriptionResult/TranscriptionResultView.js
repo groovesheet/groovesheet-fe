@@ -109,11 +109,19 @@ export default function TranscriptionResultView({
   onDownloadTranscription,
   onDownloadStem,
   onDownloadMidi,
+  onDownloadPdf,
   onReset,
   downloadError,
   isSignedIn,
   onUpgradeToFull,
   onSignUpToUnlock,
+  // 'overlay' (default) is the just-finished card inside an upload area;
+  // 'page' is the standalone /transcription-history/:id route, where the job
+  // is old news and the heading belongs to the song, not to the event.
+  variant = 'overlay',
+  title,
+  subtitle,
+  headerExtra,
 }) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -121,6 +129,7 @@ export default function TranscriptionResultView({
   const containerRef = useRef(null);
 
   const isPreview = Boolean(workflowId && workflowId.startsWith('PRV'));
+  const isPage = variant === 'page';
   // Drums route to the beat-tracked ADToF+ outputs; every drums-specific
   // branch below gates on this flag so the default (piano/bass/…) path is
   // untouched.
@@ -129,7 +138,7 @@ export default function TranscriptionResultView({
   const musicXmlKey = isDrums ? DRUMS_MUSICXML_KEY : MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
-  const scoreTitle = titleFromFilename(fileName);
+  const scoreTitle = title || titleFromFilename(fileName);
   const scoreArtist = 'Transcribed by GrooveSheet';
   const authName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
   const safeAccountName = user?.name && !user.name.includes('@') ? user.name.trim() : '';
@@ -580,16 +589,16 @@ export default function TranscriptionResultView({
   }, [onUpgradeToFull, upgrading]);
 
   return (
-    <div ref={containerRef} className="gs-song-page tr-result">
+    <div ref={containerRef} className={`gs-song-page tr-result${isPage ? ' tr-result-page' : ''}`}>
       {/* Header: status + downloads + preview CTA */}
       <div className="tr-header">
         <div className="tr-header-info">
-          <CheckCircle size={32} weight="fill" className="tr-check" />
+          {!isPage && <CheckCircle size={32} weight="fill" className="tr-check" />}
           <div className="tr-header-text">
-            <h2 className="tr-title">Transcription complete</h2>
+            <h2 className="tr-title">{isPage ? (title || fileName || 'Transcription') : 'Transcription complete'}</h2>
             <div className="tr-filename">
               <File size={16} />
-              <span>{fileName || 'Unknown file'}</span>
+              <span>{(isPage ? subtitle : null) || fileName || 'Unknown file'}</span>
               {isPreview && <span className="tr-preview-badge">10-second preview</span>}
             </div>
           </div>
@@ -606,25 +615,39 @@ export default function TranscriptionResultView({
               </button>
             )
           )}
-          <button className="tr-btn" onClick={onDownloadTranscription}>
-            <DownloadSimple size={18} weight="bold" />
-            <span>Score</span>
-          </button>
-          {midiKey && (
+          {/* Separation-only jobs (stem splitter) have no score to offer. */}
+          {onDownloadTranscription && (musicXmlKey || musicXmlText) && (
+            <button className="tr-btn" onClick={onDownloadTranscription}>
+              <DownloadSimple size={18} weight="bold" />
+              <span>Score</span>
+            </button>
+          )}
+          {/* The printable engraving — the same file that auto-downloads with
+              the MusicXML when a transcription finishes. */}
+          {onDownloadPdf && (musicXmlKey || musicXmlText) && (
+            <button className="tr-btn" onClick={onDownloadPdf}>
+              <DownloadSimple size={18} weight="bold" />
+              <span>PDF</span>
+            </button>
+          )}
+          {midiKey && onDownloadMidi && (
             <button className="tr-btn" onClick={onDownloadMidi}>
               <DownloadSimple size={18} weight="bold" />
               <span>MIDI</span>
             </button>
           )}
-          {stemKey && (
+          {stemKey && onDownloadStem && (
             <button className="tr-btn" onClick={onDownloadStem}>
               <DownloadSimple size={18} weight="bold" />
               <span>Stem</span>
             </button>
           )}
-          <button className="tr-close" onClick={onReset} aria-label="Close and start over">
-            <X size={22} weight="bold" />
-          </button>
+          {headerExtra}
+          {onReset && (
+            <button className="tr-close" onClick={onReset} aria-label={isPage ? 'Back' : 'Close and start over'}>
+              <X size={22} weight="bold" />
+            </button>
+          )}
         </div>
       </div>
 

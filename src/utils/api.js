@@ -230,6 +230,46 @@ export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToke
   return { blob, filename };
 }
 
+// Instruments whose workflows engrave a score (everything else is separation
+// only, and has no MusicXML or PDF to offer).
+export const SCORE_INSTRUMENTS = ['drums', 'jazz_bass', 'bass', 'piano'];
+
+/**
+ * Fetch the transcription's score as a paginated, print-ready PDF.
+ *
+ * MusicXML needs an editor to open; the PDF is the copy you can print or put on
+ * a stand, so it is downloaded alongside the MusicXML. The server engraves it
+ * with Verovio. Returns null when this job has no score (a separation-only run).
+ */
+export async function downloadScorePdf(baseUrl, workflowId, getToken) {
+  const isPreview = workflowId && workflowId.startsWith('PRV');
+  const url = `${baseUrl}${isPreview ? '/preview' : '/workflow'}/score-pdf/${workflowId}`;
+  let res;
+  if (isPreview) {
+    const headers = {};
+    if (getToken) {
+      try {
+        const token = await getToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch {
+        /* anonymous fallback */
+      }
+    }
+    res = await fetch(url, { headers, credentials: 'include' });
+  } else {
+    res = await authenticatedFetch(url, {}, getToken);
+  }
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Score PDF failed: ${res.status}`);
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get('content-disposition') || '';
+  const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+  const filename = match ? decodeURIComponent(match[1] || match[2]) : null;
+  return { blob, filename };
+}
+
 /**
  * Fetch a workflow output as text (e.g. MusicXML).
  * Returns null on 404.
@@ -263,12 +303,90 @@ function extractBasename(value) {
   return base || value;
 }
 
+// Workflow name -> the instrument it transcribes. Mirrors the orchestrator's
+// _INSTRUMENT_BY_WORKFLOW; used to label rows whose metadata never carried one.
+const INSTRUMENT_BY_WORKFLOW = {
+  separate_to_drumscore: 'drums',
+  separate_to_drumscore_v2: 'drums',
+  separate_to_drumscore_full: 'drums',
+  separate_to_drumscore_v2_full: 'drums',
+  adtof_transcribe: 'drums',
+  adtof_plus_transcribe: 'drums',
+  separate_to_piano_score: 'piano',
+  separate_to_piano_score_full: 'piano',
+  separate_to_bass_score: 'bass',
+  separate_to_bass_score_full: 'bass',
+  separate_to_jazz_bass_score: 'jazz_bass',
+  separate_to_jazz_bass_score_full: 'jazz_bass',
+  separate_to_guitar_stem: 'guitar',
+};
+
+const INSTRUMENT_DISPLAY = {
+  drums: 'Drums',
+  piano: 'Piano',
+  bass: 'Bass',
+  jazz_bass: 'Jazz bass',
+  vocals: 'Vocals',
+  guitar: 'Guitar',
+  other: 'Other',
+};
+
+/** The instrument a workflow is about, from metadata or its workflow name. */
+export function resolveInstrument(workflow) {
+  if (!workflow) return null;
+  return (
+    workflow.metadata?.instrument
+    || workflow.outputs?.metadata?.instrument
+    || INSTRUMENT_BY_WORKFLOW[workflow.workflow_name]
+    || null
+  );
+}
+
+/** "Piano transcription" / "Stem separation" — what the job produces. */
+export function resolveWorkflowKind(workflow) {
+  const name = workflow?.workflow_name || '';
+  if (['bs_roformer_separate', 'demucs_separate', 'separate_to_guitar_stem'].includes(name)) {
+    return 'Stem separation';
+  }
+  if (name === 'midi2score_quantize') return 'Score from MIDI';
+  return `${INSTRUMENT_DISPLAY[resolveInstrument(workflow)] || 'Audio'} transcription`;
+}
+
+const fmtDurationShort = (secs) => {
+  const total = Number(secs);
+  if (!Number.isFinite(total) || total <= 0) return null;
+  return `${Math.floor(total / 60)}:${String(Math.round(total % 60)).padStart(2, '0')}`;
+};
+
+/**
+ * One line under the title: what the job is, how long, and the uploaded file.
+ * The Library used to repeat the title here, so a row with no title showed two
+ * blank lines.
+ */
+export function resolveDescription(workflow) {
+  if (!workflow) return '';
+  // The user's own "Edit details" description wins; then the server's generated
+  // line; then one built here for backends that send neither.
+  for (const candidate of [workflow.description, workflow.display_description]) {
+    if (candidate && String(candidate).trim()) return String(candidate).trim();
+  }
+  const meta = workflow.metadata || {};
+  const parts = [resolveWorkflowKind(workflow)];
+  const dur = fmtDurationShort(meta.duration_seconds ?? workflow.duration_seconds);
+  if (dur) parts.push(dur);
+  const source = meta.original_filename || workflow.original_filename;
+  const title = resolveDisplayName(workflow);
+  if (source && source !== title) parts.push(source);
+  return parts.join(' · ');
+}
+
 /**
  * Resolve the best user-facing display name from a workflow status object.
  *
  * Checks every field the backend is known to populate, including
  * underscore variants (file_name) and path-bearing fields (input_file).
- * Falls back to workflow_id only as a true last resort.
+ * A raw workflow id is never a display name — a row with nothing else to go on
+ * gets "<Instrument> transcription", not "WF_1a2b3c…".
  */
 export function resolveDisplayName(workflow) {
   if (!workflow) return 'Unknown';
@@ -278,6 +396,7 @@ export function resolveDisplayName(workflow) {
 
   // Ordered list of candidate values – first truthy string wins
   const candidates = [
+    workflow.display_title, // server-computed, always human-readable
     workflow.title, // user-edited title from the linked library track
     workflow.original_filename,
     workflow.filename,
@@ -304,15 +423,23 @@ export function resolveDisplayName(workflow) {
     extractBasename(workflow.source_file),
     extractBasename(meta.source_file),
     extractBasename(outputsMeta.source_file),
-    // True last resort
-    workflow.workflow_id,
   ];
 
   for (const c of candidates) {
     if (c && typeof c === 'string' && c.trim()) return c.trim();
   }
 
-  return 'Unknown';
+  // Last resort: describe the job. Older backends send no display_title, and a
+  // job started from R2 keys may carry no filename at all.
+  const created = workflow.created_at || workflow.completed_at;
+  const kind = resolveWorkflowKind(workflow);
+  if (created) {
+    const d = new Date(created);
+    if (!Number.isNaN(d.getTime())) {
+      return `${kind} — ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    }
+  }
+  return kind;
 }
 
 // Maps instrument to the file keys for each output type

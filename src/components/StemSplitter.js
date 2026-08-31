@@ -12,6 +12,7 @@ import {
 import { scrollToPricing } from '../utils/scrollToPricing';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
+import { useIsTouch } from '../hooks/useMediaQuery';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
@@ -25,6 +26,7 @@ import Testimonials from './Testimonials';
 import FAQ from './FAQ';
 import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
+import TranscriptionResultView from './TranscriptionResult/TranscriptionResultView';
 import config from '../config';
 
 const SUPPORTED_MIME_TYPES = [
@@ -84,19 +86,6 @@ const MagicWandIcon = () => (
   </svg>
 );
 
-const CheckCircleIcon = () => (
-  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="32" cy="32" r="28" fill="white" stroke="white" strokeWidth="4"/>
-    <path d="M20 32L28 40L44 24" stroke="#171717" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M27 9L9 27M9 9L27 27" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 const ServerIcon = () => (
   <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="12" y="8" width="40" height="16" rx="3" stroke="white" strokeWidth="3"/>
@@ -138,7 +127,7 @@ function StemSplitter({ onLoginClick }) {
   const [selectedInstrument, setSelectedInstrument] = useState('vocals');
   // Every run is a 10s preview by default (PRV* IDs); status + download
   // endpoints are inferred from the returned ID prefix (PRV* vs WF*).
-  const [previewSelection, setPreviewSelection] = useState(null);
+  const [, setPreviewSelection] = useState(null);
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const progressTimeoutRef = useRef(null);
@@ -431,7 +420,7 @@ function StemSplitter({ onLoginClick }) {
     const suffix = `_${selectedInstrument}`;
     let filename = file?.name
       ? file.name.replace(/\.[^.]+$/, `${suffix}${extension}`)
-      : `${selectedInstrument}_${id}${extension}`;
+      : `${selectedInstrument}_groovesheet${extension}`;
     const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
     if (match) filename = decodeURIComponent(match[1] || match[2]);
 
@@ -460,14 +449,6 @@ function StemSplitter({ onLoginClick }) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const formatTimestamp = (sec) => {
-    if (sec == null) return '';
-    const total = Math.max(0, Math.round(sec));
-    const m = Math.floor(total / 60);
-    const s = total % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
   const handleManualDownload = () => {
     if (downloadUrl && downloadFilename) {
       const a = document.createElement('a');
@@ -477,6 +458,15 @@ function StemSplitter({ onLoginClick }) {
       a.click();
       document.body.removeChild(a);
     }
+  };
+
+  const isTouch = useIsTouch();
+
+  // Touch devices can't drag; the whole zone becomes the tap target.
+  // Clicks on the inner button are skipped so the picker opens once.
+  const handleDropZoneTap = (e) => {
+    if (e.target.closest('.browse-files-btn')) return;
+    handleBrowseClick();
   };
 
   const handleBrowseClick = () => {
@@ -556,6 +546,9 @@ function StemSplitter({ onLoginClick }) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={isTouch ? handleDropZoneTap : undefined}
+        role={isTouch ? 'button' : undefined}
+        tabIndex={isTouch ? 0 : undefined}
       >
         <div className="upload-content-wrapper">
           <div className="upload-visual-group">
@@ -566,12 +559,14 @@ function StemSplitter({ onLoginClick }) {
               />
             </div>
             <div className="upload-text-group">
-              <p className="upload-main-text">Drag and drop an audio file</p>
+              <p className="upload-main-text">
+                {isTouch ? 'Tap to upload an audio file' : 'Drag and drop an audio file'}
+              </p>
               <p className="upload-sub-text">MP3, WAV, FLAC up to 50MB</p>
             </div>
           </div>
           <button className="browse-files-btn" onClick={handleBrowseClick}>
-            Browse Files
+            {isTouch ? 'Choose File' : 'Browse Files'}
           </button>
         </div>
       </div>
@@ -629,59 +624,13 @@ function StemSplitter({ onLoginClick }) {
     </>
   );
 
-  const renderSuccessState = () => {
-    const isPreviewResult = jobId && jobId.startsWith('PRV');
-    return (
-      <>
-        <button className="close-btn-corner" onClick={resetUpload} aria-label="Close">
-          <CloseIcon />
-        </button>
-        <div className="upload-content-top compact">
-          <div className="upload-icon"><CheckCircleIcon /></div>
-          <div className="upload-text success-text">
-            <h3>{isPreviewResult ? '10-Second Preview Ready!' : 'Separation Succeeded!'}</h3>
-            <p className="filename-text">{file?.name || 'Uploaded_file_name.mp3'}</p>
-            {isPreviewResult && previewSelection && (
-              <p className="filename-text" style={{ opacity: 0.75, fontSize: '13px', marginTop: '4px' }}>
-                Previewing {formatTimestamp(previewSelection.start_sec)} – {formatTimestamp(previewSelection.end_sec)} of your song
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="upload-controls success-controls compact">
-          <button className="download-transcription-btn compact" onClick={handleManualDownload}>
-            {isPreviewResult ? 'Download 10s Preview' : 'Download Stem'}
-          </button>
-          {isPreviewResult && !isSignedIn && (
-            <button
-              className="download-transcription-btn compact"
-              style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
-              onClick={handleSignUpToUnlock}
-            >
-              Sign up to process the full song
-            </button>
-          )}
-          {isPreviewResult && isSignedIn && (
-            <button
-              className="download-transcription-btn compact"
-              style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
-              onClick={handleUpgradeToFull}
-            >
-              Process the full song now
-            </button>
-          )}
-        </div>
-      </>
-    );
-  };
-
   return (
     <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-background)' }}>
       <div className="dot-grid"></div>
       <HeroBackground />
       <Header onLoginClick={onLoginClick} />
       <section className="hero" style={{ flex: 1, position: 'relative', zIndex: 10 }}>
-        <div className="hero-container">
+        <div className={`hero-container ${uiState === 'success' ? 'success-expanded' : ''}`}>
           <div className="hero-content">
             <div className="hero-text">
               <h1 className="hero-title">Extract vocals & instruments from any audio.</h1>
@@ -716,7 +665,23 @@ function StemSplitter({ onLoginClick }) {
             {uiState === 'uploading' && renderUploadingState()}
             {uiState === 'cold_starting' && renderColdStartState()}
             {uiState === 'processing' && renderProcessingState()}
-            {uiState === 'success' && renderSuccessState()}
+            {uiState === 'success' && (
+              /* Same explore-style viewer the homepage shows on success: the
+                 finished stem is playable here instead of download-only. */
+              <TranscriptionResultView
+                workflowId={jobId}
+                fileName={file?.name || downloadFilename}
+                selectedInstrument={selectedInstrument}
+                prefetchedFiles={null}
+                onDownloadTranscription={handleManualDownload}
+                onDownloadStem={handleManualDownload}
+                onReset={resetUpload}
+                downloadError={error}
+                isSignedIn={isSignedIn}
+                onUpgradeToFull={handleUpgradeToFull}
+                onSignUpToUnlock={handleSignUpToUnlock}
+              />
+            )}
             {error && uiState !== 'success' && (
               <div className="error-overlay">
                 <StatusMessage variant="error">{error}</StatusMessage>

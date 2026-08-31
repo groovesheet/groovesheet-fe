@@ -3,6 +3,7 @@
 .about-page {
   background: var(--color-background);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -445,7 +446,7 @@
 }
 
 /* Large Desktop and Tablet Landscape - 1200px to 1400px */
-@media (max-width: 1400px) {
+@media (max-width: 1440px) {
   .about-content {
     gap: 100px;
   }
@@ -465,7 +466,7 @@
 }
 
 /* Medium Desktop and Tablet - 1024px to 1200px */
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .about-content {
     gap: 80px;
   }
@@ -540,7 +541,7 @@
 }
 
 /* Medium Desktop: tighten image row gaps */
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .about-image-row {
     gap: 24px;
   }

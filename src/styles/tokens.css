@@ -1,3 +1,30 @@
+/* ============================================================================
+   BREAKPOINT SCALE
+   ----------------------------------------------------------------------------
+   Media queries cannot read CSS custom properties, so these values cannot be
+   tokens. They are listed here because this file is where people look for the
+   design system's constants, and mirrored in src/styles/breakpoints.js, which
+   is what the JS hooks (useIsMobile / useIsTablet / useIsDesktop) read.
+   Change one, change both.
+
+     xs    480px   small phone
+     sm    640px   large phone
+     md    768px   phone landscape / small tablet — the main mobile cutoff
+     lg   1024px   tablet landscape / small laptop — desktop nav appears here
+     xl   1280px   desktop
+     xxl  1440px   wide desktop
+
+   Plus exactly one CONTENT breakpoint, which is deliberately off the scale:
+
+     900px  two-column editorial content collapses (About, ApiPage,
+            HelpSupport, PreviewPanel). This is a property of the content, not
+            of the device — pinning it to lg would collapse those layouts on
+            tablets that still have room for two columns.
+
+   Do not introduce a new width. If a layout seems to need one, it usually
+   wants the content breakpoint or a container query instead.
+   ============================================================================ */
+
 :root {
   /* Progress Bar Token */
   --color-progress-bar-dark: #3b82f6;

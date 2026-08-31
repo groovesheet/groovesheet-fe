@@ -584,6 +584,7 @@
   justify-content: flex-start;
   max-width: 100%;
   min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - 160px);
 }
 
 .upload-area.state-success:hover {
@@ -740,7 +741,7 @@
 }
 
 /* Tablet Breakpoint */
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .hero {
     padding: 30px 20px;
     min-height: auto;
@@ -845,14 +846,29 @@
     gap: 12px;
   }
 
-  .upload-instruments {
-    padding: 12px 16px 0;
+  /* Tab strip: one scrollable row. With flex-wrap the 5-instrument strip on
+     /stem-splitter dropped "Bass" onto its own line at <=360px, where it
+     stretched full width and read as a broken pill. */
+  .instrument-tabs {
+    padding: 12px 12px 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .instrument-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .instrument-tab {
-    min-width: 65px;
+    flex: 0 0 auto;
+    min-width: 68px;
+    min-height: 44px;
     padding: 8px 10px;
     font-size: 11px;
+    scroll-snap-align: start;
   }
 
   .instrument-tab svg {
@@ -884,14 +900,35 @@
     line-height: 28px;
   }
 
-  .upload-text p {
-    font-size: 16px;
-    line-height: 22px;
+  /* Idle drop zone. These are the classes Hero.js/StemSplitter/MidiConverter
+     actually render — the old `.upload-text p` / `.browse-btn` rules here
+     matched nothing, so the drop zone had no mobile treatment at all. */
+  .upload-drop-zone {
+    padding: 20px 12px;
   }
 
-  .browse-btn {
-    height: 60px;
-    font-size: 18px;
+  .upload-content-wrapper {
+    gap: 20px;
+  }
+
+  .file-formats-visual img {
+    max-width: 180px;
+  }
+
+  .upload-main-text {
+    font-size: 22px;
+    line-height: 28px;
+  }
+
+  .upload-sub-text {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .browse-files-btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 17px;
   }
 }
 
@@ -926,14 +963,14 @@
     border-width: 2px;
   }
 
-  .upload-instruments {
-    padding: 10px 12px 0;
+  .instrument-tabs {
+    padding: 10px 10px 0;
   }
 
   .instrument-tab {
-    min-width: 60px;
+    min-width: 62px;
     padding: 6px 8px;
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .instrument-tab svg {
@@ -961,13 +998,31 @@
     line-height: 24px;
   }
 
-  .upload-text p {
+  .upload-drop-zone {
+    padding: 16px 10px;
+  }
+
+  .upload-content-wrapper {
+    gap: 16px;
+  }
+
+  .file-formats-visual img {
+    max-width: 148px;
+  }
+
+  .upload-main-text {
+    font-size: 19px;
+    line-height: 25px;
+  }
+
+  .upload-sub-text {
     font-size: 13px;
     line-height: 18px;
   }
 
-  .browse-btn {
-    height: 54px;
+  .browse-files-btn {
+    width: 100%;
+    min-height: 50px;
     font-size: 16px;
   }
 }
@@ -1142,4 +1197,70 @@
 @keyframes cold-start-shimmer {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
+}
+
+/* =========================================================
+   Mobile: post-upload states
+   ---------------------------------------------------------
+   Everything from the success/error/cold-start section above is declared
+   after this file's @media blocks, so those rules win the cascade at every
+   width. Their mobile treatment has to live here, at the end.
+   ========================================================= */
+@media (max-width: 768px) {
+  /* 100vh overshoots the visible viewport on mobile browsers while the URL
+     bar is expanded, so the result card ran past the fold. dvh tracks it. */
+  .upload-area.state-success {
+    min-height: calc(100dvh - 120px);
+  }
+
+  /* 98px download buttons ate a third of the screen; two of them stacked
+     pushed the score itself out of view. */
+  .download-transcription-btn,
+  .download-stem-btn {
+    height: 56px;
+    font-size: 17px;
+    line-height: 22px;
+  }
+
+  .success-controls.compact {
+    flex-direction: column;
+  }
+
+  .success-text {
+    gap: 8px;
+  }
+
+  .filename-text {
+    font-size: 15px !important;
+    line-height: 20px !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The overlay is absolutely positioned 20px off each edge of the card; on a
+     narrow card that left the message ~2 words wide. */
+  .error-overlay {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 10px;
+  }
+
+  .cold-start-message {
+    font-size: 17px;
+  }
+
+  .cold-start-sub {
+    font-size: 13px;
+  }
+
+  /* Cancel read as plain text with no affordance. Give it an outline so it
+     is recognisably a control under a thumb. */
+  .cancel-btn.compact {
+    min-height: 44px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+  }
 }

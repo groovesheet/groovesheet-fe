@@ -6,6 +6,7 @@
 .api-page {
   background: var(--color-background);
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   overflow: hidden;
   font-family: var(--font-family-sans);
@@ -98,6 +99,14 @@
   .api-hero,
   .api-quickstart-grid {
     grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  /* Grid items default to min-width:auto, so the widest unbreakable line in
+     the <pre> pushed the track past the viewport even though the <pre> itself
+     scrolls. min-width:0 lets the track shrink and the code block scroll. */
+  .api-quickstart-grid > * {
+    min-width: 0;
   }
   .api-hero h1 {
     font-size: 44px !important;

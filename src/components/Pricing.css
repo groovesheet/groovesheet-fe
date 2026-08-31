@@ -460,6 +460,16 @@
   .toggle-option {
     flex: 1;
     text-align: center;
+    /* "Annually · 3 Months Free" wrapped to two lines while "Monthly" stayed
+       on one, so the two halves of the pill rendered at different heights.
+       Centre both and let the pill grow to the taller label. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 18px;
   }
 
   /* Stronger rules to remove any visible edge/outline around the outline buttons */
@@ -549,4 +559,14 @@
 .pricing-canceled-dismiss:focus-visible {
   outline: none;
   box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  /* At 320-360px the annual label needs the extra room more than the pill
+     needs its padding. */
+  .toggle-option {
+    padding: 8px 6px;
+    font-size: 12px;
+    line-height: 16px;
+  }
 }

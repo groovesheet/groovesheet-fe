@@ -19,6 +19,7 @@
   color: #ffffff;
   overflow-x: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
 
   /* Header.css and Footer.css put a 20px gutter on an OUTER element and cap an
    * INNER one at 1414px, so the real content column is 1414px sitting inside

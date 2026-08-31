@@ -6,6 +6,7 @@
 .help-page {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-background);
   color: var(--color-text);
   overflow-x: hidden;
@@ -786,7 +787,7 @@
 }
 
 /* ===================== RESPONSIVE ===================== */
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .help-contact-grid {
     grid-template-columns: 1fr;
   }

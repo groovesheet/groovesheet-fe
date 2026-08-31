@@ -129,3 +129,63 @@
   background: var(--color-panel2);
   border-color: var(--color-surface-muted);
 }
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+@media (max-width: 768px) {
+  /* The input reserves 130px on the right for the absolutely-positioned
+     Search button. On a 375px screen that left ~190px of usable field and
+     truncated the placeholder mid-word. Drop the button below instead. */
+  .eh-search-input {
+    font-size: 16px; /* < 16px makes iOS Safari zoom the page on focus */
+    padding: 14px 16px 14px 46px;
+  }
+
+  /* The button leaving the input makes .eh-search-shell taller than the
+     field, so the icon's `top: 50%` would drop it below the input. Pin it to
+     the top of the shell and centre it against the field's own height. */
+  .eh-search-input {
+    min-height: 52px;
+  }
+
+  .eh-search-icon {
+    left: 16px;
+    top: 0;
+    height: 52px;
+    align-items: center;
+    transform: none;
+  }
+
+  .eh-search-btn {
+    position: static;
+    transform: none;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .eh-try {
+    /* One scrollable row of suggestions rather than three wrapped ones. */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 12px;
+  }
+
+  .eh-try::-webkit-scrollbar {
+    display: none;
+  }
+
+  .eh-try-label {
+    flex: 0 0 auto;
+  }
+
+  .eh-try-chip {
+    flex: 0 0 auto;
+    min-height: 40px;
+  }
+}

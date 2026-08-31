@@ -11,6 +11,7 @@ import FAQ from './components/FAQ';
 import Footer from './components/layout/Footer';
 import { LoginModal } from './components/LoginModal';
 import TranscriptionHistory from './components/TranscriptionHistory';
+import TranscriptionDetail from './components/TranscriptionDetail';
 import SSOCallback from './components/SSOCallback';
 import Blog from './components/Blog';
 import BlogPost from './components/BlogPost';
@@ -168,6 +169,9 @@ function App() {
       <Route index element={<LandingPage onLoginClick={openLoginModal} />} />
       <Route path="pricing" element={<PricingPage onLoginClick={openLoginModal} />} />
       <Route path="account/history" element={<TranscriptionHistory />} />
+      {/* Owner-only song page — the private counterpart of /explore/:songId. */}
+      <Route path="transcription-history/:workflowId" element={<TranscriptionDetail />} />
+      <Route path="transcription-history" element={<Navigate to="/account/history" replace />} />
       <Route path="history" element={<Navigate to="/account/history" replace />} />
       <Route path="account/billing" element={<AccountBilling />} />
       <Route path="account/profile" element={<AccountProfile />} />

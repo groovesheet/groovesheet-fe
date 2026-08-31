@@ -536,3 +536,75 @@
     height: 28px;
   }
 }
+
+/* =========================================================
+   Mobile: touch targets and menu sheet
+   ---------------------------------------------------------
+   Declared last so it wins over the earlier @media blocks that shrink the
+   hamburger below the touch minimum.
+   ========================================================= */
+@media (max-width: 1024px) {
+  /* Apple HIG and Material both put the minimum tap target at 44px. The
+     hamburger measured 26x22 and the theme toggle 28x28 — both are the kind
+     of control people miss and then jab at twice. Grow the hit box with
+     padding; the glyphs keep their drawn size via background-clip of the
+     content box. */
+  .hamburger-menu,
+  .theme-toggle {
+    box-sizing: content-box;
+    min-width: 24px;
+    min-height: 24px;
+    padding: 11px;
+  }
+
+  .hamburger-menu {
+    margin-left: 4px;
+    margin-right: -11px;
+  }
+
+  .theme-toggle {
+    margin-right: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hamburger-menu {
+    width: 24px;
+    height: 18px;
+  }
+
+  .hamburger-menu span {
+    width: 24px;
+    height: 2.5px;
+  }
+
+  /* Full-width sheet instead of a 200px dropdown pinned to the right edge.
+     The old dropdown covered barely half the screen, left the page visibly
+     interactive behind it, and sat on top of the instrument tabs. */
+  .mobile-menu-dropdown {
+    /* Starts below the header (height published by Header.js) so the
+       hamburger stays visible and tappable to close the sheet. */
+    top: var(--gs-header-h, 82px);
+    right: 0;
+    left: 0;
+    bottom: 0;
+    border: none;
+    border-top: 1px solid var(--color-border-light);
+    border-radius: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--color-background-dark);
+  }
+
+  .mobile-menu-content {
+    padding: 8px 0 24px;
+  }
+
+  .mobile-nav-item {
+    min-height: 48px;
+    padding: 12px 20px;
+    font-size: 17px;
+  }
+}

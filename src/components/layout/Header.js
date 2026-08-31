@@ -6,11 +6,13 @@ import './Header.css';
 import { SignedIn, SignedOut } from '../../auth';
 import AccountIcon from '../AccountIcon';
 import { useTheme } from '../../context/ThemeContext';
+import { BREAKPOINTS } from '../../styles/breakpoints';
 import { LocalizedLink, stripLocaleFromPath } from '../../i18n/locale';
 import { LanguageSelector } from '../LanguageSelector';
 
 function Header({ onLoginClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const headerRef = useRef(null);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
   const [productsRect, setProductsRect] = useState(null);
@@ -55,7 +57,7 @@ function Header({ onLoginClick }) {
   useEffect(() => {
     // Close mobile menu when viewport is resized to desktop size
     const handleResize = () => {
-      if (window.innerWidth > 1024 && isMobileMenuOpen) {
+      if (window.innerWidth > BREAKPOINTS.lg && isMobileMenuOpen) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -67,8 +69,44 @@ function Header({ onLoginClick }) {
     };
   }, [isMobileMenuOpen]);
 
+  // Publish the real header height so the full-screen mobile menu can start
+  // below it — otherwise the sheet covers the hamburger and there is no way
+  // left to close it. Measured rather than hardcoded because the header grows
+  // and shrinks with the logo size across breakpoints.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return undefined;
+    const publish = () => {
+      document.documentElement.style.setProperty(
+        '--gs-header-h',
+        `${Math.round(el.getBoundingClientRect().height)}px`
+      );
+    };
+    publish();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(publish) : null;
+    if (ro) ro.observe(el);
+    window.addEventListener('resize', publish);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', publish);
+    };
+  }, []);
+
+  // Lock the page behind the mobile menu. Without this the body kept
+  // scrolling under the open sheet, which on a phone reads as the menu
+  // sliding away from you while you try to tap it.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return undefined;
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = 'hidden';
+    return () => {
+      body.style.overflow = previousOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
   return (
-    <header className="header">
+    <header className="header" ref={headerRef}>
       <div className="header-container">
         {/* Inner constrained content to align with main page sections (e.g. Pricing) */}
         <div className="header-inner">

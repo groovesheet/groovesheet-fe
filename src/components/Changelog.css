@@ -18,6 +18,7 @@
 
 .changelog-page {
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   font-family: var(--font-family-sans);
   color: var(--color-text);
@@ -264,7 +265,7 @@
   color: var(--color-muted-foreground);
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .changelog-title { font-size: 32px; }
   .changelog-main { padding: 16px 16px 72px; }
 }

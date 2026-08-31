@@ -11,7 +11,9 @@ import { BillingButtonStyles } from './AccountBilling';
 import {
   fetchWorkflowList,
   fetchWorkflowStatus,
+  downloadScorePdf,
   resolveDisplayName,
+  resolveDescription,
   resolveAvailableOutputs,
   updateWorkflowVisibility,
   updateWorkflowMetadata,
@@ -67,6 +69,25 @@ const fmtDuration = (secs) => {
 };
 
 const visibilityOf = (w) => w.visibility || 'private';
+
+// Downloads are named after the song. These are only fallbacks: the server
+// sends the real name in Content-Disposition (exposed via CORS).
+const filenameFromContentDisposition = (header) => {
+  if (!header) return null;
+  const match = header.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1] || match[2]);
+  } catch {
+    return match[1] || match[2];
+  }
+};
+
+const downloadName = (w, kind, ext) => {
+  const base = resolveDisplayName(w).replace(/\.[^.]+$/, '').replace(/[\\/:*?"<>|]/g, ' ').trim();
+  const instrument = w.metadata?.instrument;
+  return [base || 'transcription', instrument, kind, 'groovesheet'].filter(Boolean).join('_') + ext;
+};
 
 // Edit-details modal. Portal to <body> so it escapes header stacking contexts
 // (same pattern as LoginModal / AccountIcon).
@@ -223,7 +244,18 @@ export const TranscriptionHistory = () => {
       const byId = {};
       updates.filter(Boolean).forEach((u) => { byId[u.workflow_id] = u; });
       if (Object.keys(byId).length) {
-        setWorkflows((ws) => ws.map((w) => (byId[w.workflow_id] ? { ...w, ...byId[w.workflow_id] } : w)));
+        // Merge metadata field-by-field: a status payload that omitted a key
+        // used to blank the name and duration a card was already showing.
+        setWorkflows((ws) => ws.map((w) => {
+          const u = byId[w.workflow_id];
+          if (!u) return w;
+          const merged = { ...w, ...u };
+          merged.metadata = { ...(w.metadata || {}) };
+          Object.entries(u.metadata || {}).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) merged.metadata[k] = v;
+          });
+          return merged;
+        }));
       }
     };
     const interval = setInterval(tick, 10000);
@@ -247,6 +279,10 @@ export const TranscriptionHistory = () => {
         return;
       }
       if (!res.ok) throw new Error('Download failed');
+      // The server names the file after the song; only fall back to the local
+      // name when the header is missing (older API, or a proxy that strips it).
+      const serverName = filenameFromContentDisposition(res.headers.get('content-disposition'));
+      if (serverName) filename = serverName;
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -258,6 +294,28 @@ export const TranscriptionHistory = () => {
       window.URL.revokeObjectURL(url);
     } catch {
       notify('Failed to download file');
+    }
+  };
+
+  // The printable engraving, rendered server-side from the score MusicXML.
+  const handleDownloadPdf = async (workflowId, filename) => {
+    setMenuFor(null);
+    try {
+      const result = await downloadScorePdf(config.apiBaseUrl, workflowId, getToken);
+      if (!result?.blob) {
+        notify('This transcription has no score to print');
+        return;
+      }
+      const url = window.URL.createObjectURL(result.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = result.filename || filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      notify('Failed to render the score PDF');
     }
   };
 
@@ -427,10 +485,11 @@ export const TranscriptionHistory = () => {
         </button>
         <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />
         <div style={{ fontSize: 11, letterSpacing: '.5px', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '4px 10px 6px' }}>Download</div>
-        <div style={{ display: 'flex', gap: 6, padding: '0 6px 4px' }}>
-          <button className="gs-dl" style={dl} disabled={!avail.score.available && !avail.transcription.available} onClick={() => handleDownload(id, (avail.score.available ? avail.score.fileKey : avail.transcription.fileKey), `${id}.musicxml`)}>MusicXML</button>
-          <button className="gs-dl" style={dl} disabled={!avail.midi.available} onClick={() => handleDownload(id, avail.midi.fileKey, `${id}.mid`)}>MIDI</button>
-          <button className="gs-dl" style={dl} disabled={!avail.instrument.available} onClick={() => handleDownload(id, avail.instrument.fileKey, `${id}.wav`)}>Stems</button>
+        <div style={{ display: 'flex', gap: 6, padding: '0 6px 4px', flexWrap: 'wrap' }}>
+          <button className="gs-dl" style={dl} disabled={!avail.score.available && !avail.transcription.available} onClick={() => handleDownloadPdf(id, downloadName(w, 'score', '.pdf'))}>PDF</button>
+          <button className="gs-dl" style={dl} disabled={!avail.score.available && !avail.transcription.available} onClick={() => handleDownload(id, (avail.score.available ? avail.score.fileKey : avail.transcription.fileKey), downloadName(w, 'score', '.musicxml'))}>MusicXML</button>
+          <button className="gs-dl" style={dl} disabled={!avail.midi.available} onClick={() => handleDownload(id, avail.midi.fileKey, downloadName(w, 'midi', '.mid'))}>MIDI</button>
+          <button className="gs-dl" style={dl} disabled={!avail.instrument.available} onClick={() => handleDownload(id, avail.instrument.fileKey, downloadName(w, 'stem', '.wav'))}>Stems</button>
         </div>
         <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />
         <button role="menuitem" style={item('#FF6B7A')} onClick={() => { setRemoveFromExplore(false); setPopFor({ id, kind: 'delete' }); }}>
@@ -518,8 +577,10 @@ export const TranscriptionHistory = () => {
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
-    // The public song page resolves library-track UUIDs, not workflow ids.
-    const href = w.library_track_id ? `/explore/${w.library_track_id}` : undefined;
+    const description = resolveDescription(w);
+    // Every transcription has an owner-only page; publishing adds the public
+    // /explore one on top, it doesn't replace this.
+    const href = `/transcription-history/${w.workflow_id}`;
     const open = menuFor === w.workflow_id;
     const pop = popFor && popFor.id === w.workflow_id ? popFor.kind : null;
     return (
@@ -534,9 +595,9 @@ export const TranscriptionHistory = () => {
         </a>
         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
           {StatusBadge(w)}
-          <a href={href} style={{ fontSize: 17, fontWeight: 500, color: 'var(--color-text)', lineHeight: '22px', textDecoration: 'none' }}>{base}</a>
-          <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            <span>{base}</span><span style={{ opacity: 0.6 }}>{ext}</span>
+          <a href={href} style={{ fontSize: 17, fontWeight: 500, color: 'var(--color-text)', lineHeight: '22px', textDecoration: 'none' }}>{base}<span style={{ color: 'var(--color-muted-foreground)' }}>{ext}</span></a>
+          <div title={description} style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {description}
           </div>
           <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', display: 'flex', alignItems: 'center', gap: 9 }}>
             {fmtDate(ds)}<span style={{ width: 1, height: 11, background: 'var(--color-border)' }} />{fmtTime(ds)}
@@ -567,8 +628,9 @@ export const TranscriptionHistory = () => {
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
-    // The public song page resolves library-track UUIDs, not workflow ids.
-    const href = w.library_track_id ? `/explore/${w.library_track_id}` : undefined;
+    const description = resolveDescription(w);
+    // Owner-only detail page; see Card above.
+    const href = `/transcription-history/${w.workflow_id}`;
     const open = menuFor === w.workflow_id;
     const pop = popFor && popFor.id === w.workflow_id ? popFor.kind : null;
     return (
@@ -576,8 +638,8 @@ export const TranscriptionHistory = () => {
         <a href={href} style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, textDecoration: 'none' }}>
           <span style={{ width: 54, height: 40, borderRadius: 7, overflow: 'hidden', flexShrink: 0, display: 'block' }}>{Thumb(w, true)}</span>
           <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{base}</span>
-            <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{base}<span style={{ opacity: 0.6 }}>{ext}</span></span>
+            <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{base}<span style={{ opacity: 0.6 }}>{ext}</span></span>
+            <span title={description} style={{ fontSize: 12, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{description}</span>
           </span>
         </a>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>{InstrBadges(w)}</div>

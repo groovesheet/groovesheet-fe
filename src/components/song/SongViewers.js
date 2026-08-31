@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Midi } from '@tonejs/midi';
 import OSMDViewer from '../PreviewPanel/OSMDViewer';
 import SkeletonPanel from '../ui/SkeletonPanel';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import StatusMessage from '../ui/StatusMessage';
 
 // =================================================================
@@ -21,14 +22,25 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
     () => !musicXmlText || /<pitch[\s>]|<unpitched[\s>]/.test(musicXmlText),
     [musicXmlText]
   );
+
+  // Phones render the score into a ~330px column. At the desktop zoom of 0.8
+  // OSMD fits barely a measure per system, so the page becomes a ~10,000px
+  // scroll and the title/composer credits collide on top of each other.
+  // Scale the zoom (and claw back the side padding) with the viewport.
+  const isNarrow = useMediaQuery('(max-width: 768px)');
+  const isTiny = useMediaQuery('(max-width: 480px)');
+  const sheetZoom = isTiny ? 0.5 : isNarrow ? 0.62 : 0.8;
+  const sheetPad = isTiny ? '8px 6px 24px' : isNarrow ? '12px 10px 32px' : '24px 24px 48px';
+
   return (
     <div
       className="gs-sheet-scroll"
       style={{
-        height: 'min(78vh, 980px)',
+        height: isNarrow ? 'min(72dvh, 980px)' : 'min(78vh, 980px)',
         overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
         background: 'rgba(0,0,0,0.18)',
-        padding: '24px 24px 48px',
+        padding: sheetPad,
       }}
     >
       {loading && (
@@ -55,11 +67,11 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
             ref={osmdRef}
             xmlString={musicXmlText}
             theme="light"
-            zoom={0.8}
+            zoom={sheetZoom}
             drawTitle
-            drawComposer
-            drawLyricist
-            drawCredits
+            drawComposer={!isNarrow}
+            drawLyricist={!isNarrow}
+            drawCredits={!isNarrow}
             drawMetronomeMarks={false}
             onPlaybackStateChange={onPlaybackStateChange}
             containerStyle={{ minHeight: 600, padding: 0 }}

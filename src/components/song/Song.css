@@ -20,6 +20,7 @@
   --color-warn: #f59e0b;
 
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   background: var(--color-background);
   color: var(--color-text);
@@ -588,6 +589,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
 }
 .gs-song-page .gs-rsidebar::-webkit-scrollbar {
@@ -902,4 +904,133 @@
 .gs-song-page .gs-bv-section {
   margin-top: 36px;
   padding: 0 24px;
+}
+
+/* =========================================================
+   Mobile / touch refinements
+   ---------------------------------------------------------
+   Measured on a 375x812 viewport before this block: the site header (77px),
+   playbar (197px) and viewer toolbar (90px) stacked to 364px — 45% of the
+   screen — before a single note was visible. These rules compact the
+   transport, make the seek bar touchable, and turn wrapping strips into
+   single-row scrollers.
+   ========================================================= */
+@media (max-width: 768px) {
+  /* --- Transport ------------------------------------------------------- */
+  .gs-song-page .gs-playbar-inner {
+    gap: 8px 10px;
+    /* 18px of top padding gives the seek bar's enlarged touch area somewhere
+       to live without covering the transport buttons below it. */
+    padding: 18px 12px 8px;
+  }
+
+  /* Dividers and the flex spacer only earn their keep on a wide single-row
+     bar; on mobile they force extra wraps. */
+  .gs-song-page .gs-playbar-inner > .gs-pb-divider,
+  .gs-song-page .gs-pb-divider,
+  .gs-song-page .gs-pb-spacer {
+    display: none;
+  }
+
+  /* "Tempo" / "Transpose" captions cost a whole row each. The slider and the
+     stepper are self-evident, and the live value is still shown. */
+  .gs-song-page .gs-pb-knob-label {
+    display: none;
+  }
+
+  .gs-song-page .gs-pb-group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .gs-song-page .gs-pb-time {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Seek bar -------------------------------------------------------- */
+  /* The 6px rail is far below the ~44px touch minimum. Keep the rail thin
+     visually but pad the hit area out with a transparent ::before. */
+  .gs-song-page .gs-playbar-scrub {
+    height: 10px;
+    touch-action: none;
+  }
+
+  /* Grow the hit area to ~34px without thickening the rail. The downward
+     extension is absorbed by .gs-playbar-inner's top padding, so it never
+     sits over the transport buttons. */
+  .gs-song-page .gs-playbar-scrub::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    bottom: -14px;
+  }
+
+  .gs-song-page .gs-playbar-scrub-head {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* --- Toolbar + tab strip --------------------------------------------- */
+  .gs-song-page .gs-viewer-toolbar {
+    gap: 8px;
+    padding: 10px 12px 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gs-song-page .gs-viewer-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gs-song-page .gs-seg {
+    flex: 0 0 auto;
+  }
+
+  .gs-song-page .gs-seg button {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* Keyboard-shortcut chips are dead weight without a keyboard. */
+  .gs-song-page .gs-seg button .gs-seg-kbd {
+    display: none;
+  }
+
+  /* --- Viewer surface --------------------------------------------------- */
+  .gs-song-page .gs-viewer {
+    margin: 12px 12px 0;
+  }
+
+  .gs-song-page .gs-viewer-body {
+    padding: 12px;
+  }
+
+  .gs-song-page .gs-bv-section {
+    padding: 0 12px;
+    margin-top: 24px;
+  }
+
+  /* --- Drawer ----------------------------------------------------------- */
+  /* Respect the notch / home indicator on iOS. */
+  .gs-song-page .gs-rs-drawer {
+    width: min(420px, 100vw);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .gs-song-page .gs-rs-toggle {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  /* The right sidebar's 100vh fights mobile browser chrome; dvh tracks the
+     visible viewport as the URL bar collapses. */
+  .gs-song-page .gs-rsidebar {
+    height: 100dvh;
+  }
 }

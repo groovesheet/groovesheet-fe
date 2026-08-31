@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
-import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
+import { authenticatedFetch, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '../utils/api';
 import { trackWorkflowStarted } from '../utils/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '../utils/previewApi';
 import { scrollToPricing } from '../utils/scrollToPricing';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
+import { useIsTouch } from '../hooks/useMediaQuery';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
@@ -113,6 +114,7 @@ function Hero({ onLoginRequired }) {
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
   const { t } = useTranslation();
+  const isTouch = useIsTouch();
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
@@ -595,6 +597,7 @@ function Hero({ onLoginRequired }) {
               setDownloadFilename(filename);
               setStatus('completed');
               setProgress(100); // Only set to 100% after download completes
+              downloadScorePdfFile(id);
               persist({ jobId: id, status: 'completed', progress: 100, instrument: selectedInstrument, fileName: file?.name });
               // Pre-fetch secondary files (stem, MIDI) in background for instant downloads
               prefetchSecondaryFiles(id);
@@ -719,7 +722,7 @@ function Hero({ onLoginRequired }) {
     const cd = res.headers.get('content-disposition') || '';
     const extension = ['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument) ? '.musicxml' : '.wav';
     const suffix = selectedInstrument === 'drums' ? '_transcription' : selectedInstrument === 'bass' ? '_bass_transcription' : selectedInstrument === 'piano' ? '_piano_transcription' : `_${selectedInstrument}`;
-    let filename = file?.name ? file.name.replace(/\.[^.]+$/, `${suffix}${extension}`) : `${selectedInstrument}_${id}${extension}`;
+    let filename = file?.name ? file.name.replace(/\.[^.]+$/, `${suffix}${extension}`) : `${selectedInstrument}_groovesheet${extension}`;
     const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
     if (match) {
       filename = decodeURIComponent(match[1] || match[2]);
@@ -739,6 +742,28 @@ function Hero({ onLoginRequired }) {
     
     // Return the data to set state in parent
     return { objectUrl, filename };
+  };
+
+  // MusicXML lands in the browser's downloads on completion, but it needs an
+  // editor to look at. Send the engraved, page-by-page PDF with it — the copy
+  // you can actually print. Best-effort: a failed engraving must not turn a
+  // finished transcription into an error.
+  const downloadScorePdfFile = async (id) => {
+    if (!SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
+    try {
+      const result = await downloadScorePdf(API_BASE_URL, id, getToken);
+      if (!result?.blob) return;
+      const objectUrl = URL.createObjectURL(result.blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = result.filename || `${selectedInstrument}_score_groovesheet.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.warn('Score PDF download failed:', err);
+    }
   };
 
   // Reset upload state
@@ -790,7 +815,7 @@ function Hero({ onLoginRequired }) {
       }
       const fallback = file?.name
         ? file.name.replace(/\.[^.]+$/, `_${labelForFilename}${defaultExtension}`)
-        : `${labelForFilename}_${jobId}${defaultExtension}`;
+        : `${labelForFilename}_groovesheet${defaultExtension}`;
       const filename = result.filename || fallback;
       const objectUrl = URL.createObjectURL(result.blob);
       const a = document.createElement('a');
@@ -941,6 +966,15 @@ function Hero({ onLoginRequired }) {
   };
 
   // Render functions for each state
+  // On touch there is nothing to drag, so the whole drop zone becomes the tap
+  // target and the copy stops telling people to do something they can't.
+  // Clicks landing on the inner button are left alone — it opens the picker
+  // itself, and letting them bubble here would fire it twice.
+  const handleDropZoneTap = (e) => {
+    if (e.target.closest('.browse-files-btn')) return;
+    handleBrowseClick();
+  };
+
   const renderIdleState = () => (
     <>
       <div className="instrument-tabs">
@@ -966,11 +1000,14 @@ function Hero({ onLoginRequired }) {
         })}
       </div>
 
-      <div 
+      <div
         className="upload-drop-zone"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={isTouch ? handleDropZoneTap : undefined}
+        role={isTouch ? 'button' : undefined}
+        tabIndex={isTouch ? 0 : undefined}
       >
         <div className="upload-content-wrapper">
           <div className="upload-visual-group">
@@ -982,7 +1019,9 @@ function Hero({ onLoginRequired }) {
             </div>
             
             <div className="upload-text-group">
-              <p className="upload-main-text">{t('hero.dragDrop')}</p>
+              <p className="upload-main-text">
+                {isTouch ? t('hero.tapToUpload') : t('hero.dragDrop')}
+              </p>
               <p className="upload-sub-text">{t('hero.fileTypes')}</p>
             </div>
           </div>
@@ -991,7 +1030,7 @@ function Hero({ onLoginRequired }) {
             className="browse-files-btn"
             onClick={handleBrowseClick}
           >
-            {t('hero.browseFiles')}
+            {isTouch ? t('hero.chooseFile') : t('hero.browseFiles')}
           </button>
         </div>
       </div>
@@ -1133,12 +1172,13 @@ function Hero({ onLoginRequired }) {
               onDownloadTranscription={handleManualDownload}
               onDownloadStem={handleDownloadStem}
               onDownloadMidi={handleDownloadMidi}
+              onDownloadPdf={() => downloadScorePdfFile(jobId)}
               onReset={resetUpload}
               downloadError={downloadError}
               isSignedIn={isSignedIn}
               onUpgradeToFull={handleUpgradeToFull}
               onSignUpToUnlock={handleSignUpToUnlock}
-              trackTitle={resultMetadata.title}
+              title={resultMetadata.title}
             />
           )}
 
