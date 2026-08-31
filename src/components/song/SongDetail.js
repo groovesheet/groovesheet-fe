@@ -1160,6 +1160,7 @@ function SongDetail({ onLoginClick }) {
                   onDownload={handleZipDownload}
                   onLoginClick={onLoginClick}
                   downloading={zipDownloading}
+                  scoreAsset={xmlAsset}
                 />
               </div>
             </div>
@@ -1185,6 +1186,7 @@ function SongDetail({ onLoginClick }) {
                     onDownload={handleZipDownload}
                     onLoginClick={onLoginClick}
                     downloading={zipDownloading}
+                    scoreAsset={xmlAsset}
                   />
                 </div>
               </>

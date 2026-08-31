@@ -147,7 +147,7 @@ function RowThumb({ track }) {
   );
 }
 
-function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn, onDownload, onLoginClick, downloading, instrumentOptions = [], instrument, onInstrument }) {
+function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn, onDownload, onLoginClick, downloading, instrumentOptions = [], instrument, onInstrument, scoreAsset }) {
   const id = track.id;
   const durationSec = track.thumb_data?.duration_sec || track.duration_sec || 0;
 
@@ -155,7 +155,15 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
   const assetTypes = new Set((track.assets || []).map((a) => a.asset_type));
   const hasXml = formats.has('musicxml') || assetTypes.has('musicxml');
   const hasMidi = formats.has('mid') || assetTypes.has('midi');
+  // The score the viewer is looking at, engraved on demand. Falls back to any
+  // MusicXML on the track so the mobile drawer — which renders before a part
+  // has been chosen — still offers one.
+  const pdfAsset =
+    scoreAsset || (track.assets || []).find((a) => a.asset_type === 'musicxml' && a.id) || null;
+  const pdfUrl = pdfAsset ? `/api/library/assets/${pdfAsset.id}/pdf` : null;
+
   const formatList = [];
+  if (hasXml) formatList.push('PDF');
   if (hasXml) formatList.push('MusicXML');
   if (hasMidi) formatList.push('MIDI');
   if (formats.has('flac')) formatList.push('FLAC');
@@ -327,10 +335,20 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
 
         {/* Quad of secondary actions */}
         <div className="gs-quad">
-          <button type="button">
-            <Printer size={14} />
-            Print
-          </button>
+          {/* Was a <button> with no handler, while the page advertised the
+              score as "downloadable as PDF". Opens in a tab so it can be read
+              and saved; the endpoint engraves the MusicXML and caches it. */}
+          {pdfUrl ? (
+            <a href={pdfUrl} target="_blank" rel="noreferrer" title="Engraved PDF score">
+              <Printer size={14} />
+              PDF
+            </a>
+          ) : (
+            <button type="button" disabled title="No score to engrave for this track">
+              <Printer size={14} />
+              PDF
+            </button>
+          )}
           <button type="button">
             <BookmarkSimple size={14} />
             Save
