@@ -14,6 +14,7 @@ import TranscriptionResultView from './TranscriptionResult/TranscriptionResultVi
 import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
+import { scrollToPricing } from '../utils/scrollToPricing';
 
 const SUPPORTED_MIME_TYPES = [
   'audio/mp3',
@@ -122,6 +123,7 @@ function Hero({ onLoginRequired }) {
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
+  const [resultMetadata, setResultMetadata] = useState({});
   const [selectedInstrument, setSelectedInstrument] = useState('piano');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -466,7 +468,9 @@ function Hero({ onLoginRequired }) {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           console.error('Upload failed:', errorData);
-          throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+          const uploadErr = new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+          uploadErr.status = response.status;
+          throw uploadErr;
         }
 
         data = await response.json();
@@ -496,7 +500,14 @@ function Hero({ onLoginRequired }) {
       }, 1000);
     } catch (err) {
       console.error('Upload error:', err);
-      
+
+      // Out of minutes: the plans are what they need, not an error banner.
+      if (err.status === 402) {
+        setStatus(null);
+        scrollToPricing();
+        return;
+      }
+
       // Check if it's a CORS error
       if (err.message.includes('fetch') || err.name === 'TypeError') {
         setError('Unable to connect to server. This may be a CORS issue. Please check the console for details.');
@@ -555,6 +566,7 @@ function Hero({ onLoginRequired }) {
           }
           
           if (newStatus === 'completed' || newStatus === 'succeeded' || newStatus === 'success') {
+            setResultMetadata(data.outputs?.metadata || data.metadata || {});
             // Stop simulation but DON'T set to 100% yet - wait for download
             if (progressIntervalRef.current) {
               clearInterval(progressIntervalRef.current);
@@ -735,6 +747,7 @@ function Hero({ onLoginRequired }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    setResultMetadata({});
     clearPersistence();
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -831,6 +844,11 @@ function Hero({ onLoginRequired }) {
         setTimeout(() => pollStatus(result.workflow_id), 1000);
       }
     } catch (err) {
+      // Out of minutes: the plans are what they need, not an error banner.
+      if (err.status === 402) {
+        scrollToPricing();
+        return;
+      }
       setError(err.message || 'Failed to start full song processing.');
     }
   };
@@ -1110,6 +1128,7 @@ function Hero({ onLoginRequired }) {
               isSignedIn={isSignedIn}
               onUpgradeToFull={handleUpgradeToFull}
               onSignUpToUnlock={handleSignUpToUnlock}
+              trackTitle={resultMetadata.title}
             />
           )}
 

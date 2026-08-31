@@ -76,7 +76,7 @@ export const AccountBilling = () => {
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState(null);
 
-  const [catalog, setCatalog] = useState({ plans: [], topups: [], provider: 'stripe' });
+  const [catalog, setCatalog] = useState({ plans: [], topups: [], provider: 'stripe', currency: 'usd' });
   const [payment, setPayment] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
@@ -186,10 +186,20 @@ export const AccountBilling = () => {
     }
   };
 
+  // Currency the backend quoted this visitor in ("usd", or "cny" for
+  // mainland-China traffic). The fallback cards below are USD-only, so they
+  // stay in dollars if the catalog never loads.
+  const currency = catalog.currency || 'usd';
+  const money = (value) => `${currency === 'cny' ? '¥' : '$'}${value}`;
+  // Prefer the catalog's currency-specific fields, falling back to the USD
+  // ones so a cached response from an older backend still renders.
+  const planMonthly = (p) => p?.price_monthly ?? p?.price_monthly_usd;
+  const planAnnual = (p) => p?.price_annual ?? p?.price_annual_usd;
+
   const startCheckout = async (planCode, label) => {
     notify(`Opening checkout — ${label}`);
     try {
-      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut);
+      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut, currency);
       await startProviderCheckout(data);
     } catch (err) {
       if (!handleAuthError(err)) notify("Couldn't start checkout. Please try again.");
@@ -215,8 +225,14 @@ export const AccountBilling = () => {
         : 0;
 
   // allowance: minutes_per_month for the matching plan, else infer.
+  // The free plan grants 0 minutes per cycle (evaluation happens through the
+  // 10-second preview), so there is no monthly allowance to measure against —
+  // any balance a free user holds came from a top-up pack. In that case the
+  // ring reflects "of what you have" and the cycle line is hidden entirely.
   const currentPlan = catalog.plans.find((p) => tierFamily(p.id) === family);
-  const allowance = currentPlan?.minutes_per_month || (isFree ? 30 : Math.max(balanceMinutes, 1));
+  const monthlyAllowance = currentPlan?.minutes_per_month;
+  const hasMonthlyAllowance = typeof monthlyAllowance === 'number' && monthlyAllowance > 0;
+  const allowance = hasMonthlyAllowance ? monthlyAllowance : Math.max(balanceMinutes, 1);
   const pct = Math.max(0, Math.min(1, allowance ? balanceMinutes / allowance : 0));
   const ringDeg = `${(pct * 360).toFixed(0)}deg`;
   const ringPctLabel = `${Math.round(pct * 100)}%`;
@@ -263,9 +279,10 @@ export const AccountBilling = () => {
   const planCards = ['lite', 'pro'].map((fam) => {
     const fb = PLAN_FALLBACK[fam];
     const live = catalog.plans.find((p) => tierFamily(p.id) === fam);
-    const monthly = live?.price_monthly_usd ?? fb.monthly;
-    const annualP = live?.price_annual_usd ? Math.round((live.price_annual_usd / 12) * 100) / 100 : fb.annual;
-    const annualBilled = live?.price_annual_usd ?? fb.annualBilled;
+    const monthly = planMonthly(live) ?? fb.monthly;
+    const liveAnnual = planAnnual(live);
+    const annualP = liveAnnual ? Math.round((liveAnnual / 12) * 100) / 100 : fb.annual;
+    const annualBilled = liveAnnual ?? fb.annualBilled;
     const price = annual ? annualP : monthly;
     const isCurrent = isPaid && family === fam;
     const featured = fam === 'lite';
@@ -281,9 +298,9 @@ export const AccountBilling = () => {
       name: fb.name,
       badge: fb.badge,
       subtitle: fb.subtitle,
-      priceText: `$${price}`,
+      priceText: money(price),
       period: annual ? '/mo, billed yearly' : '/month',
-      billedNote: annual ? `Billed $${annualBilled} per year` : '',
+      billedNote: annual ? `Billed ${money(annualBilled)} per year` : '',
       features,
       isCurrent,
       showTag: isCurrent || featured,
@@ -311,7 +328,7 @@ export const AccountBilling = () => {
     name: t.display_name,
     minutes: t.minutes,
     priority: t.priority_queue,
-    priceText: `$${t.price_usd}`,
+    priceText: money(t.price ?? t.price_usd),
     onBuy: () => startCheckout(t.checkout_id || t.id, `+${t.minutes} min top-up`),
   }));
 
@@ -468,7 +485,9 @@ export const AccountBilling = () => {
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor' }} />
                       {isActive ? 'Active' : 'Payment issue'}
                     </span>
-                    {subscription.next_recharge_at && (
+                    {/* Free plan has no recharge cycle, and legacy rows may still
+                        carry a stale next_recharge_at that will never fire. */}
+                    {subscription.next_recharge_at && (hasMonthlyAllowance || isPaid) && (
                       <span style={muted}>{isFree ? 'Resets' : 'Renews'} {formatDate(subscription.next_recharge_at)}</span>
                     )}
                   </div>
@@ -483,14 +502,16 @@ export const AccountBilling = () => {
                       </div>
                       <div style={{ ...muted, marginTop: 7 }}>minutes left</div>
                     </div>
-                    <div role="img" aria-label={`${ringPctLabel} of monthly minutes remaining`} style={{ position: 'relative', width: 92, height: 92, borderRadius: '50%', flex: '0 0 auto', display: 'grid', placeItems: 'center', background: `conic-gradient(var(--color-primary) ${ringDeg}, var(--color-border) 0)` }}>
+                    <div role="img" aria-label={hasMonthlyAllowance ? `${ringPctLabel} of monthly minutes remaining` : `${ringPctLabel} of your available minutes remaining`} style={{ position: 'relative', width: 92, height: 92, borderRadius: '50%', flex: '0 0 auto', display: 'grid', placeItems: 'center', background: `conic-gradient(var(--color-primary) ${ringDeg}, var(--color-border) 0)` }}>
                       <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'var(--color-panel2)', display: 'grid', placeItems: 'center' }}>
                         <span style={{ fontSize: 16, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{ringPctLabel}</span>
                       </div>
                     </div>
                   </div>
                   <span style={{ ...muted, fontSize: 14, marginTop: 'auto' }}>
-                    {fmtBalance(Math.round(balanceMinutes * 10) / 10)} of {allowance} min this cycle
+                    {hasMonthlyAllowance
+                      ? `${fmtBalance(Math.round(balanceMinutes * 10) / 10)} of ${monthlyAllowance} min this cycle`
+                      : 'No monthly minutes on this plan — top up or upgrade to process full songs'}
                   </span>
                 </div>
 

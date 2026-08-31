@@ -2,6 +2,24 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../auth';
 
+// Set by pages that must be returned to after the OAuth round trip (currently
+// the campaign signup page, which shows the "credit granted" state on return).
+const POST_AUTH_REDIRECT_KEY = 'gs_post_auth_redirect';
+
+// Only ever honour a same-origin, absolute path we wrote ourselves. Anything
+// else — a full URL, a protocol-relative "//evil.com" — is discarded, so a
+// tampered localStorage value can't turn sign-in into an open redirect.
+function takeReturnPath() {
+  try {
+    const stored = localStorage.getItem(POST_AUTH_REDIRECT_KEY);
+    localStorage.removeItem(POST_AUTH_REDIRECT_KEY);
+    if (!stored || !stored.startsWith('/') || stored.startsWith('//')) return '/';
+    return stored;
+  } catch (_) {
+    return '/';
+  }
+}
+
 export default function SSOCallback() {
   const navigate = useNavigate();
 
@@ -26,7 +44,7 @@ export default function SSOCallback() {
       } catch (error) {
         console.error('Error completing SSO callback:', error);
       } finally {
-        if (mounted) navigate('/', { replace: true });
+        if (mounted) navigate(takeReturnPath(), { replace: true });
       }
     };
 

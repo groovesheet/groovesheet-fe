@@ -30,6 +30,21 @@
   display: block;
 }
 
+.sc-thumb-sheet {
+  height: 480px;
+  padding: 12px;
+  background: #f3f1f5;
+}
+
+.sc-score-preview {
+  object-fit: contain;
+  object-position: top center;
+  background: #fff;
+  border: 1px solid #d6d2d8;
+  border-radius: 7px;
+  box-sizing: border-box;
+}
+
 .sc-overlay {
   position: absolute;
   inset: 0;

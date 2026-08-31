@@ -13,7 +13,7 @@ import {
 } from './previewUtils';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
-import { createSheetSecMapper, parseSyncMap } from '../../player/syncMap';
+import { createSheetSecMapper, parseSyncMap, musicXmlHasVariableTempo } from '../../player/syncMap';
 import StatusMessage from '../ui/StatusMessage';
 import SkeletonPanel from '../ui/SkeletonPanel';
 import './PreviewPanel.css';
@@ -73,6 +73,7 @@ export default function PreviewPanel({
   // are known (then it's the sync map composed with the sheet's timing).
   const mapperRef = useRef(createSheetSecMapper({}));
   const syncMapRef = useRef(preloadedSyncMap || null);
+  const scoreHasOwnTimingRef = useRef(musicXmlHasVariableTempo(preloadedMusicXml));
   const sheetDurRef = useRef(0);
   const midiDurRef = useRef(0);
   const rateRef = useRef(1);
@@ -84,16 +85,6 @@ export default function PreviewPanel({
   // expires), the engine's readTime() returns null so the transport
   // self-advances instead of snapping back to the stale value.
   const osmdExpectRef = useRef(null); // { sheetSec, until } | null
-  // OSMD's LinearTimingSource.getCurrentTimeInMs() is "wall ms since last
-  // reset" — it excludes the seek offset (and resets on speed changes too).
-  // We track the natural-sheet-seconds position at the last reset ourselves:
-  //   effectiveSheetSec = osmdBase + reported * rate
-  const osmdBaseRef = useRef(0);
-  // Effective OSMD position in natural sheet seconds (see osmdBaseRef).
-  const osmdEffectiveSheetSec = useCallback(
-    () => osmdBaseRef.current + osmdSyncRef.current.time * (rateRef.current || 1),
-    []
-  );
 
   const isDemoMode = Boolean(preloadedMusicXml || preloadedMidiBuffer);
   const isTranscriptionInstrument = isDemoMode || TRANSCRIPTION_INSTRUMENTS.includes(selectedInstrument);
@@ -105,6 +96,7 @@ export default function PreviewPanel({
     mapperRef.current = createSheetSecMapper({
       pairs: syncMapRef.current?.pairs,
       sheetDurationSec: sheetDurRef.current,
+      preferIdentity: scoreHasOwnTimingRef.current,
     });
   }, []);
 
@@ -146,6 +138,7 @@ export default function PreviewPanel({
 
   useEffect(() => {
     if (isDemoMode) {
+      scoreHasOwnTimingRef.current = musicXmlHasVariableTempo(preloadedMusicXml);
       setMusicXmlText(preloadedMusicXml || null);
       setXmlLoading(false);
       return undefined;
@@ -168,7 +161,11 @@ export default function PreviewPanel({
         } else {
           text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken);
         }
-        if (!cancelled) setMusicXmlText(text);
+        if (!cancelled) {
+          scoreHasOwnTimingRef.current = musicXmlHasVariableTempo(text);
+          rebuildMapper();
+          setMusicXmlText(text);
+        }
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
       } finally {
@@ -176,7 +173,7 @@ export default function PreviewPanel({
       }
     })();
     return () => { cancelled = true; };
-  }, [workflowId, isTranscriptionInstrument, prefetchedFiles, getToken, isDemoMode, preloadedMusicXml, musicXmlKey]);
+  }, [workflowId, isTranscriptionInstrument, prefetchedFiles, getToken, isDemoMode, preloadedMusicXml, musicXmlKey, rebuildMapper]);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -248,12 +245,7 @@ export default function PreviewPanel({
         const osmd = osmdRef.current;
         if (!osmd) return;
         osmdExpectRef.current = { sheetSec, until: nowMs() + 2000 };
-        // seekMs targets OSMD's CURRENT (possibly sped) timeline: after
-        // setSpeed(r), wall-ms-to-position is compressed by r.
-        const r = rateRef.current || 1;
-        try { await osmd.seekMs?.((sheetSec / r) * 1000); } catch (e) {}
-        // The seek reset OSMD's elapsed counter to 0 at this position.
-        osmdBaseRef.current = sheetSec;
+        try { await osmd.seekMs?.(sheetSec * 1000); } catch (e) {}
         // Re-check at execution time: the user may have paused or switched
         // tabs while this command sat in the queue.
         const t = transportRef.current;
@@ -291,7 +283,7 @@ export default function PreviewPanel({
       readTime: () => {
         const s = osmdSyncRef.current;
         if (!s.ready) return null;
-        const eff = osmdEffectiveSheetSec();
+        const eff = s.time;
         const expect = osmdExpectRef.current;
         if (expect) {
           const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
@@ -324,7 +316,7 @@ export default function PreviewPanel({
       t.detachEngine('osmd');
       t.detachEngine('midi');
     };
-  }, [postToIframe, commandOsmd, osmdEffectiveSheetSec]);
+  }, [postToIframe, commandOsmd]);
 
   // Active engine follows the visible tab. setActiveEngine pauses the old
   // engine, seeks the new one to the shared position, and resumes if playing.
@@ -334,7 +326,6 @@ export default function PreviewPanel({
       // The sheet tab remounts OSMD; mark it not-ready until its first tick
       // and re-sync (seek + optional play) once it reports in.
       osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
-      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
       pendingOsmdSyncRef.current = true;
       t.setActiveEngine('osmd');
     } else {
@@ -397,11 +388,9 @@ export default function PreviewPanel({
       duration: s.duration,
       ready: !pendingOsmdSyncRef.current,
     };
-    // Capture the NATURAL sheet duration once. OSMD's reported duration is in
-    // the current (possibly sped) timeline, so naturalize via rate; speed
-    // changes after capture must not disturb the mapper.
+    // OSMDViewer reports an absolute natural-score position and duration.
     if (s.duration > 0 && !sheetDurRef.current) {
-      sheetDurRef.current = s.duration * (rateRef.current || 1);
+      sheetDurRef.current = s.duration;
       rebuildMapper();
       // No MIDI duration yet (iframe still loading)? Use the sheet's.
       if (!midiDurRef.current) {
@@ -420,12 +409,12 @@ export default function PreviewPanel({
       const naturalDur = sheetDurRef.current;
       if (
         st.isPlaying && !s.isPlaying && naturalDur > 0 &&
-        osmdEffectiveSheetSec() >= naturalDur - 0.05 && st.positionSec > 0.5
+        s.currentTime >= naturalDur - 0.05 && st.positionSec > 0.5
       ) {
         t.pause();
       }
     }
-  }, [rebuildMapper, commandOsmd, osmdEffectiveSheetSec]);
+  }, [rebuildMapper, commandOsmd]);
 
   // --- UI handlers ----------------------------------------------------------
   const handleTogglePlay = useCallback(() => {
@@ -449,19 +438,11 @@ export default function PreviewPanel({
   const handleChangeSpeed = useCallback((newSpeed) => {
     setSpeed(newSpeed);
     const osmd = osmdRef.current;
-    // OSMD's setSpeed re-anchors its timing source and zeroes the elapsed
-    // counter: fold the elapsed time (at the OLD rate) into the base first,
-    // and gate readTime briefly while OSMD applies the change.
-    if (osmd && osmdSyncRef.current.ready) {
-      const eff = osmdEffectiveSheetSec();
-      osmdBaseRef.current = eff;
-      osmdExpectRef.current = { sheetSec: eff, until: nowMs() + 1000 };
-    }
     rateRef.current = newSpeed;
     transportRef.current.setRate(newSpeed);
     if (osmd?.setSpeed) { try { osmd.setSpeed(newSpeed); } catch (e) {} }
     postToIframe({ type: 'speed', factor: newSpeed });
-  }, [postToIframe, osmdEffectiveSheetSec]);
+  }, [postToIframe]);
 
   const handleToggleTheme = useCallback(() => {
     setTheme((t) => (t === 'light' ? 'dark' : 'light'));

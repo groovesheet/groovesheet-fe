@@ -8,6 +8,7 @@ import {
   upgradeToFull,
   setPendingPreviewId,
 } from '../utils/previewApi';
+import { scrollToPricing } from '../utils/scrollToPricing';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
@@ -493,6 +494,11 @@ function StemSplitter({ onLoginClick }) {
         setTimeout(() => pollStatus(result.workflow_id), 1000);
       }
     } catch (err) {
+      // Out of minutes: the plans are what they need, not an error banner.
+      if (err.status === 402) {
+        scrollToPricing();
+        return;
+      }
       setError(err.message || 'Failed to start full song processing.');
     }
   };
@@ -644,7 +650,7 @@ function StemSplitter({ onLoginClick }) {
               style={{ marginTop: '8px', backgroundColor: 'var(--color-accent, #6366f1)' }}
               onClick={handleSignUpToUnlock}
             >
-              Sign up — 10 free minutes will unlock the full song
+              Sign up to process the full song
             </button>
           )}
           {isPreviewResult && isSignedIn && (

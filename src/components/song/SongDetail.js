@@ -21,12 +21,12 @@ import InstrumentDropdown from './InstrumentDropdown';
 import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
 import { useAuth, useUser } from '../../auth';
 import usePageMeta from '../../hooks/usePageMeta';
-import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
 import { createMidiEngine } from '../../player/midiEngine';
-import { parseSyncMap, createSheetSecMapper } from '../../player/syncMap';
+import { parseSyncMap, createSheetSecMapper, musicXmlHasVariableTempo } from '../../player/syncMap';
+import { applyMusicXmlMetadata } from '../../utils/musicXmlMetadata';
 import './Song.css';
 
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -85,10 +85,11 @@ function trackToCard(t) {
     id: t.id,
     title: t.title,
     artist: t.artist,
-    diff: seededDifficulty(t.id),
-    rating: seededRating(t.id),
-    views: seededViews(t.id, Number(t.popularity) || 0),
+    views: Number(t.plays) || 0,
     dur: fmtDur(t.thumb_data?.duration_sec || t.duration_sec),
+    previewUrls: t.preview_urls || {},
+    coverUrl: t.cover_url || null,
+    thumbUrl: t.thumb_url || null,
   };
 }
 
@@ -98,26 +99,6 @@ function hashId(id) {
   const s = String(id || '');
   for (let i = 0; i < s.length; i += 1) h = (h * 31 + s.charCodeAt(i)) >>> 0;
   return h;
-}
-
-function Breadcrumb({ title, artist, navigate }) {
-  return (
-    <div className="gs-breadcrumb">
-      <a
-        href="/explore"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate('/explore');
-        }}
-      >
-        Explore
-      </a>
-      <span className="sep">/</span>
-      <span style={{ color: 'var(--color-muted-foreground)' }}>{artist}</span>
-      <span className="sep">/</span>
-      <span className="current">{title}</span>
-    </div>
-  );
 }
 
 function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, instrumentUi }) {
@@ -331,10 +312,6 @@ function SongDetail({ onLoginClick }) {
       null,
     [xmlAssets, instrument]
   );
-  const sheetStemName = xmlAsset?.stem_name || null;
-  const sheetPartLabel = sheetStemName
-    ? `${STEM_META[sheetStemName]?.label || sheetStemName} part`
-    : null;
   const syncMapAsset = useMemo(
     () => (track?.assets || []).find((a) => a.asset_type === 'sync_map') || null,
     [track]
@@ -534,11 +511,9 @@ function SongDetail({ onLoginClick }) {
 
   const osmdRef = useRef(null);
   const osmdSyncRef = useRef({ time: 0, playing: false, duration: 0, ready: false });
-  // OSMD's LinearTimingSource reports elapsed ms since the last seek/reset,
-  // EXCLUDING the seek offset. Effective sheet position = base + reported.
-  const osmdBaseRef = useRef(0);
   const mapperRef = useRef(createSheetSecMapper({}));
   const syncPairsRef = useRef(null);
+  const scoreHasOwnTimingRef = useRef(false);
   const sheetDurRef = useRef(0);
   const pendingOsmdSyncRef = useRef(false);
   // After commanding OSMD to seek, its clock reports stale time for a few
@@ -549,6 +524,7 @@ function SongDetail({ onLoginClick }) {
     mapperRef.current = createSheetSecMapper({
       pairs: syncPairsRef.current,
       sheetDurationSec: sheetDurRef.current,
+      preferIdentity: scoreHasOwnTimingRef.current,
     });
   }, []);
 
@@ -559,6 +535,7 @@ function SongDetail({ onLoginClick }) {
     setXmlError(null);
     setXmlLoading(true);
     syncPairsRef.current = null;
+    scoreHasOwnTimingRef.current = false;
     sheetDurRef.current = 0;
     rebuildMapper();
     (async () => {
@@ -570,6 +547,7 @@ function SongDetail({ onLoginClick }) {
             : Promise.resolve(null),
         ]);
         if (cancelled) return;
+        scoreHasOwnTimingRef.current = musicXmlHasVariableTempo(xmlText);
         if (syncJson) {
           try {
             syncPairsRef.current = parseSyncMap(syncJson).pairs;
@@ -578,7 +556,11 @@ function SongDetail({ onLoginClick }) {
           }
           rebuildMapper();
         }
-        setMusicXmlText(xmlText);
+        setMusicXmlText(applyMusicXmlMetadata(xmlText, {
+          title: track.title,
+          artist: 'Transcribed by GrooveSheet',
+          sourceCredit: track.artist ? `Song by ${track.artist}` : undefined,
+        }));
       } catch (err) {
         if (!cancelled) setXmlError(err.message || 'Failed to load score');
       } finally {
@@ -601,8 +583,6 @@ function SongDetail({ onLoginClick }) {
         const osmd = osmdRef.current; // re-read: instance may have remounted
         if (!osmd) return;
         try { await osmd.seekMs?.(sheetSec * 1000); } catch (e) { /* ignore */ }
-        // The seek reset OSMD's elapsed counter to 0 at this position.
-        osmdBaseRef.current = sheetSec;
         // Re-check at execution time: the user may have paused or switched
         // tabs while this command sat in the queue.
         const t = transportRef.current;
@@ -643,7 +623,7 @@ function SongDetail({ onLoginClick }) {
       readTime: () => {
         const s = osmdSyncRef.current;
         if (!s.ready) return null;
-        const eff = osmdBaseRef.current + s.time;
+        const eff = s.time;
         const expect = osmdExpectRef.current;
         if (expect) {
           const settled = Math.abs(eff - expect.sheetSec) <= 0.75;
@@ -678,7 +658,7 @@ function SongDetail({ onLoginClick }) {
         const st = t.getState();
         if (
           st.isPlaying && !s.isPlaying && s.duration > 0 &&
-          osmdBaseRef.current + s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
+          s.currentTime >= s.duration - 0.05 && st.positionSec > 0.5
         ) {
           t.pause();
         }
@@ -705,9 +685,9 @@ function SongDetail({ onLoginClick }) {
     if (!track || !view) return;
     const t = transportRef.current;
     if (view === 'sheet') {
-      // SheetMusicView remounts OSMD; not-ready until its first state tick.
+      // Native OSMD playback advances its audio and cursor from one
+      // PlaybackManager. MIDI remains available only on the visualizer tab.
       osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
-      osmdBaseRef.current = 0; // fresh OSMD instance starts at 0
       pendingOsmdSyncRef.current = true;
       t.setActiveEngine('osmd');
     } else if (view === 'midi') {
@@ -806,7 +786,7 @@ function SongDetail({ onLoginClick }) {
     const trending = [...related].sort(
       (a, b) =>
         (Number(b.popularity) || 0) - (Number(a.popularity) || 0) ||
-        seededViews(b.id, 0) - seededViews(a.id, 0)
+        (Number(b.plays) || 0) - (Number(a.plays) || 0)
     );
     const newest = [...related].sort(
       (a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0)
@@ -920,8 +900,6 @@ function SongDetail({ onLoginClick }) {
 
         {!trackError && !trackLoading && track && (
           <>
-            <Breadcrumb title={track.title} artist={track.artist} navigate={navigate} />
-
             <div className="gs-song-shell">
               {/* Main column */}
               <div style={{ minWidth: 0 }}>
@@ -985,7 +963,6 @@ function SongDetail({ onLoginClick }) {
                       error={xmlError}
                       osmdRef={osmdRef}
                       onPlaybackStateChange={handleOsmdStateChange}
-                      partLabel={sheetPartLabel}
                     />
                   )}
                   {view === 'midi' && hasMidi && noteView !== 'roll' && !midiAsset && (
@@ -1044,6 +1021,7 @@ function SongDetail({ onLoginClick }) {
                     items={rail.items}
                     variant={rail.variant}
                     onCardClick={goToSong}
+                    onViewAll={() => navigate('/explore')}
                   />
                 ))}
               </div>

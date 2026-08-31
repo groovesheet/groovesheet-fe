@@ -903,26 +903,3 @@
   margin-top: 36px;
   padding: 0 24px;
 }
-
-/* Breadcrumb */
-.gs-song-page .gs-breadcrumb {
-  padding: 14px 24px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--color-muted-foreground);
-}
-.gs-song-page .gs-breadcrumb a {
-  color: var(--color-muted-foreground);
-  text-decoration: none;
-}
-.gs-song-page .gs-breadcrumb a:hover {
-  color: var(--color-text);
-}
-.gs-song-page .gs-breadcrumb .sep {
-  opacity: 0.45;
-}
-.gs-song-page .gs-breadcrumb .current {
-  color: var(--color-text);
-}

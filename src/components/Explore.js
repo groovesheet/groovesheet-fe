@@ -7,7 +7,6 @@ import ExploreHeader from './explore/ExploreHeader';
 import Section from './explore/Section';
 import { SkeletonSection, ExploreEmpty, ExploreError } from './explore/ExploreStates';
 import { STEM_INSTRUMENTS, capitalize, FORMAT_FILTER_MAP, lengthBucket } from './explore/constants';
-import { seededDifficulty, seededViews } from '../utils/cosmeticStats';
 import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
 import usePageMeta from '../hooks/usePageMeta';
@@ -27,6 +26,7 @@ function trackToCard(track) {
     year: track.year || null,
     coverUrl: track.cover_url || null,
     thumbUrl: track.thumb_url || null,
+    previewUrls: track.preview_urls || {},
     formats: track.formats || [],
     thumbData: track.thumb_data || null,
     // Capitalized for display + chip matching ('drums' → 'Drums').
@@ -55,7 +55,6 @@ export const Explore = ({ onLoginClick }) => {
   const [error, setError] = useState(null);
   const [activeChips, setActiveChips] = useState(new Set());
   const [filters, setFilters] = useState({
-    difficulty: new Set(),
     instrument: new Set(),
     format: new Set(),
     length: new Set(),
@@ -131,16 +130,12 @@ export const Explore = ({ onLoginClick }) => {
 
   // Client-side filtering: AND across groups, OR within a group. The
   // instrument chips and the Instrument checkbox group act as one OR-group on
-  // the parts derived from thumb_data.stems. Difficulty is the deterministic
-  // cosmetic placeholder until the backend exposes a real field.
+  // the parts derived from thumb_data.stems.
   const visibleTracks = useMemo(() => {
     const instrumentSet = new Set([...activeChips, ...filters.instrument]);
     const wantedFormats = [...filters.format].map((label) => FORMAT_FILTER_MAP[label]);
     return tracks.filter((t) => {
       if (instrumentSet.size > 0 && !t.parts.some((p) => instrumentSet.has(p))) return false;
-      if (filters.difficulty.size > 0 && !filters.difficulty.has(seededDifficulty(t.id))) {
-        return false;
-      }
       if (wantedFormats.length > 0 && !wantedFormats.some((f) => t.formats.includes(f))) {
         return false;
       }
@@ -154,11 +149,12 @@ export const Explore = ({ onLoginClick }) => {
     const byNewest = [...visibleTracks].sort(
       (a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0),
     );
-    // Trending: real popularity first, seeded views as a deterministic tiebreak.
+    // Trending uses only real backend engagement signals.
     const byTrending = [...visibleTracks].sort(
       (a, b) =>
         b.popularity - a.popularity ||
-        seededViews(b.id, b.popularity) - seededViews(a.id, a.popularity),
+        b.plays - a.plays ||
+        b.downloads - a.downloads,
     );
     // Sheet/MIDI sections only contain tracks that actually ship that format;
     // Section renders nothing when a list is empty.
@@ -204,13 +200,6 @@ export const Explore = ({ onLoginClick }) => {
           title: 'New this week',
           subtitle: 'Fresh transcriptions, hot off the press.',
           songs: byNewest,
-        },
-        {
-          key: 'learners',
-          title: 'For learners',
-          subtitle: 'Beginner-friendly picks across instruments.',
-          songs: byPopularity.filter((t) => seededDifficulty(t.id) === 'Beginner'),
-          accent: true,
         },
       ],
     };
@@ -284,7 +273,6 @@ export const Explore = ({ onLoginClick }) => {
                 setQuery('');
                 setActiveChips(new Set());
                 setFilters({
-                  difficulty: new Set(),
                   instrument: new Set(),
                   format: new Set(),
                   length: new Set(),

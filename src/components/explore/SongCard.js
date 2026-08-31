@@ -34,10 +34,13 @@ function resolveThumb(song, variant) {
  */
 function SongCard({ song, variant, onClick }) {
   const [coverFailed, setCoverFailed] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const Thumb = resolveThumb(song, variant);
   // Default (no-variant) cards lead with real album art; format-variant rows
   // always show their generated thumb. Broken covers fall back to the thumb.
   const showCover = !variant && song.coverUrl && !coverFailed;
+  const previewKind = variant === 'stems' ? 'stems' : variant;
+  const previewUrl = previewKind && song.previewUrls && song.previewUrls[previewKind];
   const formats = song.formats || [];
   const parts = song.parts || [];
 
@@ -45,8 +48,8 @@ function SongCard({ song, variant, onClick }) {
   const creator = song.owner && song.owner.username ? song.owner.username : null;
 
   return (
-    <article className="song-card" onClick={() => onClick && onClick(song)}>
-      <div className="sc-thumb">
+    <article className={`song-card${variant === 'sheet' ? ' song-card-sheet' : ''}`} onClick={() => onClick && onClick(song)}>
+      <div className={`sc-thumb${variant === 'sheet' ? ' sc-thumb-sheet' : ''}`}>
         {showCover ? (
           <img
             className="sc-cover"
@@ -54,6 +57,14 @@ function SongCard({ song, variant, onClick }) {
             alt={`${song.title} cover art`}
             loading="lazy"
             onError={() => setCoverFailed(true)}
+          />
+        ) : previewUrl && !previewFailed ? (
+          <img
+            className={`sc-cover${previewKind === 'sheet' ? ' sc-score-preview' : ''}`}
+            src={previewUrl}
+            alt={`${song.title} ${previewKind} preview`}
+            loading="lazy"
+            onError={() => setPreviewFailed(true)}
           />
         ) : (
           <Thumb song={song} peaks={(song.thumbData && song.thumbData.stems) || null} />

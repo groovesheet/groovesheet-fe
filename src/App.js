@@ -37,11 +37,13 @@ import { Video2Guitar, Video2Bass } from './components/video/Video2Instrument';
 import BillingSuccess from './components/BillingSuccess';
 import PricingPage from './components/PricingPage';
 import NotFound from './components/NotFound';
+import CampaignPage from './components/CampaignPage';
 import AccountBilling from './components/AccountBilling';
 import AccountProfile from './components/AccountProfile';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { useUser, useAuth } from './auth';
 import { claimPendingPreviewIfAny } from './utils/previewApi';
+import { claimPendingCampaignIfAny } from './utils/api';
 import config from './config';
 import { LocaleScope, LocaleSync } from './i18n/locale';
 
@@ -117,6 +119,37 @@ function PendingPreviewClaimRunner() {
   return null;
 }
 
+// A visitor who signed up through a /signup/:code link may land anywhere after
+// the OAuth round trip, so the campaign grant is claimed app-wide rather than
+// only on the campaign page. Idempotent server-side; a no-op with no pending code.
+function PendingCampaignClaimRunner() {
+  const { isSignedIn, isLoaded } = useUser();
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    // The campaign page claims for itself while it is mounted, so that it can
+    // render the "credit granted" state. Claiming from here too would race it
+    // and win often enough to show "already claimed" to someone who just
+    // signed up.
+    if (/^\/(zh-CN\/|zh-TW\/)?signup\//.test(window.location.pathname)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const result = await claimPendingCampaignIfAny('/api', getToken);
+        if (!cancelled && result) {
+          console.info('Campaign credit claimed:', result);
+        }
+      } catch (err) {
+        console.warn('Campaign claim failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isSignedIn, isLoaded, getToken]);
+
+  return null;
+}
+
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -154,6 +187,7 @@ function App() {
       <Route path="business-information" element={<BusinessInformation onLoginClick={openLoginModal} />} />
       <Route path="terms" element={<TermsConditions onLoginClick={openLoginModal} />} />
       <Route path="refund-policy" element={<RefundPolicy onLoginClick={openLoginModal} />} />
+      <Route path="signup/:code" element={<CampaignPage />} />
       <Route path="sso-callback" element={<SSOCallback />} />
       <Route path="preview1" element={<PreviewDemo />} />
       <Route path="video1" element={<Video1 />} />
@@ -171,6 +205,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <PendingPreviewClaimRunner />
+        <PendingCampaignClaimRunner />
         <LocaleSync />
         <Routes>
           <Route

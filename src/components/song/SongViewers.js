@@ -13,7 +13,7 @@ import StatusMessage from '../ui/StatusMessage';
 // =================================================================
 // 1) Sheet Music — OSMD
 // =================================================================
-export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange, partLabel }) {
+export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange }) {
   // A score with no sounding notes (e.g. piano transcription of a track that
   // has no piano) makes OSMD's cursor init throw inside render() — never
   // mount the viewer for one, show an explanatory empty state instead.
@@ -51,30 +51,18 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
       )}
       {!loading && !error && musicXmlText && hasNotes && (
         <div className="gs-sheet-page" style={{ maxWidth: 860, margin: '0 auto' }}>
-          {partLabel && (
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '1.4px',
-                textTransform: 'uppercase',
-                color: 'var(--color-muted-foreground)',
-                padding: '2px 0 10px',
-                textAlign: 'center',
-              }}
-            >
-              {partLabel}
-            </div>
-          )}
           <OSMDViewer
             ref={osmdRef}
             xmlString={musicXmlText}
             theme="light"
             zoom={0.8}
-            drawTitle={false}
+            drawTitle
+            drawComposer
+            drawLyricist
+            drawCredits
             drawMetronomeMarks={false}
             onPlaybackStateChange={onPlaybackStateChange}
-            containerStyle={{ minHeight: 600 }}
+            containerStyle={{ minHeight: 600, padding: 0 }}
           />
         </div>
       )}

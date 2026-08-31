@@ -8,7 +8,12 @@ import {
   LOCALE_LABELS,
   LOCALE_SHORT_LABELS,
 } from '../i18n';
-import { useLocale, stripLocaleFromPath, buildLocalePath } from '../i18n/locale';
+import {
+  useLocale,
+  stripLocaleFromPath,
+  buildLocalePath,
+  rememberLocaleChoice,
+} from '../i18n/locale';
 import './LanguageSelector.css';
 
 export const LanguageSelector = ({ compact = false }) => {
@@ -90,6 +95,10 @@ export const LanguageSelector = ({ compact = false }) => {
 
   const handleSelect = (nextLocale) => {
     closeDropdown();
+    // Record the choice even when it matches the current locale: the visitor
+    // may have been sent here by the country-based redirect, and picking a
+    // language explicitly should stop that redirect deciding for them.
+    rememberLocaleChoice(nextLocale);
     if (nextLocale === locale) return;
     if (i18n.language !== nextLocale) i18n.changeLanguage(nextLocale);
     if (typeof localStorage !== 'undefined') localStorage.setItem('i18nextLng', nextLocale);
