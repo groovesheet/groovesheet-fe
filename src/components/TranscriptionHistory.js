@@ -170,6 +170,7 @@ export const TranscriptionHistory = () => {
   const [popFor, setPopFor] = useState(null); // { id, kind: 'publish' | 'delete' }
   const [editFor, setEditFor] = useState(null); // workflow object being edited
   const [removeFromExplore, setRemoveFromExplore] = useState(false); // delete-popover option
+  const [pdfFor, setPdfFor] = useState(null); // workflow_id whose PDF is rendering
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
 
@@ -299,7 +300,8 @@ export const TranscriptionHistory = () => {
 
   // The printable engraving, rendered server-side from the score MusicXML.
   const handleDownloadPdf = async (workflowId, filename) => {
-    setMenuFor(null);
+    setPdfFor(workflowId);
+    notify('Engraving your score as a PDF…');
     try {
       const result = await downloadScorePdf(config.apiBaseUrl, workflowId, getToken);
       if (!result?.blob) {
@@ -314,8 +316,12 @@ export const TranscriptionHistory = () => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+      setMenuFor(null);
+      notify('Score PDF downloaded');
     } catch {
       notify('Failed to render the score PDF');
+    } finally {
+      setPdfFor(null);
     }
   };
 
@@ -466,7 +472,7 @@ export const TranscriptionHistory = () => {
     const id = w.workflow_id;
     const menuStyle = { position: 'absolute', right: 0, [anchorBottom ? 'bottom' : 'top']: anchorBottom ? 50 : 46, zIndex: 60, width: 230, background: 'var(--color-panel1)', borderRadius: 10, padding: 6, boxShadow: '0 14px 40px rgba(0,0,0,.45)' };
     const item = (color) => ({ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', background: 'none', border: 'none', fontFamily: 'var(--font-family-sans)', fontSize: 14, color, padding: '9px 10px', borderRadius: 6, cursor: 'pointer' });
-    const dl = { flex: 1, background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontFamily: 'var(--font-family-sans)', fontSize: 12, fontWeight: 500, padding: '7px 4px', borderRadius: 6, cursor: 'pointer' };
+    const dl = { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontFamily: 'var(--font-family-sans)', fontSize: 12, fontWeight: 500, padding: '7px 4px', borderRadius: 6, cursor: 'pointer' };
     return (
       <div role="menu" className="gs-pop" style={menuStyle} onClick={(e) => e.stopPropagation()}>
         <button role="menuitem" style={item('var(--color-primary)')} onClick={() => setPopFor({ id, kind: 'publish' })}>
@@ -485,8 +491,8 @@ export const TranscriptionHistory = () => {
         </button>
         <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />
         <div style={{ fontSize: 11, letterSpacing: '.5px', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '4px 10px 6px' }}>Download</div>
-        <div style={{ display: 'flex', gap: 6, padding: '0 6px 4px', flexWrap: 'wrap' }}>
-          <button className="gs-dl" style={dl} disabled={!avail.score.available && !avail.transcription.available} onClick={() => handleDownloadPdf(id, downloadName(w, 'score', '.pdf'))}>PDF</button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '0 6px 4px' }}>
+          <button className="gs-dl" style={dl} disabled={pdfFor === id || (!avail.score.available && !avail.transcription.available)} onClick={() => handleDownloadPdf(id, downloadName(w, 'score', '.pdf'))}>{pdfFor === id ? 'Rendering…' : 'PDF'}</button>
           <button className="gs-dl" style={dl} disabled={!avail.score.available && !avail.transcription.available} onClick={() => handleDownload(id, (avail.score.available ? avail.score.fileKey : avail.transcription.fileKey), downloadName(w, 'score', '.musicxml'))}>MusicXML</button>
           <button className="gs-dl" style={dl} disabled={!avail.midi.available} onClick={() => handleDownload(id, avail.midi.fileKey, downloadName(w, 'midi', '.mid'))}>MIDI</button>
           <button className="gs-dl" style={dl} disabled={!avail.instrument.available} onClick={() => handleDownload(id, avail.instrument.fileKey, downloadName(w, 'stem', '.wav'))}>Stems</button>
