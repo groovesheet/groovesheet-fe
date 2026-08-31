@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { trackPurchase } from '../utils/analytics';
 
 /**
  * Landing page Stripe redirects to after a successful Checkout Session.
@@ -14,6 +15,25 @@ function BillingSuccess() {
   const navigate = useNavigate();
   const sessionId = params.get('session_id');
   const [secondsLeft, setSecondsLeft] = useState(6);
+
+  // GA4 purchase. The webhook remains the authority for the credit grant and
+  // the real amount; this is the client-side funnel marker only, keyed on the
+  // session id so a refresh of this page does not double-count.
+  useEffect(() => {
+    if (!sessionId) return;
+    try {
+      const key = `gs_purchase_${sessionId}`;
+      if (window.localStorage.getItem(key)) return;
+      window.localStorage.setItem(key, '1');
+    } catch (e) {
+      /* storage unavailable: still report once for this page load */
+    }
+    trackPurchase({
+      transaction_id: sessionId,
+      tier: params.get('plan') || undefined,
+      currency: params.get('currency') || undefined,
+    });
+  }, [sessionId, params]);
 
   useEffect(() => {
     if (secondsLeft <= 0) {

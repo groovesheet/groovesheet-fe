@@ -135,6 +135,11 @@ export async function uploadFileAuthenticated(
     throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
   }
 
+  // NOTE: no workflow_started event here. Nothing in the app calls this
+  // helper - Hero, StemSplitter and MidiConverter each POST to /workflow/*
+  // through authenticatedFetch directly, and that is where the event fires.
+  // Emitting it here as well would be dead code today and a double count the
+  // day someone starts using this helper.
   return response.json();
 }
 

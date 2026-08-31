@@ -23,7 +23,9 @@ describe('shared playback transport', () => {
   });
 
   it('does not rewind when an active engine briefly reports zero', () => {
-    const readTime = jest.fn().mockReturnValueOnce(12).mockReturnValueOnce(0);
+    const readTime = jest.fn()
+      .mockReturnValueOnce(12)
+      .mockReturnValueOnce(0);
     const transport = createTransport();
     transport.attachEngine({
       id: 'score',
@@ -36,6 +38,7 @@ describe('shared playback transport', () => {
     transport.setActiveEngine('score');
     transport.seek(12);
     transport.play();
+
     nextFrame();
     expect(transport.getPosition()).toBe(12);
     nextFrame();

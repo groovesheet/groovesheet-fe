@@ -114,7 +114,6 @@ export default function TranscriptionResultView({
   isSignedIn,
   onUpgradeToFull,
   onSignUpToUnlock,
-  trackTitle,
 }) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -130,7 +129,7 @@ export default function TranscriptionResultView({
   const musicXmlKey = isDrums ? DRUMS_MUSICXML_KEY : MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
-  const scoreTitle = trackTitle || titleFromFilename(fileName);
+  const scoreTitle = titleFromFilename(fileName);
   const scoreArtist = 'Transcribed by GrooveSheet';
   const authName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
   const safeAccountName = user?.name && !user.name.includes('@') ? user.name.trim() : '';

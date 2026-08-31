@@ -224,15 +224,16 @@ export const AccountBilling = () => {
         ? subscription.balance_seconds / 60
         : 0;
 
-  // allowance: minutes_per_month for the matching plan, else infer.
-  // The free plan grants 0 minutes per cycle (evaluation happens through the
-  // 10-second preview), so there is no monthly allowance to measure against —
-  // any balance a free user holds came from a top-up pack. In that case the
-  // ring reflects "of what you have" and the cycle line is hidden entirely.
+  // allowance: minutes_per_month for the matching plan. The free tier grants
+  // no monthly minutes (allowance null) — its balance is top-ups/leftovers
+  // only, so there's no "of N min this cycle" to show.
   const currentPlan = catalog.plans.find((p) => tierFamily(p.id) === family);
-  const monthlyAllowance = currentPlan?.minutes_per_month;
-  const hasMonthlyAllowance = typeof monthlyAllowance === 'number' && monthlyAllowance > 0;
-  const allowance = hasMonthlyAllowance ? monthlyAllowance : Math.max(balanceMinutes, 1);
+  const hasAllowance = (currentPlan?.minutes_per_month ?? 0) > 0;
+  const allowance = hasAllowance
+    ? currentPlan.minutes_per_month
+    : isFree
+      ? null
+      : Math.max(balanceMinutes, 1);
   const pct = Math.max(0, Math.min(1, allowance ? balanceMinutes / allowance : 0));
   const ringDeg = `${(pct * 360).toFixed(0)}deg`;
   const ringPctLabel = `${Math.round(pct * 100)}%`;
@@ -485,9 +486,7 @@ export const AccountBilling = () => {
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor' }} />
                       {isActive ? 'Active' : 'Payment issue'}
                     </span>
-                    {/* Free plan has no recharge cycle, and legacy rows may still
-                        carry a stale next_recharge_at that will never fire. */}
-                    {subscription.next_recharge_at && (hasMonthlyAllowance || isPaid) && (
+                    {subscription.next_recharge_at && (
                       <span style={muted}>{isFree ? 'Resets' : 'Renews'} {formatDate(subscription.next_recharge_at)}</span>
                     )}
                   </div>
@@ -502,16 +501,16 @@ export const AccountBilling = () => {
                       </div>
                       <div style={{ ...muted, marginTop: 7 }}>minutes left</div>
                     </div>
-                    <div role="img" aria-label={hasMonthlyAllowance ? `${ringPctLabel} of monthly minutes remaining` : `${ringPctLabel} of your available minutes remaining`} style={{ position: 'relative', width: 92, height: 92, borderRadius: '50%', flex: '0 0 auto', display: 'grid', placeItems: 'center', background: `conic-gradient(var(--color-primary) ${ringDeg}, var(--color-border) 0)` }}>
+                    <div role="img" aria-label={`${ringPctLabel} of monthly minutes remaining`} style={{ position: 'relative', width: 92, height: 92, borderRadius: '50%', flex: '0 0 auto', display: 'grid', placeItems: 'center', background: `conic-gradient(var(--color-primary) ${ringDeg}, var(--color-border) 0)` }}>
                       <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'var(--color-panel2)', display: 'grid', placeItems: 'center' }}>
                         <span style={{ fontSize: 16, color: 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{ringPctLabel}</span>
                       </div>
                     </div>
                   </div>
                   <span style={{ ...muted, fontSize: 14, marginTop: 'auto' }}>
-                    {hasMonthlyAllowance
-                      ? `${fmtBalance(Math.round(balanceMinutes * 10) / 10)} of ${monthlyAllowance} min this cycle`
-                      : 'No monthly minutes on this plan — top up or upgrade to process full songs'}
+                    {allowance
+                      ? `${fmtBalance(Math.round(balanceMinutes * 10) / 10)} of ${allowance} min this cycle`
+                      : 'No monthly allowance — buy a plan or top-up for minutes'}
                   </span>
                 </div>
 

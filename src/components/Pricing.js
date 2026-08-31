@@ -4,9 +4,9 @@ import { useUser, useAuth } from '../auth';
 import { createCheckoutSession } from '../utils/api';
 import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import { startProviderCheckout } from '../utils/airwallex';
+import { PRICING_SECTION_ID } from '../utils/scrollToPricing';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
-import { PRICING_SECTION_ID } from '../utils/scrollToPricing';
 
 /**
  * Prices in the catalog's own currency, falling back to the USD fields so an
@@ -93,6 +93,8 @@ function Pricing({ onLoginClick }) {
   };
 
   // --- Derived display values (API-driven, with graceful static fallbacks) ---
+  // The free plan grants no processing minutes, so its card is static copy —
+  // rendering the API's 0 would read "0 minutes / month".
   const liteMonthly = planById('lite_monthly');
   const liteAnnual = planById('lite_annual');
   const proMonthly = planById('pro_monthly');
@@ -203,9 +205,6 @@ function Pricing({ onLoginClick }) {
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.18799 8.92992L5.24999 11.9929L12.25 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    {/* The free plan grants no processing minutes — evaluation
-                        happens through the 10-second preview on every song — so
-                        this line is static copy, not the API minute count. */}
                     <span>{t('pricing.plans.free.feature1')}</span>
                   </li>
                   <li className="feature-item">

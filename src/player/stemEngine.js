@@ -42,6 +42,42 @@ export function pickStemAssets(assets) {
   return byName;
 }
 
+// Client-side waveform thumbnails (fallback for tracks whose
+// library_tracks.thumb_data was never backfilled): decode each fetched stem
+// at a low sample rate in an OfflineAudioContext — no user gesture needed,
+// unlike the playback AudioContext — and reduce to PEAKS_POINTS values
+// normalized 0–100, the exact shape thumb_data.stems carries.
+const PEAKS_POINTS = 200;
+const PEAKS_SAMPLE_RATE = 8000;
+
+/** Max-pool one channel of an AudioBuffer down to 0..100 ints. */
+function peaksFromBuffer(audioBuffer) {
+  const data = audioBuffer.getChannelData(0);
+  const n = data.length;
+  if (!n) return null;
+  const bucket = Math.max(1, Math.floor(n / PEAKS_POINTS));
+  const peaks = new Array(PEAKS_POINTS).fill(0);
+  for (let i = 0; i < PEAKS_POINTS; i++) {
+    let m = 0;
+    const end = Math.min(n, (i + 1) * bucket);
+    for (let j = i * bucket; j < end; j++) {
+      const v = Math.abs(data[j]);
+      if (v > m) m = v;
+    }
+    peaks[i] = m;
+  }
+  const max = Math.max(...peaks) || 1;
+  return peaks.map((p) => Math.round((p * 100) / max));
+}
+
+/** decodeAudioData in callback form — Safari's promise form is newer. */
+function decodeIn(decodeCtx, arrayBuffer) {
+  return new Promise((resolve, reject) => {
+    const maybe = decodeCtx.decodeAudioData(arrayBuffer, resolve, reject);
+    if (maybe && typeof maybe.then === 'function') maybe.then(resolve, reject);
+  });
+}
+
 /**
  * @param {Object} opts
  * @param {Array}    opts.assets        track.assets (stem entries are used)
@@ -49,9 +85,11 @@ export function pickStemAssets(assets) {
  * @param {Function} [opts.onError]     called with (Error) on a fatal load failure
  * @param {Function} [opts.onProgress]  called with ({loaded, total, phase}) as
  *                                      stems download ('fetch') and decode ('decode')
+ * @param {Function} [opts.onPeaks]     called with (stemName, number[] 0-100) as each
+ *                                      stem's waveform thumbnail is computed client-side
  * @param {Function} [opts.refreshAssets] async () => assets — refetch presigned URLs
  */
-export function createStemEngine({ assets, onReady, onError, onProgress, refreshAssets } = {}) {
+export function createStemEngine({ assets, onReady, onError, onProgress, onPeaks, refreshAssets } = {}) {
   const stemAssets = pickStemAssets(assets);
   const stems = new Map(); // name -> { asset, arrayBuffer, buffer, gain, source, vol, muted }
   stemAssets.forEach((asset, name) => {
@@ -133,6 +171,35 @@ export function createStemEngine({ assets, onReady, onError, onProgress, refresh
     );
   })();
   fetchAllPromise.catch((err) => fail(err instanceof Error ? err : new Error(String(err))));
+
+  // Best-effort waveform thumbnails, one stem at a time so the transient
+  // decode memory stays bounded. Works on copies of the fetched bytes: the
+  // playback decode in ensureDecoded() detaches the originals.
+  if (onPeaks) {
+    (async () => {
+      await fetchAllPromise;
+      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if (!OAC) return;
+      for (const [name, st] of stems) {
+        if (disposed) return;
+        if (!st.arrayBuffer) continue;
+        const copy = st.arrayBuffer.slice(0);
+        try {
+          let decodeCtx;
+          try {
+            decodeCtx = new OAC(1, 1, PEAKS_SAMPLE_RATE);
+          } catch (e) {
+            decodeCtx = new OAC(1, 1, 44100); // some engines floor the rate range
+          }
+          const buf = await decodeIn(decodeCtx, copy);
+          const peaks = peaksFromBuffer(buf);
+          if (peaks && !disposed) {
+            try { onPeaks(name, peaks); } catch (e) { /* ignore */ }
+          }
+        } catch (e) { /* thumbnail only — never affects playback */ }
+      }
+    })().catch(() => { /* best-effort */ });
+  }
 
   // --- audio graph ----------------------------------------------------------
   const applyGains = () => {

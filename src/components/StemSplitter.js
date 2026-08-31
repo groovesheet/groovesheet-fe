@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch } from '../utils/api';
+import { trackWorkflowStarted } from '../utils/analytics';
 import {
   previewFetch,
   startPreview,
@@ -301,6 +302,13 @@ function StemSplitter({ onLoginClick }) {
       }
 
       if (!workflowId) throw new Error('No workflow_id returned from server');
+
+      // Activation step of the funnel, after the backend accepted the job.
+      trackWorkflowStarted('bs_roformer_separate', {
+        workflow_id: workflowId,
+        instrument: selectedInstrument,
+      });
+
       setJobId(workflowId);
       setStatus(data.status || 'pending');
 

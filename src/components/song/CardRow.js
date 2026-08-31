@@ -27,28 +27,7 @@ function SmallThumb({ song, flavor }) {
     );
   }
   if (flavor === 'sheet') {
-    return (
-      <svg viewBox="0 0 240 130" preserveAspectRatio="none" width="100%" height="100%" style={{ background: '#fbfaf4' }}>
-        {[20, 38, 56, 74, 92, 110]
-          .map((y, i) =>
-            Array.from({ length: 5 }).map((_, j) => (
-              <line key={`${i}-${j}`} x1={10} x2={230} y1={y - 6 + j * 3} y2={y - 6 + j * 3} stroke="#111" strokeWidth="0.4" opacity="0.7" />
-            ))
-          )
-          .flat()}
-        {[30, 60, 90, 120, 150, 180, 210].map((x) => (
-          <line key={x} x1={x} x2={x} y1={14} y2={119} stroke="#111" strokeWidth="0.3" opacity="0.5" />
-        ))}
-        {[20, 38, 56, 74, 92, 110]
-          .map((y, i) =>
-            Array.from({ length: 8 }).map((_, k) => {
-              const seed = (id.charCodeAt(0) + i * 7 + k * 3) % 5;
-              return <ellipse key={`n-${i}-${k}`} cx={30 + k * 25} cy={y + (seed - 2)} rx="2" ry="1.3" fill="#111" />;
-            })
-          )
-          .flat()}
-      </svg>
-    );
+    return <div style={{ width: '100%', height: '100%', background: '#fff' }} />;
   }
   if (flavor === 'midi') {
     const rand = (i) => (Math.sin(id.charCodeAt(1) + i * 1.7) + 1) / 2;
@@ -91,12 +70,8 @@ function SmallThumb({ song, flavor }) {
 
 function MiniThumbCard({ song, variant = 'sheet', onClick }) {
   const seed = song.id.charCodeAt(1) + song.id.charCodeAt(0);
-  const availablePreviews = ['sheet', 'midi', 'stems'].filter(
-    (kind) => song.previewUrls?.[kind] || (kind === 'midi' && song.thumbUrl)
-  );
-  const flavor = variant === 'mix'
-    ? (availablePreviews[seed % Math.max(1, availablePreviews.length)] || ['sheet', 'midi', 'stems'][seed % 3])
-    : variant;
+  const flavor = variant === 'mix' ? ['sheet', 'midi', 'stems'][seed % 3] : variant;
+  const diffClass = `gs-diff ${(song.diff || 'Intermediate').toLowerCase()}`;
   const current = song.current;
 
   return (
@@ -123,11 +98,9 @@ function MiniThumbCard({ song, variant = 'sheet', onClick }) {
       )}
       <div className="gs-thumb" style={{ height: 130 }}>
         <SmallThumb song={song} flavor={flavor} />
-        {song.diff && (
-          <div style={{ position: 'absolute', top: 8, left: 8 }}>
-            <span className={`gs-diff ${song.diff.toLowerCase()}`}>{song.diff}</span>
-          </div>
-        )}
+        <div style={{ position: 'absolute', top: 8, left: 8 }}>
+          <span className={diffClass}>{song.diff}</span>
+        </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
         <div className="gs-truncate" style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
@@ -142,12 +115,10 @@ function MiniThumbCard({ song, variant = 'sheet', onClick }) {
               <Icon.Eye />
               {fmtNum(song.views)}
             </span>
-            {Number.isFinite(song.rating) && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                <Icon.Star style={{ color: '#f59e0b' }} />
-                {song.rating.toFixed(1)}
-              </span>
-            )}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <Icon.Star style={{ color: '#f59e0b' }} />
+              {song.rating.toFixed(1)}
+            </span>
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--color-muted-foreground)' }}>
             <Icon.Sheet style={{ opacity: 0.7, width: 11, height: 11 }} />
@@ -160,7 +131,7 @@ function MiniThumbCard({ song, variant = 'sheet', onClick }) {
   );
 }
 
-function CardRow({ title, subtitle, items, variant, onCardClick, onViewAll }) {
+function CardRow({ title, subtitle, items, variant, onCardClick }) {
   const ref = useRef(null);
   const [canL, setCanL] = useState(false);
   const [canR, setCanR] = useState(true);
@@ -189,7 +160,7 @@ function CardRow({ title, subtitle, items, variant, onCardClick, onViewAll }) {
           {subtitle && <p style={{ fontSize: 13, color: 'var(--color-muted-foreground)', marginTop: 3 }}>{subtitle}</p>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <a href="/explore" onClick={(e) => { e.preventDefault(); onViewAll?.(); }} style={{ fontSize: 12, color: 'var(--color-muted-foreground)', textDecoration: 'underline', textDecorationColor: 'var(--color-border-light)', textUnderlineOffset: '3px' }}>
+          <a href="#" onClick={(e) => e.preventDefault()} style={{ fontSize: 12, color: 'var(--color-muted-foreground)', textDecoration: 'underline', textDecorationColor: 'var(--color-border-light)', textUnderlineOffset: '3px' }}>
             View all
           </a>
           <button className="gs-arrow-btn" disabled={!canL} onClick={() => ref.current.scrollBy({ left: -(ref.current.clientWidth - 80), behavior: 'smooth' })}>

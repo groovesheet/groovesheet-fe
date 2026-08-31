@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { trackSignUp } from './utils/analytics';
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
@@ -167,6 +168,10 @@ export function AuthProvider({ children }) {
       setSession(nextSession || null);
       setUser(mapUser(nextSession?.user || null));
       setIsLoaded(true);
+      // GA4 sign_up, emitted once per account. Supabase reports SIGNED_IN for
+      // every session restore, so the account's own created_at is what
+      // distinguishes a real registration from a returning login. Never-throw.
+      maybeTrackSignUp(nextSession);
     });
 
     return () => {
@@ -182,6 +187,44 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+/**
+ * Emit `sign_up` once for a genuinely new account.
+ *
+ * `onAuthStateChange` fires SIGNED_IN on every page load with a live session,
+ * so the event is gated on two things: the account was created moments ago,
+ * and this browser has not already reported it.
+ */
+const SIGNUP_REPORTED_KEY = 'gs_signup_reported';
+const NEW_ACCOUNT_WINDOW_MS = 5 * 60 * 1000;
+
+function maybeTrackSignUp(nextSession) {
+  try {
+    const account = nextSession?.user;
+    if (!account?.id || !account.created_at) return;
+
+    const ageMs = Date.now() - new Date(account.created_at).getTime();
+    if (!(ageMs >= 0 && ageMs < NEW_ACCOUNT_WINDOW_MS)) return;
+
+    let reported = null;
+    try {
+      reported = window.localStorage.getItem(SIGNUP_REPORTED_KEY);
+    } catch (e) {
+      /* storage unavailable: fall through and report once per page load */
+    }
+    if (reported === account.id) return;
+    try {
+      window.localStorage.setItem(SIGNUP_REPORTED_KEY, account.id);
+    } catch (e) {
+      /* ignore */
+    }
+
+    trackSignUp(account.app_metadata?.provider || 'email');
+  } catch (e) {
+    /* analytics must never affect authentication */
+  }
+}
+
 
 function useAuthContext() {
   const ctx = useContext(AuthContext);

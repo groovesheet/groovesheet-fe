@@ -96,6 +96,10 @@ export function createTransport() {
       try {
         const r = eng.readTime();
         if (typeof r === 'number' && Number.isFinite(r)) {
+          // Audio engines can briefly report their reset/default zero while an
+          // async seek or internal timing update settles. Playback is monotonic
+          // unless transport.seek() explicitly changes it, so ignore a large
+          // backwards sample instead of rewinding the shared UI clock.
           if (lastEngineTime == null || r >= lastEngineTime - 0.25) {
             t = r;
             lastEngineTime = r;

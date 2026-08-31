@@ -230,7 +230,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
           } catch (e) {}
         }
         if ((drawComposer || drawLyricist) && osmd.EngravingRules) {
-          // Leave a clear header-to-notation gap below both score credits.
+          // Keep the first stave comfortably below both header credits.
           osmd.EngravingRules.SystemComposerDistance = Math.max(
             osmd.EngravingRules.SystemComposerDistance || 0,
             5

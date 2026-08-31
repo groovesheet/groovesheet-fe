@@ -19,8 +19,17 @@ import DrumGridView from './DrumGridView';
 import FretboardView from './FretboardView';
 import InstrumentDropdown from './InstrumentDropdown';
 import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
+import {
+  trackExploreView,
+  trackPlay,
+  trackDownloadIntent,
+  trackDownload,
+  trackScoreView,
+  trackStemSolo,
+} from '../../utils/analytics';
 import { useAuth, useUser } from '../../auth';
 import usePageMeta from '../../hooks/usePageMeta';
+import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
@@ -85,10 +94,11 @@ function trackToCard(t) {
     id: t.id,
     title: t.title,
     artist: t.artist,
-    views: Number(t.plays) || 0,
+    diff: seededDifficulty(t.id),
+    rating: seededRating(t.id),
+    views: seededViews(t.id, Number(t.popularity) || 0),
     dur: fmtDur(t.thumb_data?.duration_sec || t.duration_sec),
     previewUrls: t.preview_urls || {},
-    coverUrl: t.cover_url || null,
     thumbUrl: t.thumb_url || null,
   };
 }
@@ -189,6 +199,16 @@ function SongDetail({ onLoginClick }) {
   const { getToken } = useAuth();
   const { isSignedIn } = useUser();
   const playSentRef = useRef(false);
+  // One explore_track_view per resolved song, reset on client-side navigation
+  // to another song (the component instance survives that).
+  const viewSentRef = useRef(false);
+  // Score engagement is reported once per song, on the first time the sheet
+  // or notation tab is actually shown.
+  const scoreViewSentRef = useRef(false);
+  // Lets the stable onStemChange callback report the current track without
+  // taking `track` as a dependency (which would re-create the handler and
+  // remount the mixer rows on every track refresh).
+  const trackRef = useRef(null);
   const [zipDownloading, setZipDownloading] = useState(false);
 
   // --- track fetch (declared below); page meta reads it once loaded --------
@@ -211,12 +231,28 @@ function SongDetail({ onLoginClick }) {
     // New song, new play credit — the component instance survives client-side
     // navigation between songs, so the guard must reset here.
     playSentRef.current = false;
+    viewSentRef.current = false;
+    scoreViewSentRef.current = false;
     (async () => {
       try {
         // Pass the bearer (when signed in) so owners can open their own
         // private/unlisted tracks; visitors stay anonymous.
         const data = await fetchLibraryTrack(songId, getToken);
-        if (!cancelled) setTrack(data);
+        if (!cancelled) {
+          setTrack(data);
+          // Funnel landing. Fires once per resolved track, after resolution
+          // succeeds, so a 404 never counts as a view. `resolved_by` records
+          // whether the visitor arrived on the stable slug or the raw UUID.
+          if (!viewSentRef.current) {
+            viewSentRef.current = true;
+            trackExploreView(data, {
+              resolved_by: data?.slug && String(songId) === String(data.slug) ? 'slug' : 'uuid',
+              has_musicxml: (data?.assets || []).some((a) => a.asset_type === 'musicxml'),
+              has_midi: (data?.assets || []).some((a) => a.asset_type === 'midi'),
+              stem_count: (data?.assets || []).filter((a) => a.asset_type === 'stem').length,
+            });
+          }
+        }
       } catch (err) {
         if (!cancelled) setTrackError({ status: err.status, message: err.message });
       } finally {
@@ -230,6 +266,9 @@ function SongDetail({ onLoginClick }) {
 
   // --- asset mapping -----------------------------------------------------------
   const stemAssetsByName = useMemo(() => pickStemAssets(track?.assets), [track]);
+  // Waveforms computed client-side by the stem engine for tracks whose
+  // thumb_data was never populated server-side. name -> number[] (0-100).
+  const [localWaves, setLocalWaves] = useState({});
   const stems = useMemo(() => {
     const names = Array.from(stemAssetsByName.keys());
     const ordered = STEM_ORDER.filter((n) => names.includes(n)).concat(
@@ -240,9 +279,9 @@ function SongDetail({ onLoginClick }) {
       label: STEM_META[name]?.label || name.charAt(0).toUpperCase() + name.slice(1),
       color: STEM_META[name]?.color || '#8d8c8d',
       sub: STEM_META[name]?.sub || '',
-      wave: track?.thumb_data?.stems?.[name] || null,
+      wave: track?.thumb_data?.stems?.[name] || localWaves[name] || null,
     }));
-  }, [stemAssetsByName, track]);
+  }, [stemAssetsByName, track, localWaves]);
 
   // All note assets, per instrument. A track may carry several MIDI/MusicXML
   // parts (adtof_drums_midi, transkun_v2_piano_midi, …) — the selected
@@ -333,6 +372,22 @@ function SongDetail({ onLoginClick }) {
     setView(first);
   }, [track, available]);
 
+  // Mirror the resolved track into a ref for the stable mixer callback.
+  useEffect(() => {
+    trackRef.current = track;
+  }, [track]);
+
+  // score_view: first time this song's notation is actually on screen.
+  useEffect(() => {
+    if (!track || scoreViewSentRef.current) return;
+    if (view !== 'sheet' && view !== 'midi') return;
+    scoreViewSentRef.current = true;
+    trackScoreView(track, {
+      note_view: noteView,
+      asset_format: view === 'sheet' ? 'musicxml' : 'midi',
+    });
+  }, [track, view, noteView]);
+
   // --- shared transport -------------------------------------------------------
   const transportRef = useRef(null);
   if (!transportRef.current) transportRef.current = createTransport();
@@ -374,10 +429,22 @@ function SongDetail({ onLoginClick }) {
     const trackId = track.id;
     setStemError(null);
     setStemProgress(null);
+    setLocalWaves({});
+    // Compute waveforms client-side only for stems the API gave no thumb for.
+    const thumbStems = track.thumb_data?.stems || {};
+    const needsWaves = Array.from(pickStemAssets(track.assets).keys()).some(
+      (name) => !thumbStems[name]
+    );
     const engine = createStemEngine({
       assets: track.assets,
       onProgress: (p) => setStemProgress(p),
       onError: (err) => setStemError(err.message || 'Failed to load stems'),
+      onPeaks: needsWaves
+        ? (name, peaks) => {
+            if (thumbStems[name]) return;
+            setLocalWaves((prev) => (prev[name] ? prev : { ...prev, [name]: peaks }));
+          }
+        : undefined,
       refreshAssets: async () => (await fetchLibraryTrack(trackId)).assets,
     });
     engine.setMasterVolume(masterVolRef.current);
@@ -392,13 +459,19 @@ function SongDetail({ onLoginClick }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Per-stem mixer state, re-seeded per track.
+  // Per-stem mixer state, re-seeded per track. `stems` identity also changes
+  // when client-side waveforms stream in — keep the user's mix in that case.
+  const mixerTrackIdRef = useRef(null);
   useEffect(() => {
-    const next = {};
-    stems.forEach((s) => {
-      next[s.name] = { mute: false, solo: false, volume: 75 };
+    const fresh = mixerTrackIdRef.current !== (track && track.id);
+    mixerTrackIdRef.current = track && track.id;
+    setStemState((prev) => {
+      const next = {};
+      stems.forEach((s) => {
+        next[s.name] = (!fresh && prev[s.name]) || { mute: false, solo: false, volume: 75 };
+      });
+      return next;
     });
-    setStemState(next);
   }, [track, stems]);
 
   // Apply mixer state to the engine (multi-solo UI semantics → per-stem mutes).
@@ -414,7 +487,17 @@ function SongDetail({ onLoginClick }) {
   }, [stemState, track]);
 
   const onStemChange = useCallback(
-    (name, patch) => setStemState((s) => ({ ...s, [name]: { ...(s[name] || {}), ...patch } })),
+    (name, patch) => {
+      // Solo is the stem-engagement signal in the funnel; mute and volume are
+      // ordinary mixing and are deliberately not reported.
+      if (patch && typeof patch.solo === 'boolean') {
+        trackStemSolo(trackRef.current, {
+          stem_name: name,
+          action: patch.solo ? 'on' : 'off',
+        });
+      }
+      setStemState((s) => ({ ...s, [name]: { ...(s[name] || {}), ...patch } }));
+    },
     []
   );
 
@@ -709,16 +792,27 @@ function SongDetail({ onLoginClick }) {
       if (!playSentRef.current && track?.id) {
         playSentRef.current = true;
         postTrackPlay(track.id);
+        // GA4 alongside the existing backend counter, not instead of it: the
+        // backend number stays the authority for the public play count.
+        trackPlay(track, { view_mode: view });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track?.id]);
+  }, [track?.id, view]);
 
   const handleZipDownload = useCallback(async () => {
     if (!track?.id || zipDownloading) return;
+    // Intent fires before the request, so a download that ends at the sign-in
+    // prompt is still measured as intent. `getToken` is always a function, so
+    // the signed-in flag has to come from the auth state, not from its presence.
+    trackDownloadIntent(track, { authenticated: Boolean(isSignedIn) });
     setZipDownloading(true);
     try {
       const { blob, filename } = await downloadLibraryTrackZip(track.id, getToken);
+      trackDownload(track, {
+        asset_count: (track.assets || []).length,
+        bytes: blob?.size || 0,
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -734,7 +828,7 @@ function SongDetail({ onLoginClick }) {
       setZipDownloading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [track?.id, zipDownloading, getToken, onLoginClick]);
+  }, [track?.id, zipDownloading, getToken, onLoginClick, isSignedIn]);
 
   const onSeekFraction = useCallback((f) => {
     const t = transportRef.current;
@@ -786,7 +880,7 @@ function SongDetail({ onLoginClick }) {
     const trending = [...related].sort(
       (a, b) =>
         (Number(b.popularity) || 0) - (Number(a.popularity) || 0) ||
-        (Number(b.plays) || 0) - (Number(a.plays) || 0)
+        seededViews(b.id, 0) - seededViews(a.id, 0)
     );
     const newest = [...related].sort(
       (a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0)
@@ -1021,7 +1115,6 @@ function SongDetail({ onLoginClick }) {
                     items={rail.items}
                     variant={rail.variant}
                     onCardClick={goToSong}
-                    onViewAll={() => navigate('/explore')}
                   />
                 ))}
               </div>

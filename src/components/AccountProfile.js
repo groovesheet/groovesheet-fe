@@ -30,8 +30,7 @@ const LANGS = [
   { code: 'zh-TW', label: '繁體中文' },
 ];
 const TIER_LABELS = { free: 'Free', lite: 'Lite', pro: 'Pro' };
-// Fallbacks used only when the billing catalog can't be fetched. The free plan
-// grants no monthly minutes — evaluation happens through the 10-second preview.
+// Free tier has no monthly allowance — the 10-second preview is the free path.
 const TIER_MINUTES = { free: 0, lite: 120, pro: 300 };
 // Must match the backend whitelist (services/profile_common.ALLOWED_LINK_PLATFORMS).
 const LINK_PLATFORMS = ['Website', 'YouTube', 'Instagram', 'X', 'SoundCloud', 'TikTok'];
@@ -260,14 +259,7 @@ export const AccountProfile = () => {
         : 0;
   const minsLeft = Math.round(balanceMinutes);
   const minsTotal = planTotalMinutes || TIER_MINUTES[tierFamily(tier)] || 0;
-  // With no monthly allowance (free plan) there is nothing to measure against —
-  // any balance came from a top-up pack, so the bar just shows "has minutes".
-  const minsPct =
-    minsTotal > 0
-      ? `${Math.max(0, Math.min(100, (minsLeft / minsTotal) * 100))}%`
-      : minsLeft > 0
-        ? '100%'
-        : '0%';
+  const minsPct = minsTotal > 0 ? `${Math.max(0, Math.min(100, (minsLeft / minsTotal) * 100))}%` : '0%';
   const rechargeDate = fmtShortDate(subscription.next_recharge_at) || '—';
   const memberSince = fmtMonthYear(profile?.member_since);
   const emailManaged = providersSet.size > 0 && !providersSet.has('email');
@@ -732,13 +724,9 @@ export const AccountProfile = () => {
                     </div>
                   </div>
                   <div style={{ background: 'var(--color-panel1)', borderRadius: 13, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <span style={{ fontSize: 12, color: muted }}>{minsTotal > 0 ? 'Next recharge' : 'Monthly minutes'}</span>
-                    <span style={{ fontSize: 24, fontWeight: 500, color: 'var(--color-text)' }}>{minsTotal > 0 ? rechargeDate : 'None'}</span>
-                    <span style={{ fontSize: 12.5, color: muted }}>
-                      {minsTotal > 0
-                        ? `Resets to ${minsTotal} min`
-                        : 'Top up or upgrade to process full songs'}
-                    </span>
+                    <span style={{ fontSize: 12, color: muted }}>Next recharge</span>
+                    <span style={{ fontSize: 24, fontWeight: 500, color: 'var(--color-text)' }}>{minsTotal > 0 ? rechargeDate : '—'}</span>
+                    <span style={{ fontSize: 12.5, color: muted }}>{minsTotal > 0 ? `Resets to ${minsTotal} min` : 'No monthly recharge on this plan'}</span>
                   </div>
                 </div>
               </section>
