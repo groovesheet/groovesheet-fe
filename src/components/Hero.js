@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadWorkflowFile } from '../utils/api';
 import { trackWorkflowStarted } from '../utils/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '../utils/previewApi';
+import { scrollToPricing } from '../utils/scrollToPricing';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { LuGuitar, LuMusic4, LuDrum } from 'react-icons/lu';
@@ -467,7 +468,9 @@ function Hero({ onLoginRequired }) {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           console.error('Upload failed:', errorData);
-          throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+          const uploadErr = new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+          uploadErr.status = response.status;
+          throw uploadErr;
         }
 
         data = await response.json();
@@ -506,7 +509,14 @@ function Hero({ onLoginRequired }) {
       }, 1000);
     } catch (err) {
       console.error('Upload error:', err);
-      
+
+      // Out of minutes: the plans are what they need, not an error banner.
+      if (err.status === 402) {
+        setStatus(null);
+        scrollToPricing();
+        return;
+      }
+
       // Check if it's a CORS error
       if (err.message.includes('fetch') || err.name === 'TypeError') {
         setError('Unable to connect to server. This may be a CORS issue. Please check the console for details.');
@@ -841,6 +851,11 @@ function Hero({ onLoginRequired }) {
         setTimeout(() => pollStatus(result.workflow_id), 1000);
       }
     } catch (err) {
+      // Out of minutes: the plans are what they need, not an error banner.
+      if (err.status === 402) {
+        scrollToPricing();
+        return;
+      }
       setError(err.message || 'Failed to start full song processing.');
     }
   };

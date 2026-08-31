@@ -30,7 +30,8 @@ const LANGS = [
   { code: 'zh-TW', label: '繁體中文' },
 ];
 const TIER_LABELS = { free: 'Free', lite: 'Lite', pro: 'Pro' };
-const TIER_MINUTES = { free: 30, lite: 120, pro: 300 };
+// Free tier has no monthly allowance — the 10-second preview is the free path.
+const TIER_MINUTES = { free: 0, lite: 120, pro: 300 };
 // Must match the backend whitelist (services/profile_common.ALLOWED_LINK_PLATFORMS).
 const LINK_PLATFORMS = ['Website', 'YouTube', 'Instagram', 'X', 'SoundCloud', 'TikTok'];
 const tierFamily = (t) => (t || 'free').split('_')[0];
@@ -724,8 +725,8 @@ export const AccountProfile = () => {
                   </div>
                   <div style={{ background: 'var(--color-panel1)', borderRadius: 13, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <span style={{ fontSize: 12, color: muted }}>Next recharge</span>
-                    <span style={{ fontSize: 24, fontWeight: 500, color: 'var(--color-text)' }}>{rechargeDate}</span>
-                    <span style={{ fontSize: 12.5, color: muted }}>{minsTotal > 0 ? `Resets to ${minsTotal} min` : 'Resets your balance'}</span>
+                    <span style={{ fontSize: 24, fontWeight: 500, color: 'var(--color-text)' }}>{minsTotal > 0 ? rechargeDate : '—'}</span>
+                    <span style={{ fontSize: 12.5, color: muted }}>{minsTotal > 0 ? `Resets to ${minsTotal} min` : 'No monthly recharge on this plan'}</span>
                   </div>
                 </div>
               </section>

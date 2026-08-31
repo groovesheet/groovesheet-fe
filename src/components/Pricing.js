@@ -4,6 +4,7 @@ import { useUser, useAuth } from '../auth';
 import { createCheckoutSession } from '../utils/api';
 import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import { startProviderCheckout } from '../utils/airwallex';
+import { PRICING_SECTION_ID } from '../utils/scrollToPricing';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
 
@@ -92,7 +93,8 @@ function Pricing({ onLoginClick }) {
   };
 
   // --- Derived display values (API-driven, with graceful static fallbacks) ---
-  const free = planById('free');
+  // The free plan grants no processing minutes, so its card is static copy —
+  // rendering the API's 0 would read "0 minutes / month".
   const liteMonthly = planById('lite_monthly');
   const liteAnnual = planById('lite_annual');
   const proMonthly = planById('pro_monthly');
@@ -114,7 +116,6 @@ function Pricing({ onLoginClick }) {
       : formatPrice(proAnnualTotal != null ? proAnnualTotal / 12 : null);
 
   // Minutes (per month for plans, one-time for top-ups).
-  const freeMinutes = formatMinutes(free?.minutes_per_month);
   const liteMinutes = formatMinutes(liteMonthly?.minutes_per_month);
   const starterMinutes = formatMinutes(starterTopup?.minutes);
   const plusMinutes = formatMinutes(plusTopup?.minutes);
@@ -126,7 +127,7 @@ function Pricing({ onLoginClick }) {
   const powerPrice = formatPrice(topupAmount(powerTopup));
 
   return (
-    <section className="pricing" aria-busy={catalogLoading}>
+    <section id={PRICING_SECTION_ID} className="pricing" aria-busy={catalogLoading}>
       <div className="pricing-container">
         <div className="pricing-header-section">
           <div className="pricing-header">
@@ -204,14 +205,7 @@ function Pricing({ onLoginClick }) {
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.18799 8.92992L5.24999 11.9929L12.25 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>
-                      {freeMinutes
-                        ? t('pricing.minutesPerMonth', {
-                            minutes: freeMinutes,
-                            defaultValue: '{{minutes}} minutes / month',
-                          })
-                        : t('pricing.plans.free.feature1')}
-                    </span>
+                    <span>{t('pricing.plans.free.feature1')}</span>
                   </li>
                   <li className="feature-item">
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">

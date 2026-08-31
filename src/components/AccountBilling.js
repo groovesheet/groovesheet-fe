@@ -224,9 +224,16 @@ export const AccountBilling = () => {
         ? subscription.balance_seconds / 60
         : 0;
 
-  // allowance: minutes_per_month for the matching plan, else infer.
+  // allowance: minutes_per_month for the matching plan. The free tier grants
+  // no monthly minutes (allowance null) — its balance is top-ups/leftovers
+  // only, so there's no "of N min this cycle" to show.
   const currentPlan = catalog.plans.find((p) => tierFamily(p.id) === family);
-  const allowance = currentPlan?.minutes_per_month || (isFree ? 30 : Math.max(balanceMinutes, 1));
+  const hasAllowance = (currentPlan?.minutes_per_month ?? 0) > 0;
+  const allowance = hasAllowance
+    ? currentPlan.minutes_per_month
+    : isFree
+      ? null
+      : Math.max(balanceMinutes, 1);
   const pct = Math.max(0, Math.min(1, allowance ? balanceMinutes / allowance : 0));
   const ringDeg = `${(pct * 360).toFixed(0)}deg`;
   const ringPctLabel = `${Math.round(pct * 100)}%`;
@@ -501,7 +508,9 @@ export const AccountBilling = () => {
                     </div>
                   </div>
                   <span style={{ ...muted, fontSize: 14, marginTop: 'auto' }}>
-                    {fmtBalance(Math.round(balanceMinutes * 10) / 10)} of {allowance} min this cycle
+                    {allowance
+                      ? `${fmtBalance(Math.round(balanceMinutes * 10) / 10)} of ${allowance} min this cycle`
+                      : 'No monthly allowance — buy a plan or top-up for minutes'}
                   </span>
                 </div>
 
