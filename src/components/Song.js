@@ -96,9 +96,6 @@ function Song({ onLoginClick }) {
   }, [trackId]);
 
   const stems = track ? deriveStems(track.assets || []) : [];
-  const scoreCount = track
-    ? (track.assets || []).filter((a) => a.asset_type === 'musicxml' && a.id).length
-    : 0;
 
   // Initialize per-stem volume/mute/solo state once stems load.
   useEffect(() => {
@@ -208,9 +205,7 @@ function Song({ onLoginClick }) {
                   )}
                   {view === 'sheet' && (
                     <span>
-                      {scoreCount > 0
-                        ? `${scoreCount} engraved ${scoreCount === 1 ? 'part' : 'parts'} · rendered from MusicXML`
-                        : 'Sheet music will appear here once a MusicXML asset is available.'}
+                      Sheet music will appear here once a MusicXML asset is available.
                     </span>
                   )}
                   {view === 'midi' && <span>MIDI piano roll · {track.duration_sec}s</span>}

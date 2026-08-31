@@ -1,192 +1,36 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { MusicNotes, FileX } from '@phosphor-icons/react';
-import CanvasPianoRoll from '../visualization/PianoRollView';
 
-// ---------------- Sheet music ----------------
-//
-// The library indexes one MusicXML asset per transcribed instrument
-// (asset_type 'musicxml', stem_name 'drums' | 'piano' | 'bass'). This used to
-// be a hardcoded "No MusicXML asset yet" panel, so a song whose drum score had
-// been engraved, published as a video AND indexed here still told the visitor
-// it had nothing — 任性 (Mayday) had 1535 notes across 95 measures sitting
-// behind that message.
-const SCORE_LABELS = { drums: 'Drums', piano: 'Piano', bass: 'Bass' };
-const SCORE_ORDER = ['piano', 'drums', 'bass'];
-
-function deriveScores(assets) {
-  return (assets || [])
-    .filter((a) => a.asset_type === 'musicxml' && a.id)
-    .map((a) => ({ id: a.id, name: a.stem_name || 'score' }))
-    .sort((a, b) => {
-      const ia = SCORE_ORDER.indexOf(a.name);
-      const ib = SCORE_ORDER.indexOf(b.name);
-      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-    });
-}
-
-// Assets are served by a redirect to storage (same shape the stems use), so
-// the score needs no auth for a public track.
-function scoreUrl(assetId) {
-  return `/api/library/assets/${assetId}/url?purpose=stream`;
-}
-
-function EngravedScore({ assetId }) {
-  const containerRef = useRef(null);
-  const osmdRef = useRef(null);
-  const [state, setState] = useState('loading');
-
-  useEffect(() => {
-    let cancelled = false;
-    const render = async () => {
-      if (!assetId || !containerRef.current) return;
-      setState('loading');
-      try {
-        const resp = await fetch(scoreUrl(assetId));
-        if (!resp.ok) throw new Error(`score fetch failed (${resp.status})`);
-        const xml = await resp.text();
-        if (cancelled) return;
-
-        // Dynamic import: OSMD is large and only this tab needs it.
-        const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay');
-        if (cancelled || !containerRef.current) return;
-
-        if (osmdRef.current) osmdRef.current.clear();
-        const osmd = new OpenSheetMusicDisplay(containerRef.current, {
-          autoResize: true,
-          drawTitle: false,      // the page header already names the song
-          drawComposer: false,
-          drawCredits: false,
-          drawPartNames: true,
-          backend: 'svg',
-        });
-        osmdRef.current = osmd;
-        await osmd.load(xml);
-        if (cancelled) return;
-        osmd.render();
-        setState('ready');
-      } catch (err) {
-        if (!cancelled) {
-          console.error('sheet render failed:', err);
-          setState('error');
-        }
-      }
-    };
-    render();
-    return () => {
-      cancelled = true;
-    };
-  }, [assetId]);
-
+// ---------------- Sheet music placeholder ----------------
+export function SheetView({ track }) {
   return (
-    <div className="gs-sheet-page" data-page={`— 1 —`}>
-      {state === 'error' && (
-        <div className="gs-sheet-empty-inner">
-          <FileX size={28} weight="duotone" />
-          <h3>Score could not be loaded</h3>
-          <p>The MusicXML asset exists but could not be rendered. Try again shortly.</p>
-        </div>
-      )}
-      <div ref={containerRef} hidden={state !== 'ready'} />
-      {state === 'loading' && (
+    <div className="gs-sheet-empty">
+      <div className="gs-sheet-page" data-page={`— 1 —`}>
         <div className="gs-sheet-empty-inner">
           <MusicNotes size={28} weight="duotone" />
-          <h3>Engraving score…</h3>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function SheetView({ track }) {
-  const scores = useMemo(() => deriveScores(track.assets), [track.assets]);
-  const [active, setActive] = useState(0);
-  const current = scores[Math.min(active, scores.length - 1)];
-
-  if (!scores.length) {
-    return (
-      <div className="gs-sheet-empty">
-        <div className="gs-sheet-page" data-page={`— 1 —`}>
-          <div className="gs-sheet-empty-inner">
-            <MusicNotes size={28} weight="duotone" />
-            <h3>No MusicXML asset yet</h3>
-            <p>
-              {track.title} doesn’t have a typeset score available. Run a workflow to
-              generate a MusicXML asset, then the engraved page will render here.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="gs-sheet">
-      {scores.length > 1 && (
-        <div className="song-seg gs-sheet-parts" role="tablist">
-          {scores.map((s, i) => (
-            <button
-              key={s.id}
-              className={i === active ? 'on' : ''}
-              onClick={() => setActive(i)}
-            >
-              {SCORE_LABELS[s.name] || s.name}
-            </button>
-          ))}
-        </div>
-      )}
-      <EngravedScore assetId={current.id} />
-    </div>
-  );
-}
-
-// ---------------- Piano roll ----------------
-//
-// The aligned MIDI is the same file the social video was rendered from, so the
-// roll here matches what the viewer saw on YouTube/bilibili. Indexed as
-// asset_type 'midi' (stem_name 'drums' today — the drum chain is the only one
-// whose forward carries a MIDI key so far).
-function deriveMidis(assets) {
-  return (assets || [])
-    .filter((a) => a.asset_type === 'midi' && a.id)
-    .map((a) => ({ id: a.id, name: a.stem_name || 'midi' }));
-}
-
-export function PianoRollView({ track, stems }) {
-  const midis = useMemo(() => deriveMidis(track.assets), [track.assets]);
-  const [active, setActive] = useState(0);
-  const current = midis[Math.min(active, midis.length - 1)];
-
-  if (!midis.length) {
-    return (
-      <div className="gs-pianoroll-empty">
-        <div className="gs-pianoroll-empty-inner">
-          <FileX size={28} weight="duotone" />
-          <h3>No MIDI asset yet</h3>
+          <h3>No MusicXML asset yet</h3>
           <p>
-            A combined piano roll requires per-instrument MIDI files. The library
-            currently only indexes audio stems for {track.title} ({stems.length} found).
+            {track.title} doesn’t have a typeset score available. Run a workflow to
+            generate a MusicXML asset, then the engraved page will render here.
           </p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
+// ---------------- Piano roll placeholder ----------------
+export function PianoRollView({ track, stems }) {
   return (
-    <div className="gs-pianoroll">
-      {midis.length > 1 && (
-        <div className="song-seg gs-pianoroll-parts" role="tablist">
-          {midis.map((m, i) => (
-            <button
-              key={m.id}
-              className={i === active ? 'on' : ''}
-              onClick={() => setActive(i)}
-            >
-              {SCORE_LABELS[m.name] || m.name}
-            </button>
-          ))}
-        </div>
-      )}
-      <CanvasPianoRoll midiUrl={scoreUrl(current.id)} />
+    <div className="gs-pianoroll-empty">
+      <div className="gs-pianoroll-empty-inner">
+        <FileX size={28} weight="duotone" />
+        <h3>No MIDI asset yet</h3>
+        <p>
+          A combined piano roll requires per-instrument MIDI files. The library
+          currently only indexes audio stems for {track.title} ({stems.length} found).
+        </p>
+      </div>
     </div>
   );
 }

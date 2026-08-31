@@ -35,11 +35,7 @@ function getNoteY(midiNote, noteHeight) {
   return (MAX_MIDI_NOTE - midiNote) * noteHeight;
 }
 
-// `midiUrl` is the library-asset path (public tracks on /explore); `jobId` +
-// `selectedInstrument` is the workflow path (a signed-in user's own run). The
-// drawing below is identical either way — only where the bytes come from
-// differs, so the two callers share one renderer.
-export default function PianoRollView({ jobId, selectedInstrument, getToken, zoom, midiUrl }) {
+export default function PianoRollView({ jobId, selectedInstrument, getToken, zoom }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const midiDataRef = useRef(null);
@@ -53,8 +49,8 @@ export default function PianoRollView({ jobId, selectedInstrument, getToken, zoo
     let cancelled = false;
 
     const loadMidi = async () => {
-      const fileKey = midiUrl ? null : MIDI_KEY_MAP[selectedInstrument];
-      if (!midiUrl && !fileKey) {
+      const fileKey = MIDI_KEY_MAP[selectedInstrument];
+      if (!fileKey) {
         setError('Piano roll is not available for this instrument type.');
         setLoading(false);
         return;
@@ -64,20 +60,14 @@ export default function PianoRollView({ jobId, selectedInstrument, getToken, zoo
         setLoading(true);
         setError(null);
 
-        let arrayBuffer;
-        if (midiUrl) {
-          const resp = await fetch(midiUrl);
-          if (!resp.ok) throw new Error(`MIDI fetch failed (${resp.status})`);
-          if (cancelled) return;
-          arrayBuffer = await resp.arrayBuffer();
-        } else {
-          const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
-          if (!result) {
-            throw new Error('MIDI file not found. It may not have been generated yet.');
-          }
-          if (cancelled) return;
-          arrayBuffer = await result.blob.arrayBuffer();
+        const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+        if (!result) {
+          throw new Error('MIDI file not found. It may not have been generated yet.');
         }
+
+        if (cancelled) return;
+
+        const arrayBuffer = await result.blob.arrayBuffer();
         const midi = new Midi(arrayBuffer);
         midiDataRef.current = midi;
         setLoading(false);
@@ -93,7 +83,7 @@ export default function PianoRollView({ jobId, selectedInstrument, getToken, zoo
     loadMidi();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, selectedInstrument, midiUrl]);
+  }, [jobId, selectedInstrument]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
