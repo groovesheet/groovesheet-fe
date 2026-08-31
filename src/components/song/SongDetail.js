@@ -266,6 +266,9 @@ function SongDetail({ onLoginClick }) {
 
   // --- asset mapping -----------------------------------------------------------
   const stemAssetsByName = useMemo(() => pickStemAssets(track?.assets), [track]);
+  // Waveforms computed client-side by the stem engine for tracks whose
+  // thumb_data was never populated server-side. name -> number[] (0-100).
+  const [localWaves, setLocalWaves] = useState({});
   const stems = useMemo(() => {
     const names = Array.from(stemAssetsByName.keys());
     const ordered = STEM_ORDER.filter((n) => names.includes(n)).concat(
@@ -276,9 +279,9 @@ function SongDetail({ onLoginClick }) {
       label: STEM_META[name]?.label || name.charAt(0).toUpperCase() + name.slice(1),
       color: STEM_META[name]?.color || '#8d8c8d',
       sub: STEM_META[name]?.sub || '',
-      wave: track?.thumb_data?.stems?.[name] || null,
+      wave: track?.thumb_data?.stems?.[name] || localWaves[name] || null,
     }));
-  }, [stemAssetsByName, track]);
+  }, [stemAssetsByName, track, localWaves]);
 
   // All note assets, per instrument. A track may carry several MIDI/MusicXML
   // parts (adtof_drums_midi, transkun_v2_piano_midi, …) — the selected
@@ -426,10 +429,22 @@ function SongDetail({ onLoginClick }) {
     const trackId = track.id;
     setStemError(null);
     setStemProgress(null);
+    setLocalWaves({});
+    // Compute waveforms client-side only for stems the API gave no thumb for.
+    const thumbStems = track.thumb_data?.stems || {};
+    const needsWaves = Array.from(pickStemAssets(track.assets).keys()).some(
+      (name) => !thumbStems[name]
+    );
     const engine = createStemEngine({
       assets: track.assets,
       onProgress: (p) => setStemProgress(p),
       onError: (err) => setStemError(err.message || 'Failed to load stems'),
+      onPeaks: needsWaves
+        ? (name, peaks) => {
+            if (thumbStems[name]) return;
+            setLocalWaves((prev) => (prev[name] ? prev : { ...prev, [name]: peaks }));
+          }
+        : undefined,
       refreshAssets: async () => (await fetchLibraryTrack(trackId)).assets,
     });
     engine.setMasterVolume(masterVolRef.current);
@@ -444,13 +459,19 @@ function SongDetail({ onLoginClick }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
 
-  // Per-stem mixer state, re-seeded per track.
+  // Per-stem mixer state, re-seeded per track. `stems` identity also changes
+  // when client-side waveforms stream in — keep the user's mix in that case.
+  const mixerTrackIdRef = useRef(null);
   useEffect(() => {
-    const next = {};
-    stems.forEach((s) => {
-      next[s.name] = { mute: false, solo: false, volume: 75 };
+    const fresh = mixerTrackIdRef.current !== (track && track.id);
+    mixerTrackIdRef.current = track && track.id;
+    setStemState((prev) => {
+      const next = {};
+      stems.forEach((s) => {
+        next[s.name] = (!fresh && prev[s.name]) || { mute: false, solo: false, volume: 75 };
+      });
+      return next;
     });
-    setStemState(next);
   }, [track, stems]);
 
   // Apply mixer state to the engine (multi-solo UI semantics → per-stem mutes).
