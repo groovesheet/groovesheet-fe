@@ -16,7 +16,6 @@ import TranscriptionResultView from './TranscriptionResult/TranscriptionResultVi
 import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
-import { scrollToPricing } from '../utils/scrollToPricing';
 
 const SUPPORTED_MIME_TYPES = [
   'audio/mp3',
