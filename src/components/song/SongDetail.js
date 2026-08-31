@@ -17,6 +17,7 @@ import CardRow from './CardRow';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import DrumGridView from './DrumGridView';
 import FretboardView from './FretboardView';
+import FallingKeysView from './FallingKeysView';
 import InstrumentDropdown from './InstrumentDropdown';
 import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
 import {
@@ -134,7 +135,10 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
         <div className="gs-seg" role="tablist">
           {tab('sheet', Icon.Sheet, 'Sheet music', '1')}
           {tab('midi', Icon.Midi, noteLabel || 'Piano roll', '2')}
-          {tab('stems', Icon.Stems, 'Stems', '3')}
+          {/* Falling keys is a keyboard picture, so it is offered only for the
+              pitched roll — a drum kit or a fretboard has its own visualiser. */}
+          {available.keys ? tab('keys', Icon.Midi, 'Falling keys', '3') : null}
+          {tab('stems', Icon.Stems, 'Stems', available.keys ? '4' : '3')}
         </div>
         {instrumentUi}
       </div>
@@ -360,8 +364,15 @@ function SongDetail({ onLoginClick }) {
   const hasMidi = Boolean(midiAsset);
   const hasSheet = Boolean(xmlAsset);
   const available = useMemo(
-    () => ({ sheet: hasSheet, midi: hasMidi, stems: hasStems }),
-    [hasSheet, hasMidi, hasStems]
+    () => ({
+      sheet: hasSheet,
+      midi: hasMidi,
+      // Falling keys draws a piano keyboard, so it applies to the pitched roll
+      // only; drums have the kit visualiser and bass/guitar the fretboard.
+      keys: hasMidi && noteView === 'roll',
+      stems: hasStems,
+    }),
+    [hasSheet, hasMidi, hasStems, noteView]
   );
 
   // --- view (tab) ----------------------------------------------------------------
@@ -846,7 +857,9 @@ function SongDetail({ onLoginClick }) {
       }
       if (e.key === '1' && available.sheet) setView('sheet');
       if (e.key === '2' && available.midi) setView('midi');
-      if (e.key === '3' && available.stems) setView('stems');
+      if (e.key === '3' && available.keys) setView('keys');
+      if (e.key === '3' && !available.keys && available.stems) setView('stems');
+      if (e.key === '4' && available.keys && available.stems) setView('stems');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -947,6 +960,10 @@ function SongDetail({ onLoginClick }) {
           : noteView === 'fretboard'
             ? 'Fretboard notes · falling onto their string and fret'
             : 'MIDI piano roll · click the roll to seek'}
+      </span>
+    ) : view === 'keys' ? (
+      <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
+        Falling keys · notes land on the key they are played on
       </span>
     ) : view === 'stems' ? (
       <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
@@ -1089,6 +1106,14 @@ function SongDetail({ onLoginClick }) {
                       loading={midiLoading}
                       error={midiError}
                       ghosts={ghosts}
+                    />
+                  )}
+                  {view === 'keys' && available.keys && (
+                    <FallingKeysView
+                      midiBuffer={midiBuffer}
+                      transport={transport}
+                      loading={midiLoading}
+                      error={midiError}
                     />
                   )}
                   {view === 'stems' && hasStems && (
