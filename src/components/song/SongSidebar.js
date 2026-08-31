@@ -338,17 +338,15 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
           {/* Was a <button> with no handler, while the page advertised the
               score as "downloadable as PDF". Opens in a tab so it can be read
               and saved; the endpoint engraves the MusicXML and caches it. */}
-          {pdfUrl ? (
-            <a href={pdfUrl} target="_blank" rel="noreferrer" title="Engraved PDF score">
-              <Printer size={14} />
-              PDF
-            </a>
-          ) : (
-            <button type="button" disabled title="No score to engrave for this track">
-              <Printer size={14} />
-              PDF
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={!pdfUrl}
+            title={pdfUrl ? 'Engraved PDF score' : 'No score to engrave for this track'}
+            onClick={() => pdfUrl && window.open(pdfUrl, '_blank', 'noopener')}
+          >
+            <Printer size={14} />
+            PDF
+          </button>
           <button type="button">
             <BookmarkSimple size={14} />
             Save
