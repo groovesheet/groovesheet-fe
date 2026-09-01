@@ -1,28 +1,9 @@
 import React, { useState } from 'react';
 import { Play, DownloadSimple } from '@phosphor-icons/react';
 import { LocalizedLink } from '../../i18n/locale';
-import SheetThumb from './thumbs/SheetThumb';
-import MidiThumb from './thumbs/MidiThumb';
-import StemThumb from './thumbs/StemThumb';
+import resolveThumb from './thumbs/resolveThumb';
 import { FORMAT_LABELS, fmtCount } from './constants';
 import './SongCard.css';
-
-const THUMB_BY_VARIANT = {
-  sheet: SheetThumb,
-  midi: MidiThumb,
-  stems: StemThumb,
-};
-
-function resolveThumb(song, variant) {
-  if (variant && THUMB_BY_VARIANT[variant]) return THUMB_BY_VARIANT[variant];
-  // Stems thumbs are the most honest default (we always have stem peaks when
-  // thumb_data exists); otherwise pick deterministically from the id.
-  if (song.thumbData && song.thumbData.stems) return StemThumb;
-  const flavors = ['sheet', 'midi', 'stems'];
-  const id = String(song.id || '00');
-  const c = (id.charCodeAt(0) + id.charCodeAt(id.length - 1)) % flavors.length;
-  return THUMB_BY_VARIANT[flavors[c]];
-}
 
 /**
  * Card model (see Explore.js trackToCard):

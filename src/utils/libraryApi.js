@@ -56,6 +56,22 @@ async function loadFixture(reason) {
   return { ...(fixture.default || fixture), _fixture: true };
 }
 
+/** Offset-page a fixture response so the dev fallback matches the paged API. */
+function fixturePage(data, { q, page = 1, limit = 24 }) {
+  const filtered = fixtureFilter(data, q);
+  const size = limit || 24;
+  const total = filtered.tracks.length;
+  return {
+    ...filtered,
+    tracks: filtered.tracks.slice((page - 1) * size, page * size),
+    total,
+    page,
+    pages: Math.max(1, Math.ceil(total / size)),
+    limit: size,
+    next_cursor: null,
+  };
+}
+
 function fixtureFilter(data, q) {
   if (!q) return data;
   const needle = q.trim().toLowerCase();
@@ -102,6 +118,72 @@ export async function fetchLibraryTracks({ q = '', cursor = null, limit = null }
     const detail = await parseErrorDetail(response);
     if (IS_DEV && response.status >= 500) {
       return fixtureFilter(await loadFixture(`HTTP ${response.status}: ${detail}`), q);
+    }
+    throw new LibraryApiError(detail, response.status);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch one page of results for the /explore/search page.
+ *
+ * Uses the API's offset mode (`page=`), which — unlike the hub's cursor mode —
+ * returns `total`/`pages` and is stable under any sort, so numbered pagination
+ * and a real result count are possible. Filtering and sorting happen
+ * server-side: the hub's client-side filtering only ever saw the first page,
+ * so a facet there silently hid matching tracks further down the catalog.
+ *
+ * @param {Object} params
+ * @param {string} [params.q] - Search query.
+ * @param {string} [params.sort] - relevance|popular|newest|plays|downloads|title
+ * @param {string[]} [params.formats] - Param values: sheet|midi|stems
+ * @param {string[]} [params.instruments] - Lowercase stem names.
+ * @param {string[]} [params.lengths] - under2|2to5|over5
+ * @param {number} [params.page] - 1-based page number.
+ * @param {number} [params.limit] - Page size (max 60).
+ * @param {boolean} [params.facets] - Ask for sidebar facet counts.
+ * @returns {Promise<{tracks: Array, total: number, page: number, pages: number, facets?: Object}>}
+ * @throws {LibraryApiError} on non-OK responses (prod, or 4xx in dev).
+ */
+export async function searchLibraryTracks({
+  q = '',
+  sort = null,
+  formats = [],
+  instruments = [],
+  lengths = [],
+  page = 1,
+  limit = null,
+  facets = false,
+} = {}) {
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  if (sort) params.set('sort', sort);
+  if (formats.length) params.set('format', formats.join(','));
+  if (instruments.length) params.set('instrument', instruments.join(','));
+  if (lengths.length) params.set('length', lengths.join(','));
+  params.set('page', String(page));
+  if (limit) params.set('limit', String(limit));
+  if (facets) params.set('facets', 'true');
+
+  let response;
+  try {
+    response = await fetch(`/api/library/tracks?${params.toString()}`, {
+      headers: { Accept: 'application/json' },
+    });
+  } catch (err) {
+    if (IS_DEV) {
+      // The fixture has no server-side filtering; page it locally so the
+      // results page is still developable with the backend down.
+      return fixturePage(await loadFixture(`network error: ${err.message}`), { q, page, limit });
+    }
+    throw new LibraryApiError('Could not reach the library. Check your connection.', 0);
+  }
+
+  if (!response.ok) {
+    const detail = await parseErrorDetail(response);
+    if (IS_DEV && response.status >= 500) {
+      return fixturePage(await loadFixture(`HTTP ${response.status}: ${detail}`), { q, page, limit });
     }
     throw new LibraryApiError(detail, response.status);
   }

@@ -1,0 +1,449 @@
+/* /explore/search — the results page. Reuses the Explore hub's page shell
+   (.explore-page / .explore-layout / .explore-sidebar-col) so the sidebar and
+   header line up between the two; everything below is results-specific. */
+
+.results-page .explore-main {
+  padding: 0 0 96px;
+}
+
+/* --- breadcrumb + title block --------------------------------------------- */
+
+.rs-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 24px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+.rs-crumbs a {
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+}
+
+.rs-crumbs a:hover {
+  color: var(--color-foreground);
+}
+
+.rs-crumbs span[aria-hidden='true'] {
+  opacity: 0.5;
+}
+
+.rs-crumb-current {
+  color: var(--color-foreground);
+}
+
+.rs-titleblock {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.rs-titles {
+  max-width: 660px;
+}
+
+.rs-title {
+  font-size: clamp(30px, 3.4vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -0.9px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.rs-title em {
+  font-style: italic;
+}
+
+.rs-sub {
+  font-size: 15px;
+  color: var(--color-muted-foreground);
+  margin-top: 10px;
+  line-height: 1.55;
+}
+
+.rs-sub b {
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+
+.rs-titleblock-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The hub's filter button sits above the hero; here it belongs inline with
+   the format tabs, so drop the top margin it carries by default. */
+.rs-filters-btn {
+  margin: 0;
+  padding: 7px 14px;
+  font-size: 14px;
+}
+
+/* --- segmented controls ---------------------------------------------------- */
+
+.rs-segmented,
+.rs-viewtoggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: 999px;
+}
+
+.rs-seg,
+.rs-view {
+  border: none;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  background: transparent;
+  color: var(--color-muted-foreground);
+}
+
+.rs-seg {
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.rs-seg:hover,
+.rs-view:hover {
+  color: var(--color-foreground);
+}
+
+.rs-seg-active,
+.rs-seg-active:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.rs-view-active,
+.rs-view-active:hover {
+  background: var(--color-panel1);
+  color: var(--color-text);
+}
+
+/* --- search field ---------------------------------------------------------- */
+
+.rs-search {
+  margin-top: 22px;
+  max-width: 620px;
+  position: relative;
+  display: block;
+}
+
+.rs-search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted-foreground);
+  display: inline-flex;
+  pointer-events: none;
+}
+
+.rs-search-input {
+  width: 100%;
+  padding: 13px 120px 13px 46px;
+  font-size: 15px;
+  border-radius: 120px;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  color: var(--color-input-text);
+  font-family: inherit;
+}
+
+.rs-search-input::placeholder {
+  color: var(--color-input-placeholder);
+}
+
+.rs-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.rs-search-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px 18px;
+  border-radius: 120px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* --- toolbar: pills, sort, layout ------------------------------------------ */
+
+.rs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rs-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.rs-nopills {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+
+.rs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text);
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-lighter);
+}
+
+.rs-pill button {
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  display: inline-flex;
+  padding: 0;
+}
+
+.rs-pill button:hover {
+  color: var(--color-text);
+}
+
+.rs-clear {
+  border: none;
+  background: transparent;
+  color: var(--color-info);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 6px;
+}
+
+.rs-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.rs-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rs-sort-label {
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  white-space: nowrap;
+}
+
+.rs-select-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rs-select-shell svg {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--color-muted-foreground);
+}
+
+.rs-select-shell select {
+  appearance: none;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-input-border);
+  border-radius: 999px;
+  padding: 7px 34px 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rs-select-shell select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* --- results --------------------------------------------------------------- */
+
+.rs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+
+/* SongCard is sized for a horizontal carousel; on the results grid it fills
+   its cell instead. */
+.rs-grid .song-card {
+  width: auto;
+  min-width: 0;
+}
+
+.rs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+/* --- pagination ------------------------------------------------------------ */
+
+.rs-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.rs-page,
+.rs-page-arrow {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--color-surface-light);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rs-page:hover:not(.rs-page-active),
+.rs-page-arrow:hover:not(:disabled) {
+  border-color: var(--color-surface-muted);
+  background: var(--color-surface-lighter);
+}
+
+.rs-page-active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+.rs-page-arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.rs-page-gap {
+  color: var(--color-muted-foreground);
+  padding: 0 2px;
+  user-select: none;
+}
+
+/* --- related searches ------------------------------------------------------ */
+
+.rs-related {
+  margin-top: 56px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border);
+}
+
+.rs-related-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+.rs-related-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rs-related-chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel2);
+  color: var(--color-foreground);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rs-related-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+/* --- responsive ------------------------------------------------------------ */
+
+@media (max-width: 1024px) {
+  .rs-titleblock-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .rs-search-input {
+    padding-right: 46px;
+  }
+
+  /* No room for the label beside the pill at this width; the icon and the
+     selected option already say what it does. */
+  .rs-search-btn {
+    display: none;
+  }
+
+  .rs-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rs-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}

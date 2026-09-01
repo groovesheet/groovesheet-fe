@@ -4,7 +4,10 @@ import FilterGroup from './FilterGroup';
 import {
   STEM_INSTRUMENTS,
   FORMAT_FILTER_MAP,
+  FORMAT_LABEL_BY_ASSET_TYPE,
   LENGTH_BUCKETS,
+  LENGTH_LABEL_BY_PARAM,
+  capitalize,
   lengthBucket,
 } from './constants';
 import './Sidebar.css';
@@ -12,12 +15,16 @@ import './Sidebar.css';
 /**
  * Explore sidebar: search, instrument chips, and checkbox FilterGroups.
  *
- * Facet counts are computed client-side from real loaded track data.
+ * Facet counts come from the server when `facetCounts` is supplied (the
+ * results page, where only one page of tracks is loaded and counting them
+ * would undercount the catalog). The hub passes `tracks` instead and counts
+ * client-side, which is accurate there because it holds the whole list.
  */
 function Sidebar({
   query,
   onQueryChange,
   tracks,
+  facetCounts,
   filters,
   setFilters,
   popularChips,
@@ -34,6 +41,38 @@ function Sidebar({
     });
 
   const facets = useMemo(() => {
+    if (facetCounts) {
+      // Server shape: {format: {musicxml: n}, instrument: {piano: n}, length: {under2: n}}
+      const instrumentCounts = facetCounts.instrument || {};
+      const known = STEM_INSTRUMENTS.map((label) => ({
+        label,
+        count: instrumentCounts[label.toLowerCase()] || 0,
+      }));
+      const extras = Object.keys(instrumentCounts)
+        .map(capitalize)
+        .filter((label) => !STEM_INSTRUMENTS.includes(label))
+        .sort()
+        .map((label) => ({ label, count: instrumentCounts[label.toLowerCase()] || 0 }));
+      return {
+        instrument: [...known, ...extras],
+        format: Object.keys(FORMAT_FILTER_MAP).map((label) => ({
+          label,
+          count: Object.entries(facetCounts.format || {}).reduce(
+            (n, [assetType, count]) =>
+              FORMAT_LABEL_BY_ASSET_TYPE[assetType] === label ? n + count : n,
+            0
+          ),
+        })),
+        length: LENGTH_BUCKETS.map((label) => ({
+          label,
+          count: Object.entries(facetCounts.length || {}).reduce(
+            (n, [param, count]) => (LENGTH_LABEL_BY_PARAM[param] === label ? n + count : n),
+            0
+          ),
+        })),
+      };
+    }
+
     const all = tracks || [];
     const instrument = {};
     const format = Object.fromEntries(Object.keys(FORMAT_FILTER_MAP).map((f) => [f, 0]));
@@ -63,7 +102,7 @@ function Sidebar({
       format: toItems(format, Object.keys(FORMAT_FILTER_MAP)),
       length: toItems(length, LENGTH_BUCKETS),
     };
-  }, [tracks]);
+  }, [tracks, facetCounts]);
 
   return (
     <aside className="explore-sidebar">
