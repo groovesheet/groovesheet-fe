@@ -124,6 +124,8 @@
   .testimonials-header {
     flex-direction: column;
     align-items: flex-start;
+    /* Row gap becomes vertical air between a heading and its own subtitle. */
+    gap: 14px;
   }
 
   .testimonials-subtitle {

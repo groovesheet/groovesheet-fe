@@ -184,6 +184,10 @@
   .features-header {
     flex-direction: column;
     align-items: flex-start;
+    /* The 40px gap was set for two columns side by side. Once stacked it
+       became 40px of vertical air between a heading and its own subtitle,
+       which read as two unrelated blocks. */
+    gap: 14px;
   }
 
   .features-title-wrapper,

@@ -6,10 +6,10 @@ export const Element = () => {
   return (
     <div className="element-section">
       <div className="element-container">
-      <div className="flex items-center justify-between relative self-stretch w-full flex-[0_0_auto]">
-        <div className="max-w-[420px] w-[420px] flex flex-col items-start relative">
+      <div className="element-header flex items-center justify-between relative self-stretch w-full flex-[0_0_auto]">
+        <div className="element-title-col max-w-[420px] w-[420px] flex flex-col items-start relative">
           <div className="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-            <div className="relative flex items-center justify-center self-stretch mt-[-1.00px] [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-[var(--color-text)] text-[40px] tracking-[-0.80px] leading-[52px]">
+            <div className="element-title relative flex items-center justify-center self-stretch mt-[-1.00px] [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-[var(--color-text)] text-[40px] tracking-[-0.80px] leading-[52px]">
               High-Accuracy Drum
               <br />
               Scores, On Demand.
@@ -17,12 +17,12 @@ export const Element = () => {
           </div>
         </div>
 
-        <p className="relative flex items-center justify-center w-[430px] [font-family:'DM_Sans-Regular',Helvetica] font-normal text-[var(--color-text)] text-xl tracking-[0] leading-6">
+        <p className="element-lede relative flex items-center justify-center w-[430px] [font-family:'DM_Sans-Regular',Helvetica] font-normal text-[var(--color-text)] text-xl tracking-[0] leading-6">
           Upload a track, review the preview, download print-ready parts.
         </p>
       </div>
 
-      <div className="h-[617.04px] justify-center self-stretch w-full flex flex-col items-start relative">
+      <div className="element-media h-[617.04px] justify-center self-stretch w-full flex flex-col items-start relative">
         <div className="flex items-center justify-center relative flex-1 self-stretch w-full grow rounded-[17.63px] overflow-hidden">
           <div className="justify-center flex-1 self-stretch grow flex flex-col items-start relative">
             {/* Use an existing public image for background via inline style to avoid css-loader url resolution */}

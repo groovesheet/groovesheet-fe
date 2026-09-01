@@ -39,3 +39,83 @@
   position: relative;
   z-index: 1;
 }
+
+/* =========================================================
+   Mobile
+   ---------------------------------------------------------
+   The header is a hardcoded two-column flex with w-[420px] and w-[430px]
+   Tailwind arbitrary values and no responsive variants, so on a phone the
+   title column was crushed to ~180px and wrapped one word per line while the
+   lede sat squeezed beside it. Stack them and let both use the full width.
+   These need to out-specify the utility classes on the same elements, hence
+   the .element-container prefix.
+   ========================================================= */
+@media (max-width: 900px) {
+  .element-container .element-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .element-container .element-title-col,
+  .element-container .element-lede {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* The utility classes centre these; left-align once stacked. */
+  .element-container .element-title,
+  .element-container .element-lede {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 768px) {
+  .element-section {
+    padding: 60px 0;
+  }
+
+  .element-container {
+    gap: 32px;
+    padding: 0 16px;
+  }
+
+  .element-container .element-title {
+    font-size: 30px;
+    line-height: 38px;
+    letter-spacing: -0.5px;
+  }
+
+  .element-container .element-lede {
+    font-size: 17px;
+    line-height: 24px;
+  }
+
+  /* 617px of fixed height is three quarters of a phone screen for what is a
+     supporting visual. */
+  .element-container .element-media {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .element-container {
+    padding: 0 12px;
+    gap: 24px;
+  }
+
+  .element-container .element-title {
+    font-size: 26px;
+    line-height: 33px;
+  }
+
+  .element-container .element-lede {
+    font-size: 16px;
+    line-height: 23px;
+  }
+
+  .element-container .element-media {
+    height: 200px;
+  }
+}

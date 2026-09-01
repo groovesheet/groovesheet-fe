@@ -228,37 +228,100 @@
 }
 
 @media (max-width: 768px) {
+  /* Stacked, the 56px row gap separates brand / links / language into three
+     drifting islands. */
   .footer-main {
-    margin-bottom: 60px;
-  }
-
-  .footer-links {
-    flex-direction: column;
     gap: 32px;
+    margin-bottom: 32px;
   }
 
-  .footer-column h3 {
-    font-size: 20px;
+  .footer-brand {
+    gap: 20px;
+    max-width: 100%;
   }
 
-  .footer-column a {
+  .footer-language .language-selector {
     font-size: 18px;
   }
 
   .footer-bottom {
-    flex-direction: column;
-    gap: 20px;
-    align-items: flex-start;
+    padding-top: 20px;
   }
 
-  .footer-bottom-left {
+  /* Two columns, side by side. Stacking them turned eight short links into a
+     ~700px scroll of full-width rows; there is easily room for both. */
+  .footer-links {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .footer-column {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  /* Section headings become labels so they read above their list rather than
+     competing with it. */
+  .footer-column h3 {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+    margin: 0 0 6px 0;
+  }
+
+  /* Every link carried a permanent underline, which on a dense list reads as
+     noise rather than affordance. Keep it for hover and keyboard focus. */
+  .footer-column a {
+    font-size: 16px;
+    line-height: 20px;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    width: auto;
+  }
+
+  .footer-column a:hover,
+  .footer-column a:focus-visible {
+    border-bottom: 1px solid currentColor;
+  }
+
+  .footer-bottom {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
 
+  .footer-bottom-left {
+    flex-direction: column-reverse;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  /* One wrapping row instead of a three-item vertical stack. */
   .footer-legal {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+
+  .footer-legal a {
+    border-bottom: none;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .footer-legal a:hover,
+  .footer-legal a:focus-visible {
+    border-bottom: 1px solid currentColor;
+  }
+
+  .copyright {
+    font-size: 14px;
   }
 }
+

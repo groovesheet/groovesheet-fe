@@ -190,22 +190,29 @@
     line-height: 36px;
   }
 
+  /* Stacked, the category and the questions under it were the same size with
+     the same padding, so nothing said which was the heading. Demote the
+     category to a quiet label and pull it tight to the questions it owns. */
   .faq-section-title {
-    font-size: 20px;
-    line-height: 28px;
-  }
-
-  .faq-question-text span {
-    font-size: 20px;
-    line-height: 28px;
-  }
-
-  .faq-question-button {
-    padding: 24px 0;
+    font-size: 13px;
+    line-height: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
   }
 
   .faq-section-label {
-    padding: 24px 20px 24px 0;
+    padding: 26px 0 10px;
+  }
+
+  .faq-question-text span {
+    font-size: 18px;
+    line-height: 25px;
+  }
+
+  .faq-question-button {
+    padding: 18px 0;
+    gap: 16px;
   }
 }
 
@@ -216,13 +223,17 @@
   }
 
   .faq-section-title {
-    font-size: 18px;
-    line-height: 24px;
+    font-size: 12px;
+    line-height: 16px;
   }
 
   .faq-question-text span {
-    font-size: 18px;
+    font-size: 17px;
     line-height: 24px;
+  }
+
+  .faq-question-button {
+    padding: 16px 0;
   }
 
   .faq-icon {
