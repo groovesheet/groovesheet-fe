@@ -1034,3 +1034,263 @@
     height: 100dvh;
   }
 }
+
+/* =========================================================
+   Spectrum view — overlaid stem spectrograms
+   ========================================================= */
+.gs-song-page .gs-spec-view {
+  display: grid;
+  grid-template-columns: 208px 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+.gs-song-page .gs-spec-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px;
+  border-right: 1px solid var(--color-border-light);
+  background: var(--color-surface-light);
+}
+.gs-song-page .gs-spec-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  margin-bottom: 4px;
+}
+.gs-song-page .gs-spec-all {
+  border: 1px solid var(--color-border-light);
+  background: transparent;
+  color: var(--color-muted-foreground);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  text-transform: none;
+}
+.gs-song-page .gs-spec-all:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-lighter);
+}
+.gs-song-page .gs-spec-layer {
+  display: grid;
+  grid-template-columns: 14px 1fr 26px;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.gs-song-page .gs-spec-layer:hover {
+  background: var(--color-surface-lighter);
+}
+.gs-song-page .gs-spec-layer.off {
+  opacity: 0.42;
+}
+.gs-song-page .gs-spec-swatch {
+  width: 14px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--layer);
+  background: var(--layer);
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 0 10px -2px var(--layer);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.gs-song-page .gs-spec-layer.off .gs-spec-swatch {
+  background: transparent;
+  box-shadow: none;
+}
+.gs-song-page .gs-spec-layer-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+}
+.gs-song-page .gs-spec-layer-sub {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-gain {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.gs-song-page .gs-spec-gain label {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-note {
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+}
+
+.gs-song-page .gs-spec-main {
+  min-width: 0;
+  padding: 16px 20px;
+}
+.gs-song-page .gs-spec-plot {
+  position: relative;
+}
+.gs-song-page .gs-spec-axis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-axis span {
+  position: absolute;
+  right: 8px;
+  transform: translateY(50%);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-canvas-wrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #05060f;
+  border: 1px solid var(--color-border-light);
+}
+.gs-song-page .gs-spec-canvas {
+  display: block;
+  cursor: crosshair;
+}
+.gs-song-page .gs-spec-unplayed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--gs-prog, 0%);
+  right: 0;
+  background: rgba(5, 6, 15, 0.42);
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--gs-prog, 0%);
+  width: 1.5px;
+  background: #fff;
+  opacity: 0.9;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-hover {
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  min-height: 320px;
+  color: var(--color-muted-foreground);
+  font-size: 12px;
+}
+.gs-song-page .gs-spec-bar {
+  width: 220px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.gs-song-page .gs-spec-bar > div {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s linear;
+}
+.gs-song-page .gs-spec-ruler {
+  position: relative;
+  margin-top: 4px;
+}
+.gs-song-page .gs-spec-ruler span {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+@media (max-width: 900px) {
+  .gs-song-page .gs-spec-view {
+    grid-template-columns: 1fr;
+  }
+  .gs-song-page .gs-spec-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+  .gs-song-page .gs-spec-main {
+    padding: 14px 12px;
+  }
+}
+.gs-song-page .gs-spec-strip {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.82);
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-strip .gs-spec-bar {
+  width: 90px;
+}

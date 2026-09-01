@@ -70,6 +70,36 @@ function peaksFromBuffer(audioBuffer) {
   return peaks.map((p) => Math.round((p * 100) / max));
 }
 
+/** Average an AudioBuffer's channels into one Float32Array. */
+function monoFromBuffer(audioBuffer) {
+  const chans = audioBuffer.numberOfChannels;
+  const first = audioBuffer.getChannelData(0);
+  if (chans === 1) return first.slice(0);
+  const out = new Float32Array(first.length);
+  for (let c = 0; c < chans; c += 1) {
+    const data = audioBuffer.getChannelData(c);
+    for (let i = 0; i < out.length; i += 1) out[i] += data[i];
+  }
+  for (let i = 0; i < out.length; i += 1) out[i] /= chans;
+  return out;
+}
+
+/** Linear-interpolation resample — accurate enough for a spectrogram picture. */
+function resampleLinear(samples, fromRate, toRate) {
+  if (!samples || !fromRate || fromRate === toRate) return samples;
+  const ratio = fromRate / toRate;
+  const out = new Float32Array(Math.max(1, Math.floor(samples.length / ratio)));
+  for (let i = 0; i < out.length; i += 1) {
+    const pos = i * ratio;
+    const i0 = Math.floor(pos);
+    const frac = pos - i0;
+    const a = samples[i0] || 0;
+    const b = samples[i0 + 1] !== undefined ? samples[i0 + 1] : a;
+    out[i] = a + (b - a) * frac;
+  }
+  return out;
+}
+
 /** decodeAudioData in callback form — Safari's promise form is newer. */
 function decodeIn(decodeCtx, arrayBuffer) {
   return new Promise((resolve, reject) => {
@@ -359,6 +389,94 @@ export function createStemEngine({ assets, onReady, onError, onProgress, onPeaks
     setMasterVolume(v) {
       masterVol = Math.max(0, Math.min(1, Number(v) || 0));
       applyGains();
+    },
+
+    // --- analysis --------------------------------------------------------
+    /**
+     * Mono samples per stem at `sampleRate`, for offline analysis (the
+     * spectrogram view). Never downloads anything twice: it decodes a copy of
+     * the bytes this engine already fetched, or — if the playback decode has
+     * since detached them — resamples the decoded playback buffer.
+     *
+     * Decoding runs through a small worker pool. `decodeAudioData` does its
+     * work off the main thread, so a few in flight is much faster than one at
+     * a time; the pool size is also what bounds memory, since a decoded
+     * 3-minute stem at 16 kHz is ~13 MB.
+     *
+     * Pass `onStem(name, samples)` to consume each stem as it lands: the
+     * samples are then handed over rather than retained, so the pool never
+     * holds more than `concurrency` of them at once, and awaiting inside the
+     * callback keeps it that way. Without it, every stem is accumulated into
+     * the returned Map.
+     *
+     * @returns {Promise<Map<string, Float32Array>>} empty when `onStem` is used
+     */
+    async getAnalysisSamples({ sampleRate = 16000, concurrency = 3, onStem } = {}) {
+      await fetchAllPromise;
+      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      const names = Array.from(stems.keys());
+      const results = new Map();
+
+      const decodeOne = async (name) => {
+        const st = stems.get(name);
+        if (!st) return;
+        // The playback decode may be mid-flight and about to detach the bytes.
+        if (!st.arrayBuffer && !st.buffer && decodePromise) {
+          try { await decodePromise; } catch (e) { /* use whatever survived */ }
+        }
+        let samples = null;
+        if (st.arrayBuffer && OAC) {
+          let copy = null;
+          try {
+            copy = st.arrayBuffer.slice(0); // throws if already detached
+          } catch (e) {
+            copy = null;
+          }
+          if (copy) {
+            try {
+              let decodeCtx;
+              try {
+                decodeCtx = new OAC(1, 1, sampleRate);
+              } catch (e) {
+                decodeCtx = new OAC(1, 1, 44100); // some engines floor the rate range
+              }
+              const buf = await decodeIn(decodeCtx, copy);
+              samples = monoFromBuffer(buf);
+              // A floored context decodes at its own rate, not the one asked for.
+              if (Math.abs(decodeCtx.sampleRate - sampleRate) > 1) {
+                samples = resampleLinear(samples, decodeCtx.sampleRate, sampleRate);
+              }
+            } catch (e) {
+              samples = null;
+            }
+          }
+        }
+        if (!samples && st.buffer) {
+          samples = resampleLinear(monoFromBuffer(st.buffer), st.buffer.sampleRate, sampleRate);
+        }
+        if (!samples || disposed) return;
+        if (onStem) {
+          try { await onStem(name, samples); } catch (e) { /* one stem failing is not fatal */ }
+        } else {
+          results.set(name, samples);
+        }
+      };
+
+      let next = 0;
+      const worker = async () => {
+        for (;;) {
+          if (disposed) return;
+          const i = next;
+          next += 1;
+          if (i >= names.length) return;
+          // eslint-disable-next-line no-await-in-loop
+          await decodeOne(names[i]);
+        }
+      };
+      await Promise.all(
+        Array.from({ length: Math.max(1, Math.min(concurrency, names.length)) }, worker)
+      );
+      return results;
     },
 
     // --- meta ------------------------------------------------------------

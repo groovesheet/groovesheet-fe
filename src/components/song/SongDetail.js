@@ -19,6 +19,7 @@ import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import DrumGridView from './DrumGridView';
 import FretboardView from './FretboardView';
 import FallingKeysView from './FallingKeysView';
+import SpectrogramView from './SpectrogramView';
 import InstrumentDropdown from './InstrumentDropdown';
 import { fetchLibraryTrack, fetchLibraryTracks, postTrackPlay, downloadLibraryTrackZip } from '../../utils/libraryApi';
 import {
@@ -90,9 +91,20 @@ function hashId(id) {
   return h;
 }
 
+// Tab order, and the digit shortcut each one answers to. Only the tabs a track
+// actually has are rendered, and the digits are assigned over that filtered
+// list so they always read 1,2,3… with no holes (VIEW_ORDER is also what the
+// keyboard handler indexes into).
+const VIEW_ORDER = ['sheet', 'midi', 'keys', 'stems', 'spectrum'];
+
 function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, instrumentUi }) {
-  const tab = (key, IconCmp, label, kbd) => {
+  // Digit label per key: 1-based position among the AVAILABLE tabs.
+  const kbdFor = {};
+  VIEW_ORDER.filter((k) => available[k]).forEach((k, i) => { kbdFor[k] = String(i + 1); });
+
+  const tab = (key, IconCmp, label) => {
     const enabled = Boolean(available[key]);
+    const kbd = kbdFor[key];
     return (
       <button
         className={viewMode === key ? 'on' : ''}
@@ -111,12 +123,14 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
     <div className="gs-viewer-toolbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div className="gs-seg" role="tablist">
-          {tab('sheet', Icon.Sheet, 'Sheet music', '1')}
-          {tab('midi', Icon.Midi, noteLabel || 'Piano roll', '2')}
+          {tab('sheet', Icon.Sheet, 'Sheet music')}
+          {tab('midi', Icon.Midi, noteLabel || 'Piano roll')}
           {/* Falling keys is a keyboard picture, so it is offered only for the
               pitched roll — a drum kit or a fretboard has its own visualiser. */}
-          {available.keys ? tab('keys', Icon.Midi, 'Falling keys', '3') : null}
-          {tab('stems', Icon.Stems, 'Stems', available.keys ? '4' : '3')}
+          {available.keys ? tab('keys', Icon.Midi, 'Falling keys') : null}
+          {tab('stems', Icon.Stems, 'Stems')}
+          {/* Spectrum rides on the same stems, so it only appears with them. */}
+          {available.spectrum ? tab('spectrum', Icon.Spectrum, 'Spectrum') : null}
         </div>
         {instrumentUi}
       </div>
@@ -349,6 +363,8 @@ function SongDetail({ onLoginClick }) {
       // only; drums have the kit visualiser and bass/guitar the fretboard.
       keys: hasMidi && noteView === 'roll',
       stems: hasStems,
+      // Overlaid stem spectrograms — same audio, same mixer state as Stems.
+      spectrum: hasStems,
     }),
     [hasSheet, hasMidi, hasStems, noteView]
   );
@@ -412,6 +428,9 @@ function SongDetail({ onLoginClick }) {
   const [stemProgress, setStemProgress] = useState(null); // { loaded, total, phase }
   const [stemError, setStemError] = useState(null);
   const [stemState, setStemState] = useState({});
+  // Same engine as stemEngineRef, but as state: the spectrum view needs to
+  // re-run its analysis when a new engine is built for a new track.
+  const [stemEngine, setStemEngine] = useState(null);
 
   useEffect(() => {
     if (!track || !hasStems) return undefined;
@@ -438,12 +457,14 @@ function SongDetail({ onLoginClick }) {
     });
     engine.setMasterVolume(masterVolRef.current);
     stemEngineRef.current = engine;
+    setStemEngine(engine);
     const t = transportRef.current;
     t.attachEngine(engine);
     return () => {
       t.detachEngine('stems');
       engine.dispose();
       if (stemEngineRef.current === engine) stemEngineRef.current = null;
+      setStemEngine((cur) => (cur === engine ? null : cur));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track]);
@@ -764,7 +785,8 @@ function SongDetail({ onLoginClick }) {
       t.setActiveEngine('osmd');
     } else if (view === 'midi') {
       t.setActiveEngine('midi');
-    } else if (view === 'stems') {
+    } else if (view === 'stems' || view === 'spectrum') {
+      // The spectrum view is a second face on the stem mixer — same engine.
       t.setActiveEngine('stems');
     }
   }, [view, track]);
@@ -833,11 +855,13 @@ function SongDetail({ onLoginClick }) {
         e.preventDefault();
         handlePlayPause();
       }
-      if (e.key === '1' && available.sheet) setView('sheet');
-      if (e.key === '2' && available.midi) setView('midi');
-      if (e.key === '3' && available.keys) setView('keys');
-      if (e.key === '3' && !available.keys && available.stems) setView('stems');
-      if (e.key === '4' && available.keys && available.stems) setView('stems');
+      // Digits index the available tabs in VIEW_ORDER, matching the labels
+      // ViewerToolbar prints.
+      const digit = parseInt(e.key, 10);
+      if (digit >= 1 && digit <= 9) {
+        const target = VIEW_ORDER.filter((k) => available[k])[digit - 1];
+        if (target) setView(target);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -948,6 +972,10 @@ function SongDetail({ onLoginClick }) {
       <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
         {stems.length} isolated stems · {stemStatusText || 'drag the timeline to scrub'}
       </span>
+    ) : view === 'spectrum' ? (
+      <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
+        {stemStatusText || 'Mel spectrograms of every stem, overlaid · toggle a layer to mute it'}
+      </span>
     ) : null;
 
   // Only a real 404 means "track gone" — anything else (422, 5xx) is a bug or
@@ -1033,7 +1061,7 @@ function SongDetail({ onLoginClick }) {
                     available={available}
                     noteLabel={noteLabel}
                     instrumentUi={
-                      view !== 'stems' && instrumentOptions.length > 1 ? (
+                      view !== 'stems' && view !== 'spectrum' && instrumentOptions.length > 1 ? (
                         <InstrumentDropdown
                           options={instrumentOptions}
                           value={instrument}
@@ -1102,6 +1130,18 @@ function SongDetail({ onLoginClick }) {
                       onStemChange={onStemChange}
                       onSeek={onSeekFraction}
                       transport={transport}
+                      statusText={stemStatusText}
+                    />
+                  )}
+                  {view === 'spectrum' && hasStems && (
+                    <SpectrogramView
+                      stems={stems}
+                      stemState={stemState}
+                      onStemChange={onStemChange}
+                      onSeek={onSeekFraction}
+                      transport={transport}
+                      stemEngine={stemEngine}
+                      trackId={track?.id}
                       statusText={stemStatusText}
                     />
                   )}

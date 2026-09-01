@@ -78,6 +78,13 @@ export const Icon = {
       <line x1="20" y1="9" x2="20" y2="15" />
     </svg>
   ),
+  Spectrum: (p) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" {...p}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 15c2-1 3-5 5-5s3 3 5 3 3-6 5-6 2 3 3 3" />
+      <path d="M3 18.5c2-.6 3-2 5-2s3 1.2 5 1.2 3-2.4 5-2.4 2 1.2 3 1.2" opacity="0.55" />
+    </svg>
+  ),
   // Playback transport
   Prev: (p) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
