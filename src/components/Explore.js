@@ -6,7 +6,8 @@ import Sidebar from './explore/Sidebar';
 import ExploreHeader from './explore/ExploreHeader';
 import Section from './explore/Section';
 import { SkeletonSection, ExploreEmpty, ExploreError } from './explore/ExploreStates';
-import { STEM_INSTRUMENTS, capitalize, FORMAT_FILTER_MAP, lengthBucket } from './explore/constants';
+import { STEM_INSTRUMENTS, FORMAT_FILTER_MAP, lengthBucket } from './explore/constants';
+import trackToCard from './explore/trackToCard';
 import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
 import usePageMeta from '../hooks/usePageMeta';
@@ -14,30 +15,6 @@ import './Explore.css';
 
 const PAGE_LIMIT = 60;
 const SEARCH_DEBOUNCE_MS = 300;
-
-/** Map a backend library track (GET /api/library/tracks) to the card model. */
-function trackToCard(track) {
-  const stems = (track.thumb_data && track.thumb_data.stems) || {};
-  return {
-    id: track.id,
-    title: track.title,
-    artist: track.artist,
-    length: (track.thumb_data && track.thumb_data.duration_sec) || track.duration_sec,
-    year: track.year || null,
-    coverUrl: track.cover_url || null,
-    thumbUrl: track.thumb_url || null,
-    previewUrls: track.preview_urls || {},
-    formats: track.formats || [],
-    thumbData: track.thumb_data || null,
-    // Capitalized for display + chip matching ('drums' → 'Drums').
-    parts: Object.keys(stems).map(capitalize),
-    popularity: track.popularity ?? 0,
-    publishedAt: track.published_at || null,
-    plays: track.plays ?? 0,
-    downloads: track.downloads ?? 0,
-    owner: track.owner || null,
-  };
-}
 
 export const Explore = ({ onLoginClick }) => {
   const navigate = useLocalizedNavigate();

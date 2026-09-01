@@ -13,7 +13,8 @@ import { useLocalizedNavigate } from '../../i18n/locale';
 import { Icon } from './icons';
 import PlaybackBar from './PlaybackBar';
 import SongSidebar from './SongSidebar';
-import CardRow from './CardRow';
+import Section from '../explore/Section';
+import trackToCard from '../explore/trackToCard';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import DrumGridView from './DrumGridView';
 import FretboardView from './FretboardView';
@@ -30,7 +31,6 @@ import {
 } from '../../utils/analytics';
 import { useAuth, useUser } from '../../auth';
 import usePageMeta from '../../hooks/usePageMeta';
-import { seededDifficulty, seededViews, seededRating } from '../../utils/cosmeticStats';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
@@ -80,28 +80,6 @@ async function fetchAssetWithRefresh(asset, trackId, as /* 'arrayBuffer' | 'text
     if (!match) throw firstErr;
     return grab(match);
   }
-}
-
-function fmtDur(s) {
-  if (!Number.isFinite(s) || s <= 0) return '—';
-  const m = Math.floor(s / 60);
-  const ss = String(Math.floor(s % 60)).padStart(2, '0');
-  return `${m}:${ss}`;
-}
-
-/** Map a library track to the card shape CardRow/MiniThumbCard expects. */
-function trackToCard(t) {
-  return {
-    id: t.id,
-    title: t.title,
-    artist: t.artist,
-    diff: seededDifficulty(t.id),
-    rating: seededRating(t.id),
-    views: seededViews(t.id, Number(t.popularity) || 0),
-    dur: fmtDur(t.thumb_data?.duration_sec || t.duration_sec),
-    previewUrls: t.preview_urls || {},
-    thumbUrl: t.thumb_url || null,
-  };
 }
 
 /** Stable id hash — seeds the "Recommended" rail's deterministic shuffle. */
@@ -886,6 +864,9 @@ function SongDetail({ onLoginClick }) {
     };
   }, [songId]);
 
+  // Rails render through the same Section + SongCard components Explore uses,
+  // off the same card model — real cover art, score previews and waveform
+  // thumbnails, sorted on the same real engagement signals.
   const rails = useMemo(() => {
     if (!related.length) return [];
     const cards = (list) => list.map(trackToCard);
@@ -893,7 +874,8 @@ function SongDetail({ onLoginClick }) {
     const trending = [...related].sort(
       (a, b) =>
         (Number(b.popularity) || 0) - (Number(a.popularity) || 0) ||
-        seededViews(b.id, 0) - seededViews(a.id, 0)
+        (Number(b.plays) || 0) - (Number(a.plays) || 0) ||
+        (Number(b.downloads) || 0) - (Number(a.downloads) || 0)
     );
     const newest = [...related].sort(
       (a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0)
@@ -903,21 +885,19 @@ function SongDetail({ onLoginClick }) {
         key: 'recommended',
         title: 'Recommended scores',
         subtitle: 'Picked from the GrooveSheet library — close in energy and instrumentation.',
-        items: cards(recommended),
-        variant: 'mix',
+        songs: cards(recommended),
       },
       {
         key: 'trending',
         title: 'Trending now',
         subtitle: 'What musicians are practicing this week.',
-        items: cards(trending),
-        variant: 'mix',
+        songs: cards(trending),
       },
       {
         key: 'new',
         title: 'New this week',
         subtitle: 'The latest transcriptions and stem packs in the catalog.',
-        items: cards(newest),
+        songs: cards(newest).filter((t) => t.formats.includes('musicxml')),
         variant: 'sheet',
       },
     ];
@@ -928,8 +908,7 @@ function SongDetail({ onLoginClick }) {
           key: 'artist',
           title: `More from ${track.artist}`,
           subtitle: `Every ${track.artist} track in the GrooveSheet library.`,
-          items: cards(byArtist),
-          variant: 'sheet',
+          songs: cards(byArtist),
         });
       }
     }
@@ -1133,11 +1112,11 @@ function SongDetail({ onLoginClick }) {
 
                 {/* Below-viewer rails — design-style slices of the related tracks */}
                 {rails.map((rail) => (
-                  <CardRow
+                  <Section
                     key={rail.key}
                     title={rail.title}
                     subtitle={rail.subtitle}
-                    items={rail.items}
+                    songs={rail.songs}
                     variant={rail.variant}
                     onCardClick={goToSong}
                   />
