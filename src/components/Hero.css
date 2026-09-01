@@ -846,8 +846,8 @@
     gap: 12px;
   }
 
-  /* Tab strip: one scrollable row. With flex-wrap the 5-instrument strip on
-     /stem-splitter dropped "Bass" onto its own line at <=360px, where it
+  /* Tab strip: one row that never wraps. With flex-wrap the 5-instrument strip
+     on /stem-splitter dropped "Bass" onto its own line at <=360px, where it
      stretched full width and read as a broken pill. */
   .instrument-tabs {
     padding: 12px 12px 0;
@@ -862,18 +862,29 @@
     display: none;
   }
 
+  /* Safe default: size to content and scroll. This is what a five-instrument
+     strip needs, and what browsers without :has() fall back to. */
   .instrument-tab {
     flex: 0 0 auto;
-    min-width: 68px;
-    min-height: 44px;
-    padding: 8px 10px;
-    font-size: 11px;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px 10px;
+    font-size: 15px;
+    line-height: 20px;
     scroll-snap-align: start;
   }
 
+  /* Three instruments or fewer — the home page — fit comfortably, so let them
+     share the row equally the way the desktop layout does instead of huddling
+     at content width and leaving ~140px of the card empty. Sizing every strip
+     for the worst case made the common case look starved. */
+  .instrument-tabs:not(:has(.instrument-tab:nth-child(4))) .instrument-tab {
+    flex: 1 1 0;
+  }
+
   .instrument-tab svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
   }
 
   .upload-content-top {
@@ -904,7 +915,7 @@
      actually render — the old `.upload-text p` / `.browse-btn` rules here
      matched nothing, so the drop zone had no mobile treatment at all. */
   .upload-drop-zone {
-    padding: 20px 12px;
+    padding: 24px 14px 28px;
   }
 
   .upload-content-wrapper {
@@ -968,14 +979,14 @@
   }
 
   .instrument-tab {
-    min-width: 62px;
-    padding: 6px 8px;
-    font-size: 11px;
+    padding: 10px 8px;
+    font-size: 14px;
+    line-height: 19px;
   }
 
   .instrument-tab svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 
   .upload-content-top {
@@ -999,7 +1010,7 @@
   }
 
   .upload-drop-zone {
-    padding: 16px 10px;
+    padding: 20px 12px 24px;
   }
 
   .upload-content-wrapper {
