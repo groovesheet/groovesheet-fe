@@ -842,7 +842,10 @@
 
   .upload-area {
     min-height: 420px;
-    padding: 0;
+    /* Desktop insets the drop zone with 8px 14px 14px. Mobile zeroed it, so
+       the dashed zone sat flush against the card's own border with only the
+       1px border between them. Keep the inset, just tighter. */
+    padding: 8px 12px 12px;
     gap: 12px;
   }
 
@@ -850,7 +853,7 @@
      on /stem-splitter dropped "Bass" onto its own line at <=360px, where it
      stretched full width and read as a broken pill. */
   .instrument-tabs {
-    padding: 12px 12px 0;
+    padding: 4px 0 0;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
@@ -969,13 +972,13 @@
 
   .upload-area {
     min-height: 380px;
-    padding: 0;
-    gap: 12px;
+    padding: 6px 10px 10px;
+    gap: 10px;
     border-width: 2px;
   }
 
   .instrument-tabs {
-    padding: 10px 10px 0;
+    padding: 2px 0 0;
   }
 
   .instrument-tab {
