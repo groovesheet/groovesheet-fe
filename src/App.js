@@ -22,6 +22,7 @@ import MidiConverter from './components/MidiConverter';
 import ApiPage from './components/ApiPage';
 import HelpSupport from './components/HelpSupport';
 import Explore from './components/Explore';
+import SearchResults from './components/explore/SearchResults';
 import SongDetail from './components/song/SongDetail';
 import CreatorProfile from './components/creator/CreatorProfile';
 import Element from './components/Element';
@@ -185,6 +186,8 @@ function App() {
       <Route path="developers" element={<ApiPage onLoginClick={openLoginModal} />} />
       <Route path="help" element={<HelpSupport onLoginClick={openLoginModal} />} />
       <Route path="explore" element={<Explore onLoginClick={openLoginModal} />} />
+      {/* Static segment, so it wins over explore/:songId regardless of order. */}
+      <Route path="explore/search" element={<SearchResults onLoginClick={openLoginModal} />} />
       <Route path="explore/:songId" element={<SongDetail onLoginClick={openLoginModal} />} />
       <Route path="u/:username" element={<CreatorProfile onLoginClick={openLoginModal} />} />
       <Route path="privacy-policy" element={<PrivacyPolicy onLoginClick={openLoginModal} />} />

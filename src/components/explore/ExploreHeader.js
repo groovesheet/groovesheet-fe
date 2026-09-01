@@ -4,7 +4,17 @@ import './ExploreHeader.css';
 
 const TRY_CHIPS = ['Clair de Lune', 'Lo-fi drums', 'Movie themes', 'Beginner piano'];
 
-function ExploreHeader({ query, onQueryChange }) {
+/**
+ * `onSubmit` hands the query to the full results page (/explore/search).
+ * Typing still filters the hub's rows live via `onQueryChange`; submitting is
+ * what leaves for the paginated, sortable view.
+ */
+function ExploreHeader({ query, onQueryChange, onSubmit }) {
+  const submit = (e) => {
+    e.preventDefault();
+    if (onSubmit) onSubmit(query);
+  };
+
   return (
     <div className="explore-hero">
       <div className="eh-copy">
@@ -15,7 +25,7 @@ function ExploreHeader({ query, onQueryChange }) {
         </p>
       </div>
       <div className="eh-search">
-        <div className="eh-search-shell">
+        <form className="eh-search-shell" onSubmit={submit}>
           <span className="eh-search-icon">
             <MagnifyingGlass size={20} weight="regular" />
           </span>
@@ -26,10 +36,10 @@ function ExploreHeader({ query, onQueryChange }) {
             onChange={(e) => onQueryChange(e.target.value)}
             aria-label="Search the library"
           />
-          <button type="button" className="eh-search-btn">
+          <button type="submit" className="eh-search-btn">
             Search
           </button>
-        </div>
+        </form>
         <div className="eh-try">
           <span className="eh-try-label">Try</span>
           {TRY_CHIPS.map((s) => (
@@ -37,7 +47,7 @@ function ExploreHeader({ query, onQueryChange }) {
               key={s}
               type="button"
               className="eh-try-chip"
-              onClick={() => onQueryChange(s)}
+              onClick={() => (onSubmit ? onSubmit(s) : onQueryChange(s))}
             >
               {s}
             </button>

@@ -68,3 +68,53 @@ export const fmtDur = (s) => {
 
 export const fmtCount = (n) =>
   n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n);
+
+// --- Results page (/explore/search) -----------------------------------------
+// The sidebar speaks in human labels; the API speaks in short param keys.
+// These maps are the only place the two vocabularies meet.
+
+/** Sidebar "Format" label → `format=` param value. */
+export const FORMAT_PARAM_BY_LABEL = {
+  'Sheet Music': 'sheet',
+  MIDI: 'midi',
+  Stems: 'stems',
+};
+
+export const FORMAT_LABEL_BY_PARAM = Object.fromEntries(
+  Object.entries(FORMAT_PARAM_BY_LABEL).map(([label, param]) => [param, label])
+);
+
+/** Backend facet key (LibraryAsset.asset_type) → sidebar "Format" label. */
+export const FORMAT_LABEL_BY_ASSET_TYPE = Object.fromEntries(
+  Object.entries(FORMAT_FILTER_MAP).map(([label, assetType]) => [assetType, label])
+);
+
+/** Sidebar "Length" label → `length=` param value. */
+export const LENGTH_PARAM_BY_LABEL = {
+  'Under 2 min': 'under2',
+  '2 to 5 min': '2to5',
+  '5+ min': 'over5',
+};
+
+export const LENGTH_LABEL_BY_PARAM = Object.fromEntries(
+  Object.entries(LENGTH_PARAM_BY_LABEL).map(([label, param]) => [param, label])
+);
+
+/**
+ * Sort options, in menu order. Every one is backed by a real column — there is
+ * deliberately no "Highest rated" or "Easiest first" here, because the catalog
+ * carries no rating or difficulty to sort by.
+ */
+export const SORT_OPTIONS = [
+  { value: 'relevance', label: 'Best match', searchOnly: true },
+  { value: 'popular', label: 'Most popular' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'plays', label: 'Most played' },
+  { value: 'downloads', label: 'Most downloaded' },
+  { value: 'title', label: 'A–Z' },
+];
+
+export const SORT_VALUES = SORT_OPTIONS.map((o) => o.value);
+
+/** Results per page. Matches the API's `limit` ceiling of 60. */
+export const RESULTS_PER_PAGE = 24;

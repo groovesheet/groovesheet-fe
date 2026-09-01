@@ -29,6 +29,24 @@ export function SkeletonSection({ cards = 4 }) {
   );
 }
 
+/** Skeleton placeholder mirroring the results grid while a page loads. */
+export function SkeletonGrid({ cards = 8 }) {
+  return (
+    <div className="exsk-grid" aria-hidden="true">
+      {Array.from({ length: cards }).map((_, i) => (
+        <div key={i} className="exsk-card exsk-card-grid">
+          <div className="exsk-thumb" />
+          <div className="exsk-meta">
+            <div className="exsk-line exsk-w60" />
+            <div className="exsk-line exsk-w40" />
+            <div className="exsk-line exsk-w80" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Shown when a search returns no tracks. */
 export function ExploreEmpty({ query, onClear }) {
   return (

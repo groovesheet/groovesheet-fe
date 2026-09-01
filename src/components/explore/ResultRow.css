@@ -1,0 +1,148 @@
+.result-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 2.2fr) minmax(0, 1.1fr) auto auto;
+  align-items: center;
+  gap: 18px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-panel2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.result-row:hover {
+  background: var(--color-panel1);
+  border-color: var(--color-surface-muted);
+}
+
+.rr-thumb {
+  width: 112px;
+  height: 66px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-panel3);
+  flex-shrink: 0;
+}
+
+.rr-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rr-titles {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rr-title,
+.rr-artist,
+.rr-primary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rr-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rr-artist {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+
+.rr-creator {
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+  width: fit-content;
+}
+
+.rr-creator:hover {
+  color: var(--color-foreground);
+  text-decoration: underline;
+}
+
+.rr-parts {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rr-primary {
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+.rr-formats {
+  display: flex;
+  gap: 6px;
+}
+
+.rr-formats span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--color-muted-foreground);
+  border: 1px solid var(--color-border);
+}
+
+.rr-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.rr-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rr-open {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 120px;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  white-space: nowrap;
+}
+
+.result-row:hover .rr-open {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* Below the toolbar breakpoint the five columns stop fitting: drop the
+   secondary metadata rather than letting the title squeeze to nothing. */
+@media (max-width: 900px) {
+  .result-row {
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+
+  .rr-thumb {
+    width: 92px;
+    height: 54px;
+  }
+
+  .rr-parts,
+  .rr-stats {
+    display: none;
+  }
+}

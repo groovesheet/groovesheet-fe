@@ -6,7 +6,12 @@ import Sidebar from './explore/Sidebar';
 import ExploreHeader from './explore/ExploreHeader';
 import Section from './explore/Section';
 import { SkeletonSection, ExploreEmpty, ExploreError } from './explore/ExploreStates';
-import { STEM_INSTRUMENTS, FORMAT_FILTER_MAP, lengthBucket } from './explore/constants';
+import {
+  STEM_INSTRUMENTS,
+  FORMAT_FILTER_MAP,
+  FORMAT_PARAM_BY_LABEL,
+  lengthBucket,
+} from './explore/constants';
 import trackToCard from './explore/trackToCard';
 import { fetchLibraryTracks } from '../utils/libraryApi';
 import { useLocalizedNavigate } from '../i18n/locale';
@@ -19,6 +24,13 @@ const SEARCH_DEBOUNCE_MS = 300;
 export const Explore = ({ onLoginClick }) => {
   const navigate = useLocalizedNavigate();
   const handleCardClick = (track) => navigate(`/explore/${track.id}`);
+
+  // Submitting a search, or asking for everything in a section, leaves the hub
+  // for the paginated results page. The hub only ever holds the first page of
+  // the catalog, so filtering in place here silently hides matching tracks
+  // further down.
+  const goToResults = (params) =>
+    navigate(`/explore/search?${new URLSearchParams(params).toString()}`);
 
   usePageMeta(
     'Explore',
@@ -170,12 +182,14 @@ export const Explore = ({ onLoginClick }) => {
           key: 'trending',
           title: 'Trending now',
           subtitle: 'What working musicians are downloading this week.',
+          sort: 'downloads',
           songs: byTrending,
         },
         {
           key: 'new',
           title: 'New this week',
           subtitle: 'Fresh transcriptions, hot off the press.',
+          sort: 'newest',
           songs: byNewest,
         },
       ],
@@ -230,7 +244,11 @@ export const Explore = ({ onLoginClick }) => {
             <span>Filters</span>
           </button>
 
-          <ExploreHeader query={query} onQueryChange={setQuery} />
+          <ExploreHeader
+            query={query}
+            onQueryChange={setQuery}
+            onSubmit={(q) => goToResults(q.trim() ? { q: q.trim() } : {})}
+          />
 
           {loading && (
             <>
@@ -270,7 +288,10 @@ export const Explore = ({ onLoginClick }) => {
                   songs={s.songs}
                   onCardClick={handleCardClick}
                   onViewAll={() =>
-                    setFilters((f) => ({ ...f, format: new Set([s.filterLabel]) }))
+                    goToResults({
+                      format: FORMAT_PARAM_BY_LABEL[s.filterLabel],
+                      sort: 'popular',
+                    })
                   }
                 />
               ))}
@@ -292,6 +313,7 @@ export const Explore = ({ onLoginClick }) => {
                   songs={s.songs}
                   accent={s.accent}
                   onCardClick={handleCardClick}
+                  onViewAll={() => goToResults({ sort: s.sort })}
                 />
               ))}
 
