@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isQueued, queueSummary } from '../utils/queue';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
@@ -158,6 +159,9 @@ export const TranscriptionHistory = () => {
   const [workflows, setWorkflows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Bumped on a failed load to re-run the fetch effect; the API restarting
+  // under us should heal on its own rather than stranding an empty page.
+  const [retryAt, setRetryAt] = useState(0);
 
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('newest');
@@ -214,10 +218,13 @@ export const TranscriptionHistory = () => {
         if (err.isAuthError) {
           setError('Your session has expired. You have been logged out.');
           setTimeout(() => navigate('/'), 2000);
+          setWorkflows([]);
         } else {
+          // Keep whatever we already have on screen. A blip in the API used to
+          // wipe the list, so an upload that was mid-flight looked lost.
           setError(err.message);
+          setRetryAt(Date.now());
         }
-        setWorkflows([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -225,7 +232,15 @@ export const TranscriptionHistory = () => {
     return () => {
       cancelled = true;
     };
-  }, [getToken, signOut, navigate]);
+  }, [getToken, signOut, navigate, retryAt]);
+
+  // Auto-retry a failed load. Without this a single blip left the page empty
+  // until the user reloaded by hand.
+  useEffect(() => {
+    if (!error) return undefined;
+    const t = setTimeout(() => setRetryAt(Date.now()), 8000);
+    return () => clearTimeout(t);
+  }, [error, retryAt]);
 
   // Poll active jobs so "Processing" cards advance without a manual reload.
   const workflowsRef = useRef(workflows);
@@ -799,6 +814,8 @@ export const TranscriptionHistory = () => {
                     const { base, ext } = fileParts(name);
                     const ds = w.created_at || w.completed_at || new Date().toISOString();
                     const progress = w.progress || 0;
+                    const queued = isQueued(w);
+                    const qSummary = queued ? queueSummary(w.queue) : null;
                     return (
                       <div key={w.workflow_id} style={{ background: 'var(--color-panel2)', borderRadius: 13, padding: '22px 24px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -811,15 +828,21 @@ export const TranscriptionHistory = () => {
                           </div>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--color-primary)', color: '#fff', fontSize: 13, fontWeight: 500, padding: '6px 12px', borderRadius: 999, whiteSpace: 'nowrap', lineHeight: 1 }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ animation: 'gsSpin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,.35)" strokeWidth="2.4" /><path d="M21 12a9 9 0 0 0-9-9" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" /></svg>
-                            Processing
+                            {queued ? 'Queued' : 'Processing'}
                           </span>
                         </div>
-                        <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
-                          <div role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} style={{ flex: 1, height: 8, borderRadius: 6, background: 'var(--color-surface-light)', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${progress}%`, borderRadius: 6, background: 'linear-gradient(90deg,#012FA7,#0139C7)', backgroundSize: '34px 100%', animation: 'gsBarMove 1s linear infinite' }} />
+                        {queued ? (
+                          <div style={{ marginTop: 18, fontSize: 14, color: 'var(--color-muted-foreground)' }}>
+                            Waiting for a free transcription slot{qSummary ? ` — ${qSummary}` : ''}. You can close this page; it keeps going.
                           </div>
-                          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)', minWidth: 42, textAlign: 'right' }}>{progress}%</span>
-                        </div>
+                        ) : (
+                          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <div role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} style={{ flex: 1, height: 8, borderRadius: 6, background: 'var(--color-surface-light)', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${progress}%`, borderRadius: 6, background: 'linear-gradient(90deg,#012FA7,#0139C7)', backgroundSize: '34px 100%', animation: 'gsBarMove 1s linear infinite' }} />
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)', minWidth: 42, textAlign: 'right' }}>{progress}%</span>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

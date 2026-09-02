@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { queueSummary } from '../utils/queue';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '../utils/api';
@@ -117,8 +119,14 @@ function MidiConverter({ onLoginClick }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
+  const navigate = useNavigate();
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState(null);
+  // Queue block from /workflow/status while the job waits for a free worker.
+  const [queue, setQueue] = useState(null);
+  // Consecutive failed polls. The old code swallowed network errors silently,
+  // so an API restart left this screen on "waking up our servers" forever.
+  const [pollFailures, setPollFailures] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -143,6 +151,10 @@ function MidiConverter({ onLoginClick }) {
 
   const getUIState = () => {
     if (status === 'uploading') return 'uploading';
+    // A job the backend reports as waiting behind others gets the queue
+    // screen whatever step it is on; everything else keeps its old mapping so
+    // chained steps still show their progress bar.
+    if (queue?.state === 'queued') return 'queued';
     if (status === 'started') return 'cold_starting';
     if (status === 'pending' || status === 'running' || status === 'processing' ||
         status === 'separating' || status === 'transcribing' || status === 'generating_sheet' ||
@@ -363,6 +375,10 @@ function MidiConverter({ onLoginClick }) {
           consecutive404s = 0;
           const data = await response.json();
           const newStatus = data.status || data.state || 'processing';
+          // A good poll clears the "reconnecting" banner and refreshes where
+          // we sit in line (null once a worker claims the job).
+          setPollFailures(0);
+          setQueue(data.queue || null);
 
           if (newStatus === 'completed' || newStatus === 'succeeded' || newStatus === 'success') {
             if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
@@ -403,6 +419,12 @@ function MidiConverter({ onLoginClick }) {
       } catch (err) {
         if (err.name !== 'TypeError') {
           setError(`Status error: ${err.message}`);
+        } else {
+          // Network/API blip. Keep polling — the job is server-side and
+          // survives this — but surface it instead of sitting on a stale
+          // screen forever, which is what used to happen when the API
+          // restarted mid-job.
+          setPollFailures((n) => n + 1);
         }
       } finally {
         if (!stopped) setTimeout(poll, intervalMs);
@@ -534,6 +556,8 @@ function MidiConverter({ onLoginClick }) {
     setFile(null);
     setJobId(null);
     setStatus(null);
+    setQueue(null);
+    setPollFailures(0);
     setProgress(0);
     setError(null);
     setDownloadUrl(null);
@@ -737,6 +761,35 @@ function MidiConverter({ onLoginClick }) {
     </>
   );
 
+  // Waiting behind other people's jobs. The wait is routinely longer than the
+  // work itself (separations run 20-30 min and the worker pool is small), so
+  // this screen's job is to say the work is safe and let the user leave.
+  const renderQueuedState = () => {
+    const summary = queueSummary(queue);
+    return (
+      <>
+        <div className="upload-content-top compact">
+          <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
+          <div className="upload-text">
+            <h3 className="cold-start-message">Your song is in the queue</h3>
+            <p className="cold-start-sub">
+              {summary ? `${summary}. ` : ''}
+              It's queued behind other transcriptions and will start automatically.
+              You can safely close this page — we'll keep processing, and you can
+              check back any time on your Transcription History.
+            </p>
+          </div>
+        </div>
+        <div className="upload-controls compact">
+          <button className="browse-files-btn" onClick={() => navigate('/account/history')}>
+            View Transcription History
+          </button>
+          <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
+        </div>
+      </>
+    );
+  };
+
   const renderProcessingState = () => (
     <>
       <div className="upload-content-top compact">
@@ -792,8 +845,17 @@ function MidiConverter({ onLoginClick }) {
               onChange={(e) => handleFileChange(e.target.files[0])}
               style={{ display: 'none' }}
             />
+            {/* The job lives server-side, so a dropped connection is not a
+                dropped job — but say so, instead of leaving a frozen screen. */}
+            {pollFailures >= 3 && uiState !== 'idle' && uiState !== 'success' && (
+              <p className="cold-start-sub" style={{ margin: '0 0 10px', opacity: 0.85 }}>
+                Reconnecting to the server… your transcription is still running and
+                will appear in your Transcription History.
+              </p>
+            )}
             {uiState === 'idle' && renderIdleState()}
             {uiState === 'uploading' && renderUploadingState()}
+            {uiState === 'queued' && renderQueuedState()}
             {uiState === 'cold_starting' && renderColdStartState()}
             {uiState === 'processing' && renderProcessingState()}
             {uiState === 'success' && (
