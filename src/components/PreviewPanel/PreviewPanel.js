@@ -7,7 +7,7 @@ import PreviewControls from './PreviewControls';
 import PreviewBottomBar from './PreviewBottomBar';
 import {
   MIDI_KEY_BY_INSTRUMENT,
-  MUSICXML_KEY_BY_INSTRUMENT,
+  musicXmlKeysFor,
   SYNC_MAP_KEY_BY_INSTRUMENT,
   truncateMidiToSeconds,
 } from './previewUtils';
@@ -89,7 +89,7 @@ export default function PreviewPanel({
   const isDemoMode = Boolean(preloadedMusicXml || preloadedMidiBuffer);
   const isTranscriptionInstrument = isDemoMode || TRANSCRIPTION_INSTRUMENTS.includes(selectedInstrument);
   const midiKey = MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
-  const musicXmlKey = MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
+  const musicXmlKey = musicXmlKeysFor(selectedInstrument)[0];
   const syncMapKey = SYNC_MAP_KEY_BY_INSTRUMENT[selectedInstrument];
 
   const rebuildMapper = useCallback(() => {

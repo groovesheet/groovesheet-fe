@@ -46,12 +46,29 @@ export const MIDI_KEY_BY_INSTRUMENT = {
   piano: 'transkun_v2_piano_midi',
 };
 
-export const MUSICXML_KEY_BY_INSTRUMENT = {
-  drums: 'adtof_plus_drums_musicxml',
-  jazz_bass: 'bassunet_jazz_bass_musicxml',
-  bass: 'fcpe_bass_musicxml',
-  piano: 'transkun_v2_piano_musicxml',
+// Candidate score keys per instrument, best first — the first one that exists
+// is what gets engraved.
+//
+// Drums intentionally lead with the beat-tracked adtof+ score; midi2score is
+// only the fallback there (same preference the social pipeline uses).
+//
+// For the melodic instruments it is the other way round: the raw model output
+// (transkun / fcpe / bassunet) is un-quantized and, for piano, a SINGLE TREBLE
+// PART with no left hand at all. The grand staff lives under the bare
+// `musicxml` key that midi2score writes. Naming only the raw key here is why
+// the sheet view rendered a one-staff score while the correct two-staff file
+// sat in storage unused.
+export const MUSICXML_KEYS_BY_INSTRUMENT = {
+  drums: ['adtof_plus_drums_musicxml', 'midi2score_drums_v2_musicxml', 'musicxml'],
+  jazz_bass: ['musicxml', 'bassunet_jazz_bass_musicxml'],
+  bass: ['musicxml', 'fcpe_bass_musicxml'],
+  piano: ['musicxml', 'transkun_v2_piano_musicxml'],
 };
+
+/** First score key that exists for `workflow`'s outputs, else the best guess. */
+export function musicXmlKeysFor(instrument) {
+  return MUSICXML_KEYS_BY_INSTRUMENT[instrument] || MUSICXML_KEYS_BY_INSTRUMENT.drums;
+}
 
 // Optional per-instrument sync map output ({ version, pairs: [[qn, sec], ...] },
 // see src/player/syncMap.js). Only chains that emit one are listed; when the

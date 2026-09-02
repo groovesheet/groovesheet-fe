@@ -11,7 +11,7 @@ import config from '../../config';
 import { downloadWorkflowFile, fetchMidiArrayBuffer, fetchMusicXmlText } from '../../utils/api';
 import {
   MIDI_KEY_BY_INSTRUMENT,
-  MUSICXML_KEY_BY_INSTRUMENT,
+  musicXmlKeysFor,
   truncateMidiToSeconds,
   truncateMusicXmlToMeasures,
 } from '../PreviewPanel/previewUtils';
@@ -36,7 +36,6 @@ const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Da
 // carries per-bar hidden tempo marks that OSMD ignores, so cursor sync runs
 // through the sync map below; the quantized MIDI is aligned to the real audio.
 // TODO: consolidate into api.js key maps
-const DRUMS_MUSICXML_KEY = 'adtof_plus_drums_musicxml';
 const DRUMS_MIDI_KEY = 'adtof_plus_drums_quantized_midi';
 const DRUMS_SYNC_MAP_KEY = 'adtof_plus_drums_sync_map';
 
@@ -135,7 +134,8 @@ export default function TranscriptionResultView({
   // untouched.
   const isDrums = selectedInstrument === 'drums';
   const midiKey = isDrums ? DRUMS_MIDI_KEY : MIDI_KEY_BY_INSTRUMENT[selectedInstrument];
-  const musicXmlKey = isDrums ? DRUMS_MUSICXML_KEY : MUSICXML_KEY_BY_INSTRUMENT[selectedInstrument];
+  const musicXmlKeys = musicXmlKeysFor(selectedInstrument);
+  const musicXmlKey = musicXmlKeys[0];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
   const scoreTitle = title || titleFromFilename(fileName);
@@ -188,8 +188,11 @@ export default function TranscriptionResultView({
         if (prefetched?.blob) {
           text = await prefetched.blob.text();
         } else {
-          if (musicXmlKey) {
-            text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken, musicXmlKey);
+          // Walk the preference list; older and newer chains name this file
+          // differently and only one of them exists for any given workflow.
+          for (const key of musicXmlKeys) {
+            text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken, key);
+            if (text) break;
           }
           if (!text) {
             text = await fetchMusicXmlText(config.apiBaseUrl, workflowId, getToken);
@@ -216,7 +219,7 @@ export default function TranscriptionResultView({
       }
     })();
     return () => { cancelled = true; };
-  }, [workflowId, musicXmlKey, prefetchedFiles, getToken, isPreview, scoreTitle, scoreArtist, scoreSourceCredit]);
+  }, [workflowId, musicXmlKey, musicXmlKeys, prefetchedFiles, getToken, isPreview, scoreTitle, scoreArtist, scoreSourceCredit]);
 
   // --- MIDI (buffer + soundfont engine) ----------------------------------------
   const [midiBuffer, setMidiBuffer] = useState(null);
