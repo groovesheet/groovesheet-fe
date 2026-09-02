@@ -468,11 +468,18 @@ const TRANSCRIPTION_KEYS = {
   jazz_bass: 'bassunet_jazz_bass_musicxml',
 };
 
+// The midi2score step names its output per-instrument for drums, but emits a
+// bare `musicxml` for piano/bass/jazz_bass. Listing the real key first matters:
+// when the instrument-specific name never resolves, selectOutputKey reports the
+// score as unavailable and callers silently fall back to TRANSCRIPTION_KEYS —
+// the raw, un-quantized model output, which for piano is a treble-only single
+// staff with no left hand. (Verified against production outputs 2026-09-02:
+// piano/bass/jazz_bass workflows only ever produce `musicxml`.)
 const SCORE_KEYS = {
-  drums: ['midi2score_drums_v2_musicxml', 'midi2score_drums_musicxml'],
-  piano: 'midi2score_piano_musicxml',
-  bass: 'midi2score_bass_musicxml',
-  jazz_bass: 'midi2score_jazz_bass_musicxml',
+  drums: ['midi2score_drums_v2_musicxml', 'midi2score_drums_musicxml', 'musicxml'],
+  piano: ['musicxml', 'midi2score_piano_musicxml'],
+  bass: ['musicxml', 'midi2score_bass_musicxml'],
+  jazz_bass: ['musicxml', 'midi2score_jazz_bass_musicxml'],
 };
 
 const asKeyList = (value) => (Array.isArray(value) ? value : [value]).filter(Boolean);

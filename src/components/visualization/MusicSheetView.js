@@ -6,12 +6,16 @@ import SkeletonPanel from '../ui/SkeletonPanel';
 
 const API_BASE_URL = config.apiBaseUrl;
 
-// MusicXML file key mapping per instrument
+// Candidate MusicXML keys per instrument, best first. midi2score names its
+// output per-instrument for drums but emits a bare `musicxml` for the melodic
+// instruments, so a single hard-coded name left piano and bass rendering
+// nothing at all ("MusicXML file not found") while the real grand-staff score
+// sat in storage under `musicxml`.
 const MUSICXML_KEY_MAP = {
-  drums: 'midi2score_drums_musicxml',
-  piano: 'midi2score_piano_musicxml',
-  bass: 'midi2score_bass_musicxml',
-  jazz_bass: 'midi2score_jazz_bass_musicxml',
+  drums: ['midi2score_drums_v2_musicxml', 'midi2score_drums_musicxml', 'musicxml'],
+  piano: ['musicxml', 'midi2score_piano_musicxml'],
+  bass: ['musicxml', 'midi2score_bass_musicxml'],
+  jazz_bass: ['musicxml', 'midi2score_jazz_bass_musicxml'],
 };
 
 export default function MusicSheetView({ jobId, selectedInstrument, getToken, zoom }) {
@@ -28,8 +32,8 @@ export default function MusicSheetView({ jobId, selectedInstrument, getToken, zo
     const loadAndRender = async () => {
       if (!jobId || !containerRef.current) return;
 
-      const fileKey = MUSICXML_KEY_MAP[selectedInstrument];
-      if (!fileKey) {
+      const fileKeys = MUSICXML_KEY_MAP[selectedInstrument];
+      if (!fileKeys || !fileKeys.length) {
         setError('Sheet music is not available for this instrument type.');
         setLoading(false);
         return;
@@ -41,7 +45,13 @@ export default function MusicSheetView({ jobId, selectedInstrument, getToken, zo
 
         // Fetch MusicXML if not already cached
         if (!xmlDataRef.current) {
-          const result = await downloadWorkflowFile(API_BASE_URL, jobId, fileKey, getToken);
+          // Try each candidate; older workflows and newer ones name this file
+          // differently and only one of them exists for any given job.
+          let result = null;
+          for (const key of fileKeys) {
+            result = await downloadWorkflowFile(API_BASE_URL, jobId, key, getToken).catch(() => null);
+            if (result) break;
+          }
           if (!result) {
             throw new Error('MusicXML file not found. It may not have been generated yet.');
           }
