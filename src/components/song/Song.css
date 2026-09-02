@@ -488,11 +488,11 @@
 
 /* Piano roll surface */
 .gs-song-page .gs-pianoroll {
-  background: #08091a;
+  background: #151515;
   position: relative;
 }
 [data-theme='light'] .gs-song-page .gs-pianoroll {
-  background: #f5f6fb;
+  background: #f4f4f5;
 }
 
 /* Stems list */

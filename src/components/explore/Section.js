@@ -78,7 +78,12 @@ function Section({ eyebrow, title, subtitle, songs, variant, accent, onCardClick
       </header>
       <div ref={ref} className="es-row">
         {songs.map((s, i) => (
-          <SongCard key={s.id + i} song={s} variant={variant} onClick={onCardClick} />
+          <SongCard
+            key={s.id + i}
+            song={s}
+            variant={variant}
+            onClick={(song) => onCardClick && onCardClick(song, variant)}
+          />
         ))}
       </div>
     </section>

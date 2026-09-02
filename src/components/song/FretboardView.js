@@ -55,7 +55,7 @@ function FretboardView({ midiBuffer, transport, loading, error, kind = 'guitar' 
         </div>
       )}
       {!loading && !error && !parseError && midiBuffer && (
-        <div style={{ width: '100%', height: 460, background: '#08091a' }}>
+        <div style={{ width: '100%', height: 460, background: '#151515' }}>
           <VideoFretboardRoll notes={notes} timeRef={timeRef} kind={kind} />
         </div>
       )}

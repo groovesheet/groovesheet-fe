@@ -185,7 +185,7 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       // background
-      ctx.fillStyle = '#08091a';
+      ctx.fillStyle = '#151515';
       ctx.fillRect(0, 0, w, h);
 
       const rollX = ROLL_GUTTER_W;
@@ -198,7 +198,7 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
       const pxPerSec = rollW / ROLL_WINDOW_SEC;
 
       // pitch rows + keyboard gutter
-      ctx.fillStyle = '#0a0d24';
+      ctx.fillStyle = '#1f1f1f';
       ctx.fillRect(0, 0, ROLL_GUTTER_W, h);
       for (let p = parsed.minPitch; p <= parsed.maxPitch; p += 1) {
         const y = rollY + (parsed.maxPitch - p) * pitchH;

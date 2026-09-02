@@ -54,7 +54,7 @@ function DrumGridView({ midiBuffer, transport, loading, error }) {
         </div>
       )}
       {!loading && !error && !parseError && midiBuffer && (
-        <div style={{ width: '100%', height: 460, background: '#08091a' }}>
+        <div style={{ width: '100%', height: 460, background: '#151515' }}>
           <VideoDrumKit notes={notes} timeRef={timeRef} />
         </div>
       )}

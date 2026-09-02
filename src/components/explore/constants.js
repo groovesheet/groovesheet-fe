@@ -118,3 +118,18 @@ export const SORT_VALUES = SORT_OPTIONS.map((o) => o.value);
 
 /** Results per page. Matches the API's `limit` ceiling of 60. */
 export const RESULTS_PER_PAGE = 24;
+
+// Which viewer tab a card should open on the song page. A card in the MIDI
+// rail leads to the MIDI tab, not to the sheet music that also happens to
+// exist — see `?view=` handling in SongDetail.
+export const VARIANT_VIEW = {
+  sheet: 'sheet',
+  midi: 'midi',
+  stems: 'stems',
+};
+
+/** `/explore/:id` with the tab the clicked rail implies (if any). */
+export function songPath(id, variant) {
+  const view = VARIANT_VIEW[variant];
+  return `/explore/${id}${view ? `?view=${view}` : ''}`;
+}

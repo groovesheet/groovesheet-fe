@@ -242,7 +242,7 @@ export default function SpectrogramView({
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#05060f';
+    ctx.fillStyle = '#101010';
     ctx.fillRect(0, 0, w, h);
 
     ctx.imageSmoothingEnabled = true;

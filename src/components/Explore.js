@@ -11,6 +11,7 @@ import {
   FORMAT_FILTER_MAP,
   FORMAT_PARAM_BY_LABEL,
   lengthBucket,
+  songPath,
 } from './explore/constants';
 import trackToCard from './explore/trackToCard';
 import { fetchLibraryTracks } from '../utils/libraryApi';
@@ -23,7 +24,9 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export const Explore = ({ onLoginClick }) => {
   const navigate = useLocalizedNavigate();
-  const handleCardClick = (track) => navigate(`/explore/${track.id}`);
+  // The rail a card sits in decides which viewer tab opens — a MIDI card must
+  // not land on the sheet music just because the track also has a score.
+  const handleCardClick = (track, variant) => navigate(songPath(track.id, variant));
 
   // Submitting a search, or asking for everything in a section, leaves the hub
   // for the paginated results page. The hub only ever holds the first page of

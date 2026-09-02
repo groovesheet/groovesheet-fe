@@ -23,11 +23,11 @@ function MidiThumb({ song, width = 320, height = 192 }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="none" style={{ display: 'block' }}>
-      <rect width={W} height={H} fill="#0c1226" />
+      <rect width={W} height={H} fill="#151515" />
       <defs>
         <pattern id={`stripe-${song.id}`} width="2" height="2" patternUnits="userSpaceOnUse">
-          <rect width="2" height="2" fill="#0c1226" />
-          <line x1="0" y1="0" x2="0" y2="2" stroke="#11183a" strokeWidth="0.5" />
+          <rect width="2" height="2" fill="#151515" />
+          <line x1="0" y1="0" x2="0" y2="2" stroke="#262626" strokeWidth="0.5" />
         </pattern>
       </defs>
       <rect width={W} height={H} fill={`url(#stripe-${song.id})`} />

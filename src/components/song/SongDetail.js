@@ -4,7 +4,7 @@
 // and binds them all to one shared transport so position/play state survive
 // tab switches. Stems-only tracks never touch the midi/musicxml code paths.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
 import NotFound from '../NotFound';
@@ -15,6 +15,7 @@ import PlaybackBar from './PlaybackBar';
 import SongSidebar from './SongSidebar';
 import Section from '../explore/Section';
 import trackToCard from '../explore/trackToCard';
+import { songPath } from '../explore/constants';
 import { SheetMusicView, PianoRollView, StemsView } from './SongViewers';
 import DrumGridView from './DrumGridView';
 import FretboardView from './FretboardView';
@@ -95,7 +96,32 @@ function hashId(id) {
 // actually has are rendered, and the digits are assigned over that filtered
 // list so they always read 1,2,3… with no holes (VIEW_ORDER is also what the
 // keyboard handler indexes into).
-const VIEW_ORDER = ['sheet', 'midi', 'keys', 'stems', 'spectrum'];
+const VIEW_ORDER = ['sheet', 'midi', 'notes', 'keys', 'stems', 'spectrum'];
+
+// `?view=` on /explore/:id — the rail a visitor clicked decides which tab the
+// page opens on, so a card from "Popular MIDI" is not answered with the sheet
+// music that also happens to exist. Each entry lists the tabs that satisfy the
+// intent, best first; VIEW_FALLBACK catches everything else.
+const VIEW_INTENTS = {
+  sheet: ['sheet', 'midi', 'notes'],
+  midi: ['midi', 'notes', 'keys', 'sheet'],
+  notes: ['notes', 'midi', 'keys', 'sheet'],
+  keys: ['keys', 'midi', 'notes', 'sheet'],
+  stems: ['stems', 'spectrum'],
+  spectrum: ['spectrum', 'stems'],
+};
+const VIEW_FALLBACK = ['sheet', 'midi', 'notes', 'keys', 'stems', 'spectrum'];
+
+/**
+ * The tab to show given what this track+instrument actually has. `preferred`
+ * is either the visitor's `?view=` intent or the tab they were already on —
+ * both are answered with the nearest tab that has data, which for an
+ * untranscribed instrument (guitar on a drums-only transcription) is the mixer.
+ */
+function resolveView(available, preferred) {
+  const order = (VIEW_INTENTS[preferred] || []).concat(VIEW_FALLBACK);
+  return order.find((v) => available[v]) || null;
+}
 
 function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, instrumentUi }) {
   // Digit label per key: 1-based position among the AVAILABLE tabs.
@@ -124,7 +150,11 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div className="gs-seg" role="tablist">
           {tab('sheet', Icon.Sheet, 'Sheet music')}
-          {tab('midi', Icon.Midi, noteLabel || 'Piano roll')}
+          {/* The raw piano roll of whatever MIDI the selected instrument has.
+              It is the MIDI tab proper and never renames itself — the
+              instrument-specific picture of the same notes is its own tab. */}
+          {tab('midi', Icon.Midi, 'MIDI')}
+          {available.notes ? tab('notes', Icon.Midi, noteLabel) : null}
           {/* Falling keys is a keyboard picture, so it is offered only for the
               pitched roll — a drum kit or a fretboard has its own visualiser. */}
           {available.keys ? tab('keys', Icon.Midi, 'Falling keys') : null}
@@ -208,6 +238,18 @@ function SongDetail({ onLoginClick }) {
   const [zipDownloading, setZipDownloading] = useState(false);
 
   // --- track fetch (declared below); page meta reads it once loaded --------
+
+  // Landing intent from the explore rails (/explore/:id?view=midi).
+  const [searchParams] = useSearchParams();
+  const requestedView = searchParams.get('view');
+  const intentView = VIEW_INTENTS[requestedView] ? requestedView : null;
+
+  // A visitor who clicked a rail half-way down /explore must not inherit that
+  // scroll offset — client-side navigation keeps it otherwise, and the song
+  // page opens somewhere in its related rails.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [songId]);
 
   // --- track fetch -----------------------------------------------------------
   const [track, setTrack] = useState(null);
@@ -326,27 +368,24 @@ function SongDetail({ onLoginClick }) {
   const viewForStem = (name) =>
     name === 'drums' ? 'drums' : name === 'guitar' || name === 'bass' ? 'fretboard' : 'roll';
   const noteView = viewForStem(instrument);
+  // Label for the instrument-specific note tab. The pitched roll has no such
+  // tab (the MIDI tab already IS its picture), so 'roll' never reaches the UI.
   const noteLabel =
     noteView === 'drums' ? 'Drum Visualizer' : noteView === 'fretboard' ? 'Fretboard Notes' : 'Piano roll';
 
-  // MIDI: exact part match for the selected instrument. Legacy fallback to an
-  // un-attributed part applies only to the roll — feeding a pitched part into
-  // the kit/fretboard visualizers would render nonsense hits.
-  const midiAsset = useMemo(() => {
-    const exact = midiAssets.find((a) => a.stem_name === instrument);
+  // Notes and score both resolve to the SELECTED instrument's part. The
+  // un-attributed fallback is for legacy tracks only: as soon as any part
+  // carries a stem_name we trust the attribution, so picking Guitar on a track
+  // transcribed for drums reports "nothing here" instead of quietly handing
+  // back the drum part — which is what made switching instruments look broken.
+  const pickPart = (assets, name) => {
+    const exact = assets.find((a) => a.stem_name === name);
     if (exact) return exact;
-    if (noteView !== 'roll') return null;
-    return midiAssets.find((a) => !a.stem_name) || midiAssets[0] || null;
-  }, [midiAssets, instrument, noteView]);
-  // Sheet music: a mismatched score is still a score, so keep the fallback.
-  const xmlAsset = useMemo(
-    () =>
-      xmlAssets.find((a) => a.stem_name === instrument) ||
-      xmlAssets.find((a) => !a.stem_name) ||
-      xmlAssets[0] ||
-      null,
-    [xmlAssets, instrument]
-  );
+    if (assets.some((a) => a.stem_name)) return assets.find((a) => !a.stem_name) || null;
+    return assets[0] || null;
+  };
+  const midiAsset = useMemo(() => pickPart(midiAssets, instrument), [midiAssets, instrument]);
+  const xmlAsset = useMemo(() => pickPart(xmlAssets, instrument), [xmlAssets, instrument]);
   const syncMapAsset = useMemo(
     () => (track?.assets || []).find((a) => a.asset_type === 'sync_map') || null,
     [track]
@@ -358,7 +397,13 @@ function SongDetail({ onLoginClick }) {
   const available = useMemo(
     () => ({
       sheet: hasSheet,
+      // The piano roll renders any MIDI part, drums included, so the MIDI tab
+      // stands wherever note data exists — it is no longer swallowed by the
+      // drum/fretboard visualiser.
       midi: hasMidi,
+      // The instrument's own picture of those same notes, for the instruments
+      // that have one.
+      notes: hasMidi && noteView !== 'roll',
       // Falling keys draws a piano keyboard, so it applies to the pitched roll
       // only; drums have the kit visualiser and bass/guitar the fretboard.
       keys: hasMidi && noteView === 'roll',
@@ -371,11 +416,63 @@ function SongDetail({ onLoginClick }) {
 
   // --- view (tab) ----------------------------------------------------------------
   const [view, setView] = useState(null);
+  // Track whose tab has already been seeded, so an instrument change corrects
+  // the current tab instead of resetting it back to the landing choice.
+  const viewSeedRef = useRef(null);
+  // The tab an instrument switch took away. Held so that switching back to a
+  // transcribed part returns you to the score you were reading, instead of
+  // leaving you parked on the mixer you were bounced to.
+  const displacedViewRef = useRef(null);
+  // `view` is mirrored into a ref so the correction effect below can read the
+  // current tab without taking it as a dependency — and, more importantly, so
+  // the bookkeeping never rides inside a setState updater, which React's
+  // StrictMode double-invokes (that would undo the parking on every switch).
+  const viewRef = useRef(null);
+  const applyView = useCallback((v) => {
+    viewRef.current = v;
+    setView(v);
+  }, []);
+  // Explicit tab clicks are the user's own choice — they retire any parked tab.
+  const chooseView = useCallback(
+    (v) => {
+      displacedViewRef.current = null;
+      applyView(v);
+    },
+    [applyView]
+  );
   useEffect(() => {
     if (!track) return;
-    const first = ['sheet', 'midi', 'stems'].find((v) => available[v]) || null;
-    setView(first);
-  }, [track, available]);
+    // Availability is instrument-scoped, so seeding before the instrument has
+    // settled would open the mixer on a track that does have a score.
+    if (instrumentOptions.length > 0 && !instrumentOptions.some((o) => o.name === instrument)) {
+      return;
+    }
+    // Keyed on the intent too, so following a MIDI card for the song you are
+    // already reading re-seeds the tab instead of silently doing nothing.
+    const seedKey = `${track.id}|${intentView || ''}`;
+    if (viewSeedRef.current !== seedKey) {
+      viewSeedRef.current = seedKey;
+      displacedViewRef.current = null;
+      applyView(resolveView(available, intentView));
+      return;
+    }
+    // Same track, new instrument: keep the tab when this instrument has data
+    // for it, otherwise slide to the nearest tab that does. For a stem nobody
+    // has transcribed that is the mixer — where selectInstrument has already
+    // soloed it.
+    const cur = viewRef.current;
+    if (cur && available[cur]) {
+      // Back on an instrument that can show the tab we were bumped off.
+      const parked = displacedViewRef.current;
+      if (parked && available[parked]) {
+        displacedViewRef.current = null;
+        applyView(parked);
+      }
+      return;
+    }
+    displacedViewRef.current = cur || displacedViewRef.current;
+    applyView(resolveView(available, cur));
+  }, [track, available, intentView, instrument, instrumentOptions, applyView]);
 
   // Mirror the resolved track into a ref for the stable mixer callback.
   useEffect(() => {
@@ -385,7 +482,7 @@ function SongDetail({ onLoginClick }) {
   // score_view: first time this song's notation is actually on screen.
   useEffect(() => {
     if (!track || scoreViewSentRef.current) return;
-    if (view !== 'sheet' && view !== 'midi') return;
+    if (view !== 'sheet' && view !== 'midi' && view !== 'notes') return;
     scoreViewSentRef.current = true;
     trackScoreView(track, {
       note_view: noteView,
@@ -495,6 +592,23 @@ function SongDetail({ onLoginClick }) {
       eng.setStemMuted(name, s.mute || (anySolo && !s.solo));
     });
   }, [stemState, track]);
+
+  // Picking an instrument is a mixer command too: the mixer should be playing
+  // the part you just chose with the rest out of the way. That is what makes
+  // selecting an untranscribed stem useful — the tab falls back to Stems and
+  // the stem is already soloed there. Only user choices solo; the per-track
+  // auto-seed of `instrument` deliberately leaves the mix alone.
+  const selectInstrument = useCallback((name) => {
+    setInstrument(name);
+    setStemState((prev) => {
+      if (!prev || !prev[name]) return prev; // this part has no audio stem
+      const next = {};
+      Object.entries(prev).forEach(([key, st]) => {
+        next[key] = { ...(st || {}), solo: key === name, mute: false };
+      });
+      return next;
+    });
+  }, []);
 
   const onStemChange = useCallback(
     (name, patch) => {
@@ -783,7 +897,9 @@ function SongDetail({ onLoginClick }) {
       osmdSyncRef.current = { ...osmdSyncRef.current, ready: false };
       pendingOsmdSyncRef.current = true;
       t.setActiveEngine('osmd');
-    } else if (view === 'midi') {
+    } else if (view === 'midi' || view === 'notes' || view === 'keys') {
+      // Piano roll, drum kit, fretboard and falling keys are four pictures of
+      // the same MIDI part, played by the same engine.
       t.setActiveEngine('midi');
     } else if (view === 'stems' || view === 'spectrum') {
       // The spectrum view is a second face on the stem mixer — same engine.
@@ -860,12 +976,12 @@ function SongDetail({ onLoginClick }) {
       const digit = parseInt(e.key, 10);
       if (digit >= 1 && digit <= 9) {
         const target = VIEW_ORDER.filter((k) => available[k])[digit - 1];
-        if (target) setView(target);
+        if (target) chooseView(target);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handlePlayPause, available]);
+  }, [handlePlayPause, available, chooseView]);
 
   // --- related rails -----------------------------------------------------------------
   // One fetch; every rail below the viewer (and the sidebar's "More by {artist}")
@@ -939,7 +1055,10 @@ function SongDetail({ onLoginClick }) {
     return out;
   }, [related, track]);
 
-  const goToSong = useCallback((s) => navigate(`/explore/${s.id}`), [navigate]);
+  const goToSong = useCallback(
+    (s, variant) => navigate(songPath(s.id, variant)),
+    [navigate]
+  );
 
   // --- drawer ---------------------------------------------------------------------------
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -958,11 +1077,13 @@ function SongDetail({ onLoginClick }) {
       </span>
     ) : view === 'midi' ? (
       <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
+        MIDI piano roll · {STEM_META[instrument]?.label || instrument} part
+      </span>
+    ) : view === 'notes' ? (
+      <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
         {noteView === 'drums'
           ? 'Drum visualizer · pieces flash on their hits'
-          : noteView === 'fretboard'
-            ? 'Fretboard notes · falling onto their string and fret'
-            : 'MIDI piano roll · click the roll to seek'}
+          : 'Fretboard notes · falling onto their string and fret'}
       </span>
     ) : view === 'keys' ? (
       <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
@@ -1052,20 +1173,22 @@ function SongDetail({ onLoginClick }) {
                     disabledControls={{ tempo: true, transpose: true, metronome: true, loop: true }}
                   />
 
-                  {/* Viewer toolbar — instrument switcher hidden on the Stems
-                      tab (the mixer is inherently all-instruments) */}
+                  {/* Viewer toolbar. The instrument switcher stays on EVERY
+                      tab, including the mixer: it is how you get back to a
+                      transcribed part after landing on Stems for one that has
+                      no notes. */}
                   <ViewerToolbar
                     viewMode={view}
-                    onView={setView}
+                    onView={chooseView}
                     viewerInfo={viewerInfo}
                     available={available}
                     noteLabel={noteLabel}
                     instrumentUi={
-                      view !== 'stems' && view !== 'spectrum' && instrumentOptions.length > 1 ? (
+                      instrumentOptions.length > 1 ? (
                         <InstrumentDropdown
                           options={instrumentOptions}
                           value={instrument}
-                          onChange={setInstrument}
+                          onChange={selectInstrument}
                         />
                       ) : null
                     }
@@ -1083,13 +1206,18 @@ function SongDetail({ onLoginClick }) {
                       onPlaybackStateChange={handleOsmdStateChange}
                     />
                   )}
-                  {view === 'midi' && hasMidi && noteView !== 'roll' && !midiAsset && (
-                    <CenteredNotice
-                      title={`No ${STEM_META[instrument]?.label || instrument} transcription yet`}
-                      body="This track doesn't have note data for this instrument. Pick another instrument from the dropdown above."
+                  {/* MIDI tab — the raw roll, for every instrument that has a
+                      part, drums included. */}
+                  {view === 'midi' && hasMidi && (
+                    <PianoRollView
+                      midiBuffer={midiBuffer}
+                      transport={transport}
+                      loading={midiLoading}
+                      error={midiError}
+                      ghosts={ghosts}
                     />
                   )}
-                  {view === 'midi' && hasMidi && noteView === 'drums' && midiAsset && (
+                  {view === 'notes' && hasMidi && noteView === 'drums' && (
                     <DrumGridView
                       midiBuffer={midiBuffer}
                       transport={transport}
@@ -1097,22 +1225,13 @@ function SongDetail({ onLoginClick }) {
                       error={midiError}
                     />
                   )}
-                  {view === 'midi' && hasMidi && noteView === 'fretboard' && midiAsset && (
+                  {view === 'notes' && hasMidi && noteView === 'fretboard' && (
                     <FretboardView
                       midiBuffer={midiBuffer}
                       transport={transport}
                       loading={midiLoading}
                       error={midiError}
                       kind={instrument}
-                    />
-                  )}
-                  {view === 'midi' && hasMidi && noteView === 'roll' && (
-                    <PianoRollView
-                      midiBuffer={midiBuffer}
-                      transport={transport}
-                      loading={midiLoading}
-                      error={midiError}
-                      ghosts={ghosts}
                     />
                   )}
                   {view === 'keys' && available.keys && (
@@ -1172,7 +1291,7 @@ function SongDetail({ onLoginClick }) {
                   stems={stems}
                   instrumentOptions={instrumentOptions}
                   instrument={instrument}
-                  onInstrument={setInstrument}
+                  onInstrument={selectInstrument}
                   relatedTracks={related}
                   onSongClick={goToSong}
                   isSignedIn={isSignedIn}
@@ -1198,7 +1317,7 @@ function SongDetail({ onLoginClick }) {
                     stems={stems}
                   instrumentOptions={instrumentOptions}
                   instrument={instrument}
-                  onInstrument={setInstrument}
+                  onInstrument={selectInstrument}
                     relatedTracks={related}
                     onSongClick={goToSong}
                     isSignedIn={isSignedIn}
