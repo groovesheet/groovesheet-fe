@@ -18,6 +18,7 @@ import {
 import { SheetMusicView, PianoRollView, StemsView } from '../song/SongViewers';
 import FretboardView from '../song/FretboardView';
 import SpectrogramView from '../song/SpectrogramView';
+import { mixBlobsToWav, blobDurationSec } from '../../player/mixdown';
 import DrumKitView from './DrumKitView';
 import PlaybackBar from '../song/PlaybackBar';
 import { Icon } from '../song/icons';
@@ -127,6 +128,9 @@ export default function TranscriptionResultView({
   // every separated stem in it is loaded — not only the one that was asked
   // for — so a vocals split plays vocals against the rest of the mix.
   files = null,
+  // Seconds, used as the transport clock when the job has no score or MIDI
+  // (a stem split) and the audio has not been measured yet.
+  durationHint = null,
 }) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -157,6 +161,16 @@ export default function TranscriptionResultView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files, prefetchedFiles, stemKey, stemMeta.name]);
   const stemEntriesKey = stemEntries.map((e) => e.key).join(',');
+  // A stem split has no score or MIDI to keep time — the audio is the clock.
+  const stemsOwnClock = !musicXmlKey && !midiKey;
+  // The complement row: "No vocals" for a vocals split, "No drums" for drums…
+  const restName = `no_${stemMeta.name}`;
+  const restMeta = {
+    name: restName,
+    label: `No ${stemMeta.label.toLowerCase()}`,
+    color: '#8d8c8d',
+    sub: 'everything else',
+  };
   const scoreTitle = title || titleFromFilename(fileName);
   const scoreArtist = 'Transcribed by GrooveSheet';
   const authName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
@@ -297,10 +311,12 @@ export default function TranscriptionResultView({
     };
   }, [midiBuffer]);
 
-  // --- Stem audio (every separated stem → one Web Audio engine) -----------------
+  // --- Stem audio: the requested stem + "everything else" → one engine --------
   const [stemStatus, setStemStatus] = useState(stemEntries.length ? 'loading' : 'missing');
   const [stemError, setStemError] = useState(null);
   const [stemEngine, setStemEngine] = useState(null); // for the spectrum view
+  const [localWaves, setLocalWaves] = useState({});   // name -> number[] 0-100
+  const [hasRest, setHasRest] = useState(false);
 
   useEffect(() => {
     if (!workflowId || !stemEntries.length) return undefined;
@@ -310,9 +326,11 @@ export default function TranscriptionResultView({
     const t = transportRef.current;
     setStemStatus('loading');
     setStemError(null);
+    setLocalWaves({});
+    setHasRest(false);
     (async () => {
       try {
-        const results = await Promise.all(stemEntries.map(async (e) => {
+        const fetched = await Promise.all(stemEntries.map(async (e) => {
           const prefetched = prefetchedFiles?.[e.key];
           const result = prefetched?.blob
             ? prefetched
@@ -320,18 +338,38 @@ export default function TranscriptionResultView({
           return result?.blob ? { name: e.name, blob: result.blob } : null;
         }));
         if (cancelled) return;
-        const loaded = results.filter(Boolean);
+        const loaded = fetched.filter(Boolean);
         if (!loaded.length) {
           setStemStatus('missing');
           return;
         }
-        const assets = loaded.map(({ name, blob }) => {
+        const main = loaded.find((x) => x.name === stemMeta.name) || loaded[0];
+        const others = loaded.filter((x) => x !== main);
+
+        // The backend ships one file per stem; the second row is built here.
+        let durationSec = 0;
+        const assetsIn = [{ name: main.name, blob: main.blob }];
+        if (others.length) {
+          const mixed = await mixBlobsToWav(others.map((x) => x.blob));
+          if (cancelled) return;
+          assetsIn.push({ name: restName, blob: mixed.blob });
+          durationSec = mixed.durationSec;
+        } else {
+          durationSec = await blobDurationSec(main.blob).catch(() => 0);
+          if (cancelled) return;
+        }
+        setHasRest(others.length > 0);
+
+        const assets = assetsIn.map(({ name, blob }) => {
           const url = URL.createObjectURL(blob);
           objectUrls.push(url);
           return { asset_type: 'stem', stem_name: name, format: 'wav', stream_url: url };
         });
         engine = createStemEngine({
           assets,
+          // Waveforms are computed client-side; nothing server-side stores
+          // them for a workflow the way thumb_data does for a library track.
+          onPeaks: (name, peaks) => setLocalWaves((prev) => (prev[name] ? prev : { ...prev, [name]: peaks })),
           onError: (err) => {
             setStemError(err.message || 'Failed to load stem audio');
             setStemStatus('error');
@@ -341,6 +379,12 @@ export default function TranscriptionResultView({
         stemEngineRef.current = engine;
         setStemEngine(engine);
         t.attachEngine(engine);
+        // With no score or MIDI the transport had no duration at all, which
+        // left the clock at 00:00 and every seek clamped to zero.
+        if (stemsOwnClock) {
+          const d = durationSec || Number(durationHint) || 0;
+          if (d > 0) t.setDuration(d);
+        }
         setStemStatus('ready');
       } catch (err) {
         if (!cancelled) {
@@ -360,24 +404,26 @@ export default function TranscriptionResultView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workflowId, stemEntriesKey]);
 
-  const stems = useMemo(
-    () => stemEntries.map((e) => {
-      const d = STEM_DISPLAY[e.name] || { name: e.name, label: e.name.charAt(0).toUpperCase() + e.name.slice(1), color: '#C9A0FF', sub: '' };
-      return { name: e.name, label: d.label, color: d.color, sub: d.sub, wave: null };
-    }),
-    [stemEntries]
-  );
+  const stems = useMemo(() => {
+    const rows = [{ name: stemMeta.name, label: stemMeta.label, color: stemMeta.color, sub: stemMeta.sub, wave: localWaves[stemMeta.name] || null }];
+    if (hasRest) rows.push({ ...restMeta, wave: localWaves[restName] || null });
+    return rows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stemMeta, hasRest, localWaves, restName]);
   const [stemState, setStemState] = useState({});
+  const stemNamesKey = stems.map((st) => st.name).join(',');
   useEffect(() => {
-    setStemState(Object.fromEntries(stems.map((st) => [st.name, { mute: false, solo: false, volume: 75 }])));
-  }, [stems]);
+    setStemState((prev) => Object.fromEntries(stems.map((st) => [st.name, prev[st.name] || { mute: false, solo: false, volume: 75 }])));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stemNamesKey]);
   useEffect(() => {
     const eng = stemEngineRef.current;
     if (!eng) return;
-    Object.entries(stemState).forEach(([name, s]) => {
-      if (!s) return;
-      eng.setStemGain(name, s.volume / 100);
-      eng.setStemMuted(name, s.mute);
+    const anySolo = Object.values(stemState).some((st) => st && st.solo);
+    Object.entries(stemState).forEach(([name, st]) => {
+      if (!st) return;
+      eng.setStemGain(name, st.volume / 100);
+      eng.setStemMuted(name, st.mute || (anySolo && !st.solo));
     });
   }, [stemState, stemStatus]);
   const onStemChange = useCallback(
@@ -580,7 +626,7 @@ export default function TranscriptionResultView({
       t.setActiveEngine('osmd');
     } else if (view === 'midi') {
       t.setActiveEngine('midi');
-    } else if (view === 'stems') {
+    } else if (view === 'stems' || view === 'spectrum') {
       t.setActiveEngine('stems');
     }
   }, [view]);

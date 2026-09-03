@@ -14,6 +14,7 @@ import Footer from './layout/Footer';
 import SkeletonPanel from './ui/SkeletonPanel';
 import StatusMessage from './ui/StatusMessage';
 import TranscriptionResultView from './TranscriptionResult/TranscriptionResultView';
+import { BillingButtonStyles } from './AccountBilling';
 import { useLocalizedNavigate } from '../i18n/locale';
 import {
   downloadScorePdf,
@@ -47,7 +48,8 @@ const dots = {
   backgroundSize: '43px 43px',
   opacity: 0.35,
 };
-const main = { position: 'relative', zIndex: 1, maxWidth: 1414, margin: '0 auto', padding: '18px 20px 40px' };
+// 1414 + 2×20 gutter: lines the content up with the nav bar (Header.css).
+const main = { position: 'relative', zIndex: 1, maxWidth: 1454, margin: '0 auto', padding: '48px 20px 40px' };
 
 const saveBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
@@ -157,14 +159,17 @@ export default function TranscriptionDetail() {
 
   const scoreKey = outputs?.score?.available ? outputs.score.fileKey : outputs?.transcription?.fileKey;
 
+  // Same "← Back" as every other account page (styles come from
+  // BillingButtonStyles; without them the arrow and label stacked).
   const backButton = (
-    <button className="back-button" onClick={() => navigate('/account/history')} style={{ marginBottom: 18 }}>
-      <ArrowLeft size={24} /><span>Your Library</span>
+    <button className="back-button" onClick={() => navigate('/account/history')} style={{ marginBottom: 36 }}>
+      <ArrowLeft size={28} weight="regular" /><span>Back</span>
     </button>
   );
 
   return (
     <div style={page}>
+      <BillingButtonStyles />
       <div style={dots} />
       <Header />
       <main style={main}>
@@ -208,6 +213,7 @@ export default function TranscriptionDetail() {
           selectedInstrument={instrument}
           prefetchedFiles={null}
           files={workflow.outputs?.files || null}
+          durationHint={workflow.preview_output_sec || workflow.metadata?.duration_seconds || null}
           onDownloadTranscription={() => download(scoreKey, fallback('score', '.musicxml'))}
           onDownloadMidi={() => download(outputs?.midi?.fileKey, fallback('midi', '.mid'))}
           onDownloadPdf={downloadPdf}
