@@ -27,12 +27,14 @@ import {
   trackExploreView,
   trackPlay,
   trackDownloadIntent,
+  trackExploreUploadCta,
   trackDownload,
   trackScoreView,
   trackStemSolo,
 } from '../../utils/analytics';
 import { useAuth, useUser } from '../../auth';
 import usePageMeta from '../../hooks/usePageMeta';
+import { LocalizedLink } from '../../i18n/locale';
 import { createTransport } from '../../player/transport';
 import { useTransport } from '../../player/transport-react';
 import { createStemEngine, pickStemAssets } from '../../player/stemEngine';
@@ -1302,6 +1304,17 @@ function SongDetail({ onLoginClick }) {
                 />
               </div>
             </div>
+
+            {/* Same bridge as the sidebar's, for the widths where the sidebar
+                is replaced by a drawer that starts closed. */}
+            <LocalizedLink
+              className="gs-song-upload-cta-mobile"
+              to="/"
+              onClick={() => trackExploreUploadCta(track, { placement: 'mobile_inline' })}
+            >
+              <strong>Not the song you needed?</strong>
+              <span>Transcribe your own audio &rarr;</span>
+            </LocalizedLink>
 
             {/* Mobile sidebar drawer */}
             <button className="gs-rs-toggle" onClick={() => setDrawerOpen(true)}>
