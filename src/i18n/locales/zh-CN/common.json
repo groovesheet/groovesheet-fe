@@ -54,7 +54,7 @@
     "browseFiles": "浏览文件",
     "chooseFile": "选择文件",
     "uploading": "上传中...",
-    "startingServer": "服务器启动中...",
+    "startingServer": "处理中...",
     "transcribing": "转谱中...",
     "cancel": "取消",
     "instruments": {
