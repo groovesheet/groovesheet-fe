@@ -56,7 +56,7 @@
     "uploading": "Uploading...",
     "startingServer": "You're in the queue",
     "inQueue": "You're in the queue",
-    "inQueueBody": "GrooveSheet is popular right now and a lot of songs are ahead of yours. Your song is queued and will be processed automatically — you can safely close this page and check back on your Transcription History.",
+    "inQueueBody": "Separating and transcribing a song takes around 20–30 minutes of processing, and jobs run one at a time. Your song is queued and will be processed automatically — you can safely close this page and check back on your Transcription History.",
     "viewHistory": "View Transcription History",
     "reconnecting": "Reconnecting to the server… your job is still running and will appear in your Transcription History.",
     "transcribing": "Transcribing...",

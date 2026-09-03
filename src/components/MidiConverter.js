@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { queueSummary } from '../utils/queue';
 import { saveActiveJob, loadActiveJob, clearActiveJob } from '../utils/activeJob';
@@ -115,6 +116,7 @@ const BassIcon = () => (
 );
 
 function MidiConverter({ onLoginClick }) {
+  const { t } = useTranslation();
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
@@ -772,7 +774,7 @@ function MidiConverter({ onLoginClick }) {
       <div className="upload-content-top compact">
         <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
         <div className="upload-text">
-          <h3 className="cold-start-message">You're in the queue</h3>
+          <h3 className="cold-start-message">{t('hero.inQueue')}</h3>
           <p className="cold-start-sub">
             GrooveSheet is busy right now and your song is waiting its turn. You can
             safely close this page — it keeps going, and you can check back any time
@@ -802,9 +804,7 @@ function MidiConverter({ onLoginClick }) {
             <h3 className="cold-start-message">You're in the queue</h3>
             <p className="cold-start-sub">
               {summary ? `${summary}. ` : ''}
-              GrooveSheet is popular right now and a lot of songs are ahead of yours.
-              Your song is queued and will be processed automatically — you can safely
-              close this page and check back on your Transcription History.
+              {t('hero.inQueueBody')}
             </p>
           </div>
         </div>
