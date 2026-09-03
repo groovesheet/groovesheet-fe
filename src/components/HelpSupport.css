@@ -535,12 +535,6 @@
   color: var(--color-muted-foreground);
   margin: 16px 0 0;
 }
-.help-wechat-note {
-  margin-top: 14px;
-  font-size: 13px;
-  color: var(--color-muted-foreground);
-}
-
 .help-wechat-qr {
   flex-shrink: 0;
   width: 168px;
@@ -617,13 +611,6 @@
   color: var(--color-muted-foreground);
   margin-top: 3px;
 }
-
-.help-channel-note {
-  font-size: 13px;
-  color: var(--color-muted-foreground);
-  margin-top: 6px;
-}
-
 .help-channel-arrow {
   color: var(--color-foreground);
   display: flex;

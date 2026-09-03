@@ -19,7 +19,7 @@ channels** (WhatsApp, WeChat, Email) with an **expanded, searchable FAQ**. No se
    - **WeChat** — **QR code** only, no ID (make the QR first-class — primary path for CN /
      Bilibili audience). Asset: `public/images/wechat-qr.png`.
    - **Email** — support address, `mailto:`.
-   Each with an optional response-time note.
+   No response-time notes on the cards — the subhead already covers it.
 
 4. **FAQ** — expanded + categorized:
    - **Getting started** (sign up/sign in, splitting a track) — from `faq.sections.overview`.

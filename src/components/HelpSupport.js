@@ -358,7 +358,6 @@ function HelpSupport({ onLoginClick }) {
                 <p className="help-wechat-desc">
                   Best for users in China — scan the code to add us on WeChat.
                 </p>
-                <div className="help-wechat-note">Typically replies within a day</div>
               </div>
               <div className="help-wechat-qr">
                 <img src="/images/wechat-qr.png" alt="GrooveSheet WeChat QR code" />
@@ -376,7 +375,6 @@ function HelpSupport({ onLoginClick }) {
                 <div className="help-channel-body">
                   <h3>WhatsApp</h3>
                   <div className="help-channel-line">{CONTACT.whatsappNumber} · click to chat</div>
-                  <div className="help-channel-note">Replies within a few hours, Mon–Fri</div>
                 </div>
                 <span className="help-channel-arrow">
                   <ArrowUpRight />
@@ -394,7 +392,6 @@ function HelpSupport({ onLoginClick }) {
                 <div className="help-channel-body">
                   <h3>Email</h3>
                   <div className="help-channel-line">{CONTACT.email}</div>
-                  <div className="help-channel-note">We usually reply within a day</div>
                 </div>
                 <span className="help-channel-arrow">
                   <ArrowUpRight />
