@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { isQueued, queueSummary } from '../utils/queue';
-import { apiPrefixForId } from '../utils/api';
+import { apiPrefixForId, resolveFileDisplayName } from '../utils/api';
+import { ProcessingCard } from './ProcessingJobs';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
@@ -598,7 +598,7 @@ export const TranscriptionHistory = () => {
   };
 
   const Card = (w) => {
-    const name = resolveDisplayName(w);
+    const name = resolveFileDisplayName(w);
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
@@ -649,7 +649,7 @@ export const TranscriptionHistory = () => {
   };
 
   const ListRow = (w) => {
-    const name = resolveDisplayName(w);
+    const name = resolveFileDisplayName(w);
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
@@ -813,43 +813,7 @@ export const TranscriptionHistory = () => {
                   <span style={{ fontSize: 16, color: 'var(--color-muted-foreground)' }}>{processing.length}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {processing.map((w) => {
-                    const name = resolveDisplayName(w);
-                    const { base, ext } = fileParts(name);
-                    const ds = w.created_at || w.completed_at || new Date().toISOString();
-                    const progress = w.progress || 0;
-                    const queued = isQueued(w);
-                    const qSummary = queued ? queueSummary(w.queue) : null;
-                    return (
-                      <div key={w.workflow_id} style={{ background: 'var(--color-panel2)', borderRadius: 13, padding: '22px 24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span>{fmtDate(ds)}</span><span style={{ width: 1, height: 12, background: 'var(--color-border)' }} /><span>{fmtTime(ds)}</span>
-                            </div>
-                            <div style={{ fontSize: 18, color: 'var(--color-text)' }}><span style={{ fontWeight: 500 }}>{base}</span><span style={{ color: 'var(--color-muted-foreground)' }}>{ext}</span></div>
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>{InstrBadges(w)}</div>
-                          </div>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--color-primary)', color: '#fff', fontSize: 13, fontWeight: 500, padding: '6px 12px', borderRadius: 999, whiteSpace: 'nowrap', lineHeight: 1 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ animation: 'gsSpin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,.35)" strokeWidth="2.4" /><path d="M21 12a9 9 0 0 0-9-9" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" /></svg>
-                            {queued ? 'Queued' : 'Processing'}{w.is_preview ? ' · 10s preview' : ''}
-                          </span>
-                        </div>
-                        {queued ? (
-                          <div style={{ marginTop: 18, fontSize: 14, color: 'var(--color-muted-foreground)' }}>
-                            Waiting for a free transcription slot{qSummary ? ` — ${qSummary}` : ''}. You can close this page; it keeps going.
-                          </div>
-                        ) : (
-                          <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
-                            <div role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} style={{ flex: 1, height: 8, borderRadius: 6, background: 'var(--color-surface-light)', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${progress}%`, borderRadius: 6, background: 'linear-gradient(90deg,#012FA7,#0139C7)', backgroundSize: '34px 100%', animation: 'gsBarMove 1s linear infinite' }} />
-                            </div>
-                            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)', minWidth: 42, textAlign: 'right' }}>{progress}%</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {processing.map((w) => <ProcessingCard key={w.workflow_id} w={w} />)}
                 </div>
               </section>
             )}
@@ -864,7 +828,7 @@ export const TranscriptionHistory = () => {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {failed.map((w) => {
-                    const name = resolveDisplayName(w);
+                    const name = resolveFileDisplayName(w);
                     const { base, ext } = fileParts(name);
                     const ds = w.failed_at || w.created_at || new Date().toISOString();
                     return (

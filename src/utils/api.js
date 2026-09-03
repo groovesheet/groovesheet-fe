@@ -391,6 +391,25 @@ export function resolveDescription(workflow) {
  * A raw workflow id is never a display name — a row with nothing else to go on
  * gets "<Instrument> transcription", not "WF_1a2b3c…".
  */
+/**
+ * Like resolveDisplayName, but shows the uploaded file as the user knows it —
+ * "AdoMIRROR.mp3", not "AdoMIRROR". The server derives an auto title from the
+ * filename stem; that is not a name anyone chose, so the filename wins over it.
+ * A title the user actually set (Edit details, or a library track) still wins.
+ */
+export function resolveFileDisplayName(workflow) {
+  if (!workflow) return 'Unknown';
+  const meta = workflow.metadata || {};
+  const outputsMeta = workflow.outputs?.metadata || {};
+  const filename = workflow.original_filename || meta.original_filename || outputsMeta.original_filename;
+  if (filename) {
+    const stem = String(filename).replace(/\.[^.]+$/, '').trim();
+    const title = (workflow.title || meta.title || outputsMeta.title || '').trim();
+    if (!workflow.library_track_id && (!title || title === stem)) return String(filename).trim();
+  }
+  return resolveDisplayName(workflow);
+}
+
 export function resolveDisplayName(workflow) {
   if (!workflow) return 'Unknown';
 

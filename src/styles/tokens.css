@@ -79,6 +79,8 @@
   --color-border-light: rgba(255, 255, 255, 0.1);
   --color-border-lighter: rgba(255, 255, 255, 0.18);
   --color-surface-light: rgba(255, 255, 255, 0.05);
+  /* Unfilled part of a progress bar (Figma: load-bar) */
+  --color-load-bar: #5f5e60;
   --color-surface-lighter: rgba(255, 255, 255, 0.08);
   --color-surface-lightest: rgba(255, 255, 255, 0.04);
   --color-inset-light: rgba(255, 255, 255, 0.15);
@@ -150,6 +152,7 @@
   --color-border-light: rgba(0, 0, 0, 0.08);
   --color-border-lighter: rgba(0, 0, 0, 0.1);
   --color-surface-light: rgba(0, 0, 0, 0.05);
+  --color-load-bar: #d9d8da;
   --color-surface-lighter: rgba(240, 240, 240, 0.5);
   --color-surface-lightest: rgba(248, 248, 248, 0.95);
   --color-inset-light: rgba(0, 0, 0, 0.05);

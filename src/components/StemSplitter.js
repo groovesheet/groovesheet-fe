@@ -23,6 +23,7 @@ import Header from './layout/Header';
 import Footer from './layout/Footer';
 import HeroBackground from './HeroBackground';
 import Features from './Features';
+import ProcessingJobs from './ProcessingJobs';
 import Pricing from './Pricing';
 import Element from './Element';
 import Testimonials from './Testimonials';
@@ -784,6 +785,8 @@ function StemSplitter({ onLoginClick }) {
           background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--color-tinted-background) 100%)',
           pointerEvents: 'none',
         }} />
+        {/* In-flight jobs, right under the uploader, so leaving this page never loses sight of them. */}
+        <ProcessingJobs />
         <Features />
       </div>
       <Pricing onLoginClick={onLoginClick} />

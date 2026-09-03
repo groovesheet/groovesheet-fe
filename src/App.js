@@ -5,6 +5,7 @@ import Header from './components/layout/Header';
 import Hero from './components/Hero';
 import HeroBackground from './components/HeroBackground';
 import Features from './components/Features';
+import ProcessingJobs from './components/ProcessingJobs';
 import Pricing from './components/Pricing';
 import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
@@ -83,6 +84,8 @@ function LandingPage({ onLoginClick }) {
         className={`features-gradient ${isGradientVisible ? 'visible' : ''} ${isGradientInstantHide ? 'instant-hide' : ''}`}
       />
       <div style={{ paddingTop: '120px' }}>
+        {/* In-flight jobs, right under the uploader, so leaving this page never loses sight of them. */}
+        <ProcessingJobs />
         <Features />
       </div>
       <Pricing onLoginClick={onLoginClick} />
