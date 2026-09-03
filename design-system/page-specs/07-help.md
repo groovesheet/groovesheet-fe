@@ -16,8 +16,8 @@ channels** (WhatsApp, WeChat, Email) with an **expanded, searchable FAQ**. No se
 
 3. **Contact channels** — three:
    - **WhatsApp** — click-to-chat link (`https://wa.me/<number>`) + optional QR.
-   - **WeChat** — WeChat ID + **QR code** (make the QR first-class — primary path for CN /
-     Bilibili audience).
+   - **WeChat** — **QR code** only, no ID (make the QR first-class — primary path for CN /
+     Bilibili audience). Asset: `public/images/wechat-qr.png`.
    - **Email** — support address, `mailto:`.
    Each with an optional response-time note.
 
@@ -31,9 +31,8 @@ channels** (WhatsApp, WeChat, Email) with an **expanded, searchable FAQ**. No se
      recordings, odd meters/tempo, output format).
    - **Publishing & Explore** (NEW — how to publish, visibility public/unlisted/private, who can
      download, unpublish, creator profile).
-   Search filters across all; "no results — contact us" fallback.
-
-5. **Still need help?** — points back to contact channels + a `/service-status` link.
+   Search filters across all; "no results — contact us" fallback. Category headings only — no
+   pill nav and no per-category blurbs.
 
 ## States
 - Default.
@@ -42,7 +41,8 @@ channels** (WhatsApp, WeChat, Email) with an **expanded, searchable FAQ**. No se
 - Loading.
 
 ## Data
-Contact details are config/env values (phone, WeChat ID + QR asset, support email) — placeholder
-clearly. FAQ extends i18n `faq.*` in `{en,zh-CN,zh-TW}/common.json`; add `account`, `uploads`,
+Contact details are live in `CONTACT` in `src/components/HelpSupport.js`: WhatsApp
+`+65 8996 8765` (`wa.me/6589968765`, shared with Volumet), email `support@groovesheet.net`
+(forwards to `edward.zhang@kelin.studio`), WeChat QR asset. FAQ extends i18n `faq.*` in `{en,zh-CN,zh-TW}/common.json`; add `account`, `uploads`,
 `publishing` groups. ⚠ Optional later: a contact form to a support inbox — not required for
 launch given direct channels.

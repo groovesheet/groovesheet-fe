@@ -41,28 +41,6 @@
   padding: 64px 20px 8px;
   text-align: center;
 }
-
-.help-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-light);
-  margin-bottom: 24px;
-  font-size: 13px;
-  color: var(--color-muted-foreground);
-}
-
-.help-status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-success);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
-  flex-shrink: 0;
-}
-
 .help-hero-title {
   font-family: var(--font-family-sans);
   font-size: 60px;
@@ -81,6 +59,17 @@
   color: var(--color-muted-foreground);
   margin: 18px auto 0;
   max-width: 600px;
+}
+
+/* keep the subheading on a single line on desktop */
+@media (min-width: 1000px) {
+  .help-hero {
+    max-width: 860px;
+  }
+  .help-hero-sub {
+    max-width: none;
+    white-space: nowrap;
+  }
 }
 
 .help-search {
@@ -158,60 +147,12 @@
   border-radius: 6px;
   font-family: var(--font-family-mono);
 }
-
-.help-quick-reach {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-  font-size: 14px;
-  color: var(--color-muted-foreground);
-}
-
-.help-quick-reach a {
-  color: var(--color-foreground);
-  text-decoration: none;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-light);
-  transition: color 0.15s ease;
-}
-
-.help-quick-reach a:hover {
-  color: var(--color-text);
-}
-
 /* ===================== FAQ ===================== */
 .help-faq {
   max-width: 1100px;
   margin: 0 auto;
   padding: 36px 20px 20px;
 }
-
-.help-catnav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.help-catnav a {
-  font-size: 14px;
-  color: var(--color-foreground);
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  background: var(--color-panel2);
-  transition: background-color 0.15s ease;
-}
-
-.help-catnav a:hover {
-  background: var(--color-panel1);
-}
-
 .help-result-count {
   text-align: center;
   font-size: 15px;
@@ -291,13 +232,6 @@
   margin: 0;
   color: var(--color-text);
 }
-
-.help-cat-label p {
-  font-size: 14px;
-  color: var(--color-muted-foreground);
-  margin: 8px 0 0;
-}
-
 .help-cat-items {
   flex: 1;
   display: flex;
@@ -601,42 +535,6 @@
   color: var(--color-muted-foreground);
   margin: 16px 0 0;
 }
-
-.help-wechat-id {
-  margin-top: 18px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--color-panel1);
-  border-radius: 8px;
-  padding: 9px 12px;
-}
-
-.help-mono {
-  font-family: var(--font-family-mono);
-  font-size: 15px;
-  color: var(--color-text);
-}
-
-.help-wechat-id button {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-foreground);
-  background: var(--color-surface-light);
-  border: none;
-  border-radius: 6px;
-  padding: 5px 9px;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-.help-wechat-id button:hover {
-  color: var(--color-text);
-}
-
 .help-wechat-note {
   margin-top: 14px;
   font-size: 13px;
@@ -651,6 +549,14 @@
   border-radius: 14px;
   padding: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.help-wechat-qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .help-contact-stack {
@@ -722,70 +628,6 @@
   color: var(--color-foreground);
   display: flex;
 }
-
-.help-contact-disclaimer {
-  font-size: 12.5px;
-  color: var(--color-surface-muted);
-  margin: 16px 2px 0;
-  font-weight: 300;
-}
-
-/* ===================== STILL NEED HELP ===================== */
-.help-still {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 48px 20px 80px;
-}
-
-.help-still-card {
-  background: var(--color-panel3);
-  border-radius: 16px;
-  padding: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 30px;
-  flex-wrap: wrap;
-}
-
-.help-still-text {
-  flex: 1;
-  min-width: 280px;
-}
-
-.help-still-text h2 {
-  font-family: var(--font-family-sans);
-  font-size: 28px;
-  line-height: 36px;
-  font-weight: 400;
-  margin: 0;
-  color: var(--color-text);
-}
-
-.help-still-text p {
-  font-size: 16px;
-  line-height: 25px;
-  color: var(--color-muted-foreground);
-  margin: 10px 0 0;
-  max-width: 520px;
-}
-
-.help-still-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.help-btn-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.help-btn-status .help-status-dot {
-  box-shadow: none;
-}
-
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 900px) {
   .help-contact-grid {
@@ -822,8 +664,5 @@
   }
   .help-wechat-qr {
     align-self: center;
-  }
-  .help-still-card {
-    padding: 30px;
   }
 }

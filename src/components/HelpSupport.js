@@ -1,22 +1,18 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
-import { LocalizedLink } from '../i18n/locale';
 import './HelpSupport.css';
 
-// Placeholder contact details — wire from config (phone, WeChat ID + QR, support email) at launch.
 const CONTACT = {
-  wechatId: 'GrooveSheetHelp',
-  whatsappNumber: '+1 (555) 010-0142',
-  whatsappHref: 'https://wa.me/15550100142',
-  email: 'support@groovesheet.app',
+  whatsappNumber: '+65 8996 8765',
+  whatsappHref: 'https://wa.me/6589968765',
+  email: 'support@groovesheet.net',
 };
 
 const FAQ_DATA = [
   {
     id: 'getting-started',
     label: 'Getting started',
-    blurb: 'Accounts and your first transcription.',
     items: [
       {
         q: 'How do I sign up or sign in?',
@@ -31,7 +27,6 @@ const FAQ_DATA = [
   {
     id: 'account',
     label: 'Account',
-    blurb: 'Profile, sign-in methods, and deletion.',
     items: [
       {
         q: 'How do I edit my profile?',
@@ -50,7 +45,6 @@ const FAQ_DATA = [
   {
     id: 'billing',
     label: 'Billing & minutes',
-    blurb: 'How minutes work, plans, and refunds.',
     items: [
       {
         q: 'What does a “minute” mean?',
@@ -85,7 +79,6 @@ const FAQ_DATA = [
   {
     id: 'uploads',
     label: 'Uploads & formats',
-    blurb: 'File limits, inputs, and outputs.',
     items: [
       { q: 'What is the maximum file size?', a: 'Up to 32 MB per file.' },
       { q: 'Which audio formats can I upload?', a: 'MP3, WAV, FLAC, and OGG.' },
@@ -98,7 +91,6 @@ const FAQ_DATA = [
   {
     id: 'quality',
     label: 'Transcription quality',
-    blurb: 'Getting the cleanest notation.',
     items: [
       {
         q: 'How do I get the cleanest notation?',
@@ -121,7 +113,6 @@ const FAQ_DATA = [
   {
     id: 'publishing',
     label: 'Publishing & Explore',
-    blurb: 'Sharing scores on Explore.',
     items: [
       {
         q: 'How do I publish a score?',
@@ -171,73 +162,15 @@ const ArrowUpRight = () => (
   </svg>
 );
 
-// Decorative pseudo-QR — deterministic pattern, replaced by the real WeChat QR at launch.
-function WeChatQr() {
-  const { rects, finders, size } = useMemo(() => {
-    const n = 25;
-    const cell = 8;
-    const dim = n * cell;
-    let s = 0x1f3a5;
-    const rnd = () => {
-      s = (s * 1103515245 + 12345) & 0x7fffffff;
-      return s / 0x7fffffff;
-    };
-    const inFinder = (r, c) => {
-      const f = (R0, C0) => r >= R0 && r < R0 + 7 && c >= C0 && c < C0 + 7;
-      return f(0, 0) || f(0, n - 7) || f(n - 7, 0);
-    };
-    const cells = [];
-    for (let r = 0; r < n; r++) {
-      for (let c = 0; c < n; c++) {
-        if (inFinder(r, c)) continue;
-        if (rnd() > 0.52) {
-          cells.push({ x: c * cell, y: r * cell, key: `m${r}_${c}` });
-        }
-      }
-    }
-    const finder = (R0, C0, k) => [
-      { key: k + 'a', x: C0 * cell, y: R0 * cell, w: 7 * cell, fill: '#0a0a0a' },
-      { key: k + 'b', x: (C0 + 1) * cell, y: (R0 + 1) * cell, w: 5 * cell, fill: '#fff' },
-      { key: k + 'c', x: (C0 + 2) * cell, y: (R0 + 2) * cell, w: 3 * cell, fill: '#0a0a0a' },
-    ];
-    return {
-      size: dim,
-      rects: cells,
-      finders: [
-        ...finder(0, 0, 'f1'),
-        ...finder(0, n - 7, 'f2'),
-        ...finder(n - 7, 0, 'f3'),
-      ],
-    };
-  }, []);
-
-  return (
-    <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%"
-      style={{ display: 'block', borderRadius: 4 }} aria-label="WeChat QR code">
-      <rect x="0" y="0" width={size} height={size} fill="#fff" />
-      {rects.map((c) => (
-        <rect key={c.key} x={c.x} y={c.y} width="8" height="8" fill="#0a0a0a" />
-      ))}
-      {finders.map((f) => (
-        <rect key={f.key} x={f.x} y={f.y} width={f.w} height={f.w} fill={f.fill} />
-      ))}
-    </svg>
-  );
-}
-
 function HelpSupport({ onLoginClick }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState({});
   const [loading, setLoading] = useState(true);
-  const [wechatCopied, setWechatCopied] = useState(false);
-  const copyTimer = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 750);
     return () => clearTimeout(t);
   }, []);
-
-  useEffect(() => () => clearTimeout(copyTimer.current), []);
 
   const toggle = (id) => setOpen((s) => ({ ...s, [id]: !s[id] }));
 
@@ -263,17 +196,6 @@ function HelpSupport({ onLoginClick }) {
   const showNoResults = !loading && searching && results.length === 0;
   const resultLabel = `${results.length} ${results.length === 1 ? 'result' : 'results'} for “${trimmed}”`;
 
-  const copyWechat = () => {
-    try {
-      if (navigator.clipboard) navigator.clipboard.writeText(CONTACT.wechatId);
-    } catch (e) {
-      /* clipboard unavailable */
-    }
-    setWechatCopied(true);
-    clearTimeout(copyTimer.current);
-    copyTimer.current = setTimeout(() => setWechatCopied(false), 1600);
-  };
-
   const clearSearch = () => setQuery('');
 
   return (
@@ -283,10 +205,6 @@ function HelpSupport({ onLoginClick }) {
       <main className="help-main">
         {/* Hero + search */}
         <section id="top" className="help-hero">
-          <div className="help-status-pill">
-            <span className="help-status-dot" />
-            <span>Support is online · replies within a day</span>
-          </div>
           <h1 className="help-hero-title">Help &amp; Support</h1>
           <p className="help-hero-sub">
             Search the FAQ, or reach us directly — we usually reply within a day.
@@ -316,27 +234,10 @@ function HelpSupport({ onLoginClick }) {
               <span className="help-search-kbd">⌘K</span>
             </div>
           </div>
-
-          <div className="help-quick-reach">
-            <span>or reach us:</span>
-            <a href="#contact">WhatsApp</a>
-            <a href="#contact">WeChat</a>
-            <a href="#contact">Email</a>
-          </div>
         </section>
 
         {/* FAQ */}
         <section className="help-faq">
-          {showBrowse && (
-            <div className="help-catnav">
-              {FAQ_DATA.map((cat) => (
-                <a key={cat.id} href={`#cat-${cat.id}`}>
-                  {cat.label}
-                </a>
-              ))}
-            </div>
-          )}
-
           {(showResults || showNoResults) && (
             <p className="help-result-count">
               {showResults ? resultLabel : `No results for “${trimmed}”`}
@@ -360,7 +261,6 @@ function HelpSupport({ onLoginClick }) {
                 <section key={cat.id} id={`cat-${cat.id}`} className="help-cat">
                   <div className="help-cat-label">
                     <h3>{cat.label}</h3>
-                    <p>{cat.blurb}</p>
                   </div>
                   <div className="help-cat-items">
                     {cat.items.map((it, i) => {
@@ -456,16 +356,12 @@ function HelpSupport({ onLoginClick }) {
                   </div>
                 </div>
                 <p className="help-wechat-desc">
-                  Best for users in China — scan the code to add us, or search the WeChat ID.
+                  Best for users in China — scan the code to add us on WeChat.
                 </p>
-                <div className="help-wechat-id">
-                  <span className="help-mono">{CONTACT.wechatId}</span>
-                  <button onClick={copyWechat}>{wechatCopied ? 'Copied' : 'Copy ID'}</button>
-                </div>
                 <div className="help-wechat-note">Typically replies within a day</div>
               </div>
               <div className="help-wechat-qr">
-                <WeChatQr />
+                <img src="/images/wechat-qr.png" alt="GrooveSheet WeChat QR code" />
               </div>
             </div>
 
@@ -506,34 +402,8 @@ function HelpSupport({ onLoginClick }) {
               </a>
             </div>
           </div>
-
-          <p className="help-contact-disclaimer">
-            Contact details shown are placeholders — wired from config (phone, WeChat ID + QR, support
-            email) at launch.
-          </p>
         </section>
 
-        {/* Still need help */}
-        <section className="help-still">
-          <div className="help-still-card">
-            <div className="help-still-text">
-              <h2>Still need help?</h2>
-              <p>
-                Reach out on any channel above, or check whether something's already on our radar over on
-                the status page.
-              </p>
-            </div>
-            <div className="help-still-actions">
-              <a href="#contact" className="help-btn-primary">
-                Contact us
-              </a>
-              <LocalizedLink to="/service-status" className="help-btn-ghost help-btn-status">
-                <span className="help-status-dot" />
-                Service status
-              </LocalizedLink>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />
