@@ -1,5 +1,6 @@
 import React from 'react';
 import './ComparePlans.css';
+import { MAX_UPLOAD_MB } from '../lib/constants';
 
 function ComparePlans() {
   return (
@@ -61,13 +62,13 @@ function ComparePlans() {
                 <span className="feature-label">Upload Size Limit per File</span>
               </div>
               <div className="compare-cell feature-value">
-                <span>2GB</span>
+                <span>{`${MAX_UPLOAD_MB} MB`}</span>
               </div>
               <div className="compare-cell feature-value">
-                <span>2GB</span>
+                <span>{`${MAX_UPLOAD_MB} MB`}</span>
               </div>
               <div className="compare-cell feature-value">
-                <span>2GB</span>
+                <span>{`${MAX_UPLOAD_MB} MB`}</span>
               </div>
             </div>
 

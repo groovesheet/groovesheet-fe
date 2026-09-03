@@ -247,7 +247,7 @@ function MidiConverter({ onLoginClick }) {
       return;
     }
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-      setError('File size too large. Max 32MB.');
+      setError(`File size too large. Max ${MAX_UPLOAD_MB}MB.`);
       return;
     }
     setFile(selectedFile);

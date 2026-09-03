@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import './HelpSupport.css';
+import { MAX_UPLOAD_MB } from '../lib/constants';
 
 const CONTACT = {
   whatsappNumber: '+65 8996 8765',
@@ -80,7 +81,7 @@ const FAQ_DATA = [
     id: 'uploads',
     label: 'Uploads & formats',
     items: [
-      { q: 'What is the maximum file size?', a: 'Up to 32 MB per file.' },
+      { q: 'What is the maximum file size?', a: `Up to ${MAX_UPLOAD_MB} MB per file.` },
       { q: 'Which audio formats can I upload?', a: 'MP3, WAV, FLAC, and OGG.' },
       {
         q: 'What output formats do I get?',
