@@ -928,10 +928,14 @@ function MidiConverter({ onLoginClick }) {
           background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--color-tinted-background) 100%)',
           pointerEvents: 'none',
         }} />
-        <Features />
+        <Features variant="midi" />
       </div>
       <Pricing onLoginClick={onLoginClick} />
-      <Element />
+      <Element
+        titleTop="DAW-Ready MIDI,"
+        titleBottom="On Demand."
+        lede="Upload a track, review the transcription, download MIDI and score files."
+      />
       <Testimonials />
       <FAQ />
       <Footer />

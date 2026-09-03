@@ -2,7 +2,17 @@ import React from "react";
 import { VariantHoverWrapper } from "./VariantHoverWrapper";
 import "./Element.css";
 
-export const Element = () => {
+/**
+ * Closing showcase band, rendered on the landing page and both tool pages.
+ * The heading was hardcoded English naming drum scores, which is wrong on the
+ * stem-splitter and MIDI pages and untranslated everywhere, so callers now
+ * supply it.
+ */
+export const Element = ({
+  titleTop = "High-Accuracy Drum",
+  titleBottom = "Scores, On Demand.",
+  lede = "Upload a track, review the preview, download print-ready parts.",
+}) => {
   return (
     <div className="element-section">
       <div className="element-container">
@@ -10,15 +20,15 @@ export const Element = () => {
         <div className="element-title-col max-w-[420px] w-[420px] flex flex-col items-start relative">
           <div className="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
             <div className="element-title relative flex items-center justify-center self-stretch mt-[-1.00px] [font-family:'Hubot_Sans-Regular',Helvetica] font-normal text-[var(--color-text)] text-[40px] tracking-[-0.80px] leading-[52px]">
-              High-Accuracy Drum
+              {titleTop}
               <br />
-              Scores, On Demand.
+              {titleBottom}
             </div>
           </div>
         </div>
 
         <p className="element-lede relative flex items-center justify-center w-[430px] [font-family:'DM_Sans-Regular',Helvetica] font-normal text-[var(--color-text)] text-xl tracking-[0] leading-6">
-          Upload a track, review the preview, download print-ready parts.
+          {lede}
         </p>
       </div>
 

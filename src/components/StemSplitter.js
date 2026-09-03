@@ -788,10 +788,14 @@ function StemSplitter({ onLoginClick }) {
         }} />
         {/* In-flight jobs, right under the uploader, so leaving this page never loses sight of them. */}
         <ProcessingJobs />
-        <Features />
+        <Features variant="stems" />
       </div>
       <Pricing onLoginClick={onLoginClick} />
-      <Element />
+      <Element
+        titleTop="Clean Separated"
+        titleBottom="Stems, On Demand."
+        lede="Upload a track, preview each part, download studio-ready stems."
+      />
       <Testimonials />
       <FAQ />
       <Footer />

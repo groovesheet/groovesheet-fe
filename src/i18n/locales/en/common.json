@@ -87,6 +87,38 @@
     "card3": {
       "title": "Export!",
       "body": "Export clean notation to PDF, MusicXML, or MIDI. Print, share, or import into your editor."
+    },
+    "stems": {
+      "title": "Clean Stems in Minutes - Not Hours.",
+      "subtitle": "Built for separation quality so you can remix, rehearse and practise with just the parts you need.",
+      "card1": {
+        "title": "Upload Your Track",
+        "body": "Drag in an MP3, WAV or FLAC (or choose one). Max {{size}} MB."
+      },
+      "card2": {
+        "title": "Pick Your Parts",
+        "body": "Isolate vocals, drums, bass, guitar or piano. Preview each stem before you download."
+      },
+      "card3": {
+        "title": "Download",
+        "body": "Export separated audio ready for your DAW, a practice loop, or a backing track."
+      }
+    },
+    "midi": {
+      "title": "Audio to MIDI in Seconds - Not Weeks.",
+      "subtitle": "Built for speed and accuracy so you can arrange, edit and produce without transcribing by ear.",
+      "card1": {
+        "title": "Upload Your Track",
+        "body": "Drag in an MP3, WAV or FLAC (or choose one). Max {{size}} MB."
+      },
+      "card2": {
+        "title": "Review the Notes",
+        "body": "Check the detected pitches, tempo and timing in the live preview before you export."
+      },
+      "card3": {
+        "title": "Export",
+        "body": "Download DAW-ready MIDI, plus PDF and MusicXML when you need the score."
+      }
     }
   },
   "pricing": {

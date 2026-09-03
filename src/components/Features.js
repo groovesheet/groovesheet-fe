@@ -3,17 +3,30 @@ import { useTranslation } from 'react-i18next';
 import './Features.css';
 import { MAX_UPLOAD_MB } from '../lib/constants';
 
-function Features() {
+/**
+ * Shared "how it works" band. The landing page, the stem splitter and the MIDI
+ * converter all render it, but each sells a different output, so the copy is
+ * keyed by variant. Ads point at all three pages; describing drum notation on
+ * the stem-splitter page is both a message-match failure for the visitor and a
+ * relevance penalty on the ad that sent them.
+ *
+ * Unknown or omitted variants fall back to the original notation copy.
+ */
+function Features({ variant = 'notation' }) {
   const { t } = useTranslation();
+  // i18next resolves the variant key first and falls back to the shared one,
+  // so a missing translation degrades to the notation copy rather than a key.
+  const tv = (leaf, opts) =>
+    t([`features.${variant}.${leaf}`, `features.${leaf}`], opts);
   return (
     <section className="features">
       <div className="features-container">
         <div className="features-header">
           <div className="features-title-wrapper">
-            <h2 className="features-title">{t('features.title')}</h2>
+            <h2 className="features-title">{tv('title')}</h2>
           </div>
           <div className="features-description-wrapper">
-            <p className="features-description">{t('features.subtitle')}</p>
+            <p className="features-description">{tv('subtitle')}</p>
           </div>
         </div>
 
@@ -29,8 +42,8 @@ function Features() {
                 </svg>
               </div>
               <div className="feature-content">
-                <h3 className="feature-card-title">{t('features.card1.title')}</h3>
-                <p className="feature-card-text">{t('features.card1.body', { size: MAX_UPLOAD_MB })}</p>
+                <h3 className="feature-card-title">{tv('card1.title')}</h3>
+                <p className="feature-card-text">{tv('card1.body', { size: MAX_UPLOAD_MB })}</p>
               </div>
             </div>
           </div>
@@ -46,8 +59,8 @@ function Features() {
                 </svg>
               </div>
               <div className="feature-content">
-                <h3 className="feature-card-title">{t('features.card2.title')}</h3>
-                <p className="feature-card-text">{t('features.card2.body')}</p>
+                <h3 className="feature-card-title">{tv('card2.title')}</h3>
+                <p className="feature-card-text">{tv('card2.body')}</p>
               </div>
             </div>
           </div>
@@ -63,8 +76,8 @@ function Features() {
                 </svg>
               </div>
               <div className="feature-content">
-                <h3 className="feature-card-title">{t('features.card3.title')}</h3>
-                <p className="feature-card-text">{t('features.card3.body')}</p>
+                <h3 className="feature-card-title">{tv('card3.title')}</h3>
+                <p className="feature-card-text">{tv('card3.body')}</p>
               </div>
             </div>
           </div>
