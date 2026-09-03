@@ -50,7 +50,7 @@
     "termsOfService": "服務條款",
     "dragDrop": "拖曳音訊檔案至此",
     "tapToUpload": "點擊上傳音訊檔案",
-    "fileTypes": "MP3、WAV、FLAC,最大 {{size}}MB",
+    "fileTypes": "MP3、WAV、FLAC、OGG,最大 {{size}}MB",
     "browseFiles": "瀏覽檔案",
     "chooseFile": "選擇檔案",
     "uploading": "上傳中...",

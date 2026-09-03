@@ -50,7 +50,7 @@
     "termsOfService": "Terms of Service",
     "dragDrop": "Drag and drop an audio file",
     "tapToUpload": "Tap to upload an audio file",
-    "fileTypes": "MP3, WAV, FLAC up to {{size}}MB",
+    "fileTypes": "MP3, WAV, FLAC, OGG up to {{size}}MB",
     "browseFiles": "Browse Files",
     "chooseFile": "Choose File",
     "uploading": "Uploading...",

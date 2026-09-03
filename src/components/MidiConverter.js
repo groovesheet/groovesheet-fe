@@ -740,7 +740,7 @@ function MidiConverter({ onLoginClick }) {
               <p className="upload-main-text">
                 {isTouch ? 'Tap to upload an audio file' : 'Drag and drop an audio file'}
               </p>
-              <p className="upload-sub-text">{`MP3, WAV, FLAC up to ${MAX_UPLOAD_MB}MB`}</p>
+              <p className="upload-sub-text">{`MP3, WAV, FLAC, OGG up to ${MAX_UPLOAD_MB}MB`}</p>
             </div>
           </div>
           <button className="browse-files-btn" onClick={handleBrowseClick}>
