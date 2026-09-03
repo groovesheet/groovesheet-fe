@@ -52,8 +52,11 @@ function setCanonical(href) {
  * Social crawlers get real per-page OG tags via the Vercel bot rewrites to
  * the backend /seo/* pages — this hook covers browser tabs, history entries,
  * and JS-executing crawlers.
+ *
+ * `image` is optional and only set when supplied, so pages without their own
+ * artwork keep the site-wide OG image from index.html rather than losing it.
  */
-export default function usePageMeta(title, description) {
+export default function usePageMeta(title, description, image) {
   useEffect(() => {
     const fullTitle = title ? `${title} | GrooveSheet` : DEFAULT_TITLE;
     const prevTitle = document.title;
@@ -63,6 +66,12 @@ export default function usePageMeta(title, description) {
       setMeta('name', 'description', description);
       setMeta('property', 'og:description', description);
     }
+    // Pages with their own artwork (blog covers) should unfurl with it rather
+    // than the site-wide preview image.
+    if (image) {
+      setMeta('property', 'og:image', image);
+      setMeta('name', 'twitter:image', image);
+    }
     const href = canonicalHref();
     setCanonical(href);
     // og:url must agree with the canonical or the two disagree about which
@@ -71,5 +80,5 @@ export default function usePageMeta(title, description) {
     return () => {
       document.title = prevTitle;
     };
-  }, [title, description]);
+  }, [title, description, image]);
 }

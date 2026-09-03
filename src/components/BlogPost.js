@@ -6,6 +6,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import { fetchBlogPostBySlug } from '../utils/blog';
+import usePageMeta from '../hooks/usePageMeta';
 import SkeletonPanel from './ui/SkeletonPanel';
 import StatusMessage from './ui/StatusMessage';
 import './BlogPost.css';
@@ -15,6 +16,15 @@ function BlogPost({ onLoginClick }) {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Every post rendered as "GrooveSheet" with the site description and the
+  // generic preview image: eleven pages a crawler sees as duplicates, each
+  // unfurling with the wrong artwork despite having its own cover.
+  usePageMeta(
+    post ? post.title : null,
+    post ? post.excerpt || undefined : undefined,
+    post ? post.coverImageUrl || undefined : undefined
+  );
 
   useEffect(() => {
     let cancelled = false;
