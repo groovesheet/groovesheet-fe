@@ -351,7 +351,8 @@ export const AccountBilling = () => {
     pointerEvents: 'none',
     zIndex: 0,
   };
-  const main = { position: 'relative', zIndex: 1, maxWidth: 1414, margin: '0 auto', padding: '14px 20px 110px' };
+  // 1414 + 2×20 gutter: lines the content up with the nav bar (Header.css).
+  const main = { position: 'relative', zIndex: 1, maxWidth: 1454, margin: '0 auto', padding: '48px 20px 110px' };
   const card = {
     background: 'var(--color-panel2)',
     borderRadius: 13,
@@ -430,7 +431,7 @@ export const AccountBilling = () => {
       <Header />
 
       <main style={main}>
-        <button className="back-button" onClick={handleBack} style={{ marginBottom: 26 }}>
+        <button className="back-button" onClick={handleBack} style={{ marginBottom: 36 }}>
           <ArrowLeft size={28} weight="regular" />
           <span>Back</span>
         </button>
@@ -446,9 +447,11 @@ export const AccountBilling = () => {
           </div>
 
           {isLoading && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 60 }}>
-              <SkeletonPanel count={1} height={150} />
-              <SkeletonPanel count={4} height={56} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} aria-busy="true">
+              <SkeletonPanel count={1} height={190} bare />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+                <SkeletonPanel count={3} height={150} bare />
+              </div>
             </div>
           )}
 

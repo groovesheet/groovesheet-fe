@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { useAuth, useAuthActions, useUser } from '../auth';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -72,12 +73,6 @@ const PROVIDERS = [
   { key: 'apple', name: 'Apple', glyph: '', glyphBg: '#000', glyphColor: '#fff', glyphFont: 'inherit' },
   { key: 'facebook', name: 'Facebook', glyph: 'f', glyphBg: '#1877F2', glyphColor: '#fff', glyphFont: 'Georgia, serif' },
 ];
-
-const Chevron = ({ size = 13, style }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={style}>
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 export const AccountProfile = () => {
   const navigate = useNavigate();
@@ -415,7 +410,8 @@ export const AccountProfile = () => {
   const muted = 'var(--color-muted-foreground)';
   const page = { position: 'relative', minHeight: '100vh', background: 'var(--color-background)', fontFamily: 'var(--font-family-sans)', WebkitFontSmoothing: 'antialiased', overflowX: 'hidden' };
   const dots = { position: 'fixed', inset: 0, backgroundImage: 'radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px)', backgroundSize: '43px 43px', opacity: 0.35, pointerEvents: 'none', zIndex: 0 };
-  const main = { position: 'relative', zIndex: 1, maxWidth: 1190, margin: '0 auto', padding: '18px 28px 96px' };
+  // 1414 + 2×20 gutter: lines the content up with the nav bar (Header.css).
+  const main = { position: 'relative', zIndex: 1, maxWidth: 1454, margin: '0 auto', padding: '48px 20px 96px' };
   const card = { background: 'var(--color-panel2)', borderRadius: 13, padding: '26px 28px' };
   const h3 = { margin: 0, fontSize: 18, fontWeight: 500, color: 'var(--color-foreground)' };
   const label = { fontSize: 13, fontWeight: 500, color: 'var(--color-text)' };
@@ -475,19 +471,22 @@ export const AccountProfile = () => {
       <Header />
 
       <main style={main}>
-        {/* Breadcrumb + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 12, color: muted, margin: '0 0 14px', letterSpacing: '.01em' }}>
-          <span>Account</span>
-          <Chevron style={{ opacity: 0.6 }} />
-          <span style={{ color: 'var(--color-foreground)' }}>Profile &amp; settings</span>
-        </div>
-        <h1 style={{ fontSize: 34, lineHeight: '42px', letterSpacing: '-.6px', margin: '0 0 4px', color: 'var(--color-text)', fontWeight: 500 }}>Profile &amp; settings</h1>
-        <p style={{ margin: '0 0 30px', fontSize: 15, color: muted }}>Manage your identity, your public creator page, and how GrooveSheet works for you.</p>
+        {/* Same header as Billing & Usage: "← Back" above, the title below. */}
+        <button className="back-button" onClick={() => navigate(-1)} style={{ marginBottom: 36 }}>
+          <ArrowLeft size={28} weight="regular" /><span>Back</span>
+        </button>
+        <h1 style={{ fontSize: 40, lineHeight: '52px', letterSpacing: '-.8px', margin: '0 0 8px', color: 'var(--color-text)', fontWeight: 400 }}>Profile &amp; settings</h1>
+        <p style={{ margin: '0 0 36px', fontSize: 18, lineHeight: '25px', color: muted }}>Manage your identity, your public creator page, and how GrooveSheet works for you.</p>
 
         {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <SkeletonPanel count={1} height={148} />
-            <SkeletonPanel count={3} height={220} />
+          <div className="aps-grid" style={{ display: 'grid', gridTemplateColumns: '204px 1fr', gap: 40, alignItems: 'start' }} aria-busy="true">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <SkeletonPanel count={7} height={44} style={{ borderRadius: 8 }} bare />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <SkeletonPanel count={1} height={190} bare />
+              <SkeletonPanel count={2} height={320} bare />
+            </div>
           </div>
         )}
 

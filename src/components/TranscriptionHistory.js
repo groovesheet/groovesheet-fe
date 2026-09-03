@@ -463,7 +463,8 @@ export const TranscriptionHistory = () => {
   // ---- styles ----
   const page = { position: 'relative', minHeight: '100vh', background: 'var(--color-background)', color: 'var(--color-text)', fontFamily: 'var(--font-family-sans)', WebkitFontSmoothing: 'antialiased' };
   const dots = { position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px)', backgroundSize: '43px 43px', opacity: 0.35 };
-  const main = { position: 'relative', zIndex: 1, maxWidth: 1414, margin: '0 auto', padding: '18px 20px 80px' };
+  // 1414 + 2×20 gutter: lines the content up with the nav bar (Header.css).
+  const main = { position: 'relative', zIndex: 1, maxWidth: 1454, margin: '0 auto', padding: '48px 20px 80px' };
   const toolbarField = { height: 52, background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 8 };
   const chipStyle = (active) => ({
     display: 'inline-flex', alignItems: 'center', gap: 7, height: 38, padding: '0 14px', borderRadius: 6, cursor: 'pointer',
@@ -744,14 +745,12 @@ export const TranscriptionHistory = () => {
       <Header />
 
       <main style={main}>
+        {/* Same header as Billing & Usage: "← Back" above, the title below. */}
+        <button className="back-button" onClick={() => navigate('/')} style={{ marginBottom: 36 }}>
+          <ArrowLeft size={28} weight="regular" /><span>Back</span>
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 32 }}>
-          {/* Back arrow and title on one line; the arrow alone is the control. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <button className="back-button" aria-label="Back" onClick={() => navigate('/')} style={{ margin: 0 }}>
-              <ArrowLeft size={28} />
-            </button>
-            <h1 style={{ fontSize: 40, lineHeight: '48px', fontWeight: 400, margin: 0, color: 'var(--color-text)' }}>Your Library</h1>
-          </div>
+          <h1 style={{ fontSize: 40, lineHeight: '52px', letterSpacing: '-.8px', fontWeight: 400, margin: 0, color: 'var(--color-text)' }}>Your Library</h1>
           <a href="/" className="gs-btn gs-btn-primary" style={{ whiteSpace: 'nowrap' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             New transcription
@@ -759,10 +758,8 @@ export const TranscriptionHistory = () => {
         </div>
 
         {loading && (
-          <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }}>
-              <SkeletonPanel count={6} height={300} />
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }} aria-busy="true">
+            <SkeletonPanel count={6} height={340} bare />
           </div>
         )}
 
