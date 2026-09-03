@@ -85,6 +85,18 @@ function PricingPage({ onLoginClick }) {
   const liteFrom = monthlyEquivalent('lite_annual', '$7.5');
   const proFrom = monthlyEquivalent('pro_annual', '$15');
 
+  // Monthly allowance straight from the live catalog. This row used to be
+  // hardcoded and claimed the free tier included 10 minutes a month, which it
+  // does not: free grants no credits and only the 10-second preview, so anyone
+  // who signed up expecting those minutes found nothing they could do.
+  const planMinutes = (id, fallback) => {
+    const minutes = planById(id)?.minutes_per_month;
+    return typeof minutes === 'number' ? minutes : fallback;
+  };
+  const freeMinutes = planMinutes('free', 0);
+  const liteMinutes = planMinutes('lite_monthly', 120);
+  const proMinutes = planMinutes('pro_monthly', 360);
+
   const toggleFaq = (id) => setOpenFaq((cur) => (cur === id ? null : id));
 
   return (
@@ -151,9 +163,9 @@ function PricingPage({ onLoginClick }) {
                 <tbody>
                   <tr>
                     <th scope="row">Minutes / month</th>
-                    <td>10</td>
-                    <td className="is-pop">120</td>
-                    <td>Custom</td>
+                    <td>{freeMinutes > 0 ? freeMinutes : '10-second preview'}</td>
+                    <td className="is-pop">{liteMinutes}</td>
+                    <td>{proMinutes}</td>
                   </tr>
                   <tr>
                     <th scope="row">Upload size per file</th>
