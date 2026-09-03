@@ -1,8 +1,9 @@
 /**
- * Never-throw GA4/GTM event wrapper.
+ * Never-throw GA4/GTM + PostHog event wrapper.
  *
  * The site loads GTM (`GTM-P9XDD5Z7`) which forwards to GA4 (`G-LJ5P8PF3YH`).
- * Everything here pushes onto `window.dataLayer` and swallows every failure:
+ * Everything here pushes onto `window.dataLayer`, mirrors the same event into
+ * PostHog (see utils/observability.js), and swallows every failure:
  * an ad blocker, a missing container, a serialisation error or a consent
  * refusal must never break Explore playback, downloads, signup or purchase.
  *
@@ -14,6 +15,7 @@
  */
 
 import { attributionProps } from './attribution';
+import { phCapture } from './observability';
 
 export const EVENTS = {
   EXPLORE_TRACK_VIEW: 'explore_track_view',
@@ -64,11 +66,13 @@ export function track(eventName, props = {}) {
     }
     if (!Array.isArray(window.dataLayer)) return false;
 
-    window.dataLayer.push({
-      event: eventName,
+    const payload = {
       ...sanitize(attributionProps()),
       ...sanitize(props),
-    });
+    };
+    window.dataLayer.push({ event: eventName, ...payload });
+    // Same taxonomy, second sink. PostHog no-ops until a key is configured.
+    phCapture(eventName, payload);
     return true;
   } catch (e) {
     return false;

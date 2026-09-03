@@ -12,6 +12,7 @@
     "lucide-react": "^0.469.0",
     "opensheetmusicdisplay": "^1.9.3",
     "osmd-extended": "file:vendor/osmd-extended",
+    "posthog-js": "^1.425.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^17.0.8",

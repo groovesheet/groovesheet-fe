@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { trackSignUp } from './utils/analytics';
+import { identifyUser, resetObservability } from './utils/observability';
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
@@ -158,7 +159,10 @@ export function AuthProvider({ children }) {
       }
       if (!mounted) return;
       setSession(data.session || null);
-      setUser(mapUser(data.session?.user || null));
+      const restored = mapUser(data.session?.user || null);
+      setUser(restored);
+      // Bind replays and funnels to the account, not just the anonymous device.
+      identifyUser(restored);
       setIsLoaded(true);
     });
 
@@ -166,7 +170,9 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession || null);
-      setUser(mapUser(nextSession?.user || null));
+      const nextUser = mapUser(nextSession?.user || null);
+      setUser(nextUser);
+      if (nextUser) identifyUser(nextUser);
       setIsLoaded(true);
       // GA4 sign_up, emitted once per account. Supabase reports SIGNED_IN for
       // every session restore, so the account's own created_at is what
@@ -250,6 +256,8 @@ const getToken = async () => {
 const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+  // Stop attributing the next session to the user who just left.
+  resetObservability();
 };
 
 const setActive = async () => undefined;
