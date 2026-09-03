@@ -69,7 +69,7 @@
       "bass": "贝斯"
     },
     "errors": {
-      "fileFormat": "不支持的文件格式。支持:.mp3、.wav、.flac、.ogg、.au、.sph",
+      "fileFormat": "暂不支持该格式——目前支持 MP3、WAV、FLAC 和 OGG。手机录音通常是 .m4a,先转换成 MP3 即可上传。",
       "fileSize": "文件过大。最大 32MB。"
     }
   },

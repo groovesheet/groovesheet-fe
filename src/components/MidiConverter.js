@@ -243,7 +243,7 @@ function MidiConverter({ onLoginClick }) {
   const handleFileChange = (selectedFile) => {
     if (!selectedFile) return;
     if (!isSupportedFileType(selectedFile)) {
-      setError('File format not supported. Accepted: .mp3, .wav, .flac, .ogg, .au, .sph');
+      setError(t('hero.errors.fileFormat'));
       return;
     }
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {

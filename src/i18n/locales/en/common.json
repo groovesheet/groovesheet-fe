@@ -69,7 +69,7 @@
       "bass": "Bass"
     },
     "errors": {
-      "fileFormat": "File format not supported. Accepted: .mp3, .wav, .flac, .ogg, .au, .sph",
+      "fileFormat": "That format isn't supported yet — we accept MP3, WAV, FLAC and OGG. Phone recordings are usually .m4a; converting to MP3 first will work.",
       "fileSize": "File size too large. Max 32MB."
     }
   },
