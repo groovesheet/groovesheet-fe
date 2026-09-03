@@ -16,6 +16,38 @@ function setMeta(attr, key, content) {
 }
 
 /**
+ * The canonical URL for the current route: origin + path, with the query
+ * string and hash dropped.
+ *
+ * This matters most on /explore. Every one of the ~1,000 YouTube uploads deep
+ * links with its own utm_content, gs_v and view parameters, so a single track
+ * is reachable at hundreds of distinct URLs. Without a canonical each of those
+ * is a separate document to a crawler, splitting the ranking signal for the
+ * page and spending crawl budget re-reading the same track.
+ */
+function canonicalHref() {
+  try {
+    const { origin, pathname } = window.location;
+    // Trailing slashes would fork the canonical for the same route.
+    const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+    return `${origin}${path}`;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setCanonical(href) {
+  if (!href) return;
+  let el = document.head.querySelector('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement('link');
+    el.setAttribute('rel', 'canonical');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('href', href);
+}
+
+/**
  * Client-side document title + description/OG meta for public pages.
  * Social crawlers get real per-page OG tags via the Vercel bot rewrites to
  * the backend /seo/* pages — this hook covers browser tabs, history entries,
@@ -31,6 +63,11 @@ export default function usePageMeta(title, description) {
       setMeta('name', 'description', description);
       setMeta('property', 'og:description', description);
     }
+    const href = canonicalHref();
+    setCanonical(href);
+    // og:url must agree with the canonical or the two disagree about which
+    // URL is the real one for the same page.
+    setMeta('property', 'og:url', href);
     return () => {
       document.title = prevTitle;
     };
