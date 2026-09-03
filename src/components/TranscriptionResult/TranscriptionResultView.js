@@ -17,6 +17,7 @@ import {
 } from '../PreviewPanel/previewUtils';
 import { SheetMusicView, PianoRollView, StemsView } from '../song/SongViewers';
 import FretboardView from '../song/FretboardView';
+import SpectrogramView from '../song/SpectrogramView';
 import DrumKitView from './DrumKitView';
 import PlaybackBar from '../song/PlaybackBar';
 import { Icon } from '../song/icons';
@@ -72,7 +73,7 @@ const viewForStem = (name) =>
 // Lucide instrument icon sized to match the inline tab icons.
 const DrumKitTabIcon = (p) => <Drum size={14} strokeWidth={2} aria-hidden="true" {...p} />;
 
-function ViewerToolbar({ view, onView, available, midiLabel, midiIcon }) {
+function ViewerToolbar({ view, onView, available, midiLabel, midiIcon, showSheet = true, showMidi = true, stemsLabel = null }) {
   const tab = (key, IconCmp, label, kbd) => {
     const enabled = Boolean(available[key]);
     return (
@@ -92,9 +93,10 @@ function ViewerToolbar({ view, onView, available, midiLabel, midiIcon }) {
   return (
     <div className="gs-viewer-toolbar">
       <div className="gs-seg" role="tablist">
-        {tab('sheet', Icon.Sheet, 'Sheet music', '1')}
-        {tab('midi', midiIcon || Icon.Midi, midiLabel, '2')}
-        {tab('stems', Icon.Stems, 'Stem', '3')}
+        {showSheet && tab('sheet', Icon.Sheet, 'Sheet music', '1')}
+        {showMidi && tab('midi', midiIcon || Icon.Midi, midiLabel, '2')}
+        {tab('stems', Icon.Stems, available.stems && stemsLabel ? stemsLabel : 'Stem', '3')}
+        {available.spectrum && tab('spectrum', Icon.Spectrum, 'Spectrum', '4')}
       </div>
     </div>
   );
@@ -121,6 +123,10 @@ export default function TranscriptionResultView({
   title,
   subtitle,
   headerExtra,
+  // Output file map from the status payload ({ key: r2path }). When present,
+  // every separated stem in it is loaded — not only the one that was asked
+  // for — so a vocals split plays vocals against the rest of the mix.
+  files = null,
 }) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -138,6 +144,19 @@ export default function TranscriptionResultView({
   const musicXmlKey = musicXmlKeys[0];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
+  // Every `bs_roformer_<name>_stem` the job produced, the requested one first.
+  // Falls back to the single requested stem when no file map is available
+  // (the upload surfaces pass prefetched blobs instead).
+  const stemEntries = useMemo(() => {
+    const keys = Object.keys(files || prefetchedFiles || {});
+    const found = keys
+      .map((k) => { const m = /^bs_roformer_(\w+)_stem$/.exec(k); return m ? { key: k, name: m[1] } : null; })
+      .filter(Boolean);
+    const list = found.length ? found : (stemKey ? [{ key: stemKey, name: stemMeta.name }] : []);
+    return list.sort((a, b) => (a.name === stemMeta.name ? -1 : b.name === stemMeta.name ? 1 : 0));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files, prefetchedFiles, stemKey, stemMeta.name]);
+  const stemEntriesKey = stemEntries.map((e) => e.key).join(',');
   const scoreTitle = title || titleFromFilename(fileName);
   const scoreArtist = 'Transcribed by GrooveSheet';
   const authName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
@@ -278,34 +297,41 @@ export default function TranscriptionResultView({
     };
   }, [midiBuffer]);
 
-  // --- Stem audio (single separated stem → Web Audio engine) --------------------
-  const [stemStatus, setStemStatus] = useState(stemKey ? 'loading' : 'missing');
+  // --- Stem audio (every separated stem → one Web Audio engine) -----------------
+  const [stemStatus, setStemStatus] = useState(stemEntries.length ? 'loading' : 'missing');
   const [stemError, setStemError] = useState(null);
+  const [stemEngine, setStemEngine] = useState(null); // for the spectrum view
 
   useEffect(() => {
-    if (!workflowId || !stemKey) return undefined;
+    if (!workflowId || !stemEntries.length) return undefined;
     let cancelled = false;
     let engine = null;
-    let objectUrl = null;
+    const objectUrls = [];
     const t = transportRef.current;
     setStemStatus('loading');
     setStemError(null);
     (async () => {
       try {
-        const prefetched = prefetchedFiles?.[stemKey];
-        const result = prefetched?.blob
-          ? prefetched
-          : await downloadWorkflowFile(config.apiBaseUrl, workflowId, stemKey, getToken);
+        const results = await Promise.all(stemEntries.map(async (e) => {
+          const prefetched = prefetchedFiles?.[e.key];
+          const result = prefetched?.blob
+            ? prefetched
+            : await downloadWorkflowFile(config.apiBaseUrl, workflowId, e.key, getToken);
+          return result?.blob ? { name: e.name, blob: result.blob } : null;
+        }));
         if (cancelled) return;
-        if (!result?.blob) {
+        const loaded = results.filter(Boolean);
+        if (!loaded.length) {
           setStemStatus('missing');
           return;
         }
-        objectUrl = URL.createObjectURL(result.blob);
+        const assets = loaded.map(({ name, blob }) => {
+          const url = URL.createObjectURL(blob);
+          objectUrls.push(url);
+          return { asset_type: 'stem', stem_name: name, format: 'wav', stream_url: url };
+        });
         engine = createStemEngine({
-          assets: [
-            { asset_type: 'stem', stem_name: stemMeta.name, format: 'wav', stream_url: objectUrl },
-          ],
+          assets,
           onError: (err) => {
             setStemError(err.message || 'Failed to load stem audio');
             setStemStatus('error');
@@ -313,6 +339,7 @@ export default function TranscriptionResultView({
         });
         engine.setMasterVolume(masterVolRef.current);
         stemEngineRef.current = engine;
+        setStemEngine(engine);
         t.attachEngine(engine);
         setStemStatus('ready');
       } catch (err) {
@@ -327,19 +354,23 @@ export default function TranscriptionResultView({
       t.detachEngine('stems');
       if (engine) engine.dispose();
       if (stemEngineRef.current === engine) stemEngineRef.current = null;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setStemEngine(null);
+      objectUrls.forEach((u) => URL.revokeObjectURL(u));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflowId, stemKey]);
+  }, [workflowId, stemEntriesKey]);
 
   const stems = useMemo(
-    () => [{ name: stemMeta.name, label: stemMeta.label, color: stemMeta.color, sub: stemMeta.sub, wave: null }],
-    [stemMeta]
+    () => stemEntries.map((e) => {
+      const d = STEM_DISPLAY[e.name] || { name: e.name, label: e.name.charAt(0).toUpperCase() + e.name.slice(1), color: '#C9A0FF', sub: '' };
+      return { name: e.name, label: d.label, color: d.color, sub: d.sub, wave: null };
+    }),
+    [stemEntries]
   );
   const [stemState, setStemState] = useState({});
   useEffect(() => {
-    setStemState({ [stemMeta.name]: { mute: false, solo: false, volume: 75 } });
-  }, [stemMeta.name]);
+    setStemState(Object.fromEntries(stems.map((st) => [st.name, { mute: false, solo: false, volume: 75 }])));
+  }, [stems]);
   useEffect(() => {
     const eng = stemEngineRef.current;
     if (!eng) return;
@@ -523,13 +554,19 @@ export default function TranscriptionResultView({
       sheet: xmlLoading || Boolean(musicXmlText),
       midi: midiLoading || Boolean(midiBuffer),
       stems: stemStatus === 'loading' || stemStatus === 'ready',
+      // Overlaid stem spectrograms — same audio and mixer state as Stems.
+      spectrum: stemStatus === 'ready' && Boolean(stemEngine),
     }),
-    [xmlLoading, musicXmlText, midiLoading, midiBuffer, stemStatus]
+    [xmlLoading, musicXmlText, midiLoading, midiBuffer, stemStatus, stemEngine]
   );
-  const [view, setView] = useState('sheet');
+  // A separation-only job has no score and no MIDI to wait for; don't offer
+  // tabs that can never light up.
+  const showSheet = Boolean(musicXmlKey || musicXmlText);
+  const showMidi = Boolean(midiKey || midiBuffer);
+  const [view, setView] = useState(showSheet ? 'sheet' : 'stems');
   useEffect(() => {
     if (!available[view]) {
-      const first = ['sheet', 'midi', 'stems'].find((v) => available[v]);
+      const first = ['sheet', 'midi', 'stems', 'spectrum'].find((v) => available[v]);
       if (first) setView(first);
     }
   }, [available, view]);
@@ -576,6 +613,7 @@ export default function TranscriptionResultView({
       if (e.key === '1' && available.sheet) setView('sheet');
       if (e.key === '2' && available.midi) setView('midi');
       if (e.key === '3' && available.stems) setView('stems');
+      if (e.key === '4' && available.spectrum) setView('spectrum');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -610,7 +648,7 @@ export default function TranscriptionResultView({
           {isPreview && (
             isSignedIn ? (
               <button className="tr-btn tr-btn-primary" onClick={handleUpgradeClick} disabled={upgrading}>
-                {upgrading ? 'Starting…' : 'Transcribe the full song'}
+                {upgrading ? 'Starting…' : (showSheet ? 'Transcribe the full song' : 'Separate the full song')}
               </button>
             ) : (
               <button className="tr-btn tr-btn-primary" onClick={onSignUpToUnlock}>
@@ -642,7 +680,7 @@ export default function TranscriptionResultView({
           {stemKey && onDownloadStem && (
             <button className="tr-btn" onClick={onDownloadStem}>
               <DownloadSimple size={18} weight="bold" />
-              <span>Stem</span>
+              <span>{isPreview ? 'Download preview' : 'Stem'}</span>
             </button>
           )}
           {headerExtra}
@@ -691,8 +729,7 @@ export default function TranscriptionResultView({
           onView={setView}
           available={available}
           midiLabel={midiTabLabel}
-          midiIcon={isDrums ? DrumKitTabIcon : undefined}
-        />
+          midiIcon={isDrums ? DrumKitTabIcon : undefined} showSheet={showSheet} showMidi={showMidi} stemsLabel={stems.length > 1 ? 'Stems' : 'Stem'} />
       </div>
 
       {/* Viewer */}
@@ -739,7 +776,19 @@ export default function TranscriptionResultView({
             onStemChange={onStemChange}
             onSeek={onSeekFraction}
             transport={transport}
-            statusText={stemError || (stemStatus === 'loading' ? 'Loading stem…' : null)}
+            statusText={stemError || (stemStatus === 'loading' ? (stems.length > 1 ? 'Loading stems…' : 'Loading stem…') : null)}
+          />
+        )}
+        {view === 'spectrum' && available.spectrum && (
+          <SpectrogramView
+            stems={stems}
+            stemState={stemState}
+            onStemChange={onStemChange}
+            onSeek={onSeekFraction}
+            transport={transport}
+            stemEngine={stemEngine}
+            trackId={workflowId}
+            statusText={stemError}
           />
         )}
       </div>

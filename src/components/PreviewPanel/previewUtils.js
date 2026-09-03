@@ -65,9 +65,14 @@ export const MUSICXML_KEYS_BY_INSTRUMENT = {
   piano: ['musicxml', 'transkun_v2_piano_musicxml'],
 };
 
-/** First score key that exists for `workflow`'s outputs, else the best guess. */
+/**
+ * Candidate score keys for an instrument, best first. Empty for anything
+ * that has no score at all (vocals, guitar, "other", plain bass separation):
+ * falling back to the drums list here made a stem split look like it had a
+ * sheet to download, and rendered Score/PDF buttons that could only fail.
+ */
 export function musicXmlKeysFor(instrument) {
-  return MUSICXML_KEYS_BY_INSTRUMENT[instrument] || MUSICXML_KEYS_BY_INSTRUMENT.drums;
+  return MUSICXML_KEYS_BY_INSTRUMENT[instrument] || [];
 }
 
 // Optional per-instrument sync map output ({ version, pairs: [[qn, sec], ...] },

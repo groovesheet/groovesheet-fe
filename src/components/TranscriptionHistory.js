@@ -4,6 +4,9 @@ import { ProcessingCard } from './ProcessingJobs';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
+import { LuDrum, LuGuitar, LuMusic4 } from 'react-icons/lu';
+import { LiaMicrophoneAltSolid } from 'react-icons/lia';
+import { Piano } from 'lucide-react';
 import { useAuth, useAuthActions } from '../auth';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -71,6 +74,37 @@ const fmtDuration = (secs) => {
 };
 
 const visibilityOf = (w) => w.visibility || 'private';
+// --color-primary (#012fa7) is a button fill, not a text color: on the dark
+// panel it is barely visible. Text that needs to read as "primary" uses this.
+const ACCENT_TEXT = '#8fa9ff';
+
+// What a job is, without the file name repeated: "Stem separation", "Piano
+// transcription". The server's line appends the source file, which the card
+// title already shows.
+const kindOf = (w) => String(resolveDescription(w) || '').split(' · ')[0] || 'Transcription';
+// The one line under the title: the user's own description if they wrote one,
+// else "<kind> · 16:15 September 3, 2026".
+const cardLine = (w, ds) => (w.description && String(w.description).trim())
+  ? String(w.description).trim()
+  : `${kindOf(w)} · ${fmtTime(ds)} ${fmtDate(ds)}`;
+
+// Bass icon shared with the upload surfaces (Hero/StemSplitter keep a local copy).
+const BassGlyph = ({ size }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
+    <path d="m11.5 12.5l4.9-4.9" /><path d="m21.2 2.9c-0.1-0.1-0.5-0.2-0.6-0.2-0.1-0.1-0.1-0.1-0.4-0.1q-0.2 0-0.3 0.1-0.2 0.1-0.4 0.2l-1.9 1.7c-0.2 0-0.4 0.2-0.5 0.3-0.1 0.1-0.2 0.2-0.3 0.3q0 0.2-0.1 0.3 0 0.2 0 0.4l0.2 0.5c0 0 0 0.3 0 0.3 0 0 0 0.1-0.1 0.2q0 0.2-0.1 0.4-0.1 0.1-0.3 0.3 0.2-0.2 0.3-0.3 0.2-0.1 0.4-0.1 0.1-0.1 0.3-0.2c0.2 0 0.5 0.1 0.6 0.1h0.6q0.2 0 0.3 0 0.2 0 0.4-0.1 0.2-0.1 0.4-0.2c0.1-0.1 0.2-0.1 0.3-0.3 0.2-0.3 0.3-0.7 0.6-1.1 0 0 0.1-0.2 0.7-0.6 0.1-0.1 0.6-0.1 0.6-0.2 0-0.2 0.1-0.2 0-0.3 0-0.1 0-0.4-0.1-0.7-0.2-0.4-0.6-0.7-0.6-0.7z" /><path d="m6 16l2 2" /><path d="m9 14l1 1" /><path d="m8.1 9.2c1.5-3.4 3.5-3.6 4.2-2.5 0.7 1.2-0.9 2.3 0 3.4 0.7 1 2.1-0.2 1 0.7-2 1.7 2.2 0.1 3.2 1.5 0.6 0.8-0.2 2.3-1.4 2.7l-1.7 0.7c-0.6 0.3-0.6 0.4-0.8 0.5-0.1 0.1-0.2 0.6-0.2 0.6-0.1 0.3-0.1 0.3-0.1 0.9 0 0.2 0 0.5 0 0.6 0 0.5 0 0.8-0.2 1.5-0.2 0.5-0.4 1.1-0.9 1.5-0.4 0.5-0.7 0.6-1.2 0.7-0.6 0.2-1.3 0.3-2 0.1-3-0.9-5.8-3.4-6.2-6.3 0-0.5 0.1-1.3 0.3-1.8 0.3-0.4 0.5-0.8 1.1-1.1 0.4-0.2 0.8-0.4 1.3-0.6 0.5-0.2 0.6-0.3 1.1-0.5 0.2-0.1 0.5-0.2 0.7-0.3q0.2-0.1 0.5-0.2 0.2-0.2 0.4-0.4 0.2-0.2 0.3-0.5z" />
+  </svg>
+);
+const InstrumentGlyph = ({ instrument, size }) => {
+  switch (instrument) {
+    case 'vocals': return <LiaMicrophoneAltSolid size={size} />;
+    case 'drums': return <LuDrum size={size} />;
+    case 'piano': return <Piano size={size} strokeWidth={1.8} />;
+    case 'guitar': return <LuGuitar size={size} />;
+    case 'bass':
+    case 'jazz_bass': return <BassGlyph size={size} />;
+    default: return <LuMusic4 size={size} />;
+  }
+};
 
 // Downloads are named after the song. These are only fallbacks: the server
 // sends the real name in Content-Disposition (exposed via CORS).
@@ -442,7 +476,7 @@ export const TranscriptionHistory = () => {
   const badge = (w) => {
     const v = visibilityOf(w);
     const map = {
-      public: { label: 'Published', color: 'var(--color-primary)', dot: true },
+      public: { label: 'Published', color: ACCENT_TEXT, dot: true },
       unlisted: { label: 'Unlisted', color: 'var(--color-warning)', dot: true },
       private: { label: 'Private', color: 'var(--color-muted-foreground)', lock: true },
     };
@@ -451,13 +485,9 @@ export const TranscriptionHistory = () => {
 
   const Thumb = (w, h) => {
     if (w.cover_url) return <img src={w.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />;
-    const color = INSTRUMENT_COLORS[instrOf(w)] || '#8d8c8d';
     return (
-      <span style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${color}33, #15151a)` }}>
-        <svg width={h ? 22 : 34} height={h ? 22 : 34} viewBox="0 0 24 24" fill="none" style={{ color }}>
-          <path d="M9 18V5l11-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="2" /><circle cx="17" cy="16" r="3" stroke="currentColor" strokeWidth="2" />
-        </svg>
+      <span style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'var(--color-panel1)', color: '#fff' }}>
+        <InstrumentGlyph instrument={instrOf(w)} size={h ? 22 : 36} />
       </span>
     );
   };
@@ -486,6 +516,7 @@ export const TranscriptionHistory = () => {
   // Kebab menu (shared between grid + list).
   const KebabMenu = (w, anchorBottom) => {
     const avail = resolveAvailableOutputs(w);
+    const hasScore = avail.score.available || avail.transcription.available;
     const v = visibilityOf(w);
     const published = v === 'public' || v === 'unlisted';
     const id = w.workflow_id;
@@ -494,33 +525,43 @@ export const TranscriptionHistory = () => {
     const dl = { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontFamily: 'var(--font-family-sans)', fontSize: 12, fontWeight: 500, padding: '7px 4px', borderRadius: 6, cursor: 'pointer' };
     return (
       <div role="menu" className="gs-pop" style={menuStyle} onClick={(e) => e.stopPropagation()}>
-        <button role="menuitem" style={item('var(--color-primary)')} onClick={() => setPopFor({ id, kind: 'publish' })}>
+        {!w.is_preview && (
+        <button role="menuitem" style={item(ACCENT_TEXT)} onClick={() => setPopFor({ id, kind: 'publish' })}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19V6M6 12l6-6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           {published ? 'Change visibility' : 'Publish…'}
         </button>
-        {published && (
+        )}
+        {published && !w.is_preview && (
           <button role="menuitem" style={item('var(--color-text)')} onClick={() => setVisibility(id, 'private')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v8M8 9l4-4 4 4M5 19h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             Unpublish
           </button>
         )}
+        {!w.is_preview && (
         <button role="menuitem" style={item('var(--color-text)')} onClick={() => { setMenuFor(null); setEditFor(w); }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><path d="M13.5 6.5l4 4" stroke="currentColor" strokeWidth="2" /></svg>
           Edit details
         </button>
-        <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />
+        )}
+        {!w.is_preview && <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />}
         <div style={{ fontSize: 11, letterSpacing: '.5px', textTransform: 'uppercase', color: 'var(--color-muted-foreground)', padding: '4px 10px 6px' }}>Download</div>
+        {/* Only what this job actually produced: a stem split has stems, not a score. */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '0 6px 4px' }}>
-          <button className="gs-dl" style={dl} disabled={pdfFor === id || (!avail.score.available && !avail.transcription.available)} onClick={() => handleDownloadPdf(id, downloadName(w, 'score', '.pdf'))}>{pdfFor === id ? 'Rendering…' : 'PDF'}</button>
-          <button className="gs-dl" style={dl} disabled={!avail.score.available && !avail.transcription.available} onClick={() => handleDownload(id, (avail.score.available ? avail.score.fileKey : avail.transcription.fileKey), downloadName(w, 'score', '.musicxml'))}>MusicXML</button>
-          <button className="gs-dl" style={dl} disabled={!avail.midi.available} onClick={() => handleDownload(id, avail.midi.fileKey, downloadName(w, 'midi', '.mid'))}>MIDI</button>
-          <button className="gs-dl" style={dl} disabled={!avail.instrument.available} onClick={() => handleDownload(id, avail.instrument.fileKey, downloadName(w, 'stem', '.wav'))}>Stems</button>
+          {hasScore && <button className="gs-dl" style={dl} disabled={pdfFor === id} onClick={() => handleDownloadPdf(id, downloadName(w, 'score', '.pdf'))}>{pdfFor === id ? 'Rendering…' : 'PDF'}</button>}
+          {hasScore && <button className="gs-dl" style={dl} onClick={() => handleDownload(id, (avail.score.available ? avail.score.fileKey : avail.transcription.fileKey), downloadName(w, 'score', '.musicxml'))}>MusicXML</button>}
+          {avail.midi.available && <button className="gs-dl" style={dl} onClick={() => handleDownload(id, avail.midi.fileKey, downloadName(w, 'midi', '.mid'))}>MIDI</button>}
+          {avail.instrument.available && <button className="gs-dl" style={dl} onClick={() => handleDownload(id, avail.instrument.fileKey, downloadName(w, 'stem', '.wav'))}>Stems</button>}
+          {!hasScore && !avail.midi.available && !avail.instrument.available && <span style={{ gridColumn: '1 / -1', fontSize: 12, color: 'var(--color-muted-foreground)', padding: '4px 4px 6px' }}>Nothing to download yet.</span>}
         </div>
+        {!w.is_preview && (
+        <>
         <div style={{ height: 1, background: 'var(--color-border)', margin: '6px 4px' }} />
         <button role="menuitem" style={item('#FF6B7A')} onClick={() => { setRemoveFromExplore(false); setPopFor({ id, kind: 'delete' }); }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Delete
         </button>
+        </>
+        )}
       </div>
     );
   };
@@ -602,7 +643,7 @@ export const TranscriptionHistory = () => {
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
-    const description = resolveDescription(w);
+    const description = cardLine(w, ds);
     // Every transcription has an owner-only page; publishing adds the public
     // /explore one on top, it doesn't replace this.
     const href = `/transcription-history/${w.workflow_id}`;
@@ -619,23 +660,19 @@ export const TranscriptionHistory = () => {
           )}
         </a>
         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
-          {StatusBadge(w)}
           <a href={href} style={{ fontSize: 17, fontWeight: 500, color: 'var(--color-text)', lineHeight: '22px', textDecoration: 'none' }}>{base}<span style={{ color: 'var(--color-muted-foreground)' }}>{ext}</span></a>
           <div title={description} style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {description}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', display: 'flex', alignItems: 'center', gap: 9 }}>
-            {fmtDate(ds)}<span style={{ width: 1, height: 11, background: 'var(--color-border)' }} />{fmtTime(ds)}
-          </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{InstrBadges(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto', paddingTop: 14, borderTop: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{InstrBadges(w)}{StatusBadge(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto', paddingTop: 10 }}>
             {href && (
               <a href={href} className="gs-btn gs-btn-secondary" style={{ flex: 1 }}>
                 Open <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </a>
             )}
             <div style={{ position: 'relative', marginLeft: href ? 0 : 'auto' }}>
-              <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" hidden={!!w.is_preview} onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
+              <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
               </button>
               {open && !pop && KebabMenu(w, true)}
@@ -653,7 +690,7 @@ export const TranscriptionHistory = () => {
     const { base, ext } = fileParts(name);
     const ds = w.created_at || w.completed_at || new Date().toISOString();
     const dur = fmtDuration(w.metadata?.duration_seconds ?? w.duration_seconds);
-    const description = resolveDescription(w);
+    const description = cardLine(w, ds);
     // Owner-only detail page; see Card above.
     const href = `/transcription-history/${w.workflow_id}`;
     const open = menuFor === w.workflow_id;
@@ -677,7 +714,7 @@ export const TranscriptionHistory = () => {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
           )}
-          <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" hidden={!!w.is_preview} onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
+          <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
           </button>
           {open && !pop && KebabMenu(w, false)}
@@ -707,16 +744,13 @@ export const TranscriptionHistory = () => {
       <Header />
 
       <main style={main}>
-        <button className="back-button" onClick={() => navigate('/')} style={{ marginBottom: 18 }}>
-          <ArrowLeft size={24} /><span>Back</span>
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 32 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 32 }}>
+          {/* Back arrow and title on one line; the arrow alone is the control. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <button className="back-button" aria-label="Back" onClick={() => navigate('/')} style={{ margin: 0 }}>
+              <ArrowLeft size={28} />
+            </button>
             <h1 style={{ fontSize: 40, lineHeight: '48px', fontWeight: 400, margin: 0, color: 'var(--color-text)' }}>Your Library</h1>
-            <p style={{ fontSize: 18, lineHeight: '25px', color: 'var(--color-muted-foreground)', margin: 0, maxWidth: 540 }}>
-              Every transcription you've made — in progress, ready, and published. We store your files for 1 year.
-            </p>
           </div>
           <a href="/" className="gs-btn gs-btn-primary" style={{ whiteSpace: 'nowrap' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>

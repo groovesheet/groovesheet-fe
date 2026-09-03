@@ -207,6 +207,7 @@ export default function TranscriptionDetail() {
           fileName={workflow.metadata?.original_filename || title}
           selectedInstrument={instrument}
           prefetchedFiles={null}
+          files={workflow.outputs?.files || null}
           onDownloadTranscription={() => download(scoreKey, fallback('score', '.musicxml'))}
           onDownloadMidi={() => download(outputs?.midi?.fileKey, fallback('midi', '.mid'))}
           onDownloadPdf={downloadPdf}
