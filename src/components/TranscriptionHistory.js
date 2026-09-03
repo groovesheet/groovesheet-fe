@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isQueued, queueSummary } from '../utils/queue';
+import { apiPrefixForId } from '../utils/api';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MagnifyingGlass } from '@phosphor-icons/react';
@@ -286,8 +287,11 @@ export const TranscriptionHistory = () => {
     setMenuFor(null);
     try {
       const token = await getToken();
-      const res = await fetch(`${config.apiBaseUrl}/workflow/download/${workflowId}/${fileKey}`, {
+      // Previews (PRV*) are served from /preview and may be owned by the
+      // anonymous cookie session rather than the bearer — send both.
+      const res = await fetch(`${config.apiBaseUrl}${apiPrefixForId(workflowId)}/download/${workflowId}/${fileKey}`, {
         headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       if (res.status === 401 || res.status === 403) {
         await signOut();
@@ -623,7 +627,7 @@ export const TranscriptionHistory = () => {
           <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', display: 'flex', alignItems: 'center', gap: 9 }}>
             {fmtDate(ds)}<span style={{ width: 1, height: 11, background: 'var(--color-border)' }} />{fmtTime(ds)}
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{InstrBadges(w)}</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{InstrBadges(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto', paddingTop: 14, borderTop: '1px solid var(--color-border)' }}>
             {href && (
               <a href={href} className="gs-btn gs-btn-secondary" style={{ flex: 1 }}>
@@ -631,7 +635,7 @@ export const TranscriptionHistory = () => {
               </a>
             )}
             <div style={{ position: 'relative', marginLeft: href ? 0 : 'auto' }}>
-              <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
+              <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" hidden={!!w.is_preview} onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
               </button>
               {open && !pop && KebabMenu(w, true)}
@@ -663,7 +667,7 @@ export const TranscriptionHistory = () => {
             <span title={description} style={{ fontSize: 12, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{description}</span>
           </span>
         </a>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>{InstrBadges(w)}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>{InstrBadges(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
         <div style={{ minWidth: 0 }}>{StatusBadge(w)}</div>
         <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>{fmtDate(ds)}</div>
         <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>{dur || '—'}</div>
@@ -673,7 +677,7 @@ export const TranscriptionHistory = () => {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
           )}
-          <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
+          <button aria-haspopup="menu" aria-expanded={open} aria-label="More actions" hidden={!!w.is_preview} onClick={(e) => { e.stopPropagation(); setPopFor(null); setMenuFor(open ? null : w.workflow_id); }} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', cursor: 'pointer' }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
           </button>
           {open && !pop && KebabMenu(w, false)}
@@ -828,7 +832,7 @@ export const TranscriptionHistory = () => {
                           </div>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--color-primary)', color: '#fff', fontSize: 13, fontWeight: 500, padding: '6px 12px', borderRadius: 999, whiteSpace: 'nowrap', lineHeight: 1 }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ animation: 'gsSpin 1s linear infinite' }}><circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,.35)" strokeWidth="2.4" /><path d="M21 12a9 9 0 0 0-9-9" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" /></svg>
-                            {queued ? 'Queued' : 'Processing'}
+                            {queued ? 'Queued' : 'Processing'}{w.is_preview ? ' · 10s preview' : ''}
                           </span>
                         </div>
                         {queued ? (

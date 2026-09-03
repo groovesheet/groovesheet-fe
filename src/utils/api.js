@@ -193,6 +193,9 @@ export async function fetchWorkflowList(baseUrl, getToken, signOut = null, param
  *   Returns null if file not found (404), otherwise returns { blob, filename }
  * @throws {Error} - For non-404 download failures
  */
+/** Endpoint prefix for an id: previews (PRV*) live under /preview, runs under /workflow. */
+export const apiPrefixForId = (id) => (id && String(id).startsWith('PRV') ? '/preview' : '/workflow');
+
 export async function downloadWorkflowFile(baseUrl, workflowId, fileKey, getToken) {
   // Preview previews carry IDs prefixed with `PRV` and live under /preview/...
   const isPreview = workflowId && workflowId.startsWith('PRV');
@@ -572,17 +575,36 @@ export function resolveAvailableOutputs(workflow) {
  * @throws {AuthError} - Throws AuthError for 401/403 responses
  */
 export async function fetchWorkflowStatus(baseUrl, workflowId, getToken, signOut = null) {
-  const response = await authenticatedFetch(
-    `${baseUrl}/workflow/status/${workflowId}`,
-    {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
+  const url = `${baseUrl}${apiPrefixForId(workflowId)}/status/${workflowId}`;
+  let response;
+  if (apiPrefixForId(workflowId) === '/preview') {
+    // Previews are owned by either the anonymous cookie session or, once
+    // signed in, the user — attach the bearer when there is one and always
+    // send the cookie, mirroring downloadWorkflowFile. The Library lists a
+    // signed-in user's previews, so this path is now taken from there too.
+    const headers = { accept: 'application/json' };
+    if (getToken) {
+      try {
+        const token = await getToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch {
+        /* anonymous fallback */
+      }
+    }
+    response = await fetch(url, { method: 'GET', headers, credentials: 'include', cache: 'no-store' });
+  } else {
+    response = await authenticatedFetch(
+      url,
+      {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+        },
       },
-    },
-    getToken,
-    signOut
-  );
+      getToken,
+      signOut
+    );
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

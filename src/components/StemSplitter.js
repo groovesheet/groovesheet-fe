@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
+import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
+import { queueSummary } from '../utils/queue';
+import { saveActiveJob, loadActiveJob, clearActiveJob } from '../utils/activeJob';
 import { trackWorkflowStarted } from '../utils/analytics';
 import {
   previewFetch,
@@ -117,8 +120,15 @@ function StemSplitter({ onLoginClick }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
+  const navigate = useNavigate();
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState(null);
+  // Queue block from /preview/status or /workflow/status while the job waits
+  // for a free worker: { state, position, ahead, eta_seconds }.
+  const [queue, setQueue] = useState(null);
+  // Consecutive failed polls. Network errors used to be swallowed silently, so
+  // an API restart left this screen frozen with no hint anything was wrong.
+  const [pollFailures, setPollFailures] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -141,8 +151,23 @@ function StemSplitter({ onLoginClick }) {
     };
   }, []);
 
+  // Coming back to this page (or reloading) while a job is still running used
+  // to show an empty upload box, as if nothing had been submitted. Resume it.
+  useEffect(() => {
+    if (!isLoaded || jobId) return;
+    const saved = loadActiveJob('stem-splitter');
+    if (!saved) return;
+    setJobId(saved.jobId);
+    if (saved.instrument) setSelectedInstrument(saved.instrument);
+    setStatus('started');
+    setProgress(0);
+    pollStatus(saved.jobId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
+
   const getUIState = () => {
     if (status === 'uploading') return 'uploading';
+    if (queue?.state === 'queued') return 'queued';
     if (status === 'started') return 'cold_starting';
     if (status === 'pending' || status === 'running' || status === 'processing' ||
         status === 'separating' || status === 'transcribing' || status === 'generating_sheet' ||
@@ -300,6 +325,7 @@ function StemSplitter({ onLoginClick }) {
 
       setJobId(workflowId);
       setStatus(data.status || 'pending');
+      saveActiveJob('stem-splitter', workflowId, { instrument: selectedInstrument });
 
       setTimeout(() => pollStatus(workflowId), 1000);
     } catch (err) {
@@ -338,6 +364,7 @@ function StemSplitter({ onLoginClick }) {
           if (consecutive404s >= max404s) {
             setError('Job not found after repeated attempts. Please re-upload.');
             stopped = true;
+            clearActiveJob('stem-splitter');
             return;
           }
           setStatus('pending');
@@ -349,12 +376,15 @@ function StemSplitter({ onLoginClick }) {
           consecutive404s = 0;
           const data = await response.json();
           const newStatus = data.status || data.state || 'processing';
+          setPollFailures(0);
+          setQueue(data.queue || null);
 
           if (newStatus === 'completed' || newStatus === 'succeeded' || newStatus === 'success') {
             if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
             if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
             sendNotification('GrooveSheet', { body: 'Your stem separation is ready!' });
             stopped = true;
+            clearActiveJob('stem-splitter');
             try {
               const { objectUrl, filename } = await downloadStemFile(id);
               setDownloadUrl(objectUrl);
@@ -369,12 +399,13 @@ function StemSplitter({ onLoginClick }) {
             stopProgressSimulation();
             setError(data.message || 'Processing failed.');
             stopped = true;
+            clearActiveJob('stem-splitter');
             return;
           }
-          // Handle cold-start → processing transition
+          // Queue → worker transition
           if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
             simulateProgress();
-            sendNotification('GrooveSheet', { body: 'Server is ready! Separating your audio now.' });
+            sendNotification('GrooveSheet', { body: "It's your turn — separating your audio now." });
           }
           if (newStatus === 'started') {
             stopProgressSimulation();
@@ -386,6 +417,10 @@ function StemSplitter({ onLoginClick }) {
       } catch (err) {
         if (err.name !== 'TypeError') {
           setError(`Status error: ${err.message}`);
+        } else {
+          // Network/API blip. The job is server-side and survives this — keep
+          // polling, but say so instead of sitting on a stale screen forever.
+          setPollFailures((n) => n + 1);
         }
       } finally {
         if (!stopped) setTimeout(poll, intervalMs);
@@ -441,6 +476,9 @@ function StemSplitter({ onLoginClick }) {
     setFile(null);
     setJobId(null);
     setStatus(null);
+    setQueue(null);
+    setPollFailures(0);
+    clearActiveJob('stem-splitter');
     setProgress(0);
     setError(null);
     setDownloadUrl(null);
@@ -591,20 +629,55 @@ function StemSplitter({ onLoginClick }) {
     </>
   );
 
+  // "started" with no position yet: still a queue, never a server booting.
   const renderColdStartState = () => (
     <>
       <div className="upload-content-top compact">
         <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
         <div className="upload-text">
-          <h3 className="cold-start-message">Waking up our servers...</h3>
-          <p className="cold-start-sub">We're in early access! This may take ~5-10 min. We'll notify you when ready.</p>
+          <h3 className="cold-start-message">You're in the queue</h3>
+          <p className="cold-start-sub">
+            GrooveSheet is busy right now and your song is waiting its turn. You can
+            safely close this page — it keeps going, and you can check back any time
+            on your Transcription History.
+          </p>
         </div>
       </div>
       <div className="upload-controls compact">
+        <button className="browse-files-btn" onClick={() => navigate('/account/history')}>
+          View Transcription History
+        </button>
         <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
       </div>
     </>
   );
+
+  // Backend reported a real position: say where, and roughly how long.
+  const renderQueuedState = () => {
+    const summary = queueSummary(queue);
+    return (
+      <>
+        <div className="upload-content-top compact">
+          <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
+          <div className="upload-text">
+            <h3 className="cold-start-message">You're in the queue</h3>
+            <p className="cold-start-sub">
+              {summary ? `${summary}. ` : ''}
+              GrooveSheet is popular right now and a lot of songs are ahead of yours.
+              Your song is queued and will be processed automatically — you can safely
+              close this page and check back on your Transcription History.
+            </p>
+          </div>
+        </div>
+        <div className="upload-controls compact">
+          <button className="browse-files-btn" onClick={() => navigate('/account/history')}>
+            View Transcription History
+          </button>
+          <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
+        </div>
+      </>
+    );
+  };
 
   const renderProcessingState = () => (
     <>
@@ -663,6 +736,13 @@ function StemSplitter({ onLoginClick }) {
             />
             {uiState === 'idle' && renderIdleState()}
             {uiState === 'uploading' && renderUploadingState()}
+            {pollFailures >= 3 && uiState !== 'idle' && uiState !== 'success' && (
+              <p className="cold-start-sub" style={{ margin: '0 0 10px', opacity: 0.85 }}>
+                Reconnecting to the server… your job is still running and will
+                appear in your Transcription History.
+              </p>
+            )}
+            {uiState === 'queued' && renderQueuedState()}
             {uiState === 'cold_starting' && renderColdStartState()}
             {uiState === 'processing' && renderProcessingState()}
             {uiState === 'success' && (

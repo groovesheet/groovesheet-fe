@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { queueSummary } from '../utils/queue';
+import { saveActiveJob, loadActiveJob, clearActiveJob } from '../utils/activeJob';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '../utils/api';
@@ -148,6 +149,20 @@ function MidiConverter({ onLoginClick }) {
       if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
     };
   }, []);
+
+  // Coming back to this page (or reloading) while a job is still running used
+  // to show an empty upload box, as if nothing had been submitted. Resume it.
+  useEffect(() => {
+    if (!isLoaded || jobId) return;
+    const saved = loadActiveJob('midi-converter');
+    if (!saved) return;
+    setJobId(saved.jobId);
+    if (saved.instrument) setSelectedInstrument(saved.instrument);
+    setStatus('started');
+    setProgress(0);
+    pollStatus(saved.jobId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   const getUIState = () => {
     if (status === 'uploading') return 'uploading';
@@ -326,6 +341,7 @@ function MidiConverter({ onLoginClick }) {
 
       setJobId(workflowId);
       setStatus(data.status || 'pending');
+      saveActiveJob('midi-converter', workflowId, { instrument: selectedInstrument });
 
       setTimeout(() => pollStatus(workflowId), 1000);
     } catch (err) {
@@ -364,6 +380,7 @@ function MidiConverter({ onLoginClick }) {
           if (consecutive404s >= max404s) {
             setError('Job not found after repeated attempts. Please re-upload.');
             stopped = true;
+            clearActiveJob('midi-converter');
             return;
           }
           setStatus('pending');
@@ -385,6 +402,7 @@ function MidiConverter({ onLoginClick }) {
             if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
             sendNotification('GrooveSheet', { body: 'Your MIDI conversion is ready!' });
             stopped = true;
+            clearActiveJob('midi-converter');
             try {
               const { objectUrl, filename } = await downloadInstrumentFile(id);
               setDownloadUrl(objectUrl);
@@ -402,12 +420,13 @@ function MidiConverter({ onLoginClick }) {
             stopProgressSimulation();
             setError(data.message || 'Processing failed.');
             stopped = true;
+            clearActiveJob('midi-converter');
             return;
           }
           // Handle cold-start â?processing transition
           if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
             simulateProgress();
-            sendNotification('GrooveSheet', { body: 'Server is ready! Converting your audio now.' });
+            sendNotification('GrooveSheet', { body: "It's your turn — converting your audio now." });
           }
           if (newStatus === 'started') {
             stopProgressSimulation();
@@ -558,6 +577,7 @@ function MidiConverter({ onLoginClick }) {
     setStatus(null);
     setQueue(null);
     setPollFailures(0);
+    clearActiveJob('midi-converter');
     setProgress(0);
     setError(null);
     setDownloadUrl(null);
@@ -751,11 +771,18 @@ function MidiConverter({ onLoginClick }) {
       <div className="upload-content-top compact">
         <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
         <div className="upload-text">
-          <h3 className="cold-start-message">Waking up our servers...</h3>
-          <p className="cold-start-sub">We're in early access! This may take ~5-10 min. We'll notify you when ready.</p>
+          <h3 className="cold-start-message">You're in the queue</h3>
+          <p className="cold-start-sub">
+            GrooveSheet is busy right now and your song is waiting its turn. You can
+            safely close this page — it keeps going, and you can check back any time
+            on your Transcription History.
+          </p>
         </div>
       </div>
       <div className="upload-controls compact">
+        <button className="browse-files-btn" onClick={() => navigate('/account/history')}>
+          View Transcription History
+        </button>
         <button className="cancel-btn compact" onClick={resetUpload}>Cancel</button>
       </div>
     </>
@@ -771,12 +798,12 @@ function MidiConverter({ onLoginClick }) {
         <div className="upload-content-top compact">
           <div className="upload-icon cold-start-pulse"><ServerIcon /></div>
           <div className="upload-text">
-            <h3 className="cold-start-message">Your song is in the queue</h3>
+            <h3 className="cold-start-message">You're in the queue</h3>
             <p className="cold-start-sub">
               {summary ? `${summary}. ` : ''}
-              It's queued behind other transcriptions and will start automatically.
-              You can safely close this page — we'll keep processing, and you can
-              check back any time on your Transcription History.
+              GrooveSheet is popular right now and a lot of songs are ahead of yours.
+              Your song is queued and will be processed automatically — you can safely
+              close this page and check back on your Transcription History.
             </p>
           </div>
         </div>
