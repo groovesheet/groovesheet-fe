@@ -533,7 +533,7 @@ function StemSplitter({ onLoginClick }) {
     } catch (err) {
       // Out of minutes: the plans are what they need, not an error banner.
       if (err.status === 402) {
-        scrollToPricing();
+        scrollToPricing({ tab: 'topups' });
         return;
       }
       setError(err.message || 'Failed to start full song processing.');

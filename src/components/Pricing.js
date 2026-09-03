@@ -4,7 +4,7 @@ import { useUser, useAuth } from '../auth';
 import { createCheckoutSession } from '../utils/api';
 import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import { startProviderCheckout } from '../utils/airwallex';
-import { PRICING_SECTION_ID } from '../utils/scrollToPricing';
+import { PRICING_SECTION_ID, PRICING_TAB_EVENT } from '../utils/scrollToPricing';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
 
@@ -48,6 +48,20 @@ function Pricing({ onLoginClick }) {
     if (params.has('canceled')) {
       setShowCanceled(true);
     }
+    // Arriving out of minutes: open on top-ups, the cheapest way to unblock.
+    if (params.get('tab') === 'topups') {
+      setActiveTab('topups');
+    }
+  }, []);
+
+  // Same signal, but for the pricing section rendered in-page on the landing
+  // and tool routes, where there is no navigation to carry a query string.
+  useEffect(() => {
+    const onTab = (e) => {
+      if (e.detail === 'topups' || e.detail === 'plans') setActiveTab(e.detail);
+    };
+    window.addEventListener(PRICING_TAB_EVENT, onTab);
+    return () => window.removeEventListener(PRICING_TAB_EVENT, onTab);
   }, []);
 
   // Index catalog entries by id for easy lookup. Undefined until the API resolves.
