@@ -312,8 +312,8 @@ export default function CampaignPage() {
       },
     },
     redeemed: {
-      Icon: SealCheck, iconBg: '#5f5e60',
-      title: t('campaign.redeemed.title'),
+      Icon: SealCheck, iconBg: '#22c55e',
+      title: t('campaign.redeemed.title', tv),
       body: t('campaign.redeemed.body', tv),
       cta: t('campaign.redeemed.cta'), ctaTo: '/',
       cta2: t('campaign.redeemed.cta2'), cta2To: '/pricing',
@@ -341,6 +341,7 @@ export default function CampaignPage() {
 
       {isMarketing && (
         <section className="cmp-hero">
+          {campaign?.logo_url && <Watermark src={campaign.logo_url} />}
           <div className="cmp-hero-copy">
             <h1 className="cmp-h1">{headline}</h1>
             <p className="cmp-sub">{sub}</p>
@@ -350,18 +351,6 @@ export default function CampaignPage() {
                 <span><CreditCard size={18} /> {t('campaign.assurance.noCard')}</span>
                 <span><Lightning size={18} /> {t('campaign.assurance.instant')}</span>
                 <span><Prohibit size={18} /> {t('campaign.assurance.noCharge')}</span>
-              </div>
-            )}
-
-            {campaign?.logo_url && (
-              <div className="cmp-lockup">
-                <img className="cmp-lockup-logo" src={campaign.logo_url} alt="" />
-                <span className="cmp-lockup-rule" />
-                <img
-                  className="cmp-lockup-wordmark"
-                  src="/images/Logo_White.png"
-                  alt="GrooveSheet"
-                />
               </div>
             )}
           </div>
@@ -481,13 +470,11 @@ export default function CampaignPage() {
       {account && (
         <section className="cmp-account">
           <div className="cmp-account-card">
+            {campaign?.logo_url && <Watermark src={campaign.logo_url} />}
             <div className="cmp-account-head">
               <span className="cmp-status-icon" style={{ background: account.iconBg }}>
                 <account.Icon size={28} weight="fill" />
               </span>
-              {campaign?.logo_url && (
-                <img className="cmp-account-logo" src={campaign.logo_url} alt="" />
-              )}
             </div>
             <h1 className="cmp-account-title">{account.title}</h1>
             <p className="cmp-account-body">{account.body}</p>
@@ -660,6 +647,17 @@ export default function CampaignPage() {
       <Footer />
     </div>
   );
+}
+
+/**
+ * The campaign mark, blown up and bled off the corner as background texture.
+ *
+ * Campaign logos are supplied as flat black-on-white PNGs with no alpha, so
+ * `invert` + `screen` is what knocks the white ground out on this dark page —
+ * the same pair the foreground lockup used before this replaced it.
+ */
+function Watermark({ src }) {
+  return <img className="cmp-watermark" src={src} alt="" aria-hidden="true" />;
 }
 
 function AuthTile({ label, bg, Icon, onClick, dark }) {

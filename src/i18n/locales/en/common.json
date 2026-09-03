@@ -331,8 +331,8 @@
       "cta2": "Copy Link To Share"
     },
     "redeemed": {
-      "title": "You Have Already Claimed This One.",
-      "body": "The {{name}} credit has already landed in this account. It is one claim per account, but whatever you have left is still there to spend.",
+      "title": "Claimed! Your {{name}} Credit Is In.",
+      "body": "This account has already picked up the {{name}} credit — one claim per account, and every minute you haven't spent is still waiting for your next song.",
       "cta": "Upload A Song",
       "cta2": "See Top-Up Packs"
     },
