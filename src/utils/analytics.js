@@ -25,6 +25,7 @@ export const EVENTS = {
   TRACK_DOWNLOAD_INTENT: 'track_download_intent',
   TRACK_DOWNLOAD: 'track_download',
   SIGN_UP: 'sign_up',
+  EXPLORE_UPLOAD_CTA: 'explore_upload_cta_click',
   WORKFLOW_STARTED: 'workflow_started',
   PURCHASE: 'purchase',
 };
@@ -120,6 +121,15 @@ export function trackDownload(track_, extra = {}) {
 
 export function trackSignUp(method) {
   return track(EVENTS.SIGN_UP, { method: method || 'unknown' });
+}
+
+/**
+ * The bridge from a free library page to the paid transcription flow. Every
+ * marketing asset points at /explore, which is free to download, so this is the
+ * only place that measures intent to cross into the paid product.
+ */
+export function trackExploreUploadCta(track_, extra = {}) {
+  return track(EVENTS.EXPLORE_UPLOAD_CTA, { ...trackProps(track_), ...extra });
 }
 
 export function trackWorkflowStarted(workflowName, extra = {}) {

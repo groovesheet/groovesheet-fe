@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import { creatorHandleForTrack } from '../../utils/creatorApi';
 import { reportTrack } from '../../utils/libraryApi';
+import { trackExploreUploadCta } from '../../utils/analytics';
 import { LocalizedLink } from '../../i18n/locale';
 
 /** Report dialog — portal to <body> (LoginModal pattern). Launch DMCA path. */
@@ -332,6 +333,33 @@ function SongSidebar({ track, stems, relatedTracks = [], onSongClick, isSignedIn
         >
           {formatLabel}
         </div>
+
+        {/* Bridge to the paid flow. Library downloads are free, and every
+            marketing channel points here, so without this there is no route
+            from a song page into the product people actually pay for. */}
+        <LocalizedLink
+          to="/"
+          onClick={() => trackExploreUploadCta(track, { placement: 'sidebar' })}
+          style={{
+            display: 'block',
+            marginTop: 14,
+            padding: '11px 12px',
+            border: '1px solid var(--color-border)',
+            borderRadius: 10,
+            textAlign: 'center',
+            textDecoration: 'none',
+            color: 'var(--color-text)',
+            fontSize: 12,
+            lineHeight: 1.45,
+          }}
+        >
+          <span style={{ display: 'block', fontWeight: 600 }}>
+            Not the song you needed?
+          </span>
+          <span style={{ color: 'var(--color-muted-foreground)' }}>
+            Transcribe your own audio &rarr;
+          </span>
+        </LocalizedLink>
 
         {/* Quad of secondary actions */}
         <div className="gs-quad">
