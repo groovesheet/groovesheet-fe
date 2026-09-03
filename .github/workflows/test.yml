@@ -1,0 +1,48 @@
+name: Tests
+
+# Deliberately cheap, for the same reason groovesheet-be filters its builds
+# after the 2026-07 Actions billing incident:
+#   - only runs when code or dependencies change, not on doc or asset edits
+#   - one job, one Node version, no matrix
+#   - npm cache keyed on the lockfile, so the usual run installs from cache
+#   - concurrency cancels superseded runs on the same branch
+#
+# It exists because src/i18n/claims.test.js guards the marketing copy against
+# the product it describes, and a guard nobody runs is not a guard. Every
+# conversion defect found in the 2026-09-04 audit was copy that had drifted
+# from a value enforced in code.
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'package.json', 'package-lock.json', '.github/workflows/test.yml']
+  pull_request:
+    paths: ['src/**', 'package.json', 'package-lock.json', '.github/workflows/test.yml']
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the Node version Vercel builds this project with.
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # CI=true makes react-scripts run once and exit rather than watch.
+      - name: Run tests
+        run: npm test -- --watchAll=false
+        env:
+          CI: true
