@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { queueSummary } from '../utils/queue';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
 import { authenticatedFetch, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '../utils/api';
@@ -118,8 +120,13 @@ function Hero({ onLoginRequired }) {
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState(null);
   // eslint-disable-next-line no-unused-vars
+  const navigate = useNavigate();
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState(null);
+  // Queue block from the status endpoint while the job waits for a worker.
+  const [queue, setQueue] = useState(null);
+  // Consecutive failed polls, so an API blip is visible instead of a frozen screen.
+  const [pollFailures, setPollFailures] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [downloadError, setDownloadError] = useState(null);
@@ -202,6 +209,9 @@ function Hero({ onLoginRequired }) {
       return 'uploading';
     }
     
+    // "started" means published and waiting behind other jobs — a queue,
+    // never a server booting. With a reported position, show it.
+    if (queue?.state === 'queued') return 'queued';
     if (status === 'started') {
       console.log('🧊 UI State: COLD_STARTING');
       return 'cold_starting';
@@ -571,6 +581,8 @@ function Hero({ onLoginRequired }) {
           const data = await response.json();
           console.log('📊 Status data:', data);
           const newStatus = data.status || data.state || 'processing';
+          setPollFailures(0);
+          setQueue(data.queue || null);
           console.log('🔄 Status transition:', status, '→', newStatus);
           // Optional granular message from backend
           if (data.last_progress_message) {
@@ -616,7 +628,7 @@ function Hero({ onLoginRequired }) {
           if (newStatus === 'worker_processing' && (status === 'started' || status === 'pending')) {
             console.log('🔥 Worker woke up! Restarting progress simulation.');
             simulateProgress();
-            sendNotification('GrooveSheet', { body: 'Server is ready! Processing your audio now.' });
+            sendNotification('GrooveSheet', { body: "It's your turn — processing your audio now." });
           }
           // Pause progress sim during cold start
           if (newStatus === 'started') {
@@ -632,8 +644,10 @@ function Hero({ onLoginRequired }) {
       } catch (err) {
         console.error('Polling error:', err);
         if (err.name === 'TypeError') {
-          // Network glitch; continue
+          // Network glitch; keep polling — the job is server-side — but count
+          // it so the page can say it is reconnecting rather than freezing.
           console.warn('Network issue, will retry');
+          setPollFailures((n) => n + 1);
         } else {
           setError(`Status error: ${err.message}`);
         }
@@ -778,6 +792,8 @@ function Hero({ onLoginRequired }) {
     setFile(null);
     setJobId(null);
     setStatus(null);
+    setQueue(null);
+    setPollFailures(0);
     setProgress(0);
     setError(null);
     setDownloadUrl(null);
@@ -1066,6 +1082,7 @@ function Hero({ onLoginRequired }) {
     </>
   );
 
+  // Waiting for a worker, no position reported yet.
   const renderColdStartState = () => (
     <>
       <div className="upload-content-top compact">
@@ -1073,22 +1090,48 @@ function Hero({ onLoginRequired }) {
           <ServerIcon />
         </div>
         <div className="upload-text">
-          <h3>{t('hero.startingServer')}</h3>
+          <h3>{t('hero.inQueue')}</h3>
+          <p className="cold-start-sub">{t('hero.inQueueBody')}</p>
         </div>
       </div>
 
       <div className="upload-controls compact">
-        <div className="progress-bar-row">
-          <div className="progress-bar-fill compact" style={{ width: '0%' }} />
-          <div className="progress-bar-remaining compact" />
-        </div>
-
+        <button className="browse-files-btn" onClick={() => navigate('/account/history')}>
+          {t('hero.viewHistory')}
+        </button>
         <button className="cancel-btn compact" onClick={resetUpload}>
           {t('hero.cancel')}
         </button>
       </div>
     </>
   );
+
+  // Waiting for a worker, with a real position from the backend.
+  const renderQueuedState = () => {
+    const summary = queueSummary(queue);
+    return (
+      <>
+        <div className="upload-content-top compact">
+          <div className="upload-icon">
+            <ServerIcon />
+          </div>
+          <div className="upload-text">
+            <h3>{t('hero.inQueue')}</h3>
+            <p className="cold-start-sub">{summary ? `${summary}. ` : ''}{t('hero.inQueueBody')}</p>
+          </div>
+        </div>
+
+        <div className="upload-controls compact">
+          <button className="browse-files-btn" onClick={() => navigate('/account/history')}>
+            {t('hero.viewHistory')}
+          </button>
+          <button className="cancel-btn compact" onClick={resetUpload}>
+            {t('hero.cancel')}
+          </button>
+        </div>
+      </>
+    );
+  };
 
   const renderProcessingState = () => (
     <>
@@ -1161,6 +1204,10 @@ function Hero({ onLoginRequired }) {
           {/* Render based on UI state */}
           {uiState === 'idle' && renderIdleState()}
           {uiState === 'uploading' && renderUploadingState()}
+          {pollFailures >= 3 && uiState !== 'idle' && uiState !== 'success' && (
+            <p className="cold-start-sub" style={{ margin: '0 0 10px', opacity: 0.85 }}>{t('hero.reconnecting')}</p>
+          )}
+          {uiState === 'queued' && renderQueuedState()}
           {uiState === 'cold_starting' && renderColdStartState()}
           {uiState === 'processing' && renderProcessingState()}
           {isSuccess && (

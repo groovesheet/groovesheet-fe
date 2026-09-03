@@ -54,7 +54,11 @@
     "browseFiles": "Browse Files",
     "chooseFile": "Choose File",
     "uploading": "Uploading...",
-    "startingServer": "Processing...",
+    "startingServer": "You're in the queue",
+    "inQueue": "You're in the queue",
+    "inQueueBody": "GrooveSheet is popular right now and a lot of songs are ahead of yours. Your song is queued and will be processed automatically — you can safely close this page and check back on your Transcription History.",
+    "viewHistory": "View Transcription History",
+    "reconnecting": "Reconnecting to the server… your job is still running and will appear in your Transcription History.",
     "transcribing": "Transcribing...",
     "cancel": "Cancel",
     "instruments": {

@@ -54,7 +54,11 @@
     "browseFiles": "瀏覽檔案",
     "chooseFile": "選擇檔案",
     "uploading": "上傳中...",
-    "startingServer": "處理中...",
+    "startingServer": "正在排隊",
+    "inQueue": "正在排隊",
+    "inQueueBody": "GrooveSheet 現在很熱門，前面還有很多歌曲在等待。你的歌曲已進入佇列，會自動處理——可以放心關閉此頁面，稍後在「轉錄歷史」查看。",
+    "viewHistory": "查看轉錄歷史",
+    "reconnecting": "正在重新連接伺服器……你的任務仍在執行，稍後會出現在轉錄歷史中。",
     "transcribing": "轉譜中...",
     "cancel": "取消",
     "instruments": {
