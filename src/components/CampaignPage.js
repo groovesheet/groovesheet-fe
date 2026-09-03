@@ -334,6 +334,7 @@ export default function CampaignPage() {
   // ------------------------------------------------------------- render ----
   return (
     <div className="campaign-page" lang={i18n.language}>
+      <Backdrop code={state.code || code} />
       <Header onLoginClick={scrollTop} />
       <div ref={topRef} />
 
@@ -646,6 +647,30 @@ export default function CampaignPage() {
 
       <Footer />
     </div>
+  );
+}
+
+/**
+ * The campaign's own photo behind the page, mirroring the home page's
+ * `.hero-background`: a wide banner pinned to the top, pre-darkened into a
+ * 0-64 band and faded to the page ground at its bottom edge.
+ *
+ * Found by convention at `/images/campaigns/<code>-bg.webp` rather than a
+ * column on the campaign row, so giving a campaign a backdrop is dropping a
+ * file next to its logo. Campaigns without one 404 and hide the layer, which
+ * is the common case.
+ */
+function Backdrop({ code }) {
+  const [failed, setFailed] = useState(false);
+  if (!code || failed) return null;
+  return (
+    <img
+      className="cmp-backdrop"
+      src={`${process.env.PUBLIC_URL}/images/campaigns/${encodeURIComponent(code)}-bg.webp`}
+      alt=""
+      aria-hidden="true"
+      onError={() => setFailed(true)}
+    />
   );
 }
 

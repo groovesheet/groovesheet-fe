@@ -11,6 +11,10 @@
 
 .campaign-page {
   container-type: inline-size;
+  /* Makes this a stacking context so .cmp-backdrop's z-index -1 lands above
+   * the dot-grid background below and under every section, instead of
+   * disappearing behind the page's own background. */
+  isolation: isolate;
   font-family: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   background-color: #171717;
@@ -28,6 +32,27 @@
   --cmp-content: 1414px;
   --cmp-gutter: 20px;
   --cmp-max: calc(var(--cmp-content) + 2 * var(--cmp-gutter));
+}
+
+/* ------------------------------------------------------------- backdrop */
+
+/* Mirrors the home page's .hero-background: pinned to the top of the page,
+ * full-bleed width, scrolling away with the content rather than fixed. The
+ * asset is pre-darkened and pre-faded, so there is no overlay here — the
+ * bottom of the image already is the page ground.
+ *
+ * .campaign-page isolates, so z-index -1 lands the image above its dot-grid
+ * background but under every section.
+ */
+.campaign-page .cmp-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* ------------------------------------------------------------- primitives */
@@ -451,10 +476,13 @@
 
 /* --------------------------------------------------------- account card */
 
+/* Deeper top padding than the section needs on its own: these states have no
+ * hero, so the card would otherwise start straight under the nav and cover
+ * the backdrop photo entirely. This gives the photo a band to read in. */
 .campaign-page .cmp-account {
   max-width: var(--cmp-max);
   margin: 0 auto;
-  padding: clamp(24px, 4cqi, 56px) var(--cmp-gutter) clamp(48px, 7cqi, 88px);
+  padding: clamp(40px, 9cqi, 132px) var(--cmp-gutter) clamp(48px, 7cqi, 88px);
 }
 
 .campaign-page .cmp-account-card {
