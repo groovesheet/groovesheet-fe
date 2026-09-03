@@ -50,7 +50,7 @@
     "termsOfService": "服务条款",
     "dragDrop": "拖入音频文件",
     "tapToUpload": "点击上传音频文件",
-    "fileTypes": "MP3、WAV、FLAC、OGG,最大 {{size}}MB",
+    "fileTypes": "MP3、WAV、FLAC、M4A,最大 {{size}}MB",
     "browseFiles": "浏览文件",
     "chooseFile": "选择文件",
     "uploading": "上传中...",
@@ -69,7 +69,7 @@
       "bass": "贝斯"
     },
     "errors": {
-      "fileFormat": "暂不支持该格式——目前支持 MP3、WAV、FLAC 和 OGG。手机录音通常是 .m4a,先转换成 MP3 即可上传。",
+      "fileFormat": "暂不支持该格式——目前支持 MP3、WAV、FLAC、OGG 和 M4A。",
       "fileSize": "文件过大。最大 32MB。"
     }
   },
