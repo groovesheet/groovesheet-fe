@@ -7,6 +7,7 @@ import Testimonials from './Testimonials';
 import { useUser } from '../auth';
 import { LocalizedLink } from '../i18n/locale';
 import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
+import { MAX_UPLOAD_MB } from '../lib/constants';
 import './FAQ.css';
 import './PricingPage.css';
 
@@ -169,9 +170,9 @@ function PricingPage({ onLoginClick }) {
                   </tr>
                   <tr>
                     <th scope="row">Upload size per file</th>
-                    <td>100 MB</td>
-                    <td className="is-pop">500 MB</td>
-                    <td>1 GB</td>
+                    <td>{`${MAX_UPLOAD_MB} MB`}</td>
+                    <td className="is-pop">{`${MAX_UPLOAD_MB} MB`}</td>
+                    <td>{`${MAX_UPLOAD_MB} MB`}</td>
                   </tr>
                   <tr>
                     <th scope="row">

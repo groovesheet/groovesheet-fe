@@ -17,6 +17,7 @@ import {
 } from '../utils/api';
 import { startProviderCheckout } from '../utils/airwallex';
 import config from '../config';
+import { MAX_UPLOAD_MB } from '../lib/constants';
 
 const PAGE_SIZE = 20;
 
@@ -274,8 +275,8 @@ export const AccountBilling = () => {
 
   // Build the two plan cards (Lite, Pro) from the live catalog, with fallbacks.
   const PLAN_FALLBACK = {
-    lite: { name: 'Lite', badge: 'PROFESSIONAL', subtitle: 'Best for working musicians', monthly: 10, annual: 7.5, annualBilled: 90, features: ['120 minutes / month', 'Downloads: PDF, MusicXML, MIDI', '500 MB upload / file', 'Batch processing', 'Rollover up to 240 min'] },
-    pro: { name: 'Pro', badge: 'ENTERPRISE', subtitle: 'For studios & power users', monthly: 18, annual: 15, annualBilled: 180, features: ['Everything in Lite', '300 minutes / month', 'Fast processing queue', '1 GB upload / file', 'Rollover up to 600 min'] },
+    lite: { name: 'Lite', badge: 'PROFESSIONAL', subtitle: 'Best for working musicians', monthly: 10, annual: 7.5, annualBilled: 90, features: ['120 minutes / month', 'Downloads: PDF, MusicXML, MIDI', `${MAX_UPLOAD_MB} MB upload / file`, 'Batch processing', 'Rollover up to 240 min'] },
+    pro: { name: 'Pro', badge: 'ENTERPRISE', subtitle: 'For studios & power users', monthly: 18, annual: 15, annualBilled: 180, features: ['Everything in Lite', '300 minutes / month', 'Fast processing queue', `${MAX_UPLOAD_MB} MB upload / file`, 'Rollover up to 600 min'] },
   };
   const planCards = ['lite', 'pro'].map((fam) => {
     const fb = PLAN_FALLBACK[fam];

@@ -13,7 +13,7 @@ import {
   setPendingPreviewId,
 } from '../utils/previewApi';
 import { scrollToPricing } from '../utils/scrollToPricing';
-import { MAX_UPLOAD_BYTES } from '../lib/constants';
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '../lib/constants';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { useIsTouch } from '../hooks/useMediaQuery';
@@ -602,7 +602,7 @@ function StemSplitter({ onLoginClick }) {
               <p className="upload-main-text">
                 {isTouch ? 'Tap to upload an audio file' : 'Drag and drop an audio file'}
               </p>
-              <p className="upload-sub-text">MP3, WAV, FLAC up to 50MB</p>
+              <p className="upload-sub-text">{`MP3, WAV, FLAC up to ${MAX_UPLOAD_MB}MB`}</p>
             </div>
           </div>
           <button className="browse-files-btn" onClick={handleBrowseClick}>
