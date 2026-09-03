@@ -44,3 +44,12 @@ export const STORAGE_KEYS = {
   THEME: 'theme',
   AUTH_TOKEN: 'auth_token',
 };
+
+/**
+ * Maximum upload size, enforced identically by Hero, StemSplitter and
+ * MidiConverter. There is no per-plan upload limit anywhere in the app or the
+ * API — the cap is flat for every tier, so any copy suggesting otherwise is
+ * describing something the product does not do.
+ */
+export const MAX_UPLOAD_BYTES = 32 * 1024 * 1024;
+export const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);

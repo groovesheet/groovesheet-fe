@@ -5,6 +5,7 @@ import { createCheckoutSession } from '../utils/api';
 import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import { startProviderCheckout } from '../utils/airwallex';
 import { PRICING_SECTION_ID, PRICING_TAB_EVENT } from '../utils/scrollToPricing';
+import { MAX_UPLOAD_MB } from '../lib/constants';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
 
@@ -231,7 +232,7 @@ function Pricing({ onLoginClick }) {
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.18799 8.92992L5.24999 11.9929L12.25 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>{t('pricing.plans.free.feature3')}</span>
+                    <span>{t('pricing.plans.free.feature3', { size: MAX_UPLOAD_MB })}</span>
                   </li>
                   <li className="feature-item">
                     <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -290,7 +291,7 @@ function Pricing({ onLoginClick }) {
                       <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2.85474 8.53502L5.91674 11.598L12.9167 4.59802" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>{t('pricing.plans.lite.feature3')}</span>
+                      <span>{t('pricing.plans.lite.feature3', { size: MAX_UPLOAD_MB })}</span>
                     </li>
                     <li className="feature-item">
                       <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -347,7 +348,7 @@ function Pricing({ onLoginClick }) {
                     <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.52148 8.92992L5.58348 11.9929L12.5835 4.99292" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span>{t('pricing.plans.pro.feature3')}</span>
+                    <span>{t('pricing.plans.pro.feature3', { size: MAX_UPLOAD_MB })}</span>
                   </li>
                   <li className="feature-item">
                     <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">

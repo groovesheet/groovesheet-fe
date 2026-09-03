@@ -50,7 +50,7 @@
     "termsOfService": "Terms of Service",
     "dragDrop": "Drag and drop an audio file",
     "tapToUpload": "Tap to upload an audio file",
-    "fileTypes": "MP3, WAV, FLAC up to 50MB",
+    "fileTypes": "MP3, WAV, FLAC up to {{size}}MB",
     "browseFiles": "Browse Files",
     "chooseFile": "Choose File",
     "uploading": "Uploading...",
@@ -78,7 +78,7 @@
     "subtitle": "Built for speed and accuracy so you can focus on practice, teaching, and performance.",
     "card1": {
       "title": "Upload Your Track",
-      "body": "Drag in an MP3 (or choose one). We detect tempo, time signatures, and drum events automatically. Max 10 MB."
+      "body": "Drag in an MP3 (or choose one). We detect tempo, time signatures, and drum events automatically. Max {{size}} MB."
     },
     "card2": {
       "title": "Customize Instantly",
@@ -114,7 +114,7 @@
         "cta": "Get Free",
         "feature1": "10-second preview on every song",
         "feature2": "Full songs need a paid plan or top-up",
-        "feature3": "100 MB upload/file",
+        "feature3": "{{size}} MB upload/file",
         "feature4": "Standard queue"
       },
       "lite": {
@@ -124,7 +124,7 @@
         "cta": "Subscribe",
         "feature1": "120 minutes / month",
         "feature2": "Result downloads (PDF, MusicXML, MIDI)",
-        "feature3": "500 MB upload/file",
+        "feature3": "{{size}} MB upload/file",
         "feature4": "Batch processing",
         "feature5": "Priority support with chat"
       },
@@ -135,7 +135,7 @@
         "cta": "Subscribe",
         "feature1": "Everything in Lite",
         "feature2": "Fast queue",
-        "feature3": "1 GB upload/file",
+        "feature3": "{{size}} MB upload/file",
         "feature4": "Early access to new features"
       }
     },

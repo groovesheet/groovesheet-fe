@@ -19,6 +19,7 @@ import TranscriptionResultView from './TranscriptionResult/TranscriptionResultVi
 import StatusMessage from './ui/StatusMessage';
 import './Hero.css';
 import config from '../config';
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '../lib/constants';
 
 const SUPPORTED_MIME_TYPES = [
   'audio/mp3',
@@ -36,7 +37,7 @@ const SUPPORTED_MIME_TYPES = [
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.wav', '.flac', '.ogg', '.au', '.sph'];
 
-const MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = MAX_UPLOAD_BYTES;
 
 const isSupportedFileType = (selectedFile) => {
   const mime = (selectedFile.type || '').toLowerCase();
@@ -1038,7 +1039,7 @@ function Hero({ onLoginRequired }) {
               <p className="upload-main-text">
                 {isTouch ? t('hero.tapToUpload') : t('hero.dragDrop')}
               </p>
-              <p className="upload-sub-text">{t('hero.fileTypes')}</p>
+              <p className="upload-sub-text">{t('hero.fileTypes', { size: MAX_UPLOAD_MB })}</p>
             </div>
           </div>
 

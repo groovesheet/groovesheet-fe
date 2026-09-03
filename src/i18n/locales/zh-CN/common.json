@@ -50,7 +50,7 @@
     "termsOfService": "服务条款",
     "dragDrop": "拖入音频文件",
     "tapToUpload": "点击上传音频文件",
-    "fileTypes": "MP3、WAV、FLAC,最大 50MB",
+    "fileTypes": "MP3、WAV、FLAC,最大 {{size}}MB",
     "browseFiles": "浏览文件",
     "chooseFile": "选择文件",
     "uploading": "上传中...",
@@ -78,7 +78,7 @@
     "subtitle": "为速度与精度而生,让您专注于练习、教学和演出。",
     "card1": {
       "title": "上传你的曲目",
-      "body": "拖入一首 MP3(或选择文件)。我们自动识别速度、拍号和鼓点。单文件最大 10 MB。"
+      "body": "拖入一首 MP3(或选择文件)。我们自动识别速度、拍号和鼓点。单文件最大 {{size}} MB。"
     },
     "card2": {
       "title": "即时自定义",
@@ -114,7 +114,7 @@
         "cta": "免费开始",
         "feature1": "每首歌曲可免费预览 10 秒",
         "feature2": "完整歌曲需付费套餐或加时包",
-        "feature3": "单文件 100 MB",
+        "feature3": "单文件 {{size}} MB",
         "feature4": "标准队列"
       },
       "lite": {
@@ -124,7 +124,7 @@
         "cta": "订阅",
         "feature1": "每月 120 分钟",
         "feature2": "结果下载(PDF、MusicXML、MIDI)",
-        "feature3": "单文件 500 MB",
+        "feature3": "单文件 {{size}} MB",
         "feature4": "批量处理",
         "feature5": "在线聊天优先支持"
       },
@@ -135,7 +135,7 @@
         "cta": "订阅",
         "feature1": "包含轻享版全部功能",
         "feature2": "快速队列",
-        "feature3": "单文件 1 GB",
+        "feature3": "单文件 {{size}} MB",
         "feature4": "新功能抢先体验"
       }
     },

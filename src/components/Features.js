@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import './Features.css';
+import { MAX_UPLOAD_MB } from '../lib/constants';
 
 function Features() {
   const { t } = useTranslation();
@@ -29,7 +30,7 @@ function Features() {
               </div>
               <div className="feature-content">
                 <h3 className="feature-card-title">{t('features.card1.title')}</h3>
-                <p className="feature-card-text">{t('features.card1.body')}</p>
+                <p className="feature-card-text">{t('features.card1.body', { size: MAX_UPLOAD_MB })}</p>
               </div>
             </div>
           </div>
