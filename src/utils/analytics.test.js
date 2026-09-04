@@ -4,6 +4,8 @@ import {
   trackDownloadIntent,
   trackSignUp,
   trackPurchase,
+  adsConversion,
+  ADS_LABELS,
   EVENTS,
 } from './analytics';
 import {
@@ -183,6 +185,32 @@ describe('funnel helpers', () => {
     trackSignUp('google');
     expect(window.dataLayer[0].event).toBe('sign_up');
     expect(window.dataLayer[0].method).toBe('google');
+  });
+
+  it('sends the Google Ads conversion alongside the sign_up event', () => {
+    window.gtag = jest.fn();
+    trackSignUp('email');
+    expect(window.gtag).toHaveBeenCalledWith('event', 'conversion', {
+      send_to: `AW-18426875153/${ADS_LABELS.SIGN_UP}`,
+      value: 1.0,
+      currency: 'SGD',
+    });
+    delete window.gtag;
+  });
+
+  it('still records sign_up when gtag is blocked', () => {
+    delete window.gtag;
+    expect(() => trackSignUp('email')).not.toThrow();
+    expect(window.dataLayer[0].event).toBe('sign_up');
+  });
+
+  it('adsConversion no-ops without gtag and refuses an empty label', () => {
+    delete window.gtag;
+    expect(adsConversion(ADS_LABELS.SIGN_UP)).toBe(false);
+    window.gtag = jest.fn();
+    expect(adsConversion('')).toBe(false);
+    expect(window.gtag).not.toHaveBeenCalled();
+    delete window.gtag;
   });
 
   it('uses the GA4 recommended name for purchase', () => {
