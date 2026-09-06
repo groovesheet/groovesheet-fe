@@ -197,6 +197,39 @@ export function trackWorkflowStarted(workflowName, extra = {}) {
 }
 
 /**
+ * Send the purchase to Google Ads as a named event, with no conversion label.
+ *
+ * The labelled path above is the precise one, but it needs a label that only
+ * exists in the Ads UI. This is the second, label-free route Google documents
+ * for the Google tag: an event addressed to the Ads destination by name, which
+ * a conversion action configured for the `purchase` event will pick up. The
+ * account's Purchase action is an Ads-created "account default", and no label
+ * for it was ever configured in the code or in the GTM container — so this is
+ * the route most likely to be the one it is actually listening on.
+ *
+ * Both are sent because they cost nothing together and fail in opposite
+ * directions: the labelled call is exact but silent while unconfigured, this
+ * one needs no configuration but depends on how the action was set up. They
+ * carry the same `transaction_id`, which is precisely what Google deduplicates
+ * on, so if both land the sale is still counted once.
+ */
+export function adsPurchaseEvent({ value, currency, transaction_id } = {}) {
+  try {
+    if (typeof window === 'undefined' || typeof window.gtag !== 'function') return false;
+    const payload = {
+      send_to: ADS_ID,
+      value: typeof value === 'number' ? value : undefined,
+      currency: currency || undefined,
+    };
+    if (transaction_id) payload.transaction_id = transaction_id;
+    window.gtag('event', 'purchase', payload);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * A completed payment, reported to every sink that needs it.
  *
  * `value` is the amount actually charged, read back from Stripe server-side
@@ -208,6 +241,9 @@ export function trackWorkflowStarted(workflowName, extra = {}) {
  */
 export function trackPurchase({ value, currency, transaction_id, tier } = {}) {
   const pushed = track(EVENTS.PURCHASE, { value, currency, transaction_id, tier });
+  // Two routes to Google Ads; see adsPurchaseEvent for why both, and why
+  // sending both cannot double-count.
   adsConversion(ADS_LABELS.PURCHASE, { value, currency, transaction_id });
+  adsPurchaseEvent({ value, currency, transaction_id });
   return pushed;
 }
