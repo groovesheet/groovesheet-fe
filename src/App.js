@@ -49,8 +49,16 @@ import { claimPendingPreviewIfAny } from './utils/previewApi';
 import { claimPendingCampaignIfAny } from './utils/api';
 import config from './config';
 import { LocaleScope, LocaleSync } from './i18n/locale';
+import usePageMeta from './hooks/usePageMeta';
 
 function LandingPage({ onLoginClick }) {
+  usePageMeta(
+    'Audio to Sheet Music, Stems & MIDI',
+    'Turn any song into sheet music. AI transcription for drums, piano and bass, '
+      + 'plus vocal removal, stem separation and audio to MIDI. Export PDF, '
+      + 'MusicXML and MIDI.'
+  );
+
   const { isDarkMode } = useTheme();
   const gradientRef = useRef(null);
   const [isGradientVisible, setIsGradientVisible] = useState(false);

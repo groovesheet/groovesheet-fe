@@ -18,6 +18,7 @@ import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '../lib/constants';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { useIsTouch } from '../hooks/useMediaQuery';
+import usePageMeta from '../hooks/usePageMeta';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
@@ -117,6 +118,17 @@ const BassIcon = () => (
 );
 
 function StemSplitter({ onLoginClick }) {
+  // Search-terms report (Google Ads, 7 Aug - 5 Sept 2026): of the 13 terms that
+  // earned a click, 10 were vocal-removal phrasings — "vocal remover", "vocal
+  // remover free", "audio vocal isolator", "lyrics remover from audio". Every
+  // route used to inherit index.html's sheet-music title and description, so
+  // paid traffic landed on a page that never repeated the words it searched for.
+  usePageMeta(
+    'Vocal Remover & Stem Splitter',
+    'Remove vocals from any song, or split a track into vocals, drums, bass and '
+      + 'instruments. Runs in the browser — nothing to install.'
+  );
+
   const { t } = useTranslation();
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
@@ -708,9 +720,10 @@ function StemSplitter({ onLoginClick }) {
         <div className={`hero-container ${uiState === 'success' ? 'success-expanded' : ''}`}>
           <div className="hero-content">
             <div className="hero-text">
-              <h1 className="hero-title">Extract vocals & instruments from any audio.</h1>
+              <h1 className="hero-title">Remove vocals from any song.</h1>
               <p className="hero-subtitle">
-                Upload an audio. Receive clean, separated & high quality audio stems in minutes.
+                Upload a track and get clean, separated stems in minutes — vocals, drums,
+                bass and instruments, isolated or removed.
               </p>
             </div>
             <div className="hero-disclaimer hero-disclaimer-desktop">

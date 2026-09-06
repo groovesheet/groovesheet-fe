@@ -18,6 +18,7 @@ import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '../lib/constants';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 import { useTheme } from '../context/ThemeContext';
 import { useIsTouch } from '../hooks/useMediaQuery';
+import usePageMeta from '../hooks/usePageMeta';
 import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
@@ -116,6 +117,15 @@ const BassIcon = () => (
 );
 
 function MidiConverter({ onLoginClick }) {
+  // See the note in StemSplitter.js: per-route meta, worded from the Google Ads
+  // search-terms report. "mp3 to midi" and "audio to midi converter" are the
+  // phrasings this page actually gets impressions on.
+  usePageMeta(
+    'Audio to MIDI Converter — MP3 to MIDI',
+    'Convert MP3, WAV and other audio into MIDI. Editable MIDI for piano, bass '
+      + 'and drums, with sheet music export.'
+  );
+
   const { t } = useTranslation();
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();

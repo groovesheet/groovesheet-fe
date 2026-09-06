@@ -8,6 +8,7 @@ import { useUser } from '../auth';
 import { LocalizedLink } from '../i18n/locale';
 import useBillingCatalog, { formatMoney } from '../utils/useBillingCatalog';
 import { MAX_UPLOAD_MB } from '../lib/constants';
+import usePageMeta from '../hooks/usePageMeta';
 import './FAQ.css';
 import './PricingPage.css';
 
@@ -68,6 +69,12 @@ const BILLING_FAQ = [
 ];
 
 function PricingPage({ onLoginClick }) {
+  usePageMeta(
+    'Pricing & Plans',
+    'GrooveSheet plans for vocal removal, stem separation, audio to MIDI and '
+      + 'audio to sheet music.'
+  );
+
   const { isSignedIn } = useUser();
   const [openFaq, setOpenFaq] = useState('minute');
 
