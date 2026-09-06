@@ -55,7 +55,9 @@ function CreatorProfile({ onLoginClick }) {
 
   usePageMeta(
     profile ? (profile.display_name || `@${profile.username}`) : null,
-    profile?.bio || (profile ? `Transcriptions published by ${profile.display_name || profile.username} on GrooveSheet.` : null)
+    profile?.bio || (profile ? `Transcriptions published by ${profile.display_name || profile.username} on GrooveSheet.` : null),
+    // A creator link should unfurl as that creator, not the site logo.
+    profile?.avatar_url || undefined
   );
 
   const [query, setQuery] = useState('');

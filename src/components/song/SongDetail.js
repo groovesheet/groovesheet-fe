@@ -258,9 +258,15 @@ function SongDetail({ onLoginClick }) {
   const [trackLoading, setTrackLoading] = useState(true);
   const [trackError, setTrackError] = useState(null); // { status, message }
 
+  // The cover is the whole point of sharing a song page: a link to
+  // "Shape of You" should unfurl as that record, not the site logo. Social
+  // crawlers already get it from the /seo/track rewrite in vercel.json, but
+  // that only covers the handful of bots listed there — everything else, and
+  // the page itself, fell back to the generic preview image.
   usePageMeta(
     track ? `${track.title} — ${track.artist}` : null,
-    track ? `Listen and download sheet music, MIDI and stems for ${track.title} by ${track.artist}.` : null
+    track ? `Listen and download sheet music, MIDI and stems for ${track.title} by ${track.artist}.` : null,
+    track ? track.cover_url || undefined : undefined
   );
 
   useEffect(() => {
