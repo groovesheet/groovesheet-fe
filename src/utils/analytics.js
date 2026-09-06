@@ -31,6 +31,48 @@ export const EVENTS = {
 };
 
 /**
+ * Google Ads conversions.
+ *
+ * Google Ads does not read the dataLayer events above. It needs its own
+ * `conversion` event sent through the AW- tag configured in public/index.html.
+ * GTM would be the usual place to wire this, but the container on this site
+ * (`GTM-P9XDD5Z7`) belongs to a different Google account than the Ads login,
+ * so the call has to live in the app.
+ *
+ * `purchase` is deliberately absent: that conversion is configured in Google Ads
+ * as a page-load rule on /billing/success, which already fires on the redirect
+ * back from Stripe and Airwallex. Sending an event here as well would
+ * double-count every payment.
+ */
+const ADS_ID = 'AW-18426875153';
+
+export const ADS_LABELS = {
+  SIGN_UP: 'A2rWCNukmu0cEJGaz9JE',
+};
+
+/**
+ * Send one Google Ads conversion. Returns true when it reached gtag.
+ *
+ * Never throws. A missing `gtag` — ad blocker, consent refusal, or the tag
+ * simply not loaded yet — is a silent no-op, on the same principle as track():
+ * measurement must never break signup.
+ */
+export function adsConversion(label, { value, currency } = {}) {
+  try {
+    if (!label || typeof label !== 'string') return false;
+    if (typeof window === 'undefined' || typeof window.gtag !== 'function') return false;
+    window.gtag('event', 'conversion', {
+      send_to: `${ADS_ID}/${label}`,
+      value: typeof value === 'number' ? value : 1.0,
+      currency: currency || 'SGD',
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * Values GA4 must never receive. Raw IPs, cookie values and tokens are
  * stripped defensively even though no call site sends them today.
  */
@@ -119,8 +161,15 @@ export function trackDownload(track_, extra = {}) {
   return track(EVENTS.TRACK_DOWNLOAD, { ...trackProps(track_), ...extra });
 }
 
+/**
+ * Fires once per genuinely new account — auth.js gates this on account age and
+ * a localStorage marker, so the Google Ads conversion is not re-sent on the
+ * signed-in user's later page loads.
+ */
 export function trackSignUp(method) {
-  return track(EVENTS.SIGN_UP, { method: method || 'unknown' });
+  const pushed = track(EVENTS.SIGN_UP, { method: method || 'unknown' });
+  adsConversion(ADS_LABELS.SIGN_UP);
+  return pushed;
 }
 
 /**
