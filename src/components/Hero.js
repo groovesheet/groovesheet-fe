@@ -32,7 +32,17 @@ const SUPPORTED_MIME_TYPES = [
   'audio/x-ogg',
   'audio/basic',
   'audio/x-au',
-  'audio/x-nist'
+  'audio/x-nist',
+  // The MPEG-4 family, which is what phones record: iPhone Voice Memos and
+  // most Android recorders write .m4a. Browsers label it inconsistently —
+  // audio/mp4, audio/x-m4a, and sometimes video/mp4 for the same file — so all
+  // three are listed. Decoded server-side by the ffmpeg fallback in
+  // services/segment_selector.py; do not add formats ahead of that.
+  'audio/mp4',
+  'audio/x-m4a',
+  'audio/aac',
+  'audio/aacp',
+  'video/mp4'
 ];
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.wav', '.flac', '.ogg', '.au', '.sph'];
@@ -1197,7 +1207,7 @@ function Hero({ onLoginRequired }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".mp3,.wav,.flac,.ogg,.au,.sph,audio/mp3,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/x-flac,audio/ogg,audio/x-ogg,audio/basic,audio/x-au,audio/x-nist"
+            accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,.mp4,.au,.sph,audio/mp3,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/x-flac,audio/ogg,audio/x-ogg,audio/basic,audio/x-au,audio/x-nist,audio/mp4,audio/x-m4a,audio/aac,video/mp4"
             onChange={(e) => handleFileChange(e.target.files[0])}
             style={{ display: 'none' }}
           />

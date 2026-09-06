@@ -50,7 +50,7 @@
     "termsOfService": "服務條款",
     "dragDrop": "拖曳音訊檔案至此",
     "tapToUpload": "點擊上傳音訊檔案",
-    "fileTypes": "MP3、WAV、FLAC、OGG,最大 {{size}}MB",
+    "fileTypes": "MP3、WAV、FLAC、M4A,最大 {{size}}MB",
     "browseFiles": "瀏覽檔案",
     "chooseFile": "選擇檔案",
     "uploading": "上傳中...",
@@ -69,7 +69,7 @@
       "bass": "貝斯"
     },
     "errors": {
-      "fileFormat": "暫不支援該格式——目前支援 MP3、WAV、FLAC 與 OGG。手機錄音通常是 .m4a,先轉換成 MP3 即可上傳。",
+      "fileFormat": "暫不支援該格式——目前支援 MP3、WAV、FLAC、OGG 與 M4A。",
       "fileSize": "檔案過大。最大 32MB。"
     }
   },

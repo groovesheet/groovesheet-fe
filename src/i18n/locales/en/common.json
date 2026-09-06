@@ -50,7 +50,7 @@
     "termsOfService": "Terms of Service",
     "dragDrop": "Drag and drop an audio file",
     "tapToUpload": "Tap to upload an audio file",
-    "fileTypes": "MP3, WAV, FLAC, OGG up to {{size}}MB",
+    "fileTypes": "MP3, WAV, FLAC, M4A up to {{size}}MB",
     "browseFiles": "Browse Files",
     "chooseFile": "Choose File",
     "uploading": "Uploading...",
@@ -69,7 +69,7 @@
       "bass": "Bass"
     },
     "errors": {
-      "fileFormat": "That format isn't supported yet — we accept MP3, WAV, FLAC and OGG. Phone recordings are usually .m4a; converting to MP3 first will work.",
+      "fileFormat": "That format isn't supported — we accept MP3, WAV, FLAC, OGG and M4A.",
       "fileSize": "File size too large. Max 32MB."
     }
   },

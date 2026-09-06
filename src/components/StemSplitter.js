@@ -604,7 +604,7 @@ function StemSplitter({ onLoginClick }) {
               <p className="upload-main-text">
                 {isTouch ? 'Tap to upload an audio file' : 'Drag and drop an audio file'}
               </p>
-              <p className="upload-sub-text">{`MP3, WAV, FLAC, OGG up to ${MAX_UPLOAD_MB}MB`}</p>
+              <p className="upload-sub-text">{`MP3, WAV, FLAC, M4A up to ${MAX_UPLOAD_MB}MB`}</p>
             </div>
           </div>
           <button className="browse-files-btn" onClick={handleBrowseClick}>
@@ -732,7 +732,7 @@ function StemSplitter({ onLoginClick }) {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".mp3,.wav,.flac,.ogg,.au,.sph,audio/mp3,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/x-flac,audio/ogg,audio/x-ogg,audio/basic,audio/x-au,audio/x-nist"
+              accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,.mp4,.au,.sph,audio/mp3,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/x-flac,audio/ogg,audio/x-ogg,audio/basic,audio/x-au,audio/x-nist,audio/mp4,audio/x-m4a,audio/aac,video/mp4"
               onChange={(e) => handleFileChange(e.target.files[0])}
               style={{ display: 'none' }}
             />
