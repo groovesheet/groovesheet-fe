@@ -5,6 +5,7 @@ import {
   trackSignUp,
   trackPurchase,
   adsConversion,
+  adsPurchaseEvent,
   ADS_LABELS,
   EVENTS,
 } from './analytics';
@@ -323,6 +324,50 @@ describe('purchase reporting', () => {
     expect(window.dataLayer[0].transaction_id).toBe('cs_1');
   });
 
+  it('reaches Google Ads by event name when no label is configured', () => {
+    // The label lives only in the Ads UI. This is the second, label-free route,
+    // and the one the account's Ads-created Purchase action is most likely
+    // listening on — no label for it exists in the code or the GTM container.
+    window.gtag = jest.fn();
+    adsPurchaseEvent({ value: 12, currency: 'USD', transaction_id: 'cs_test_9' });
+    expect(window.gtag).toHaveBeenCalledWith('event', 'purchase', {
+      send_to: 'AW-18426875153',
+      value: 12,
+      currency: 'USD',
+      transaction_id: 'cs_test_9',
+    });
+    delete window.gtag;
+  });
+
+  it('sends both routes with one shared dedup id, so a sale counts once', () => {
+    // Both may land. Google deduplicates on transaction_id, which is the whole
+    // reason sending both is safe rather than a double-count.
+    window.gtag = jest.fn();
+    trackPurchase({ value: 12, currency: 'USD', transaction_id: 'cs_same' });
+    const ids = window.gtag.mock.calls.map((c) => c[2].transaction_id);
+    expect(ids.every((id) => id === 'cs_same')).toBe(true);
+    delete window.gtag;
+  });
+
+  it('omits value and currency rather than inventing them', () => {
+    // A purchase reported as 1.0 SGD by default would be a fabricated amount
+    // sitting in the revenue column of the Ads report.
+    window.gtag = jest.fn();
+    adsPurchaseEvent({ transaction_id: 'cs_novalue' });
+    expect(window.gtag).toHaveBeenCalledWith('event', 'purchase', {
+      send_to: 'AW-18426875153',
+      value: undefined,
+      currency: undefined,
+      transaction_id: 'cs_novalue',
+    });
+    delete window.gtag;
+  });
+
+  it('never throws when gtag is blocked', () => {
+    delete window.gtag;
+    expect(() => adsPurchaseEvent({ value: 1, transaction_id: 'x' })).not.toThrow();
+  });
+
   it('still records the sale when the Ads label is unconfigured', () => {
     // ADS_LABELS.PURCHASE comes from the environment and is empty here. A
     // missing label must cost the Google conversion, never the GA4 record.
@@ -330,7 +375,12 @@ describe('purchase reporting', () => {
     expect(ADS_LABELS.PURCHASE).toBe('');
     expect(() => trackPurchase({ value: 12, transaction_id: 'cs_2' })).not.toThrow();
     expect(window.dataLayer[0].event).toBe('purchase');
-    expect(window.gtag).not.toHaveBeenCalled();
+    // The labelled conversion no-ops, but the label-free event still goes, so
+    // an unset label no longer means Ads hears nothing at all.
+    expect(window.gtag).toHaveBeenCalledTimes(1);
+    expect(window.gtag).toHaveBeenCalledWith('event', 'purchase', expect.objectContaining({
+      send_to: 'AW-18426875153',
+    }));
     delete window.gtag;
   });
 
