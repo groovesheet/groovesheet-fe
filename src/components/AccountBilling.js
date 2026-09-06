@@ -18,6 +18,7 @@ import {
 import { startProviderCheckout } from '../utils/airwallex';
 import config from '../config';
 import { MAX_UPLOAD_MB } from '../lib/constants';
+import { getClickIds } from '../utils/attribution';
 
 const PAGE_SIZE = 20;
 
@@ -200,7 +201,7 @@ export const AccountBilling = () => {
   const startCheckout = async (planCode, label) => {
     notify(`Opening checkout — ${label}`);
     try {
-      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut, currency);
+      const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut, currency, getClickIds());
       await startProviderCheckout(data);
     } catch (err) {
       if (!handleAuthError(err)) notify("Couldn't start checkout. Please try again.");

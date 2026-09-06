@@ -23,6 +23,34 @@
 const FIRST_TOUCH_KEY = 'gs_attr_first';
 const LAST_TOUCH_KEY = 'gs_attr_last';
 
+/**
+ * The Google Ads click that brought this visitor here.
+ *
+ * Kept separate from the two touch records above because it answers a
+ * different question and follows a different rule. Those record *how we
+ * acquired* someone and so are first-touch; Google Ads bills and attributes on
+ * the *most recent* click, so this is deliberately last-touch and overwritten
+ * by each new ad landing.
+ *
+ * It exists because revenue and ad spend were two unrelated numbers: a payment
+ * could not be traced to the click that paid for it, which is the only way to
+ * know whether an ad earned back more than it cost. This is carried into
+ * Stripe Checkout metadata and recorded on the payment server-side.
+ *
+ * 90 days is Google's maximum click-through conversion window; a click older
+ * than that would no longer be credited by Google either, so keeping it would
+ * only overstate our own attribution.
+ */
+const CLICK_ID_KEY = 'gs_click_id';
+const CLICK_ID_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+
+/**
+ * Google's click identifiers, in the order it prefers them. `gclid` is the
+ * ordinary web click; `gbraid`/`wbraid` replace it for iOS and app campaigns,
+ * where `gclid` is withheld.
+ */
+const CLICK_ID_PARAMS = ['gclid', 'gbraid', 'wbraid'];
+
 /** utm_source values we treat as a known platform. */
 const KNOWN_PLATFORMS = ['youtube', 'bilibili'];
 
@@ -138,11 +166,60 @@ export function attributionProps() {
   };
 }
 
+/**
+ * Snapshot the ad click on landing, if this landing carries one.
+ *
+ * The query string is gone as soon as the visitor navigates, and payment
+ * happens many pages later, so the click id has to be stored the moment it
+ * arrives. A visit with no click id leaves any stored one alone — an organic
+ * return visit must not erase the ad that is still inside its window.
+ */
+export function captureClickId(search) {
+  let params;
+  try {
+    params = new URLSearchParams(search || '');
+  } catch (e) {
+    return getClickIds();
+  }
+
+  const found = {};
+  CLICK_ID_PARAMS.forEach((name) => {
+    const value = params.get(name);
+    // Stripe metadata caps values at 500 characters; a longer one is not a
+    // real click id and must not travel far enough to break Checkout.
+    if (value && value.length <= 500) found[name] = value;
+  });
+
+  if (!Object.keys(found).length) return getClickIds();
+
+  safeSet(CLICK_ID_KEY, { ...found, seen_at: new Date().toISOString() });
+  return found;
+}
+
+/**
+ * The stored click identifiers, or an empty object when there is no live one.
+ * Always a plain object, so call sites can spread it unconditionally.
+ */
+export function getClickIds() {
+  const record = safeGet(CLICK_ID_KEY);
+  if (!record) return {};
+
+  const seenAt = Date.parse(record.seen_at || '');
+  if (Number.isNaN(seenAt) || Date.now() - seenAt > CLICK_ID_MAX_AGE_MS) return {};
+
+  const out = {};
+  CLICK_ID_PARAMS.forEach((name) => {
+    if (record[name]) out[name] = record[name];
+  });
+  return out;
+}
+
 /** Test seam. */
 export function _resetAttribution() {
   try {
     window.localStorage.removeItem(FIRST_TOUCH_KEY);
     window.localStorage.removeItem(LAST_TOUCH_KEY);
+    window.localStorage.removeItem(CLICK_ID_KEY);
   } catch (e) {
     /* ignore */
   }

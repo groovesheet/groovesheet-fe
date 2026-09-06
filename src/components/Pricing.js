@@ -8,6 +8,7 @@ import { PRICING_SECTION_ID, PRICING_TAB_EVENT } from '../utils/scrollToPricing'
 import { MAX_UPLOAD_MB } from '../lib/constants';
 import StatusMessage from './ui/StatusMessage';
 import './Pricing.css';
+import { getClickIds } from '../utils/attribution';
 
 /**
  * Prices in the catalog's own currency, falling back to the USD fields so an
@@ -95,7 +96,7 @@ function Pricing({ onLoginClick }) {
       const planKey = resolvePlanKey(plan);
       // Send back the currency the user was actually quoted, so the price on
       // Stripe Checkout can't differ from the price on the card they clicked.
-      const data = await createCheckoutSession('/api', planKey, getToken, signOut, currency);
+      const data = await createCheckoutSession('/api', planKey, getToken, signOut, currency, getClickIds());
 
       // Hand off to the provider's hosted checkout (Stripe URL or Airwallex SDK).
       await startProviderCheckout(data);
