@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { trackPurchase } from '../utils/analytics';
+import { useAuth, useAuthActions } from '../auth';
+import { fetchCheckoutSession } from '../utils/api';
+import config from '../config';
 
 /**
  * Landing page Stripe redirects to after a successful Checkout Session.
@@ -14,11 +17,19 @@ function BillingSuccess() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = params.get('session_id');
+  const { getToken } = useAuth();
+  const { signOut } = useAuthActions();
   const [secondsLeft, setSecondsLeft] = useState(6);
 
-  // GA4 purchase. The webhook remains the authority for the credit grant and
-  // the real amount; this is the client-side funnel marker only, keyed on the
-  // session id so a refresh of this page does not double-count.
+  // The purchase, reported to GA4 and to Google Ads. The webhook remains the
+  // authority for the credit grant; this is what tells the ad platform a sale
+  // happened and what it was worth.
+  //
+  // The amount is fetched rather than taken from the URL because the URL is
+  // caller-controlled, and reported even when that fetch fails: a conversion
+  // without a value is worth far more than no conversion at all. Keyed on the
+  // session id so a refresh cannot double-count, and Google is given the same
+  // id to deduplicate on independently.
   useEffect(() => {
     if (!sessionId) return;
     try {
@@ -28,12 +39,24 @@ function BillingSuccess() {
     } catch (e) {
       /* storage unavailable: still report once for this page load */
     }
-    trackPurchase({
+
+    const fallback = {
       transaction_id: sessionId,
       tier: params.get('plan') || undefined,
       currency: params.get('currency') || undefined,
-    });
-  }, [sessionId, params]);
+    };
+
+    fetchCheckoutSession(config.apiBaseUrl, sessionId, getToken, signOut)
+      .then((session) => {
+        trackPurchase({
+          transaction_id: sessionId,
+          tier: session.plan || fallback.tier,
+          value: typeof session.value === 'number' ? session.value : undefined,
+          currency: session.currency || fallback.currency,
+        });
+      })
+      .catch(() => trackPurchase(fallback));
+  }, [sessionId, params, getToken, signOut]);
 
   useEffect(() => {
     if (secondsLeft <= 0) {

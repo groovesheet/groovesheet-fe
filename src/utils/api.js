@@ -771,11 +771,40 @@ export async function fetchUserSubscription(baseUrl, getToken, signOut = null) {
 }
 
 /**
+ * Read back what a Checkout Session actually charged.
+ *
+ * The success page needs a real amount to report as the conversion value, and
+ * it cannot compute one: the total depends on presentment currency and any
+ * discount, and anything carried in the redirect URL is caller-controlled.
+ * The backend re-reads it from Stripe and refuses sessions owned by anyone
+ * else.
+ *
+ * @returns {Promise<{ amount_cents: number|null, value: number|null, currency: string|null, plan: string|null, payment_status: string|null }>}
+ */
+export async function fetchCheckoutSession(baseUrl, sessionId, getToken, signOut = null) {
+  const response = await authenticatedFetch(
+    `${baseUrl}/billing/checkout-session/${encodeURIComponent(sessionId)}`,
+    { method: 'GET', headers: { accept: 'application/json' } },
+    getToken,
+    signOut
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch checkout session: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+
+/**
  * Create a Stripe Checkout session for a plan or top-up and return the hosted URL.
  * @param {string} baseUrl
  * @param {string} plan - one of: tier2, tier2_annual, tier3, tier3_annual, topup-30, topup-60, topup-120
  * @param {Function} getToken
  * @param {Function} [signOut]
+ * @param {string|null} [currency]
+ * @param {object|null} [clickIds] - Google Ads click ids ({gclid}/{gbraid}/{wbraid})
+ *   from utils/attribution. Passed in rather than read here so this module
+ *   stays a pure transport helper with no dependencies of its own.
  * @returns {Promise<{ session_id: string, url: string }>}
  */
 export async function createCheckoutSession(
@@ -783,7 +812,8 @@ export async function createCheckoutSession(
   plan,
   getToken,
   signOut = null,
-  currency = null
+  currency = null,
+  clickIds = null
 ) {
   const response = await authenticatedFetch(
     `${baseUrl}/billing/create-checkout-session`,
@@ -793,7 +823,15 @@ export async function createCheckoutSession(
       // `currency` echoes back what the user was quoted (see /billing/plans),
       // so the Stripe Checkout total matches the price they clicked. Omitted,
       // the backend re-derives it from the caller's country.
-      body: JSON.stringify(currency ? { plan, currency } : { plan }),
+      //
+      // The click ids ride along so the webhook can record which ad click
+      // earned this payment. Absent for every organic visitor, which is the
+      // normal case and simply means the purchase is unattributed.
+      body: JSON.stringify({
+        plan,
+        ...(currency ? { currency } : {}),
+        ...(clickIds || {}),
+      }),
     },
     getToken,
     signOut

@@ -48,6 +48,12 @@ const ADS_ID = 'AW-18426875153';
 
 export const ADS_LABELS = {
   SIGN_UP: 'A2rWCNukmu0cEJGaz9JE',
+  // The account's Purchase conversion action. Read from the environment
+  // because the label is account configuration, not code: it comes from
+  // Google Ads > Goals > Conversions > Purchase > Tag setup, and pasting it
+  // into Vercel is a deploy rather than a release. Unset, adsConversion()
+  // below no-ops, so a missing label costs the conversion but never the sale.
+  PURCHASE: process.env.REACT_APP_ADS_PURCHASE_LABEL || '',
 };
 
 /**
@@ -57,15 +63,20 @@ export const ADS_LABELS = {
  * simply not loaded yet — is a silent no-op, on the same principle as track():
  * measurement must never break signup.
  */
-export function adsConversion(label, { value, currency } = {}) {
+export function adsConversion(label, { value, currency, transaction_id } = {}) {
   try {
     if (!label || typeof label !== 'string') return false;
     if (typeof window === 'undefined' || typeof window.gtag !== 'function') return false;
-    window.gtag('event', 'conversion', {
+    const payload = {
       send_to: `${ADS_ID}/${label}`,
       value: typeof value === 'number' ? value : 1.0,
       currency: currency || 'SGD',
-    });
+    };
+    // Google deduplicates on this, so a refresh of the success page or a
+    // Stripe retry cannot inflate the conversion count — and, now that a real
+    // amount is attached, cannot inflate reported revenue either.
+    if (transaction_id) payload.transaction_id = transaction_id;
+    window.gtag('event', 'conversion', payload);
     return true;
   } catch (e) {
     return false;
@@ -185,6 +196,18 @@ export function trackWorkflowStarted(workflowName, extra = {}) {
   return track(EVENTS.WORKFLOW_STARTED, { workflow_name: workflowName, ...extra });
 }
 
+/**
+ * A completed payment, reported to every sink that needs it.
+ *
+ * `value` is the amount actually charged, read back from Stripe server-side
+ * (see BillingSuccess). It is not optional decoration: without it the Google
+ * Ads Purchase conversion carries no revenue, bidding cannot learn what a
+ * customer is worth, and return on ad spend is not computable. Reporting the
+ * conversion here rather than through a URL-based rule in the Ads UI is what
+ * makes attaching that amount possible at all.
+ */
 export function trackPurchase({ value, currency, transaction_id, tier } = {}) {
-  return track(EVENTS.PURCHASE, { value, currency, transaction_id, tier });
+  const pushed = track(EVENTS.PURCHASE, { value, currency, transaction_id, tier });
+  adsConversion(ADS_LABELS.PURCHASE, { value, currency, transaction_id });
+  return pushed;
 }

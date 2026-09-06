@@ -10,6 +10,8 @@ import {
 } from './analytics';
 import {
   captureAttribution,
+  captureClickId,
+  getClickIds,
   parseCampaign,
   sourcePlatform,
   getFirstTouch,
@@ -225,5 +227,116 @@ describe('funnel helpers', () => {
   it('tolerates a missing track object', () => {
     expect(() => trackExploreView(null)).not.toThrow();
     expect(window.dataLayer[0].event).toBe('explore_track_view');
+  });
+});
+
+/**
+ * The ad click is the join between money and spend.
+ *
+ * Google Ads reported zero conversions for weeks while the database held no
+ * record of a payment amount and no record of which click produced it. Even
+ * once a sale happens, a conversion with no value teaches the bidder nothing
+ * and makes return on ad spend uncomputable. These pin down the two halves:
+ * the click survives from landing to checkout, and the amount reaches Google.
+ */
+describe('google ads click capture', () => {
+  it('stores a gclid from the landing query string', () => {
+    captureClickId('?gclid=Cj0KCQiA_abc123');
+    expect(getClickIds()).toEqual({ gclid: 'Cj0KCQiA_abc123' });
+  });
+
+  it('accepts the iOS and app-campaign variants Google sends instead', () => {
+    captureClickId('?gbraid=0AAAAA_braid');
+    expect(getClickIds()).toEqual({ gbraid: '0AAAAA_braid' });
+    _resetAttribution();
+    captureClickId('?wbraid=0AAAAA_wbraid');
+    expect(getClickIds()).toEqual({ wbraid: '0AAAAA_wbraid' });
+  });
+
+  it('keeps the click through later organic page views', () => {
+    // The click id is gone from the URL the moment they navigate, but payment
+    // happens many pages later — losing it here loses the attribution.
+    captureClickId('?gclid=survives');
+    captureClickId('');
+    captureClickId('?utm_source=youtube');
+    expect(getClickIds()).toEqual({ gclid: 'survives' });
+  });
+
+  it('takes the most recent click, unlike first-touch campaign attribution', () => {
+    // Google bills and credits on the last click, so this deliberately
+    // diverges from the first-touch rule used for campaign source.
+    captureClickId('?gclid=older');
+    captureClickId('?gclid=newer');
+    expect(getClickIds()).toEqual({ gclid: 'newer' });
+  });
+
+  it('forgets a click older than Google would credit', () => {
+    const stale = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000).toISOString();
+    window.localStorage.setItem(
+      'gs_click_id',
+      JSON.stringify({ gclid: 'expired', seen_at: stale })
+    );
+    // Past 90 days Google no longer credits the click either; keeping it would
+    // only overstate our own attribution.
+    expect(getClickIds()).toEqual({});
+  });
+
+  it('drops a value too long for Stripe metadata rather than breaking checkout', () => {
+    captureClickId(`?gclid=${'x'.repeat(501)}`);
+    expect(getClickIds()).toEqual({});
+  });
+
+  it('returns a spreadable object when there was never a click', () => {
+    expect(getClickIds()).toEqual({});
+    expect({ plan: 'tier2', ...getClickIds() }).toEqual({ plan: 'tier2' });
+  });
+
+  it('never throws on a malformed query string', () => {
+    expect(() => captureClickId(undefined)).not.toThrow();
+    expect(() => captureClickId('?%%%')).not.toThrow();
+  });
+});
+
+describe('purchase reporting', () => {
+  it('carries the real amount and a dedup id to Google Ads', () => {
+    window.gtag = jest.fn();
+    adsConversion('PURCHASE_LABEL', {
+      value: 12,
+      currency: 'USD',
+      transaction_id: 'cs_test_123',
+    });
+    expect(window.gtag).toHaveBeenCalledWith('event', 'conversion', {
+      send_to: 'AW-18426875153/PURCHASE_LABEL',
+      value: 12,
+      currency: 'USD',
+      // Without this a page refresh or a Stripe retry would book the sale twice.
+      transaction_id: 'cs_test_123',
+    });
+    delete window.gtag;
+  });
+
+  it('reports the purchase to GA4 with its value', () => {
+    trackPurchase({ value: 12, currency: 'USD', transaction_id: 'cs_1', tier: 'tier2' });
+    expect(window.dataLayer[0].event).toBe('purchase');
+    expect(window.dataLayer[0].value).toBe(12);
+    expect(window.dataLayer[0].currency).toBe('USD');
+    expect(window.dataLayer[0].transaction_id).toBe('cs_1');
+  });
+
+  it('still records the sale when the Ads label is unconfigured', () => {
+    // ADS_LABELS.PURCHASE comes from the environment and is empty here. A
+    // missing label must cost the Google conversion, never the GA4 record.
+    window.gtag = jest.fn();
+    expect(ADS_LABELS.PURCHASE).toBe('');
+    expect(() => trackPurchase({ value: 12, transaction_id: 'cs_2' })).not.toThrow();
+    expect(window.dataLayer[0].event).toBe('purchase');
+    expect(window.gtag).not.toHaveBeenCalled();
+    delete window.gtag;
+  });
+
+  it('still records the sale when gtag is blocked entirely', () => {
+    delete window.gtag;
+    expect(() => trackPurchase({ value: 12, transaction_id: 'cs_3' })).not.toThrow();
+    expect(window.dataLayer[0].event).toBe('purchase');
   });
 });
