@@ -61,6 +61,11 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = config.apiBaseUrl;
 
+// Which surface started the job. Stored in the workflow metadata so
+// /account/history can label a row by where it came from — the backend
+// workflow name alone can't tell a MIDI conversion from a transcription.
+const UPLOAD_SOURCE = 'stem_splitter';
+
 // NOTE: Download key maps (stemKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
 // When changing download logic here, update those files too.
@@ -273,7 +278,7 @@ function StemSplitter({ onLoginClick }) {
           API_BASE_URL,
           'bs_roformer_separate',
           fileToUpload,
-          { instrument: selectedInstrument },
+          { instrument: selectedInstrument, source: UPLOAD_SOURCE },
           getToken
         );
         workflowId = data.workflow_id || data.preview_id;
@@ -302,7 +307,7 @@ function StemSplitter({ onLoginClick }) {
         const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
         const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
         formData.append('file', safeFile);
-        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument, source: UPLOAD_SOURCE }));
 
         const response = await authenticatedFetch(
           `${API_BASE_URL}/workflow/bs_roformer_separate`,

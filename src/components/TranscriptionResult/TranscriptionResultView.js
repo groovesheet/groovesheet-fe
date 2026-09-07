@@ -20,6 +20,7 @@ import FretboardView from '../song/FretboardView';
 import SpectrogramView from '../song/SpectrogramView';
 import { mixBlobsToWav, blobDurationSec } from '../../player/mixdown';
 import DrumKitView from './DrumKitView';
+import PreviewLockTeaser from './PreviewLockTeaser';
 import PlaybackBar from '../song/PlaybackBar';
 import { Icon } from '../song/icons';
 import StatusMessage from '../ui/StatusMessage';
@@ -131,6 +132,12 @@ export default function TranscriptionResultView({
   // Seconds, used as the transport clock when the job has no score or MIDI
   // (a stem split) and the audio has not been measured yet.
   durationHint = null,
+  // Which tab opens first. /midi-converter sells MIDI, so it opens on the note
+  // view (piano roll / fretboard / drum kit) rather than on the engraving.
+  defaultView = 'sheet',
+  // Overlay heading. "Transcription complete" fits the transcribe surfaces;
+  // the MIDI converter names what it just produced instead.
+  statusLabel = 'Transcription complete',
 }) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -609,13 +616,18 @@ export default function TranscriptionResultView({
   // tabs that can never light up.
   const showSheet = Boolean(musicXmlKey || musicXmlText);
   const showMidi = Boolean(midiKey || midiBuffer);
-  const [view, setView] = useState(showSheet ? 'sheet' : 'stems');
+  // The caller's preferred tab, when this result can actually show it.
+  const initialView = (defaultView === 'sheet' && !showSheet) || (defaultView === 'midi' && !showMidi)
+    ? (showSheet ? 'sheet' : showMidi ? 'midi' : 'stems')
+    : defaultView;
+  const [view, setView] = useState(initialView);
   useEffect(() => {
     if (!available[view]) {
-      const first = ['sheet', 'midi', 'stems', 'spectrum'].find((v) => available[v]);
+      // Fall back through the caller's preference before the default order.
+      const first = [defaultView, 'sheet', 'midi', 'stems', 'spectrum'].find((v) => available[v]);
       if (first) setView(first);
     }
-  }, [available, view]);
+  }, [available, view, defaultView]);
 
   // Active engine follows the visible tab.
   useEffect(() => {
@@ -682,7 +694,7 @@ export default function TranscriptionResultView({
         <div className="tr-header-info">
           {!isPage && <CheckCircle size={32} weight="fill" className="tr-check" />}
           <div className="tr-header-text">
-            <h2 className="tr-title">{isPage ? (title || fileName || 'Transcription') : 'Transcription complete'}</h2>
+            <h2 className="tr-title">{isPage ? (title || fileName || 'Transcription') : statusLabel}</h2>
             <div className="tr-filename">
               <File size={16} />
               <span>{(isPage ? subtitle : null) || fileName || 'Unknown file'}</span>
@@ -787,6 +799,14 @@ export default function TranscriptionResultView({
             error={xmlError}
             osmdRef={osmdRef}
             onPlaybackStateChange={handleOsmdStateChange}
+            footer={isPreview ? (
+              <PreviewLockTeaser
+                isSignedIn={isSignedIn}
+                onUpgradeToFull={onUpgradeToFull ? handleUpgradeClick : null}
+                onSignUpToUnlock={onSignUpToUnlock}
+                upgrading={upgrading}
+              />
+            ) : null}
           />
         )}
         {view === 'midi' && (

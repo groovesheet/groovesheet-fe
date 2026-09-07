@@ -24,6 +24,7 @@ import {
   resolveDescription,
   resolveDisplayName,
   resolveInstrument,
+  resolveWorkflowType,
 } from '../utils/api';
 import config from '../config';
 import usePageMeta from '../hooks/usePageMeta';
@@ -214,6 +215,9 @@ export default function TranscriptionDetail() {
           prefetchedFiles={null}
           files={workflow.outputs?.files || null}
           durationHint={workflow.preview_output_sec || workflow.metadata?.duration_seconds || null}
+          /* Open on the tab that matches what the job was made for, so a MIDI
+             conversion reopens as a MIDI conversion. */
+          defaultView={resolveWorkflowType(workflow).id === 'midi' ? 'midi' : 'sheet'}
           onDownloadTranscription={() => download(scoreKey, fallback('score', '.musicxml'))}
           onDownloadMidi={() => download(outputs?.midi?.fileKey, fallback('midi', '.mid'))}
           onDownloadPdf={downloadPdf}

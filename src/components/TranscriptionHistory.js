@@ -20,6 +20,7 @@ import {
   resolveDisplayName,
   resolveDescription,
   resolveAvailableOutputs,
+  resolveWorkflowType,
   updateWorkflowVisibility,
   updateWorkflowMetadata,
   deleteWorkflow,
@@ -514,6 +515,18 @@ export const TranscriptionHistory = () => {
     );
   };
 
+  // Which product made this row — Stems / MIDI / Transcription. Sits next to
+  // the instrument chip so a mixed library is readable at a glance.
+  const TypeBadge = (w) => {
+    const t = resolveWorkflowType(w);
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-foreground)', background: 'var(--color-surface-light)', border: '1px solid var(--color-border)', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap' }}>
+        <span style={{ width: 7, height: 7, borderRadius: 2, background: t.color }} />
+        {t.label}
+      </span>
+    );
+  };
+
   // Kebab menu (shared between grid + list).
   const KebabMenu = (w, anchorBottom) => {
     const avail = resolveAvailableOutputs(w);
@@ -665,7 +678,7 @@ export const TranscriptionHistory = () => {
           <div title={description} style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {description}
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{InstrBadges(w)}{StatusBadge(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>{TypeBadge(w)}{InstrBadges(w)}{StatusBadge(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto', paddingTop: 10 }}>
             {href && (
               <a href={href} className="gs-btn gs-btn-secondary" style={{ flex: 1 }}>
@@ -705,7 +718,7 @@ export const TranscriptionHistory = () => {
             <span title={description} style={{ fontSize: 12, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{description}</span>
           </span>
         </a>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>{InstrBadges(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>{TypeBadge(w)}{InstrBadges(w)}{w.is_preview && <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 999, border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" }}>10s preview</span>}</div>
         <div style={{ minWidth: 0 }}>{StatusBadge(w)}</div>
         <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>{fmtDate(ds)}</div>
         <div style={{ fontSize: 13, color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>{dur || '—'}</div>

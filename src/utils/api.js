@@ -355,6 +355,42 @@ export function resolveWorkflowKind(workflow) {
   return `${INSTRUMENT_DISPLAY[resolveInstrument(workflow)] || 'Audio'} transcription`;
 }
 
+const STEM_ONLY_WORKFLOWS = [
+  'bs_roformer_separate',
+  'demucs_separate',
+  'separate_to_guitar_stem',
+  'compress_stems',
+];
+
+const WORKFLOW_TYPES = {
+  stems: { id: 'stems', label: 'Stems', color: '#5EE7DF' },
+  midi: { id: 'midi', label: 'MIDI', color: '#C9A0FF' },
+  transcription: { id: 'transcription', label: 'Transcription', color: '#7AA2FF' },
+  score: { id: 'score', label: 'Score from MIDI', color: '#84F2A6' },
+};
+
+/**
+ * Which product made this job — Stem Splitter, MIDI Converter, or a full
+ * transcription — as `{ id, label, color }` for the Library's type chip.
+ *
+ * The three surfaces run overlapping workflow chains (/midi-converter and the
+ * home page both run `separate_to_*_score`), so the workflow name alone can't
+ * tell them apart. New jobs carry `metadata.source`; rows from before that
+ * shipped fall back to what the workflow produces, which still separates a
+ * stem split from a transcription.
+ */
+export function resolveWorkflowType(workflow) {
+  const source = workflow?.metadata?.source || workflow?.outputs?.metadata?.source;
+  if (source === 'stem_splitter') return WORKFLOW_TYPES.stems;
+  if (source === 'midi_converter') return WORKFLOW_TYPES.midi;
+  if (source === 'transcribe') return WORKFLOW_TYPES.transcription;
+
+  const name = workflow?.workflow_name || '';
+  if (STEM_ONLY_WORKFLOWS.includes(name)) return WORKFLOW_TYPES.stems;
+  if (name === 'midi2score_quantize') return WORKFLOW_TYPES.score;
+  return WORKFLOW_TYPES.transcription;
+}
+
 const fmtDurationShort = (secs) => {
   const total = Number(secs);
   if (!Number.isFinite(total) || total <= 0) return null;

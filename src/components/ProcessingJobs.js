@@ -9,6 +9,7 @@ import {
   fetchWorkflowList,
   fetchWorkflowStatus,
   resolveFileDisplayName,
+  resolveWorkflowType,
 } from '../utils/api';
 import { loadActiveJob } from '../utils/activeJob';
 import { isQueued, queueSummary } from '../utils/queue';
@@ -36,6 +37,18 @@ function InstrumentTag({ instrument }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-foreground)', background: 'var(--color-surface-light)', border: '1px solid var(--color-border)', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap' }}>
       <span style={{ width: 7, height: 7, borderRadius: '50%', background: INSTRUMENT_COLORS[i] || '#8d8c8d' }} />
       {instrumentLabel(i)}
+    </span>
+  );
+}
+
+// Stems / MIDI / Transcription — same chip the history grid shows, so a job
+// keeps its label from the queue through to the finished card.
+function TypeTag({ workflow }) {
+  const t = resolveWorkflowType(workflow);
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-foreground)', background: 'var(--color-surface-light)', border: '1px solid var(--color-border)', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap' }}>
+      <span style={{ width: 7, height: 7, borderRadius: 2, background: t.color }} />
+      {t.label}
     </span>
   );
 }
@@ -69,6 +82,7 @@ export function ProcessingCard({ w }) {
             {base}<span style={{ color: 'var(--color-muted-foreground)' }}>{ext}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <TypeTag workflow={w} />
             {instrument && <InstrumentTag instrument={instrument} />}
             {w.is_preview && (
               <span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 999, border: '1px solid var(--color-border)', color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap' }}>10s preview</span>

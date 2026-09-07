@@ -61,6 +61,11 @@ const isSupportedFileType = (selectedFile) => {
 
 const API_BASE_URL = config.apiBaseUrl;
 
+// Which surface started the job. Stored in the workflow metadata so
+// /account/history can label a row by where it came from — the backend
+// workflow name alone can't tell a MIDI conversion from a transcription.
+const UPLOAD_SOURCE = 'transcribe';
+
 // TODO(launch): piano, drums and bass are production-ready today. The other
 // instruments are temporarily hidden from the picker — add them back here once
 // their pipelines ship.
@@ -470,7 +475,7 @@ function Hero({ onLoginRequired }) {
           API_BASE_URL,
           workflowName,
           fileToUpload,
-          { instrument: selectedInstrument },
+          { instrument: selectedInstrument, source: UPLOAD_SOURCE },
           getToken
         );
       } else {
@@ -479,7 +484,7 @@ function Hero({ onLoginRequired }) {
         const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
         const safeFile = safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
         formData.append('file', safeFile);
-        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument }));
+        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument, source: UPLOAD_SOURCE }));
 
         const response = await authenticatedFetch(
           `${API_BASE_URL}/workflow/${workflowName}`,

@@ -14,7 +14,9 @@ import StatusMessage from '../ui/StatusMessage';
 // =================================================================
 // 1) Sheet Music — OSMD
 // =================================================================
-export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange }) {
+// `footer` renders under the engraved page, inside the same scroll container —
+// used by the preview result view to continue the page into a blurred teaser.
+export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange, footer }) {
   // A score with no sounding notes (e.g. piano transcription of a track that
   // has no piano) makes OSMD's cursor init throw inside render() — never
   // mount the viewer for one, show an explanatory empty state instead.
@@ -78,6 +80,7 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
           />
         </div>
       )}
+      {!loading && !error && musicXmlText && hasNotes && footer}
     </div>
   );
 }
