@@ -542,6 +542,19 @@ const SCORE_KEYS = {
 
 const asKeyList = (value) => (Array.isArray(value) ? value : [value]).filter(Boolean);
 
+/**
+ * Every MusicXML key an instrument's chain can write, best first: the
+ * quantized midi2score output, then the raw model score.
+ *
+ * Callers must walk the list rather than assume one name. Drums never produce
+ * a bare `musicxml` — asking for it returned
+ * "File 'musicxml' not found. Available: [... adtof_plus_drums_musicxml ...]".
+ */
+export function scoreKeysFor(instrument) {
+  const keys = [...asKeyList(SCORE_KEYS[instrument]), ...asKeyList(TRANSCRIPTION_KEYS[instrument])];
+  return keys.filter((k, i) => keys.indexOf(k) === i);
+}
+
 const selectOutputKey = (keyMap, instrument, outputs, workflowName = '') => {
   const fallback = keyMap[instrument] || keyMap.drums;
   const keys = asKeyList(fallback);

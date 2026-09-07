@@ -140,6 +140,10 @@ function MidiConverter({ onLoginClick }) {
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
+  // The finished job's output file map. The result view reads every separated
+  // stem out of it; with only the prefetched blobs it knows about the one
+  // instrument that was asked for and can't build the "everything else" row.
+  const [resultFiles, setResultFiles] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('drums');
   // Every run is a 10s preview by default. Routes through /preview/{name}.
@@ -303,6 +307,7 @@ function MidiConverter({ onLoginClick }) {
 
         if (data.cached || data.status === 'completed') {
           setJobId(workflowId);
+          setResultFiles(data.outputs?.files || null);
           setStatus('completed');
           setProgress(100);
           stopProgressSimulation();
@@ -411,6 +416,7 @@ function MidiConverter({ onLoginClick }) {
             sendNotification('GrooveSheet', { body: 'Your MIDI conversion is ready!' });
             stopped = true;
             clearActiveJob('midi-converter');
+            setResultFiles(data.outputs?.files || null);
             try {
               const { objectUrl, filename } = await downloadInstrumentFile(id);
               setDownloadUrl(objectUrl);
@@ -590,6 +596,7 @@ function MidiConverter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    setResultFiles(null);
     setPreviewSelection(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -900,6 +907,7 @@ function MidiConverter({ onLoginClick }) {
                 fileName={file?.name || downloadFilename}
                 selectedInstrument={selectedInstrument}
                 prefetchedFiles={prefetchedFilesRef.current}
+                files={resultFiles}
                 onDownloadTranscription={handleManualDownload}
                 onDownloadStem={handleDownloadStem}
                 onDownloadMidi={handleDownloadMidi}

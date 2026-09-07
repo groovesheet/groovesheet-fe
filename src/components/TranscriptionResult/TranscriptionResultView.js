@@ -411,12 +411,17 @@ export default function TranscriptionResultView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workflowId, stemEntriesKey]);
 
+  // The job separated more than the one instrument that was asked for, so an
+  // "everything else" row is coming. List it while the mix is still being
+  // built: showing one row until then made a 6-stem split read as a 1-stem one
+  // ("Sources: 1 stems") for as long as the download took.
+  const expectRest = stemEntries.length > 1;
   const stems = useMemo(() => {
     const rows = [{ name: stemMeta.name, label: stemMeta.label, color: stemMeta.color, sub: stemMeta.sub, wave: localWaves[stemMeta.name] || null }];
-    if (hasRest) rows.push({ ...restMeta, wave: localWaves[restName] || null });
+    if (hasRest || expectRest) rows.push({ ...restMeta, wave: localWaves[restName] || null });
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stemMeta, hasRest, localWaves, restName]);
+  }, [stemMeta, hasRest, expectRest, localWaves, restName]);
   const [stemState, setStemState] = useState({});
   const stemNamesKey = stems.map((st) => st.name).join(',');
   useEffect(() => {
@@ -837,6 +842,7 @@ export default function TranscriptionResultView({
         )}
         {view === 'stems' && (
           <StemsView
+            loading={stemStatus === 'loading'}
             stems={stems}
             stemState={stemState}
             onStemChange={onStemChange}

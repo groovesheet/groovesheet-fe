@@ -1324,3 +1324,35 @@
 .gs-song-page .gs-spec-strip .gs-spec-bar {
   width: 90px;
 }
+
+/* A stem row whose audio is still downloading. The empty waveform is a flat
+   baseline, which otherwise reads as a real measurement of a silent stem —
+   sweep it like SkeletonPanel so it reads as "not here yet". */
+.gs-song-page .gs-stem-wave-pending {
+  position: relative;
+  overflow: hidden;
+  opacity: 0.55;
+}
+
+.gs-song-page .gs-stem-wave-pending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--color-surface-lighter) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.gs-song-page .gs-stem-row:nth-child(2) .gs-stem-wave-pending::after {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-song-page .gs-stem-wave-pending::after { animation: none; display: none; }
+}

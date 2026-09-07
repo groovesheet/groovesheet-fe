@@ -142,6 +142,11 @@ function StemSplitter({ onLoginClick }) {
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState(null);
+  // The finished job's output file map ({ key: r2path }). The result view needs
+  // it to find every separated stem — without it the viewer only knows about
+  // the one instrument that was asked for, and the "everything else" row that
+  // is mixed from the others never appears.
+  const [resultFiles, setResultFiles] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [selectedInstrument, setSelectedInstrument] = useState('vocals');
   // Every run is a 10s preview by default (PRV* IDs); status + download
@@ -290,6 +295,7 @@ function StemSplitter({ onLoginClick }) {
         // Cache hit — already completed.
         if (data.cached || data.status === 'completed') {
           setJobId(workflowId);
+          setResultFiles(data.outputs?.files || null);
           setStatus('completed');
           setProgress(100);
           stopProgressSimulation();
@@ -394,6 +400,7 @@ function StemSplitter({ onLoginClick }) {
             sendNotification('GrooveSheet', { body: 'Your stem separation is ready!' });
             stopped = true;
             clearActiveJob('stem-splitter');
+            setResultFiles(data.outputs?.files || null);
             try {
               const { objectUrl, filename } = await downloadStemFile(id);
               setDownloadUrl(objectUrl);
@@ -492,6 +499,7 @@ function StemSplitter({ onLoginClick }) {
     setError(null);
     setDownloadUrl(null);
     setDownloadFilename(null);
+    setResultFiles(null);
     setPreviewSelection(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -760,6 +768,7 @@ function StemSplitter({ onLoginClick }) {
                 fileName={file?.name || downloadFilename}
                 selectedInstrument={selectedInstrument}
                 prefetchedFiles={null}
+                files={resultFiles}
                 onDownloadTranscription={handleManualDownload}
                 onDownloadStem={handleManualDownload}
                 onReset={resetUpload}

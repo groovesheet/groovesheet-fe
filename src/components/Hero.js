@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { queueSummary } from '../utils/queue';
 import { useUser, useAuth } from '../auth';
 import confetti from 'canvas-confetti';
-import { authenticatedFetch, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '../utils/api';
+import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '../utils/api';
 import { trackWorkflowStarted } from '../utils/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '../utils/previewApi';
 import { scrollToPricing } from '../utils/scrollToPricing';
@@ -150,6 +150,13 @@ function Hero({ onLoginRequired }) {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFilename, setDownloadFilename] = useState(null);
   const [resultMetadata, setResultMetadata] = useState({});
+  // The finished job's output file map. The result view reads every separated
+  // stem out of it; with only the prefetched blobs it knows about the one
+  // instrument that was asked for and can't build the "everything else" row.
+  const [resultFiles, setResultFiles] = useState(null);
+  // Same map, readable synchronously: the download runs in the poll callback,
+  // before a setState from the same tick is visible.
+  const resultFilesRef = useRef(null);
   const [selectedInstrument, setSelectedInstrument] = useState('piano');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -607,6 +614,8 @@ function Hero({ onLoginRequired }) {
           
           if (newStatus === 'completed' || newStatus === 'succeeded' || newStatus === 'success') {
             setResultMetadata(data.outputs?.metadata || data.metadata || {});
+            resultFilesRef.current = data.outputs?.files || null;
+            setResultFiles(resultFilesRef.current);
             // Stop simulation but DON'T set to 100% yet - wait for download
             if (progressIntervalRef.current) {
               clearInterval(progressIntervalRef.current);
@@ -720,31 +729,46 @@ function Hero({ onLoginRequired }) {
   const downloadInstrumentFile = async (id) => {
     // For transcription instruments (full pipeline): download MusicXML score
     // For separation-only instruments: download the separated WAV stem using backend descriptive key
-    let fileKey;
+    // A score instrument has several possible MusicXML names and only one of
+    // them exists for any given job — the drums chain writes
+    // midi2score_drums_v2_musicxml / adtof_plus_drums_musicxml and never a bare
+    // `musicxml`, which is what this asked for unconditionally: a guaranteed
+    // "File 'musicxml' not found" on every drums run. Try the key the finished
+    // job reported first, then the rest, and only fail if none resolve.
+    let fileKeys;
     if (['drums', 'jazz_bass', 'bass', 'piano'].includes(selectedInstrument)) {
-      fileKey = 'musicxml';
+      const candidates = scoreKeysFor(selectedInstrument);
+      const reported = resultFilesRef.current || null;
+      fileKeys = reported
+        ? [...candidates.filter((k) => reported[k]), ...candidates.filter((k) => !reported[k])]
+        : candidates;
     } else if (selectedInstrument === 'vocals') {
-      fileKey = 'bs_roformer_vocals_stem';
+      fileKeys = ['bs_roformer_vocals_stem'];
     } else if (selectedInstrument === 'guitar') {
-      fileKey = 'bs_roformer_guitar_stem';
+      fileKeys = ['bs_roformer_guitar_stem'];
     } else if (selectedInstrument === 'other') {
-      fileKey = 'bs_roformer_other_stem';
+      fileKeys = ['bs_roformer_other_stem'];
     } else if (selectedInstrument === 'bass_separation') {
-      fileKey = 'bs_roformer_bass_stem';
+      fileKeys = ['bs_roformer_bass_stem'];
     } else {
-      fileKey = selectedInstrument;
+      fileKeys = [selectedInstrument];
     }
     const isPreview = id && id.startsWith('PRV');
     const dlPrefix = isPreview ? '/preview' : '/workflow';
-    const url = `${API_BASE_URL}${dlPrefix}/download/${id}/${fileKey}`;
-    console.log('Fetching from:', url);
     const fetchFn = isPreview ? previewFetch : authenticatedFetch;
-    const res = await fetchFn(url, {}, getToken);
-    console.log('Download response:', res.status, res.statusText);
-    if (!res.ok) {
-      const txt = await res.text().catch(() => '');
-      console.error('Download failed response:', txt);
-      throw new Error(`Download failed ${res.status}: ${txt}`);
+    let res = null;
+    let lastBody = '';
+    for (const key of fileKeys) {
+      const attempt = await fetchFn(`${API_BASE_URL}${dlPrefix}/download/${id}/${key}`, {}, getToken);
+      if (attempt.ok) { res = attempt; break; }
+      lastBody = await attempt.text().catch(() => '');
+      // Anything other than "this job doesn't have that file" is a real error.
+      if (attempt.status !== 404) {
+        throw new Error(`Download failed ${attempt.status}: ${lastBody}`);
+      }
+    }
+    if (!res) {
+      throw new Error(`Download failed 404: ${lastBody}`);
     }
     const blob = await res.blob();
     console.log('Blob received:', blob.size, 'bytes');
@@ -815,6 +839,8 @@ function Hero({ onLoginRequired }) {
     setDownloadUrl(null);
     setDownloadFilename(null);
     setResultMetadata({});
+    setResultFiles(null);
+    resultFilesRef.current = null;
     clearPersistence();
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -1232,6 +1258,7 @@ function Hero({ onLoginRequired }) {
               fileName={file?.name || downloadFilename}
               selectedInstrument={selectedInstrument}
               prefetchedFiles={prefetchedFilesRef.current}
+              files={resultFiles}
               onDownloadTranscription={handleManualDownload}
               onDownloadStem={handleDownloadStem}
               onDownloadMidi={handleDownloadMidi}

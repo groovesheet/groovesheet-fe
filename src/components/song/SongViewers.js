@@ -353,6 +353,9 @@ export function StemsView({
   transport,
   statusText,
   separatorName = 'GrooveSheet BS-Roformer',
+  // Stem audio is still downloading: rows exist but have no waveform yet.
+  // Without this the empty-wave placeholder reads as a real, silent stem.
+  loading = false,
 }) {
   const listRef = useRef(null);
 
@@ -384,6 +387,7 @@ export function StemsView({
           onChange={(patch) => onStemChange(s.name, patch)}
           onSeek={onSeek}
           anySolo={anySolo}
+          loading={loading}
         />
       ))}
       <div
@@ -410,7 +414,7 @@ export function StemsView({
   );
 }
 
-function StemRow({ stem, state, onChange, onSeek, anySolo }) {
+function StemRow({ stem, state, onChange, onSeek, anySolo, loading }) {
   const ref = useRef(null);
   const onClickWave = (e) => {
     const r = ref.current.getBoundingClientRect();
@@ -437,7 +441,7 @@ function StemRow({ stem, state, onChange, onSeek, anySolo }) {
         onClick={onClickWave}
         style={{ cursor: 'pointer', position: 'relative' }}
       >
-        <StemWaveform stem={stem} muted={effectivelyMuted} />
+        <StemWaveform stem={stem} muted={effectivelyMuted} loading={loading} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
@@ -466,13 +470,18 @@ function StemRow({ stem, state, onChange, onSeek, anySolo }) {
   );
 }
 
-function StemWaveform({ stem, muted }) {
+function StemWaveform({ stem, muted, loading }) {
   // Real waveform: `stem.wave` is thumb_data.stems[name] — 0..100 ints.
+  const hasWave = Array.isArray(stem.wave) && stem.wave.length > 0;
   const bars = useMemo(() => {
     const src = Array.isArray(stem.wave) && stem.wave.length ? stem.wave : [];
     if (!src.length) return new Array(200).fill(0.08); // no thumb → flat baseline
     return src.map((v) => Math.max(0.04, Math.min(1, (Number(v) || 0) / 100)));
   }, [stem.wave]);
+
+  // Still fetching: the flat baseline would otherwise pass for a real reading
+  // of a silent stem. Breathe it instead, the way SkeletonPanel does.
+  const pending = loading && !hasWave;
 
   const N = bars.length;
   const barW = 220 / N;
@@ -485,7 +494,11 @@ function StemWaveform({ stem, muted }) {
     });
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '126px' }}>
+    <div
+      style={{ position: 'relative', width: '100%', height: '126px' }}
+      className={pending ? 'gs-stem-wave-pending' : undefined}
+      aria-busy={pending || undefined}
+    >
       {/* dim (unplayed) layer */}
       <svg
         viewBox="0 0 220 52"
