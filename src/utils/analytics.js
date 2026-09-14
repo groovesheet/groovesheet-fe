@@ -3,7 +3,8 @@
  *
  * The site loads GTM (`GTM-P9XDD5Z7`) which forwards to GA4 (`G-LJ5P8PF3YH`).
  * Everything here pushes onto `window.dataLayer`, mirrors the same event into
- * PostHog (see utils/observability.js), and swallows every failure:
+ * PostHog (see utils/observability.js) and, for the two events Meta can bid on,
+ * into the Meta Pixel loaded in public/index.html, and swallows every failure:
  * an ad blocker, a missing container, a serialisation error or a consent
  * refusal must never break Explore playback, downloads, signup or purchase.
  *
@@ -84,6 +85,41 @@ export function adsConversion(label, { value, currency, transaction_id } = {}) {
 }
 
 /**
+ * The subset of the funnel that maps onto a Meta standard event. Only the two
+ * bottom-of-funnel actions go across: Meta's optimiser wants the event it is
+ * bidding for, and forwarding the whole funnel would add noise the campaigns
+ * never optimise against. GA4 and PostHog still receive everything.
+ *
+ * Unlike Google Ads, `purchase` is included. The double-count that adsConversion()
+ * avoids comes from a Google Ads page-load rule on /billing/success; Meta has no
+ * equivalent rule, so this is the only place the pixel hears about a payment.
+ */
+const META_EVENTS = {
+  sign_up: 'CompleteRegistration',
+  purchase: 'Purchase',
+};
+
+/**
+ * Forward one event to the Meta Pixel. Never throws, and no-ops when the pixel
+ * did not load (ad blocker, or the snippet removed) — same principle as track().
+ */
+function metaCapture(eventName, props) {
+  try {
+    const metaName = META_EVENTS[eventName];
+    if (!metaName || typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+    const params = {};
+    if (props.value !== undefined) params.value = props.value;
+    if (props.currency !== undefined) params.currency = props.currency;
+    // Meta deduplicates on this, so a reloaded success page cannot inflate the
+    // conversion count, exactly as transaction_id does for Google.
+    if (props.transaction_id !== undefined) params.eventID = props.transaction_id;
+    window.fbq('track', metaName, params);
+  } catch (e) {
+    /* pixel reporting is best-effort */
+  }
+}
+
+/**
  * Values GA4 must never receive. Raw IPs, cookie values and tokens are
  * stripped defensively even though no call site sends them today.
  */
@@ -127,6 +163,7 @@ export function track(eventName, props = {}) {
     window.dataLayer.push({ event: eventName, ...payload });
     // Same taxonomy, second sink. PostHog no-ops until a key is configured.
     phCapture(eventName, payload);
+    metaCapture(eventName, payload);
     return true;
   } catch (e) {
     return false;
