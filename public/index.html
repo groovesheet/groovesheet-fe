@@ -20,6 +20,28 @@
     </script>
     <!-- End Google tag -->
 
+    <!-- Meta Pixel (GrooveSheet Web, Kelin Marketing business portfolio) -->
+    <!-- Inline for the same reason the Google Ads conversion call lives in
+         src/utils/analytics.js: the container on this site (GTM-P9XDD5Z7)
+         belongs to a different account than the ads logins, so we cannot put a
+         tag in it. Move this into the container if that ownership is ever
+         resolved, and delete the block so the pixel never loads twice. -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window,document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2726179107784436');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=2726179107784436&ev=PageView&noscript=1" alt="" /></noscript>
+    <!-- End Meta Pixel -->
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
