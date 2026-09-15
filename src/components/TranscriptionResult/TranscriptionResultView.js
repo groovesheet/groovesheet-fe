@@ -42,7 +42,8 @@ const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Da
 const DRUMS_MIDI_KEY = 'adtof_plus_drums_quantized_midi';
 const DRUMS_SYNC_MAP_KEY = 'adtof_plus_drums_sync_map';
 
-// Hero instrument value → BS-Roformer stem download key.
+// Hero instrument value → separated stem download key. Everything here comes
+// from bs-roformer except saxophone, which only the 53-stem model produces.
 const STEM_KEY_BY_INSTRUMENT = {
   drums: 'bs_roformer_drums_stem',
   piano: 'bs_roformer_piano_stem',
@@ -51,6 +52,7 @@ const STEM_KEY_BY_INSTRUMENT = {
   bass_separation: 'bs_roformer_bass_stem',
   vocals: 'bs_roformer_vocals_stem',
   guitar: 'bs_roformer_guitar_stem',
+  saxophone: 'bsr_mega_saxophone_stem',
   other: 'bs_roformer_other_stem',
 };
 
@@ -63,6 +65,7 @@ const STEM_DISPLAY = {
   bass_separation: { name: 'bass', label: 'Bass', color: '#FFC857', sub: 'sub · low end' },
   vocals: { name: 'vocals', label: 'Vocals', color: '#7CC4FF', sub: 'lead · voice' },
   guitar: { name: 'guitar', label: 'Guitar', color: '#84F2A6', sub: 'strings · plucked' },
+  saxophone: { name: 'saxophone', label: 'Saxophone', color: '#FF9F6B', sub: 'reed · horn' },
   other: { name: 'other', label: 'Other', color: '#C9A0FF', sub: 'texture · residual' },
 };
 
@@ -155,13 +158,15 @@ export default function TranscriptionResultView({
   const musicXmlKey = musicXmlKeys[0];
   const stemKey = STEM_KEY_BY_INSTRUMENT[selectedInstrument];
   const stemMeta = STEM_DISPLAY[selectedInstrument] || STEM_DISPLAY.other;
-  // Every `bs_roformer_<name>_stem` the job produced, the requested one first.
+  // Every `<producer>_<name>_stem` the job produced, the requested one first.
+  // Two producers exist: bs_roformer for the six main stems, bsr_mega for the
+  // long tail (saxophone and friends).
   // Falls back to the single requested stem when no file map is available
   // (the upload surfaces pass prefetched blobs instead).
   const stemEntries = useMemo(() => {
     const keys = Object.keys(files || prefetchedFiles || {});
     const found = keys
-      .map((k) => { const m = /^bs_roformer_(\w+)_stem$/.exec(k); return m ? { key: k, name: m[1] } : null; })
+      .map((k) => { const m = /^(?:bs_roformer|bsr_mega)_(\w+)_stem$/.exec(k); return m ? { key: k, name: m[1] } : null; })
       .filter(Boolean);
     const list = found.length ? found : (stemKey ? [{ key: stemKey, name: stemMeta.name }] : []);
     return list.sort((a, b) => (a.name === stemMeta.name ? -1 : b.name === stemMeta.name ? 1 : 0));

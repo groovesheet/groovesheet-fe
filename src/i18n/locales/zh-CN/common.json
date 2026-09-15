@@ -66,7 +66,8 @@
       "drums": "鼓",
       "piano": "钢琴",
       "guitar": "吉他",
-      "bass": "贝斯"
+      "bass": "贝斯",
+      "saxophone": "萨克斯"
     },
     "errors": {
       "fileFormat": "暂不支持该格式——目前支持 MP3、WAV、FLAC、OGG 和 M4A。",
