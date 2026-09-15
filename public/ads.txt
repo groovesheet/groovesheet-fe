@@ -1,0 +1,6 @@
+# Authorized Digital Sellers for groovesheet.net
+# https://iabtechlab.com/ads-txt/
+# Copied to the site root at build time, served at https://www.groovesheet.net/ads.txt
+#
+# Google AdSense, Kelin Studio publisher account.
+google.com, pub-8631844190242419, DIRECT, f08c47fec0942fa0
