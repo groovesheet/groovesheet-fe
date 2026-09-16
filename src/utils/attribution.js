@@ -45,11 +45,30 @@ const CLICK_ID_KEY = 'gs_click_id';
 const CLICK_ID_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 /**
- * Google's click identifiers, in the order it prefers them. `gclid` is the
- * ordinary web click; `gbraid`/`wbraid` replace it for iOS and app campaigns,
- * where `gclid` is withheld.
+ * Ad click identifiers, the only reliable marker of a paid click.
+ *
+ * `gclid` is the ordinary Google web click; `gbraid`/`wbraid` replace it for
+ * iOS and app campaigns, where `gclid` is withheld. `fbclid`, `ttclid` and
+ * `msclkid` are the Meta, TikTok and Bing equivalents.
+ *
+ * Why the non-Google ones matter: Google Ads and Meta each attribute a
+ * conversion using their own click id and their own lookback window, so both
+ * will claim the same signup and the two dashboards will sum to more signups
+ * than happened. Neither can see the other's clicks, so no report inside
+ * either one can settle it. Keeping every network's click id on our own record
+ * is what makes "which channel produced this" answerable.
  */
-const CLICK_ID_PARAMS = ['gclid', 'gbraid', 'wbraid'];
+const CLICK_ID_PARAMS = ['gclid', 'gbraid', 'wbraid', 'fbclid', 'ttclid', 'msclkid'];
+
+/** Which network a click id belongs to, for gs_source_platform. */
+const CLICK_ID_PLATFORM = {
+  gclid: 'google_ads',
+  gbraid: 'google_ads',
+  wbraid: 'google_ads',
+  fbclid: 'meta_ads',
+  ttclid: 'tiktok_ads',
+  msclkid: 'bing_ads',
+};
 
 /** utm_source values we treat as a known platform. */
 const KNOWN_PLATFORMS = ['youtube', 'bilibili'];
@@ -85,45 +104,6 @@ export function sourcePlatform(utmSource, referrer) {
 }
 
 /**
- * Click IDs, the only reliable marker of a paid click.
- *
- * Why these matter more than UTMs: Google Ads and Meta each attribute a
- * conversion using their own click ID and their own lookback window, so both
- * will claim the same signup and the two dashboards will sum to more signups
- * than actually happened. Neither platform can see the other's clicks, so no
- * report inside either one can settle it. Storing the click ID on our own
- * record is what makes "which channel produced this" answerable.
- *
- * wbraid and gbraid are Google's iOS privacy-safe variants and appear instead
- * of gclid on a lot of Safari and app-to-web traffic. Dropping them loses real
- * Google conversions, so they are captured alongside gclid.
- */
-const CLICK_ID_PARAMS = ['gclid', 'wbraid', 'gbraid', 'fbclid', 'ttclid', 'msclkid'];
-
-const CLICK_ID_PLATFORM = {
-  gclid: 'google_ads',
-  wbraid: 'google_ads',
-  gbraid: 'google_ads',
-  fbclid: 'meta_ads',
-  ttclid: 'tiktok_ads',
-  msclkid: 'bing_ads',
-};
-
-function parseClickIds(params) {
-  const out = {};
-  CLICK_ID_PARAMS.forEach((name) => {
-    const value = params.get(name);
-    if (value) out[name] = value;
-  });
-  return out;
-}
-
-function clickIdPlatform(clickIds) {
-  const found = CLICK_ID_PARAMS.find((name) => clickIds[name]);
-  return found ? CLICK_ID_PLATFORM[found] : null;
-}
-
-/**
  * Read campaign parameters out of a query string.
  * Returns null when the landing carries no campaign at all.
  */
@@ -140,8 +120,13 @@ export function parseCampaign(search, referrer = '') {
   const utmCampaign = params.get('utm_campaign');
   const utmContent = params.get('utm_content');
   const videoId = params.get('gs_v');
-  const clickIds = parseClickIds(params);
-  const paidPlatform = clickIdPlatform(clickIds);
+  const clickIds = {};
+  CLICK_ID_PARAMS.forEach((name) => {
+    const value = params.get(name);
+    if (value && value.length <= 500) clickIds[name] = value;
+  });
+  const firstClickId = CLICK_ID_PARAMS.find((name) => clickIds[name]);
+  const paidPlatform = firstClickId ? CLICK_ID_PLATFORM[firstClickId] : null;
 
   // No campaign markers at all: an organic or direct visit.
   if (!utmSource && !utmMedium && !utmCampaign && !utmContent && !videoId && !paidPlatform) {
