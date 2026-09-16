@@ -102,6 +102,45 @@ describe('attribution capture', () => {
   });
 });
 
+describe('paid click attribution', () => {
+  /* The failure this guards against: a Google Ads click often arrives with a
+     gclid and no UTMs at all. Before click IDs were parsed, parseCampaign
+     returned null for that landing, so the visit was filed as organic and the
+     paid click was never recorded. Every Google-sourced signup was invisible. */
+  it('captures a Google click that carries no UTMs', () => {
+    captureAttribution('?gclid=ABC123');
+    const props = attributionProps();
+    expect(props.gclid).toBe('ABC123');
+    expect(props.gs_source_platform).toBe('google_ads');
+  });
+
+  it('captures the iOS click IDs, not just gclid', () => {
+    captureAttribution('?wbraid=WB123');
+    expect(attributionProps().wbraid).toBe('WB123');
+    expect(attributionProps().gs_source_platform).toBe('google_ads');
+  });
+
+  it('separates a Meta click from a Google one', () => {
+    captureAttribution('?fbclid=FB999');
+    const props = attributionProps();
+    expect(props.fbclid).toBe('FB999');
+    expect(props.gs_source_platform).toBe('meta_ads');
+  });
+
+  /* A click ID beats utm_source when the two disagree. The ad networks append
+     the click ID themselves; UTMs are hand-written and often wrong or stale. */
+  it('trusts the click ID over a contradicting utm_source', () => {
+    captureAttribution('?gclid=ABC123&utm_source=newsletter&utm_medium=email');
+    expect(attributionProps().gs_source_platform).toBe('google_ads');
+  });
+
+  it('carries the click ID through to a later conversion event', () => {
+    captureAttribution('?gclid=ABC123');
+    captureAttribution('');
+    expect(attributionProps().gclid).toBe('ABC123');
+  });
+});
+
 describe('never-throw analytics wrapper', () => {
   it('pushes an event onto the dataLayer', () => {
     expect(track('test_event', { a: 1 })).toBe(true);

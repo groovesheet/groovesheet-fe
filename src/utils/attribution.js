@@ -85,6 +85,45 @@ export function sourcePlatform(utmSource, referrer) {
 }
 
 /**
+ * Click IDs, the only reliable marker of a paid click.
+ *
+ * Why these matter more than UTMs: Google Ads and Meta each attribute a
+ * conversion using their own click ID and their own lookback window, so both
+ * will claim the same signup and the two dashboards will sum to more signups
+ * than actually happened. Neither platform can see the other's clicks, so no
+ * report inside either one can settle it. Storing the click ID on our own
+ * record is what makes "which channel produced this" answerable.
+ *
+ * wbraid and gbraid are Google's iOS privacy-safe variants and appear instead
+ * of gclid on a lot of Safari and app-to-web traffic. Dropping them loses real
+ * Google conversions, so they are captured alongside gclid.
+ */
+const CLICK_ID_PARAMS = ['gclid', 'wbraid', 'gbraid', 'fbclid', 'ttclid', 'msclkid'];
+
+const CLICK_ID_PLATFORM = {
+  gclid: 'google_ads',
+  wbraid: 'google_ads',
+  gbraid: 'google_ads',
+  fbclid: 'meta_ads',
+  ttclid: 'tiktok_ads',
+  msclkid: 'bing_ads',
+};
+
+function parseClickIds(params) {
+  const out = {};
+  CLICK_ID_PARAMS.forEach((name) => {
+    const value = params.get(name);
+    if (value) out[name] = value;
+  });
+  return out;
+}
+
+function clickIdPlatform(clickIds) {
+  const found = CLICK_ID_PARAMS.find((name) => clickIds[name]);
+  return found ? CLICK_ID_PLATFORM[found] : null;
+}
+
+/**
  * Read campaign parameters out of a query string.
  * Returns null when the landing carries no campaign at all.
  */
@@ -101,18 +140,24 @@ export function parseCampaign(search, referrer = '') {
   const utmCampaign = params.get('utm_campaign');
   const utmContent = params.get('utm_content');
   const videoId = params.get('gs_v');
+  const clickIds = parseClickIds(params);
+  const paidPlatform = clickIdPlatform(clickIds);
 
   // No campaign markers at all: an organic or direct visit.
-  if (!utmSource && !utmMedium && !utmCampaign && !utmContent && !videoId) {
+  if (!utmSource && !utmMedium && !utmCampaign && !utmContent && !videoId && !paidPlatform) {
     return null;
   }
 
   return {
-    gs_source_platform: sourcePlatform(utmSource, referrer),
+    // A click ID outranks utm_source when deciding the platform. The ad
+    // networks append it themselves on every paid click, whereas UTMs are
+    // hand-written and routinely missing or wrong.
+    gs_source_platform: paidPlatform || sourcePlatform(utmSource, referrer),
     gs_campaign: utmCampaign || null,
     gs_content: utmContent || null,
     gs_video_id: videoId || null,
     utm_medium: utmMedium || null,
+    ...clickIds,
   };
 }
 
@@ -157,13 +202,19 @@ export function getLastTouch() {
 export function attributionProps() {
   const touch = getFirstTouch() || getLastTouch();
   if (!touch) return { gs_source_platform: 'direct' };
-  return {
+  const props = {
     gs_source_platform: touch.gs_source_platform || 'direct',
     gs_campaign: touch.gs_campaign || undefined,
     gs_content: touch.gs_content || undefined,
     gs_video_id: touch.gs_video_id || undefined,
     gs_attribution_age: getFirstTouch() ? 'first_touch' : 'last_touch',
   };
+  // Carry the click ID through to the conversion event so the signup can be
+  // tied back to one specific ad click rather than to a channel guess.
+  CLICK_ID_PARAMS.forEach((name) => {
+    if (touch[name]) props[name] = touch[name];
+  });
+  return props;
 }
 
 /**
