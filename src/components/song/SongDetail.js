@@ -242,9 +242,13 @@ function SongDetail({ onLoginClick }) {
   // --- track fetch (declared below); page meta reads it once loaded --------
 
   // Landing intent from the explore rails (/explore/:id?view=midi).
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedView = searchParams.get('view');
   const intentView = VIEW_INTENTS[requestedView] ? requestedView : null;
+  // Which part to open on (/explore/:id?instrument=piano), so a link can point
+  // at one instrument of a multi-part track. Validated against the track's own
+  // options where the instrument is seeded — an unknown name is ignored there.
+  const requestedInstrument = (searchParams.get('instrument') || '').trim().toLowerCase() || null;
 
   // A visitor who clicked a rail half-way down /explore must not inherit that
   // scroll offset — client-side navigation keeps it otherwise, and the song
@@ -363,12 +367,19 @@ function SongDetail({ onLoginClick }) {
 
   const [instrument, setInstrument] = useState(null);
   useEffect(() => {
-    // Re-seed per track: prefer the first instrument that actually has note
-    // data so the sheet/roll tabs open on something renderable.
+    // Re-seed per track: an ?instrument= landing wins when this track carries
+    // that part at all, otherwise prefer the first instrument that actually
+    // has note data so the sheet/roll tabs open on something renderable.
+    const asked = requestedInstrument
+      ? instrumentOptions.find((o) => o.name === requestedInstrument)
+      : null;
     const first =
-      instrumentOptions.find((o) => o.hasScore || o.hasNotes) || instrumentOptions[0] || null;
+      asked ||
+      instrumentOptions.find((o) => o.hasScore || o.hasNotes) ||
+      instrumentOptions[0] ||
+      null;
     setInstrument(first ? first.name : null);
-  }, [instrumentOptions]);
+  }, [instrumentOptions, requestedInstrument]);
 
   // Tab 2's view follows the SELECTED instrument, so the tab renames the
   // moment you pick Drums/Guitar/Bass — even on legacy tracks whose note
@@ -606,17 +617,32 @@ function SongDetail({ onLoginClick }) {
   // selecting an untranscribed stem useful — the tab falls back to Stems and
   // the stem is already soloed there. Only user choices solo; the per-track
   // auto-seed of `instrument` deliberately leaves the mix alone.
-  const selectInstrument = useCallback((name) => {
-    setInstrument(name);
-    setStemState((prev) => {
-      if (!prev || !prev[name]) return prev; // this part has no audio stem
-      const next = {};
-      Object.entries(prev).forEach(([key, st]) => {
-        next[key] = { ...(st || {}), solo: key === name, mute: false };
+  const selectInstrument = useCallback(
+    (name) => {
+      setInstrument(name);
+      // Mirror the choice into the URL, so the address bar is always a link to
+      // the part on screen — that is where a piano-only link comes from. It
+      // replaces rather than pushes: switching parts is not a page you want to
+      // walk back through one instrument at a time.
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('instrument', name);
+          return next;
+        },
+        { replace: true }
+      );
+      setStemState((prev) => {
+        if (!prev || !prev[name]) return prev; // this part has no audio stem
+        const next = {};
+        Object.entries(prev).forEach(([key, st]) => {
+          next[key] = { ...(st || {}), solo: key === name, mute: false };
+        });
+        return next;
       });
-      return next;
-    });
-  }, []);
+    },
+    [setSearchParams]
+  );
 
   const onStemChange = useCallback(
     (name, patch) => {
