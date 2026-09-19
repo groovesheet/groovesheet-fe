@@ -84,6 +84,7 @@ const OSMDViewer = forwardRef(function OSMDViewer(
     zoom = 1.0,
     onPlayNote,
     onPlaybackStateChange,
+    onSeekRequest,
     containerStyle,
     measuresPerSystem,
     betweenStaffDistance,
@@ -113,6 +114,8 @@ const OSMDViewer = forwardRef(function OSMDViewer(
 
   useEffect(() => { onPlayNoteRef.current = onPlayNote; }, [onPlayNote]);
   useEffect(() => { onPlaybackStateChangeRef.current = onPlaybackStateChange; }, [onPlaybackStateChange]);
+  const onSeekRequestRef = useRef(onSeekRequest);
+  useEffect(() => { onSeekRequestRef.current = onSeekRequest; }, [onSeekRequest]);
 
   useEffect(() => {
     if (!containerRef.current) return undefined;
@@ -162,12 +165,24 @@ const OSMDViewer = forwardRef(function OSMDViewer(
       const pm = playbackRef.current;
       const note = nearest.sourceNote;
       if (pm && note) {
-        try { pm.playNote(note, false); } catch (e) {}
+        // A host that owns the transport gets the click as a seek REQUEST.
+        // playFromMs() pauses the PlaybackManager, so seeking here behind the
+        // host's back stopped the sound while its clock carried on playing.
+        const hostSeek = onSeekRequestRef.current;
+        // Audition the note only when idle; mid-playback it would double it.
+        if (!hostSeek || pm.RunningState !== 1) {
+          try { pm.playNote(note, false); } catch (e) {}
+        }
         try {
           const ts = note.getAbsoluteTimestamp?.();
           if (ts && pm.timingSource?.Settings) {
             const ms = pm.timingSource.Settings.getDurationInMilliseconds(ts);
-            seekPlaybackClock(playbackClockRef.current, ms * playbackRateRef.current);
+            const naturalMs = ms * playbackRateRef.current;
+            if (hostSeek) {
+              hostSeek(naturalMs / 1000);
+              return;
+            }
+            seekPlaybackClock(playbackClockRef.current, naturalMs);
             pm.playFromMs(ms, false);
           }
         } catch (e) {}

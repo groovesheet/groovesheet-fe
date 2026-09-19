@@ -542,7 +542,9 @@ export default function TranscriptionResultView({
           pendingOsmdSyncRef.current = true;
           return;
         }
-        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), false);
+        // Seeking pauses OSMD's PlaybackManager, so a seek during playback has
+        // to ask for the restart (see SongDetail).
+        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), t.getState().isPlaying);
       },
       readTime: () => {
         const s = osmdSyncRef.current;
@@ -562,6 +564,11 @@ export default function TranscriptionResultView({
       t.detachEngine('osmd');
     };
   }, [hasSheet, commandOsmd]);
+
+  // A click on the score is a seek on the shared transport, in song seconds.
+  const handleSheetSeek = useCallback((sheetSec) => {
+    transportRef.current.seek(mapperRef.current.sheetSecToMidiSec(sheetSec));
+  }, []);
 
   const handleOsmdStateChange = useCallback(
     (s) => {
@@ -804,6 +811,7 @@ export default function TranscriptionResultView({
             error={xmlError}
             osmdRef={osmdRef}
             onPlaybackStateChange={handleOsmdStateChange}
+            onSeekRequest={handleSheetSeek}
             footer={isPreview ? (
               <PreviewLockTeaser
                 isSignedIn={isSignedIn}

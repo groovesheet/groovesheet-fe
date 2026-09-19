@@ -859,7 +859,10 @@ function SongDetail({ onLoginClick }) {
           pendingOsmdSyncRef.current = true;
           return;
         }
-        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), false);
+        // Seeking pauses OSMD's PlaybackManager, so a seek during playback has
+        // to ask for the restart — otherwise the transport keeps counting
+        // over a silent score. commandOsmd re-checks isPlaying when it runs.
+        commandOsmd(mapperRef.current.midiSecToSheetSec(sec), t.getState().isPlaying);
       },
       readTime: () => {
         const s = osmdSyncRef.current;
@@ -907,6 +910,12 @@ function SongDetail({ onLoginClick }) {
     },
     [rebuildMapper, commandOsmd]
   );
+
+  // A click on the score is a seek on the shared transport, in song seconds —
+  // the viewer only knows sheet seconds.
+  const handleSheetSeek = useCallback((sheetSec) => {
+    transportRef.current.seek(mapperRef.current.sheetSecToMidiSec(sheetSec));
+  }, []);
 
   // Cursor-follow: while another engine drives the clock and the sheet is
   // mounted, move the OSMD cursor along (copy of PreviewPanel's pattern).
@@ -1238,6 +1247,7 @@ function SongDetail({ onLoginClick }) {
                       error={xmlError}
                       osmdRef={osmdRef}
                       onPlaybackStateChange={handleOsmdStateChange}
+                      onSeekRequest={handleSheetSeek}
                     />
                   )}
                   {/* MIDI tab — the raw roll, for every instrument that has a
