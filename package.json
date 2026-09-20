@@ -27,9 +27,11 @@
   },
   "scripts": {
     "start": "NODE_OPTIONS=--max-http-header-size=81920 react-scripts start",
-    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
+    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build && node scripts/prerender.mjs",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build:spa": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
+    "prerender": "node scripts/prerender.mjs"
   },
   "eslintConfig": {
     "extends": [
@@ -49,8 +51,10 @@
     ]
   },
   "devDependencies": {
+    "@sparticuz/chromium": "^149.0.0",
     "autoprefixer": "^10.4.21",
     "http-proxy-middleware": "^3.0.5",
-    "postcss": "^8.5.6"
+    "postcss": "^8.5.6",
+    "puppeteer-core": "^25.5.0"
   }
 }

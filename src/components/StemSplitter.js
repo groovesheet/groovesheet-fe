@@ -721,7 +721,12 @@ function StemSplitter({ onLoginClick }) {
         <div className={`hero-container ${uiState === 'success' ? 'success-expanded' : ''}`}>
           <div className="hero-content">
             <div className="hero-text">
-              <h1 className="hero-title">Extract vocals & instruments from any audio.</h1>
+              {/* The h1 carries the target phrase verbatim. On the live SERP
+                  for "stem splitter" (9,900/mo) every organic result is a tool
+                  page naming itself that way, including a Shopify store and a
+                  one-page indie tool that both outrank this site: that SERP is
+                  won on page relevance, not domain strength. */}
+              <h1 className="hero-title">AI stem splitter: extract vocals & instruments from any song.</h1>
               <p className="hero-subtitle">
                 Upload an audio. Receive clean, separated & high quality audio stems in minutes.
               </p>
