@@ -40,6 +40,22 @@ const ROUTES = JSON.parse(
   readFileSync(join(ROOT, 'src/seo/prerenderRoutes.json'), 'utf8'),
 );
 
+/* "/" is deliberately NOT in that list.
+ *
+ * build/index.html is two things at once: the home page, and the SPA fallback
+ * Vercel serves for every path with no file behind it. Prerendering the home
+ * page into it would hand all ~265 /explore/* track pages a document whose
+ * canonical says https://www.groovesheet.net/ — telling Google every one of
+ * them is a duplicate of the home page. That is worse than the shell they get
+ * today, which asserts nothing.
+ *
+ * Prerendering the home page needs the fallback moved to its own file and a
+ * catch-all rewrite added to vercel.json, which changes routing for every
+ * dynamic URL on the site and wants a preview deploy to verify. Until then the
+ * home page keeps the real title, description and JSON-LD already baked into
+ * public/index.html, which are correct for it.
+ */
+
 /* How long to let a route settle before snapshotting. The pages are static
    marketing copy, so this is about fonts and the i18n bundle resolving, not
    data fetching. */
