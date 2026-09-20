@@ -8,6 +8,7 @@ import cfg from "../../../scripts/pipeline.config.json";
 import measured from "../../../content/seo-keywords.json";
 import { complete, extractJson, llmHasWeb } from "./llm";
 import { scanNews } from "./news";
+import { postSlugs } from "../posts";
 import {
   finishRun,
   getDraft,
@@ -438,19 +439,41 @@ async function captions(d: Checkable): Promise<Captions> {
 
 /* ---------- The run ---------- */
 
+/* A slug nothing else already answers to.
+ *
+ * Volumet asked the live site: HEAD the URL, and a 200 means taken. That check
+ * cannot be used here, and the failure is silent and permanent. Until the
+ * rewrites land, www.groovesheet.net is the CRA single-page app, which serves
+ * its shell with status 200 for EVERY path under /blog. So every candidate
+ * looked taken, the loop exhausted all 18 tries, and the fallback stamped
+ * Date.now() into the URL of a post that will keep that URL forever. The first
+ * real run produced exactly that.
+ *
+ * The three local sources are authoritative anyway, and between them they are
+ * complete: content_drafts (every draft and published post), blog_posts (the
+ * originals), and content/posts (file posts). Asking them needs no network and
+ * cannot be fooled by a catch-all route. */
 async function uniqueSlug(slug: string): Promise<string> {
-  let candidate = slug || `industry-news-${Date.now()}`;
-  for (let i = 2; i < 20; i++) {
-    const live = await fetch(`${cfg.business.baseUrl}${cfg.content.urlPrefix}/${candidate}`, {
-      method: "HEAD",
-      signal: AbortSignal.timeout(8000),
-    })
-      .then((r) => r.status === 200)
-      .catch(() => false);
-    if (!live && !(await slugTaken(candidate))) return candidate;
-    candidate = `${slug}-${i}`.slice(0, cfg.validation.slugMaxChars);
+  const base = slug || cfg.news.categorySlug;
+
+  const taken = new Set<string>(postSlugs());
+  try {
+    const { legacySlugs } = await import("./legacy");
+    for (const s of await legacySlugs()) taken.add(s);
+  } catch {
+    /* blog_posts unreachable. content_drafts is still checked below, and a
+       clash with one of eleven known slugs is the lesser risk than refusing
+       to draft at all. */
   }
-  return `${slug.slice(0, 40)}-${Date.now()}`;
+
+  let candidate = base;
+  for (let i = 2; i < 20; i++) {
+    if (!taken.has(candidate) && !(await slugTaken(candidate))) return candidate;
+    candidate = `${base}-${i}`.slice(0, cfg.validation.slugMaxChars);
+  }
+  /* Nineteen posts on one subject in one taxonomy. Dated, not stamped: a
+     reader can at least read it. */
+  return `${base.slice(0, 40)}-${new Date().toISOString().slice(0, 10)}`;
 }
 
 export async function runPipeline(trigger: "cron" | "manual"): Promise<RunOutcome> {
