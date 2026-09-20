@@ -1,0 +1,1518 @@
+/* ============================================================
+   Volumet internal portal.
+
+   Every class here is prefixed .int- so nothing can collide with
+   the public site. site.css is not touched and not loaded here:
+   this file plus the design-system tokens in colors_and_type.css
+   are the whole stylesheet for /internal.
+
+   Values are ported from the Claude Design implementation
+   ("Volumet Internal Portal.dc.html"). Colours, type and spacing
+   are all existing tokens. Nothing new is invented.
+   ============================================================ */
+
+.int-root {
+  min-height: 100vh;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+/* Default link colour for plain prose links.
+
+   Wrapped in :where() so it carries ZERO specificity and loses to any
+   component rule below. Written as `.int-root a` it scored (0,1,1) and
+   outranked every single-class rule it sat above: nav items, breadcrumbs,
+   company cells and pager buttons all rendered --primary blue, and an <a> with
+   .gs-btn--primary got blue text on the blue plate, which is invisible. */
+:where(.int-root a) {
+  color: var(--primary);
+}
+:where(.int-root a) {
+  text-decoration: none;
+}
+/* The hover underline is wrapped in :where() for the same reason the colour
+   above is. Written as `.int-root a:hover` it scored (0,2,1) and beat
+   `.int-module-card:hover`, so every card that is a link grew an underline
+   across its whole body the moment the pointer touched it. */
+:where(.int-root a):hover {
+  text-decoration: underline;
+}
+.int-root select,
+.int-root input,
+.int-root textarea,
+.int-root button {
+  font-family: inherit;
+}
+
+/* ---------- Top bar ---------- */
+.int-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 56px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+}
+.int-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.int-logo {
+  height: 20px;
+  width: auto;
+  display: block;
+}
+.int-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--hairline);
+  display: inline-block;
+  flex: 0 0 1px;
+}
+.int-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.int-crumb {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+a.int-crumb:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+.int-crumb-sep {
+  font-size: 13px;
+  color: var(--muted-soft);
+}
+.int-crumb-current {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.int-spacer {
+  flex: 1;
+}
+
+.int-user {
+  position: relative;
+}
+.int-user-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 6px 0 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.int-user-name {
+  font-size: 13px;
+  color: var(--body);
+}
+.int-root .int-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  font-size: 11px;
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+.int-menu {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  width: 180px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-soft);
+  padding: 8px 0;
+  z-index: 50;
+}
+.int-menu-label {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.int-menu-rule {
+  height: 1px;
+  background: var(--hairline-soft);
+  margin: 4px 0;
+}
+.int-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink);
+}
+.int-menu-item:hover {
+  background: var(--surface-soft);
+}
+
+/* Hamburger. Hidden until the sidebar becomes a drawer. */
+.int-burger {
+  display: none;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+}
+
+/* ---------- Frame ---------- */
+.int-frame {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 56px);
+}
+
+/* ---------- Sidebar ---------- */
+.int-sidebar {
+  width: 220px;
+  flex: 0 0 auto;
+  background: var(--canvas);
+  border-right: 1px solid var(--hairline);
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 0;
+  transition: width 150ms var(--ease-out);
+  overflow: hidden;
+}
+.int-sidebar.is-collapsed {
+  width: 56px;
+}
+.int-nav-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.int-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.int-nav-group-label {
+  padding: 0 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+  white-space: nowrap;
+  transition: opacity 150ms var(--ease-out);
+}
+.int-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--body);
+  text-align: left;
+}
+.int-nav-item:hover {
+  background: var(--surface-soft);
+  text-decoration: none;
+}
+.int-nav-item.is-active {
+  background: var(--surface-soft);
+  border-left-color: var(--primary);
+  font-weight: 600;
+  color: var(--primary);
+}
+.int-nav-glyph {
+  width: 18px;
+  flex: 0 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+.int-nav-label {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 150ms var(--ease-out);
+}
+.int-nav-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  color: var(--muted);
+}
+.int-nav-item.is-active .int-nav-badge {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.is-collapsed .int-nav-label,
+.is-collapsed .int-nav-group-label {
+  opacity: 0;
+}
+.is-collapsed .int-nav-badge {
+  display: none;
+}
+.int-sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid var(--hairline-soft);
+  padding-top: 12px;
+}
+.int-collapse {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------
+   Overrides of design-system classes.
+
+   The .int-root-prefixed rules below sit on the same element as a
+   .gs-* class and set the same properties. At equal
+   specificity the winner would be decided by whichever stylesheet
+   the browser linked first, which is not something this file
+   controls. The prefix settles it: these always win inside the
+   portal, and can never reach the public site.
+   ------------------------------------------------------------ */
+
+/* A design-system button rendered as an <a> must keep its own label colour. */
+.int-root a.gs-btn--primary {
+  color: var(--on-primary);
+}
+.int-root a.gs-btn--secondary-light {
+  color: var(--ink);
+}
+.int-root a.gs-btn--secondary-dark,
+.int-root a.gs-btn--outline-on-dark {
+  color: var(--on-dark);
+}
+.int-root a.gs-btn:hover {
+  text-decoration: none;
+}
+
+/* ---------- Content ---------- */
+.int-content {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 32px 64px;
+}
+.int-content-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.int-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 24px;
+}
+.int-page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.6px;
+  color: var(--ink);
+  line-height: 1.15;
+}
+.int-page-desc {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.int-page-actions {
+  display: flex;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+/* Page-header scale for the design-system button, which is 44px by default. */
+.int-root .int-btn-sm {
+  height: 38px;
+  font-size: 14px;
+  padding: 10px 18px;
+}
+
+/* ---------- Index ---------- */
+.int-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.int-counters {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.int-counters .gs-stat-value {
+  font-size: 32px;
+}
+.int-modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+.int-root .int-module-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: inherit;
+}
+.int-module-card:hover {
+  text-decoration: none;
+}
+.int-module-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.int-module-glyph {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--primary);
+}
+.int-module-glyph.is-soon {
+  color: var(--muted-soft);
+}
+.int-module-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.int-module-meta {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+.int-module-meta.is-due {
+  color: var(--semantic-down);
+}
+.int-module-meta.is-soon {
+  color: var(--muted-soft);
+}
+
+/* ---------- Filter bar ---------- */
+.int-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.int-activity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--body);
+}
+.int-activity-value {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+.int-count {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+/* Native select, restyled. The chevron is a sibling span because
+   appearance:none removes the built-in one. */
+.int-select-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.int-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 40px;
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-none);
+  background: var(--canvas);
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+/* The lead bar carries six controls, and a native select sizes itself to its
+   widest option: the segment list holds combined labels up to 59 characters
+   ("Civil / infrastructure + Interior fit-out + Main contractor"), which
+   stretched that one control to ~390px and pushed Status and Owner onto a
+   second row. Cap the closed control on that bar only. Every placeholder
+   still fits at this width, a long selected value ellipses, and the open
+   dropdown shows the full label either way. The quote bar is not capped:
+   it has room, and its value bands need the full label. */
+.int-toolbar-leads .int-select {
+  max-width: 130px;
+  text-overflow: ellipsis;
+}
+/* Same row, second half of the problem: flex wraps a line before it shrinks
+   anything on it, so the fixed 280px search box decided where the break fell.
+   Give it a smaller flex basis and let it grow back: it still renders at its
+   designed 280px wherever there is room, and gives the row up to 80px rather
+   than pushing Owner onto a second line. */
+.int-root .int-toolbar-leads .int-search {
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 280px;
+}
+.int-select-chevron {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 9px;
+  color: var(--muted);
+}
+.int-root .int-search {
+  width: 280px;
+  height: 40px;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+.int-root .int-search-wide {
+  width: 320px;
+}
+.int-tab {
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--body);
+  background: transparent;
+}
+.int-tab.is-active {
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--canvas);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- Tables ---------- */
+.int-table-panel {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+}
+.int-table-scroll {
+  overflow-x: auto;
+}
+.int-table-leads {
+  min-width: 1680px;
+  table-layout: fixed;
+}
+.int-table-quotes {
+  min-width: 1180px;
+  table-layout: fixed;
+}
+.int-cell-tight {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.int-cell-mono {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.int-cell-muted {
+  color: var(--muted-soft);
+}
+.int-company {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.int-row-won {
+  background: rgba(0, 103, 255, 0.04);
+}
+.int-row-won .int-company {
+  color: var(--primary);
+}
+.int-row-dnc {
+  opacity: 0.45;
+}
+.int-row-dnc .int-company {
+  text-decoration: line-through;
+}
+.int-next-due {
+  color: var(--semantic-down);
+}
+.int-note {
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Inline status dropdown. Saves on change, no modal, no save button. */
+.int-status-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.int-status {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 30px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  color: var(--ink);
+}
+.int-status:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+.int-status-chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 9px;
+  color: var(--muted);
+}
+.int-status-won {
+  color: var(--primary);
+}
+.int-status-declined {
+  color: var(--semantic-down);
+}
+.int-status-up {
+  color: var(--semantic-up);
+}
+.int-status-dnc {
+  color: var(--muted-soft);
+}
+
+.int-table-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--hairline);
+}
+.int-pager {
+  display: flex;
+  gap: 8px;
+}
+.int-pager-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  font-size: 13px;
+  color: var(--ink);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.int-pager-btn:hover {
+  text-decoration: none;
+}
+.int-pager-btn.is-disabled {
+  color: var(--muted-soft);
+  cursor: default;
+  pointer-events: none;
+}
+.int-page-range {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+.int-download {
+  font-size: 13px;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+/* ---------- Lead detail ---------- */
+.int-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.int-detail-main,
+.int-detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+/* The hand-written opener. The one thing she reads as she dials, so it gets
+   the dark canvas and the largest type on the page. */
+.int-opener {
+  background: var(--surface-dark);
+  color: var(--on-dark);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.int-opener-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* The lightened blue from the announcement bar: --primary does not pass
+     contrast on the dark canvas, this does. */
+  color: #5c9dff;
+}
+.int-opener-trigger {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--on-dark-soft);
+}
+.int-opener-rule {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.int-opener-text {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--on-dark);
+}
+.int-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.int-log-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.int-root .int-log-note {
+  flex: 1;
+  min-width: 200px;
+  height: 40px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.int-history {
+  display: flex;
+  flex-direction: column;
+}
+.int-history-row {
+  display: flex;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--hairline-soft);
+}
+.int-history-when {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  flex: 0 0 110px;
+}
+.int-history-outcome {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex: 0 0 130px;
+}
+.int-history-note {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+  flex: 1;
+}
+.int-history-user {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-soft);
+}
+/* The archive's file column: a download link when there is one, and always a
+   way to put one there. The input is hidden inside its own label, which is the
+   one reliable way to restyle a file picker. */
+.int-quote-file {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  white-space: nowrap;
+}
+.int-attach {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-none);
+  background: var(--canvas);
+  font-size: 11.5px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.int-attach:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.int-attach input {
+  display: none;
+}
+.int-attach-error {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 2;
+  padding: 4px 8px;
+  background: var(--semantic-down);
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* The editable deal value, on the prospects table and in the detail panel.
+   Sized to sit on the same baseline as the status pill beside it, and the
+   prefix is a static label rather than part of the value so the box holds a
+   plain number that can be typed over. */
+.int-money {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  gap: 2px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-none);
+  background: var(--canvas);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  max-width: 100%;
+}
+.int-money:focus-within {
+  border-color: var(--primary);
+}
+.int-money-prefix {
+  color: var(--muted);
+}
+.int-money-input {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-align: right;
+}
+.int-money-input:focus {
+  outline: none;
+}
+.int-money-input:disabled {
+  color: var(--muted);
+}
+/* Floated, so a refused save does not reflow the row it is in. */
+.int-money-error {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 2;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: var(--radius-none);
+  background: var(--semantic-down);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+
+/* The inbound-tap feed on /internal/prospects reuses the call-history rows,
+   with a quieter outcome column: a tap is a signal, not a status change, and
+   it must not read as loudly as "Meeting booked" three rows above it. */
+.int-signal-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+.int-signal-row .int-history-outcome {
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.int-history-empty {
+  font-size: 13px;
+  color: var(--muted);
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline-soft);
+}
+.int-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+.int-field-label {
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.int-field-value {
+  color: var(--ink);
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.int-field-value.is-mono {
+  font-family: var(--font-mono);
+}
+.int-field-value.is-empty {
+  color: var(--muted-soft);
+}
+.int-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.int-select-full {
+  display: flex;
+  width: 100%;
+}
+.int-select-full .int-select {
+  width: 100%;
+}
+
+.int-drawer-scrim {
+  display: none;
+}
+
+/* ---------- Placeholder module ---------- */
+.int-soon {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 72px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.int-soon-desc {
+  margin: 0;
+  max-width: 420px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+/* ---------- Declined-reason dialog ---------- */
+.int-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(10, 15, 28, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.int-dialog {
+  width: 440px;
+  max-width: 100%;
+  background: var(--canvas);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.int-dialog-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.int-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ---------- Login ---------- */
+.int-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-dark);
+  padding: 24px;
+}
+.int-login-card {
+  width: 380px;
+  max-width: 100%;
+  background: var(--canvas);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.int-login-copy {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.int-login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.int-login-foot {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-soft);
+  font-family: var(--font-mono);
+}
+.int-login-error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--semantic-down);
+}
+
+/* ============================================================
+   Responsive. The design is desktop-only; the drawer below is
+   this site's own behaviour, matching the public nav pattern.
+   ============================================================ */
+@media (max-width: 1100px) {
+  .int-counters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .int-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .int-burger {
+    display: inline-flex;
+  }
+  .int-content {
+    padding: 24px;
+  }
+  /* Sidebar becomes an overlay drawer, closed by default, closing on
+     navigation and on Escape (see Sidebar.tsx). */
+  .int-sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    z-index: 45;
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform 150ms var(--ease-out);
+    box-shadow: var(--shadow-soft);
+  }
+  .int-sidebar.is-open {
+    transform: translateX(0);
+  }
+  /* Collapse is a desktop affordance; the drawer has no room for it. */
+  .int-sidebar.is-collapsed {
+    width: 240px;
+  }
+  .is-collapsed .int-nav-label,
+  .is-collapsed .int-nav-group-label {
+    opacity: 1;
+  }
+  .is-collapsed .int-nav-badge {
+    display: inline;
+  }
+  .int-collapse {
+    display: none;
+  }
+  .int-drawer-scrim {
+    display: block;
+    position: fixed;
+    inset: 56px 0 0;
+    z-index: 44;
+    background: rgba(10, 15, 28, 0.35);
+    border: none;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .int-counters {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 24px;
+  }
+  .int-page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .int-user-name {
+    display: none;
+  }
+  .int-root .int-search,
+  .int-root .int-search-wide {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   Resources: the collateral library.
+   ============================================================ */
+.int-featured {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 0;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  align-items: stretch;
+}
+.int-featured-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 32px;
+  min-width: 0;
+}
+.int-featured-title {
+  margin: 0;
+}
+.int-featured-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+/* The embedded PDF. A fixed height because an <object> has no intrinsic one
+   and would otherwise collapse to nothing. */
+.int-featured-preview {
+  width: 100%;
+  height: 420px;
+  border: none;
+  border-left: 1px solid var(--hairline);
+  background: var(--surface-soft);
+  display: block;
+}
+.int-resource-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.int-resource-note {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .int-featured {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .int-featured-preview {
+    height: 320px;
+    border-left: none;
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+/* Login: the "I am" picker that sits above the shared password. */
+.int-login-who {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---------- Sortable column headers ---------- */
+.int-root .int-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  /* The th already carries the uppercase caption styling; inherit it so the
+     header reads identically whether or not the column is sortable. */
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.int-root .int-sort:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+.int-root .int-sort.is-active {
+  color: var(--ink);
+}
+/* Idle marker is nearly invisible: it signals "sortable" without turning the
+   header row into a line of arrows. */
+.int-sort-caret {
+  font-size: 7px;
+  color: var(--muted-soft);
+  opacity: 0.45;
+  line-height: 1;
+}
+.int-sort:hover .int-sort-caret {
+  opacity: 1;
+}
+.int-sort.is-active .int-sort-caret {
+  font-size: 8px;
+  color: var(--primary);
+  opacity: 1;
+}
+
+/* ---------- Rich text editor (RichTextEditor.tsx) ----------
+   The WYSIWYG for a post body. Prose inside it is set like the article it
+   becomes, so what the reviewer approves is what the reader gets. */
+.rte {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--hairline);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--canvas);
+}
+.rte-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.rte-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.rte-mini {
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.rte-mini:hover {
+  background: var(--surface-strong);
+}
+.rte-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--hairline);
+}
+.rte-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  padding: 4px 6px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm, 6px);
+}
+.rte-content {
+  min-height: 640px;
+  padding: 16px 20px;
+  font-size: 15px;
+}
+.rte-foot {
+  border-top: 1px solid var(--hairline);
+  padding: 8px 16px;
+  font-size: 12px;
+}
+.blog-tiptap {
+  min-height: 600px;
+  color: var(--body);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+.blog-tiptap:focus {
+  outline: none;
+}
+.blog-tiptap > * + * {
+  margin-top: 0.85em;
+}
+.blog-tiptap h1,
+.blog-tiptap h2,
+.blog-tiptap h3,
+.blog-tiptap h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0;
+}
+.blog-tiptap h1 { font-size: 26px; line-height: 1.25; }
+.blog-tiptap h2 { font-size: 22px; line-height: 1.35; }
+.blog-tiptap h3 { font-size: 17px; line-height: 1.4; }
+.blog-tiptap h4 { font-size: 15.5px; }
+.blog-tiptap strong { font-weight: 600; color: var(--ink); }
+.blog-tiptap em { font-style: italic; }
+.blog-tiptap a { color: var(--primary); text-decoration: underline; }
+.blog-tiptap ul { list-style: disc; padding-left: 1.5rem; }
+.blog-tiptap ol { list-style: decimal; padding-left: 1.5rem; }
+.blog-tiptap li > p { margin: 0; }
+.blog-tiptap blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.blog-tiptap p.is-editor-empty:first-child::before,
+.blog-tiptap .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-soft);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+/* Video nodes keep a 16:9 frame, and the iframe is inert so a click selects
+   the node (to delete it) instead of starting the player. */
+.blog-tiptap div[data-youtube-video],
+.blog-tiptap .blog-video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+}
+.blog-tiptap div[data-youtube-video] iframe,
+.blog-tiptap .blog-video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+}
+.blog-tiptap .ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.blog-tiptap img.blog-body-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.blog-tiptap table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+  table-layout: fixed;
+  overflow: hidden;
+}
+.blog-tiptap th,
+.blog-tiptap td {
+  border: 1px solid var(--hairline);
+  padding: 6px 10px;
+  vertical-align: top;
+  text-align: left;
+  min-width: 3rem;
+  position: relative;
+}
+.blog-tiptap th {
+  background: var(--surface-soft);
+  font-weight: 600;
+  color: var(--ink);
+}
+.blog-tiptap td > p,
+.blog-tiptap th > p { margin: 0; }
+.blog-tiptap .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  pointer-events: none;
+}
+.blog-tiptap .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  cursor: col-resize;
+}
+
+/* ---------- Post editor layout ---------- */
+.int-form-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.int-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.int-form-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.int-form-hint {
+  font-size: 12px;
+  color: var(--muted-soft);
+}
+.int-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.int-chip {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  color: var(--body);
+  cursor: pointer;
+}
+.int-chip.is-on {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+.int-serp {
+  border: 1px solid var(--hairline);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.int-serp-url { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+.int-serp-title { font-size: 17px; color: var(--primary); line-height: 1.3; }
+.int-serp-desc { font-size: 13px; color: var(--body); line-height: 1.45; }
+
+/* Something is in flight. Used where a click starts a slow network send, so
+   the person is never left wondering whether it registered. */
+.int-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: int-spin 0.7s linear infinite;
+}
+@keyframes int-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .int-spinner { animation-duration: 2s; }
+}
+
+/* An information mark whose note appears on hover or keyboard focus. For help
+   that is worth having once and would be noise if it sat on screen for good. */
+.int-tip {
+  position: relative;
+  display: inline-flex;
+  color: var(--muted-soft);
+  cursor: help;
+  outline: none;
+}
+.int-tip:hover,
+.int-tip:focus-visible {
+  color: var(--primary);
+}
+.int-tip-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 5;
+  width: 240px;
+  padding: 10px 12px;
+  background: var(--ink);
+  color: var(--canvas);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-fast, 120ms) var(--ease-out, ease-out);
+  pointer-events: none;
+}
+.int-tip:hover .int-tip-body,
+.int-tip:focus-visible .int-tip-body {
+  opacity: 1;
+  visibility: visible;
+}

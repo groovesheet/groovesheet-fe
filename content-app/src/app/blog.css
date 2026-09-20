@@ -1,0 +1,674 @@
+/* The public blog: site chrome, layout bands and the article itself.
+
+   Volumet's equivalents live in its public/site.css, a light-theme marketing
+   stylesheet. The class names are kept, because the ported page components
+   call them, but every rule here is written against GrooveSheet's tokens and
+   follows design-system/VISUAL_GUIDE.md: 1414px for the chrome, 1190px for
+   content, 660px of measure for prose, layered 16/13/8 radii, brand blue for
+   links and hovers, a 2px lift on cards, and no decorative gradients. */
+
+/* ---------- Header ---------- */
+
+.site-header {
+  position: relative;
+  z-index: 10;
+  padding: 22px 0 10px;
+  background: transparent;
+}
+
+.site-header-inner {
+  max-width: 1414px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.site-logo {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.site-logo img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+}
+
+.site-nav-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-foreground);
+  text-decoration: none;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.site-nav-item:hover {
+  color: var(--color-text);
+  background: var(--color-surface-lightest);
+}
+
+.site-nav-item.is-active {
+  color: var(--color-info);
+}
+
+.site-header-cta {
+  flex: 0 0 auto;
+  /* Pins the pill to the right whether or not the nav between them is shown.
+     Without it, the nav going display:none on mobile left the pill sitting
+     directly against the logo. */
+  margin-left: auto;
+}
+
+/* Products dropdown. The panel is absolutely positioned so opening it never
+   reflows the header, and it sits above the hero. */
+.site-products {
+  position: relative;
+}
+
+.site-products > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-products > summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-products > summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.site-products[open] > summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.site-products-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--color-panel1);
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  box-shadow: 0 12px 32px var(--color-shadow);
+}
+
+.site-products-menu a {
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--color-foreground);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-products-menu a:hover {
+  background: var(--color-surface-lighter);
+  color: var(--color-text);
+}
+
+@media (max-width: 900px) {
+  .site-nav {
+    display: none;
+  }
+}
+
+/* On a phone the logo and the pill together came to a few pixels more than the
+   viewport, and neither shrinks, so the pill sat flush against the right edge
+   with no gutter at all. Both give up a little instead. */
+@media (max-width: 640px) {
+  .site-header-inner {
+    gap: 12px;
+  }
+
+  .site-logo img {
+    height: 28px;
+  }
+
+  .site-header-cta {
+    height: 38px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  margin-top: 96px;
+  padding: 56px 0 32px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-tinted-background);
+}
+
+.site-footer-inner {
+  max-width: 1414px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.site-footer-brand img {
+  height: 26px;
+  width: auto;
+}
+
+.site-footer-tagline {
+  margin: 12px 0 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+}
+
+.site-footer-cols {
+  display: flex;
+  gap: 56px;
+  flex-wrap: wrap;
+}
+
+.site-footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.site-footer-col h2 {
+  margin: 0 0 4px;
+  color: var(--color-muted-foreground);
+}
+
+.site-footer-col a {
+  font-size: 14px;
+  color: var(--color-foreground);
+  text-decoration: none;
+}
+
+.site-footer-col a:hover {
+  color: var(--color-info);
+}
+
+.site-footer-rule {
+  max-width: 1414px;
+  margin: 40px auto 20px;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.site-footer-fine {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+
+/* ---------- Bands and grids ---------- */
+
+.band {
+  padding: 64px 0;
+}
+
+.band--tight {
+  padding: 32px 0;
+}
+
+.band--soft {
+  background: var(--color-tinted-background);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Hero ---------- */
+
+.hero-light {
+  padding: 56px 0 0;
+}
+
+.hero-light h1 {
+  margin: 12px 0 0;
+  font-weight: 400;
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  max-width: 18ch;
+}
+
+.hero-sub {
+  margin: 16px 0 0;
+  max-width: 660px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+}
+
+/* ---------- Media ---------- */
+
+.media-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+}
+
+.media-frame > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ar-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+/* ---------- Cards ---------- */
+
+.post-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.post-card:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.post-card .media-frame {
+  transition: border-color 0.2s ease;
+}
+
+.post-card:hover .media-frame {
+  border-color: var(--color-primary);
+}
+
+.post-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.post-card__title {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.post-card:hover .post-card__title {
+  color: var(--color-info);
+}
+
+.post-card__desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-muted-foreground);
+}
+
+.article-meta {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--color-surface-muted);
+}
+
+/* ---------- Feature card ---------- */
+
+.blog-feature {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  overflow: hidden;
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.blog-feature:hover {
+  text-decoration: none;
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.blog-feature__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: clamp(28px, 4vw, 52px);
+}
+
+.blog-feature__copy h2 {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.blog-feature__copy p {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--color-foreground);
+  line-height: 1.6;
+}
+
+.blog-feature__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-info);
+}
+
+.blog-feature:hover .blog-feature__go {
+  text-decoration: underline;
+}
+
+/* The feature card's picture sits inside the rounded outer card, so it drops
+   its own radius and keeps only the dividing rule. */
+.blog-feature .media-frame {
+  min-height: 360px;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+@media (max-width: 900px) {
+  .blog-feature {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-feature .media-frame {
+    order: -1;
+    min-height: 220px;
+    border-left: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+/* ---------- Section heads and topic nav ---------- */
+
+.blog-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.blog-section-head h2 {
+  margin: 0;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.blog-section-head p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-muted-foreground);
+}
+
+.topic-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.topic-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-foreground);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.topic-nav a:hover,
+.topic-nav a[aria-current="page"] {
+  border-color: var(--color-primary);
+  color: var(--color-info);
+  text-decoration: none;
+}
+
+.topic-nav a[aria-current="page"] {
+  font-weight: 500;
+}
+
+.topic-count {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-surface-muted);
+}
+
+/* ---------- The article ---------- */
+
+.article {
+  max-width: 720px;
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--color-foreground);
+}
+
+.article-wide .article {
+  max-width: none;
+}
+
+.article > * + * {
+  margin-top: 1.1em;
+}
+
+.article h2 {
+  margin: 2em 0 0.6em;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.article h3 {
+  margin: 1.6em 0 0.5em;
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.article a {
+  color: var(--color-info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article a:hover {
+  color: var(--color-text);
+}
+
+.article ul,
+.article ol {
+  padding-left: 1.3em;
+}
+
+.article li + li {
+  margin-top: 0.4em;
+}
+
+.article img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+}
+
+.article blockquote {
+  margin-left: 0;
+  padding-left: 18px;
+  border-left: 2px solid var(--color-primary);
+  color: var(--color-muted-foreground);
+}
+
+.article code {
+  padding: 2px 6px;
+  background: var(--color-surface-lighter);
+  border-radius: 4px;
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
+}
+
+.article pre {
+  padding: 16px;
+  overflow-x: auto;
+  background: var(--color-panel3);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.article pre code {
+  padding: 0;
+  background: none;
+}
+
+.article table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.article th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.article td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border-light);
+  vertical-align: top;
+}
+
+.article hr {
+  margin: 2.4em 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.article iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+}
+
+.faq-wrap {
+  max-width: 760px;
+}
+
+/* ---------- The closing call to action ---------- */
+
+.final-cta {
+  border-top: 1px solid var(--color-border);
+}
+
+.final-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding-top: 32px;
+  padding-bottom: 32px;
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.final-cta-line {
+  margin: 8px 0 0;
+  max-width: 48ch;
+  color: var(--color-muted-foreground);
+  line-height: 1.6;
+}
+
+.final-cta-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}

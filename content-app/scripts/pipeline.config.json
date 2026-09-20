@@ -1,0 +1,477 @@
+{
+  "business": {
+    "siteName": "GrooveSheet",
+    "legalName": "GrooveSheet",
+    "baseUrl": "https://www.groovesheet.net",
+    "repo": "groovesheet/groovesheet-fe",
+    "appDir": "content-app",
+    "defaultBranch": "main",
+    "market": "global",
+    "locale": "en_US",
+    "description": "AI music transcription: upload audio, get accurate, editable, printable notation (PDF, MusicXML, MIDI) in minutes, plus stem separation and audio-to-MIDI."
+  },
+  "content": {
+    "contentDir": "content/posts",
+    "queueFile": "content/keyword-queue.yaml",
+    "briefDir": "content/briefs",
+    "fileExtension": ".mdx",
+    "urlPrefix": "/blog",
+    "defaultAuthor": "GrooveSheet Editorial",
+    "defaultCategory": "Guide",
+    "defaultImage": "/og.png",
+    "titleSuffix": " | GrooveSheet",
+    "wordCount": {
+      "min": 900,
+      "target": 1200,
+      "max": 1800
+    },
+    "faqCount": {
+      "min": 3,
+      "max": 6
+    }
+  },
+  "demand": {
+    "minMonthlySearchVolume": 10,
+    "maxKeywordDifficulty": 35,
+    "requireMeasuredData": true,
+    "maxDataAgeDays": 365,
+    "dataSource": "Google Ads Keyword Planner",
+    "database": "Global"
+  },
+  "queue": {
+    "selection": "order",
+    "allowedIntents": [
+      "informational",
+      "commercial",
+      "transactional",
+      "navigational"
+    ],
+    "allowedStatuses": [
+      "queued",
+      "done",
+      "skipped"
+    ]
+  },
+  "cadence": {
+    "everyDays": 3,
+    "postsPerRun": 1,
+    "cron": "0 1 */3 * *"
+  },
+  "moneyPages": [
+    {
+      "path": "/",
+      "label": "Transcribe a song",
+      "priority": 1
+    },
+    {
+      "path": "/pricing",
+      "label": "Pricing and plans",
+      "priority": 1
+    },
+    {
+      "path": "/stem-splitter",
+      "label": "Stem splitter",
+      "priority": 1
+    },
+    {
+      "path": "/midi-converter",
+      "label": "Audio to MIDI converter",
+      "priority": 1
+    },
+    {
+      "path": "/explore",
+      "label": "Explore transcriptions",
+      "priority": 2
+    },
+    {
+      "path": "/developers",
+      "label": "Transcription API",
+      "priority": 2
+    },
+    {
+      "path": "/help",
+      "label": "Help and support",
+      "priority": 3
+    },
+    {
+      "path": "/about",
+      "label": "About GrooveSheet",
+      "priority": 3
+    }
+  ],
+  "validation": {
+    "titleMaxChars": 50,
+    "descriptionMaxChars": 160,
+    "descriptionMinChars": 70,
+    "summaryMaxChars": 200,
+    "slugPattern": "^[a-z0-9-]+$",
+    "slugMaxChars": 60,
+    "minMoneyPageLinks": 2,
+    "minBodyChars": 2000,
+    "requiredFrontmatter": [
+      "title",
+      "description",
+      "summary",
+      "category",
+      "publishedAt",
+      "updatedAt",
+      "image"
+    ],
+    "requireFaqs": true,
+    "forbidJsxInBody": true,
+    "forbidBareUrls": true,
+    "reservedRouteDirs": [
+      "src/app/blog"
+    ],
+    "reservedSlugs": [
+      "category",
+      "industry",
+      "author",
+      "page",
+      "feed",
+      "search"
+    ],
+    "warnOnMissingMoneyPageRoute": true,
+    "routeSearchDirs": [
+      "src/app"
+    ]
+  },
+  "voice": {
+    "tone": [
+      "Plain, specific and unhurried. Explain the thing, then stop.",
+      "Lead with what the reader came for. No throat-clearing introductions.",
+      "Written by someone who plays. Name instruments, techniques, file formats, DAWs and notation software exactly.",
+      "Concrete over abstract: name the model, the format, the export, the limitation.",
+      "State trade-offs honestly, including when a machine transcription is the wrong tool and a human ear is not.",
+      "American English spelling (analyze, color, practice as both noun and verb).",
+      "Second person for the reader, first person plural for the company.",
+      "Short paragraphs. Tables for anything with more than three parallel facts."
+    ],
+    "bannedPhrases": [
+      "delve",
+      "in today's fast-paced world",
+      "game-changer",
+      "game changer",
+      "revolutionize",
+      "revolutionise",
+      "unlock the power",
+      "seamless",
+      "cutting-edge",
+      "state-of-the-art",
+      "elevate your",
+      "robust solution",
+      "leverage our",
+      "look no further",
+      "in conclusion",
+      "it is important to note",
+      "when it comes to",
+      "dive into",
+      "navigate the complexities",
+      "unparalleled",
+      "bespoke solutions",
+      "world-class",
+      "take your playing to the next level",
+      "music lovers everywhere",
+      "effortlessly"
+    ],
+    "bannedPatterns": [
+      {
+        "pattern": "—",
+        "reason": "No em dashes. Use a colon, a full stop, or rewrite."
+      },
+      {
+        "pattern": "–",
+        "reason": "No en dashes in prose. Use 'to' for ranges."
+      },
+      {
+        "pattern": "\\b(?:we|our team)\\s+(?:are|is)\\s+(?:passionate|excited|thrilled)\\b",
+        "reason": "No enthusiasm filler."
+      },
+      {
+        "pattern": "\\bAs an AI\\b",
+        "reason": "Model artefact."
+      }
+    ],
+    "requiredDisclaimers": [
+      {
+        "id": "accuracy-claims",
+        "whenBodyMentions": [
+          "accuracy",
+          "accurate",
+          "note-perfect",
+          "perfect transcription",
+          "error rate"
+        ],
+        "text": "Never claim note-perfect or 100% accurate transcription. Automatic transcription is a first draft a musician edits. State what affects the result: recording quality, how busy the mix is, the instrument, and whether stems were separated first."
+      },
+      {
+        "id": "copyright",
+        "whenBodyMentions": [
+          "copyright",
+          "cover",
+          "sheet music",
+          "publish",
+          "sell",
+          "arrangement",
+          "royalt"
+        ],
+        "text": "Do not tell readers that transcribing a commercial song gives them the right to distribute, sell or perform the result. A transcription of a copyrighted song is a derivative work. Point them at the rights holder or a licensing body and say the rules differ by country."
+      },
+      {
+        "id": "no-price-promises",
+        "whenBodyMentions": [
+          "price",
+          "cost",
+          "pricing",
+          "plan",
+          "$",
+          "free"
+        ],
+        "text": "Do not restate plan prices, minute allowances or limits as fact in the body. They change. Link to /pricing and describe the shape of the offer, not the numbers."
+      },
+      {
+        "id": "processing-time",
+        "whenBodyMentions": [
+          "minutes",
+          "how long",
+          "queue",
+          "processing time",
+          "wait"
+        ],
+        "text": "Do not promise a processing time. Say that a full song usually takes a few minutes to tens of minutes depending on length and load, and that the job page shows queue position."
+      },
+      {
+        "id": "competitor-claims",
+        "whenBodyMentions": [
+          "AnthemScore",
+          "ScoreCloud",
+          "Klangio",
+          "Melodyne",
+          "Moises",
+          "LALAL",
+          "competitor",
+          "versus",
+          " vs "
+        ],
+        "text": "Compare on verifiable, checkable facts only: supported instruments, export formats, whether it separates stems, pricing model shape. Never assert that a competitor's output is worse without a test we actually ran."
+      }
+    ],
+    "styleReferencePost": ""
+  },
+  "brief": {
+    "requiredSections": [
+      "What it is, in one paragraph, answering the query directly",
+      "When a musician, teacher or producer actually needs it (the triggers)",
+      "How the work is done, and what the alternatives are",
+      "What you get: deliverables, formats and typical use, as a table",
+      "What drives the quality of the result, as a list of factors",
+      "What to do next, with the internal links to the money pages"
+    ],
+    "researchPrompts": [
+      "What do the current top-ranking pages for this keyword cover, and what do they all miss?",
+      "What does a musician, teacher or producer buying this actually need to decide?",
+      "Which instrument, genre or workflow does this apply to, and where does it break down?"
+    ],
+    "outputContract": "A single .mdx file: YAML frontmatter then a markdown body. Markdown only, no JSX, no imported components."
+  },
+  "taxonomy": {
+    "note": "Read by the portal editor, the drafting prompt and the public /blog category pages. A category is a topic (what the post is about) and gets its own indexable hub page at /blog/category/<slug>. An industry is an audience (who it is for). Slugs are URLs: rename a label freely, never a slug.",
+    "defaultAuthor": "GrooveSheet Editorial",
+    "authors": [
+      "GrooveSheet Editorial",
+      "Edward Zhang"
+    ],
+    "categories": [
+      {
+        "slug": "industry-news",
+        "label": "Industry news",
+        "description": "What is changing in music AI, notation software and audio tooling, and what it means for the people who actually play."
+      },
+      {
+        "slug": "music-transcription",
+        "label": "Music transcription",
+        "description": "Turning a recording into notation: how automatic transcription works, where it is reliable and how to correct it."
+      },
+      {
+        "slug": "stem-separation",
+        "label": "Stem separation",
+        "description": "Splitting a mix into vocals, drums, bass and the rest: the models, the artefacts and what the stems are good for."
+      },
+      {
+        "slug": "midi-and-daws",
+        "label": "MIDI and DAWs",
+        "description": "Audio to MIDI, quantisation, tempo maps and getting a transcription into Logic, Ableton, FL Studio or Reaper."
+      },
+      {
+        "slug": "sheet-music-notation",
+        "label": "Sheet music and notation",
+        "description": "MusicXML, PDF exports, engraving conventions and moving scores between MuseScore, Sibelius, Dorico and Finale."
+      },
+      {
+        "slug": "practice-and-learning",
+        "label": "Practice and learning",
+        "description": "Learning a part by ear, slowing it down, looping it, and practising from a chart you trust."
+      },
+      {
+        "slug": "music-education",
+        "label": "Music education",
+        "description": "Using transcription and stems in lessons, ensembles and classrooms, and what students get out of it."
+      },
+      {
+        "slug": "production",
+        "label": "Production and remixing",
+        "description": "Remixes, backing tracks, samples and covers built from separated stems and transcribed parts."
+      },
+      {
+        "slug": "guides",
+        "label": "Guides",
+        "description": "Plain explanations of the formats, terms and decisions behind getting a score out of a recording."
+      }
+    ],
+    "industries": [
+      {
+        "slug": "drummers",
+        "label": "Drummers"
+      },
+      {
+        "slug": "pianists",
+        "label": "Pianists and keyboardists"
+      },
+      {
+        "slug": "bassists",
+        "label": "Bassists"
+      },
+      {
+        "slug": "guitarists",
+        "label": "Guitarists"
+      },
+      {
+        "slug": "music-teachers",
+        "label": "Music teachers and schools"
+      },
+      {
+        "slug": "producers",
+        "label": "Producers and remixers"
+      },
+      {
+        "slug": "worship-and-session",
+        "label": "Worship and session musicians"
+      },
+      {
+        "slug": "transcribers-arrangers",
+        "label": "Transcribers and arrangers"
+      }
+    ]
+  },
+  "news": {
+    "note": "Read by src/lib/content/ (the /internal content pipeline). The pipeline scans these feeds every cadence.everyDays, ranks the stories for relevance to the business, and drafts one post from the winner. Every query and feed below was run against the live source on 2026-09-20 and kept only if its results were on topic. The ones that were dropped are worth knowing about, because they look obviously right and are not: a query naming Moises returns footballers and baseball players, one naming Dorico, Sibelius or Finale returns the composers and sports fixtures, and \"music education\" returns local school-district news. Notation-software coverage comes from the Scoring Notes feed instead, which is the trade press for exactly that. Test any new query with curl before adding it: a feed that 404s is a silent failure later.",
+    "everyDays": 3,
+    "cron": "0 1 */3 * *",
+    "maxAgeDays": 10,
+    "maxPerFeed": 8,
+    "minScore": 55,
+    "category": "Industry news",
+    "categorySlug": "industry-news",
+    "searchQueries": [
+      "\"music transcription\" OR \"transcribe a song\" OR \"drum transcription\"",
+      "\"stem separation\" OR \"source separation\" music",
+      "\"audio to MIDI\" OR \"MIDI transcription\" OR \"polyphonic pitch\"",
+      "\"LALAL.AI\" OR AnthemScore OR Klangio OR ScoreCloud OR \"Moises AI\"",
+      "\"AI music\" lawsuit OR ruling OR licence OR license",
+      "\"music tech\" startup funding OR launch"
+    ],
+    "tradeFeeds": [
+      {
+        "name": "Scoring Notes",
+        "url": "https://www.scoringnotes.com/feed/"
+      },
+      {
+        "name": "MusicRadar Tech",
+        "url": "https://www.musicradar.com/feeds/tag/music-tech"
+      },
+      {
+        "name": "MusicTech",
+        "url": "https://www.musictech.com/feed/"
+      },
+      {
+        "name": "CDM (Create Digital Music)",
+        "url": "https://cdm.link/feed/"
+      },
+      {
+        "name": "Synthtopia",
+        "url": "https://www.synthtopia.com/feed/"
+      },
+      {
+        "name": "Music Business Worldwide",
+        "url": "https://www.musicbusinessworldwide.com/feed/"
+      }
+    ],
+    "requiredSections": [
+      "What happened, in one paragraph, with the original source linked",
+      "Why it matters to a musician, teacher or producer who wants a score out of a recording",
+      "What it changes in practice, and what it does not change",
+      "Our view: the trade-offs, the open questions, and who should care",
+      "What to do next, with the internal links to the money pages",
+      "Sources"
+    ],
+    "subreddits": [
+      "WeAreTheMusicMakers",
+      "drums",
+      "piano",
+      "edmproduction",
+      "musictheory"
+    ],
+    "relevance": [
+      "Best: something a working musician, music teacher or producer should act on or understand. A new music AI model for transcription, separation or MIDI, a notation software release, a licensing or copyright decision touching transcriptions and covers, a real shift in how people learn parts by ear.",
+      "Good: moves by the tools our readers already use (MuseScore, Dorico, Sibelius, Ableton, Logic, Moises, LALAL, Melodyne, Izotope) where we can explain what it changes at the desk or on the stand.",
+      "Reject: press-release fluff with no substance, market-size reports, stock and funding news with no product behind it, streaming royalty politics with no bearing on playing, AI song generation with no transcription or separation angle, hardware synth reviews, concert and festival news."
+    ]
+  },
+  "generation": {
+    "provider": "unwired",
+    "portalModels": [
+      "deepseek/deepseek-chat",
+      "anthropic/claude-sonnet-5"
+    ],
+    "portalSocialModel": "deepseek/deepseek-chat",
+    "apiKeyEnv": "DEEPSEEK_API_KEY",
+    "model": "deepseek-chat",
+    "maxOutputTokens": 8000,
+    "note": "The portal and cron run through src/lib/content/llm.ts, which picks DeepSeek or OpenRouter from whichever key is set."
+  },
+  "syndication": {
+    "script": "scripts/syndicate.mjs",
+    "platforms": [
+      "linkedin",
+      "facebook",
+      "instagram",
+      "pinterest"
+    ],
+    "runInPipeline": false,
+    "runAfterDeployOnly": true,
+    "reason": "A syndicated URL that 404s is the failure this ordering exists to prevent. Syndicate only after the post is live and returns 200.",
+    "apiKeyEnvs": [
+      "ZERNIO_API_KEY",
+      "UPLOAD_POST_API_KEY"
+    ]
+  },
+  "search": {
+    "sitemapCommand": "node scripts/gsc.mjs sitemap",
+    "envKeys": [
+      "GSC_KEY_FILE",
+      "GSC_SITE_URL"
+    ],
+    "runAfterDeployOnly": true
+  },
+  "pullRequest": {
+    "branchPrefix": "blog/",
+    "labels": [
+      "blog",
+      "automated"
+    ],
+    "draft": false,
+    "reviewRequired": true,
+    "buildCommand": "npm run build",
+    "installCommand": "npm ci"
+  }
+}

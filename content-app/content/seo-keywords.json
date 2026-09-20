@@ -1,0 +1,21 @@
+{
+  "market": "US, UK, CA and AU",
+  "builtAt": "2026-09-20",
+  "note": "Measured in Google Ads Keyword Planner for the GrooveSheet account (customer 970-378-7901) over Aug 2025 to Jul 2026, across US+UK+CA+AU. 'guitar tab maker' (5,400) is measured and real but deliberately absent: GrooveSheet separates a guitar stem and does not produce tablature or guitar notation, so a post targeting it would promise something the product does not do. Same reason for keeping speech-to-text terms such as 'audio transcription software' out. Rebuild with scripts/build-seo-keywords.mjs when there is a fresh export.",
+  "keywords": [
+    { "keyword": "stem splitter", "volume": 14800, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "sheet music maker", "volume": 14800, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "remove vocals from a song", "volume": 12100, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "ai stem splitter", "volume": 6600, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "separate vocals from music", "volume": 3600, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "free music notation software", "volume": 3600, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "audio to midi converter", "volume": 2400, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "transcribe music", "volume": 2400, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "music transcription software", "volume": 1300, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "music scanner", "volume": 1300, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "audio to sheet music", "volume": 1000, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "drum transcription", "volume": 320, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "song to sheet music", "volume": 320, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" },
+    { "keyword": "piano transcription software", "volume": 40, "source": "Google Ads Keyword Planner", "measuredAt": "2026-07-31" }
+  ]
+}

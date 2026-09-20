@@ -1,4 +1,4 @@
-﻿# GrooveSheet Frontend (groovesheet-fe)
+# GrooveSheet Frontend (groovesheet-fe)
 
 > Agent memory for Claude Code. See [`.claude/`](./.claude/) for team-shared permissions and slash commands (`/qa`, `/dev`, `/env`). Personal overrides go in `.claude/settings.local.json` (gitignored).
 
@@ -51,6 +51,23 @@
 - High z-index modals/dropdowns: use `ReactDOM.createPortal(..., document.body)` with `z-index: 2147483647`
 - Glass morphism is used **once** — only on the Hero upload card. Don't add it elsewhere.
 - `docs/DESIGN_SYSTEM.md` is now a stub redirecting to `design-system/`. The 496-line original is preserved in git history.
+
+## Content pipeline and internal portal (`content-app/`)
+
+`content-app/` is a **separate Next.js app in this repo, deployed as its own
+Vercel project**. It owns `/blog`, `/blog/<slug>`, `/blog/category/<slug>`,
+`/blog-media`, `/internal` and `/api/internal`, served on the main domain
+through rewrites from this project's `vercel.json`. CRA cannot run cron jobs,
+hold a Postgres connection or server-render a post, which is why it is separate.
+
+- It replaced the client-rendered blog at `src/components/Blog.js`. Those
+  routes still exist in `App.js` and must NOT be relinked: the rewrite wins on
+  the live domain, and re-adding a link would send people to the old reader,
+  which shows only `blog_posts` and none of the pipeline's posts.
+- The eleven original posts in Supabase `blog_posts` are read in place by
+  `content-app/src/lib/content/legacy.ts`. Do not copy or migrate that table.
+- Read `content-app/README.md` before changing anything in it. It is the only
+  place the provider quirks are written down.
 
 ## Auth & Gating
 - Gate UI with `<SignedIn>` / `<SignedOut>` from `src/auth.js`

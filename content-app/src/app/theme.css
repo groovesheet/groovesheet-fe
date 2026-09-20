@@ -1,0 +1,125 @@
+/* GrooveSheet tokens for the content app.
+
+   The runtime source of truth for the product is groovesheet-fe's
+   src/styles/tokens.css. This app is a separate Next.js build and cannot
+   import across apps, so the values are mirrored here. When a colour changes
+   there, change it here. Nothing in this file is invented: every --color-*
+   value below appears in that file.
+
+   Dark is the default, as in the product. Light is [data-theme="light"]. The
+   portal follows the operating system through the prefers-color-scheme block
+   at the bottom, because nobody signed into /internal wants to hunt for a
+   theme switch. */
+
+:root {
+  /* Base surfaces */
+  --color-background: #171717;
+  --color-tinted-background: #151515;
+  --color-panel1: #323033;
+  --color-panel2: #212121;
+  --color-panel3: #1a1a1a;
+  --color-border: #3d3b3e;
+  --color-text: #ffffff;
+  --color-muted-foreground: #8d8c8d;
+  --color-foreground: #f4f4f4;
+  --color-surface-muted: #5f5e60;
+
+  /* Brand */
+  --color-primary: #012fa7;
+  --color-primary-hover: #0139c7;
+  --color-primary-shadow: rgba(1, 47, 167, 0.3);
+
+  /* Status */
+  --color-danger: #ff6b6b;
+  --color-success: #22c55e;
+  --color-warning: #ffb020;
+  --color-info: #93b4ff;
+
+  /* Translucent fills */
+  --color-border-light: rgba(255, 255, 255, 0.1);
+  --color-border-lighter: rgba(255, 255, 255, 0.18);
+  --color-surface-light: rgba(255, 255, 255, 0.05);
+  --color-surface-lighter: rgba(255, 255, 255, 0.08);
+  --color-surface-lightest: rgba(255, 255, 255, 0.04);
+  --color-shadow: rgba(0, 0, 0, 0.37);
+
+  /* The brand signature. 43px grid, per design-system/VISUAL_GUIDE.md. */
+  --color-dot-pattern: #171e43;
+
+  /* Type */
+  --font-family-sans: "Hubot Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+[data-theme="light"] {
+  --color-background: #ffffff;
+  --color-tinted-background: #f6f6f6;
+  --color-panel1: #ffffff;
+  --color-panel2: #f6f6f6;
+  --color-panel3: #ffffff;
+  --color-border: #e5e5e5;
+  --color-text: #000000;
+  --color-muted-foreground: #666666;
+  --color-foreground: #000000;
+  --color-surface-muted: #ffffff;
+
+  --color-border-light: rgba(0, 0, 0, 0.08);
+  --color-border-lighter: rgba(0, 0, 0, 0.1);
+  --color-surface-light: rgba(0, 0, 0, 0.05);
+  --color-surface-lighter: rgba(240, 240, 240, 0.5);
+  --color-surface-lightest: rgba(248, 248, 248, 0.95);
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-dot-pattern: #b8d4ff;
+}
+
+/* A viewer whose OS says light, who has not chosen otherwise, gets light. The
+   :root:not([data-theme]) guard means an explicit choice always wins. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-background: #ffffff;
+    --color-tinted-background: #f6f6f6;
+    --color-panel1: #ffffff;
+    --color-panel2: #f6f6f6;
+    --color-panel3: #ffffff;
+    --color-border: #e5e5e5;
+    --color-text: #000000;
+    --color-muted-foreground: #666666;
+    --color-foreground: #000000;
+    --color-surface-muted: #ffffff;
+
+    --color-border-light: rgba(0, 0, 0, 0.08);
+    --color-border-lighter: rgba(0, 0, 0, 0.1);
+    --color-surface-light: rgba(0, 0, 0, 0.05);
+    --color-surface-lighter: rgba(240, 240, 240, 0.5);
+    --color-surface-lightest: rgba(248, 248, 248, 0.95);
+    --color-shadow: rgba(0, 0, 0, 0.08);
+    --color-dot-pattern: #b8d4ff;
+  }
+}
+
+html {
+  color-scheme: dark light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The dot grid. Fixed, so it does not scroll with the content, at the 43px
+   pitch and ~35% opacity the visual guide specifies. */
+.gs-dotgrid::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+}

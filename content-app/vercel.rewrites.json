@@ -1,0 +1,94 @@
+{
+  "_README": [
+    "This file is NOT read by Vercel. It is the block to paste into the MAIN",
+    "project's vercel.json, which lives one directory up at gs-fe-content/vercel.json",
+    "(groovesheet-fe's root). Paste it and redeploy the main project.",
+    "",
+    "WHY: the content app is its own Vercel project on its own domain. These",
+    "rewrites put its four route trees on www.groovesheet.net, so the blog earns",
+    "authority for the main domain rather than for a Vercel subdomain, and the",
+    "portal is reachable at the address people expect.",
+    "",
+    "ORDER MATTERS, in two places, and both are easy to get wrong:",
+    "",
+    "1. `/api/internal/:path*` MUST come BEFORE the existing `/api/:path*` entry.",
+    "   Vercel takes the first rewrite that matches. `/api/:path*` sends",
+    "   everything to api.groovesheet.net, so if it goes first every portal",
+    "   action (sign in, save, approve, send) 404s against the Python backend,",
+    "   which has no such routes.",
+    "",
+    "2. The two `redirects` entries whose source is",
+    "   `/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)` send visitors in China to",
+    "   the Chinese locale. They match /blog and /internal too. Left alone, a",
+    "   reader in China lands on /zh-CN/blog, which the CRA app renders from the",
+    "   OLD blog_posts reader and which therefore shows none of the posts this",
+    "   pipeline publishes. Add blog, blog-media and internal to the negative",
+    "   lookahead in BOTH redirect sources, as shown under _redirectSourceFix",
+    "   below. The blog is English-only for now (see pipeline.config.json), so",
+    "   a Chinese visitor should reach the same English post as everyone else,",
+    "   not a locale that has nothing behind it.",
+    "",
+    "Replace CONTENT_APP_URL below with the content project's production URL.",
+    "Vercel needs the protocol: https://groovesheet-content.vercel.app, or a",
+    "custom domain if one is set. Do not point it at the git-branch URL, which",
+    "changes on every deploy."
+  ],
+
+  "_redirectSourceFix": {
+    "before": "/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)",
+    "after": "/:path((?!api/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
+    "note": "Apply to BOTH redirect entries that use this source. There are two: one for the CN geo rule on the bare path and one for the cookie-missing case."
+  },
+
+  "_rewritesToAdd": [
+    {
+      "_note": "FIRST. Before the existing /api/:path* entry.",
+      "source": "/api/internal/:path*",
+      "destination": "CONTENT_APP_URL/api/internal/:path*"
+    },
+    {
+      "source": "/blog",
+      "destination": "CONTENT_APP_URL/blog"
+    },
+    {
+      "source": "/blog/:path*",
+      "destination": "CONTENT_APP_URL/blog/:path*"
+    },
+    {
+      "source": "/blog-media/:path*",
+      "destination": "CONTENT_APP_URL/blog-media/:path*"
+    },
+    {
+      "source": "/internal",
+      "destination": "CONTENT_APP_URL/internal"
+    },
+    {
+      "source": "/internal/:path*",
+      "destination": "CONTENT_APP_URL/internal/:path*"
+    },
+    {
+      "_note": "The blog's own sitemap. The site-wide /sitemap.xml stays pointed at api.groovesheet.net; this is a second sitemap, and both get submitted in Search Console. See src/app/sitemap.ts for why there are two.",
+      "source": "/blog-sitemap.xml",
+      "destination": "CONTENT_APP_URL/sitemap.xml"
+    }
+  ],
+
+  "_notRewritten": {
+    "/api/cron/content": [
+      "Deliberately absent. Vercel Cron calls the cron path on the project that",
+      "declares it, which is the content project itself (see its vercel.json).",
+      "It never goes through the main domain, and exposing it there would add a",
+      "public door to a job that only CRON_SECRET protects."
+    ]
+  },
+
+  "_afterwards": [
+    "Once the main project is redeployed, check all four on the real domain:",
+    "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/blog",
+    "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/blog/understanding-ghost-notes-detection",
+    "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/blog-sitemap.xml",
+    "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/internal   (expect 307 to /internal/login)",
+    "The second one is the important one: it is an existing indexed URL that",
+    "must not break on the day this ships."
+  ]
+}
