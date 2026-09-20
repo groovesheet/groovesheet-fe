@@ -132,6 +132,78 @@ project, not the main one. `--social` sets only the two social keys from
 generates the cron secret, so nothing is typed. A value only takes effect on
 the next production deploy.
 
+## Deploying
+
+**Production deploys come from Git. `vercel deploy --prod` cannot work, by
+policy, and it fails in the worst possible way.**
+
+The Kelin Studio team has a deployment policy set to Git-only for production.
+A CLI deploy is still accepted by the API, still creates a deployment record,
+and then never builds. The CLI itself prints nothing and hangs indefinitely;
+`vercel ls` shows the deployment as `UNKNOWN` with a 0ms build and no logs.
+Nothing anywhere says why. Six deployments were burned on this before the
+reason was found, and it is only visible in one field of the REST API:
+
+```bash
+TOKEN=$(python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/Library/Application Support/com.vercel.cli/auth.json')))['token'])")
+curl -sS "https://api.vercel.com/v13/deployments/<dpl_id>?teamId=team_sdgtRsTJTOsKrM2ahYMIsj0q" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys;print(json.load(sys.stdin).get('readyStateReason'))"
+# CLI deployments are not allowed in production. Only Git deployments are allowed.
+```
+
+**Read `readyStateReason` first** for any deployment that is `BLOCKED` or
+`UNKNOWN`. It is the only place the answer appears: not in `vercel logs`, not
+in `vercel inspect`, not in the CLI's output.
+
+Two things that look like the cause and are not, both checked:
+
+- `live: false` on the project. Every project in the team has it, including
+  the ones deploying fine. It does not mean paused.
+- The team being blocked or over quota. The team is on Pro with no block, and
+  34 other deployments were `READY` while all six of this project's were
+  `BLOCKED`. When only one project is affected, it is that project's
+  deployments being refused, not the team.
+
+### How to deploy
+
+Push to the production branch. That is the whole procedure.
+
+```bash
+git push origin feat/content-pipeline     # while that is the production branch
+```
+
+GitHub's webhook triggers the build. Nothing is uploaded from a laptop, so it
+does not matter whose machine it runs on or what their network does.
+
+### Project settings that make that work
+
+Set once, via the API, and worth knowing if the project is ever recreated:
+
+| Setting | Value | Why |
+|---|---|---|
+| Git repository | `groovesheet/groovesheet-fe` | Same repo as the CRA app |
+| Root Directory | `content-app` | The app is a subdirectory; without this the build runs against the CRA app |
+| Framework | `nextjs` | |
+| Production Branch | `feat/content-pipeline` | Temporary. `main` has no `content-app/` yet |
+| Ignored Build Step | `git diff --quiet HEAD^ HEAD -- .` | Both projects watch one repo. Without this, every push to the CRA app rebuilds this one for nothing. The command runs from the Root Directory, so `.` means `content-app` |
+
+**When this branch merges to `main`, change the production branch back**, or
+production silently keeps building from a branch nobody is updating:
+
+```bash
+TOKEN=$(python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/Library/Application Support/com.vercel.cli/auth.json')))['token'])")
+curl -sS -X PATCH "https://api.vercel.com/v9/projects/prj_yC0C22IWDpgjw1tkhNmk4o1BWM1s/branch?teamId=team_sdgtRsTJTOsKrM2ahYMIsj0q" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"branch":"main"}'
+```
+
+### A second reason not to deploy from the CLI
+
+`.vercelignore` exists because without it the CLI uploads `.next` and
+`node_modules`: 622MB against 89 files that matter. That produced its own
+stall, separate from the policy one, and cost an hour of looking at the wrong
+problem. Keep the file even though Git deploys do not read it, because someone
+will eventually run `vercel deploy` for a preview.
+
 ## Things that will bite
 
 **Dev mode cannot render a post.** `next-mdx-remote` throws inside `next dev`

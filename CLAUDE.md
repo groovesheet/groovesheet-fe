@@ -69,6 +69,18 @@ hold a Postgres connection or server-render a post, which is why it is separate.
 - Read `content-app/README.md` before changing anything in it. It is the only
   place the provider quirks are written down.
 
+**Deploying anything in this repo: production comes from Git only.** The Kelin
+Studio Vercel team has a Git-only deployment policy, so `vercel deploy --prod`
+is refused. It does not say so: the API accepts it, creates the deployment,
+never builds it, and the CLI hangs with no output while `vercel ls` reports
+`UNKNOWN`. The reason appears in exactly one place, the `readyStateReason`
+field of `GET /v13/deployments/<id>`, which reads "CLI deployments are not
+allowed in production. Only Git deployments are allowed." **Check that field
+first** whenever a deployment sits at `BLOCKED` or `UNKNOWN`. To deploy, push
+to the project's production branch. `content-app/README.md` has the full
+account, including two plausible causes (`live: false`, team quota) that are
+red herrings.
+
 ## Auth & Gating
 - Gate UI with `<SignedIn>` / `<SignedOut>` from `src/auth.js`
 - Login entry points: call `LoginModal` via `onLoginClick` prop (see `Header.js`)
