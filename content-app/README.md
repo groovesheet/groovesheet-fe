@@ -97,11 +97,23 @@ UPLOAD_POST_API_KEY=...
 Apply the schema once, through the **session** pooler:
 
 ```bash
-psql "$DATABASE_URL_SESSION" -f src/lib/content/schema.sql
+npm run schema
 ```
 
-On Supabase, use the pooler hosts. The direct host is IPv6 only and Vercel
-cannot reach it.
+That runs `scripts/apply-schema.mjs`, which reads `DATABASE_URL_SESSION` from
+`.env.local`, prints the host it is about to change, and applies
+`src/lib/content/schema.sql`. Pass a URL as an argument to override. It is
+idempotent, so run it again after any change to that file.
+
+`psql "$DATABASE_URL_SESSION" -f src/lib/content/schema.sql` does the same
+thing if you have psql. It is not installed by default on macOS, which is why
+the script exists: this app already depends on the `pg` driver, so it needs
+nothing new.
+
+Use the **session** pooler (port 5432), not the transaction pooler the app
+runs on: DDL across one file needs a session that survives between statements.
+On Supabase use a pooler host either way, because the direct host is IPv6 only
+and Vercel cannot reach it.
 
 **One credential per person** instead of a shared password:
 

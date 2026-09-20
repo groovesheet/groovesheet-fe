@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check:em-dash": "node scripts/check-em-dash.mjs",
-    "prebuild": "node scripts/check-em-dash.mjs"
+    "prebuild": "node scripts/check-em-dash.mjs",
+    "schema": "node scripts/apply-schema.mjs"
   },
   "dependencies": {
     "@tiptap/extension-table": "^3.31.3",
