@@ -175,6 +175,30 @@ git push origin feat/content-pipeline     # while that is the production branch
 GitHub's webhook triggers the build. Nothing is uploaded from a laptop, so it
 does not matter whose machine it runs on or what their network does.
 
+**Redeploying with nothing to commit** is not `git commit --allow-empty`. That
+is the usual advice and it does not work here: the Ignored Build Step below
+asks whether the commit touched `content-app`, an empty commit did not, and
+the build is correctly skipped. Redeploy the current production deployment
+instead, which inherits its Git source and so satisfies the policy:
+
+```bash
+TOKEN=$(python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/Library/Application Support/com.vercel.cli/auth.json')))['token'])")
+TEAM=team_sdgtRsTJTOsKrM2ahYMIsj0q
+SRC=$(curl -sS "https://api.vercel.com/v6/deployments?teamId=$TEAM&projectId=prj_yC0C22IWDpgjw1tkhNmk4o1BWM1s&limit=20&target=production" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "
+import json,sys
+for x in json.load(sys.stdin)['deployments']:
+    if x.get('state')=='READY' and (x.get('meta') or {}).get('githubCommitSha'): print(x['uid']); break")
+curl -sS -X POST "https://api.vercel.com/v13/deployments?teamId=$TEAM" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d "{\"deploymentId\":\"$SRC\",\"name\":\"groovesheet-content\",\"target\":\"production\",\"meta\":{\"action\":\"redeploy\"}}"
+```
+
+The Redeploy button in the dashboard does the same thing. Note the distinction
+that costs the time: a redeploy of a Git deployment is a Git deployment, while
+`POST /v13/deployments` with a fresh `gitSource` is not, and is refused with
+the same "CLI deployments are not allowed" message.
+
 ### Project settings that make that work
 
 Set once, via the API, and worth knowing if the project is ever recreated:
