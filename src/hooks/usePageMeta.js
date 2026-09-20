@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 
-const DEFAULT_TITLE = 'GrooveSheet — AI Music Transcription';
+/* Must match <title> in public/index.html. When they disagree, the first
+   client-side navigation silently replaces the title Google indexed. */
+const DEFAULT_TITLE = 'Audio to Sheet Music, Stems & MIDI | GrooveSheet';
 
 function setMeta(attr, key, content) {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);

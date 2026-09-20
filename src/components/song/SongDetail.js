@@ -267,9 +267,16 @@ function SongDetail({ onLoginClick }) {
   // crawlers already get it from the /seo/track rewrite in vercel.json, but
   // that only covers the handful of bots listed there — everything else, and
   // the page itself, fell back to the generic preview image.
+  // Titled for the notation cluster, not the brand. "drum sheet music" and
+  // its eleven phrasings are ~8,100 searches/mo and the intent is "find the
+  // notation for this song", which is exactly what this page answers. Song
+  // and artist lead so the phrase match is front-loaded; the category words
+  // follow and survive truncation often enough to be worth carrying.
   usePageMeta(
-    track ? `${track.title} — ${track.artist}` : null,
-    track ? `Listen and download sheet music, MIDI and stems for ${track.title} by ${track.artist}.` : null,
+    track ? `${track.title} by ${track.artist}: Sheet Music & MIDI` : null,
+    track
+      ? `Free sheet music, MIDI and isolated stems for ${track.title} by ${track.artist}. AI-transcribed notation you can play along to, download or edit.`
+      : null,
     track ? track.cover_url || undefined : undefined
   );
 

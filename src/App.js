@@ -49,6 +49,20 @@ import { claimPendingPreviewIfAny } from './utils/previewApi';
 import { claimPendingCampaignIfAny } from './utils/api';
 import config from './config';
 import { LocaleScope, LocaleSync } from './i18n/locale';
+import useRouteMeta from './seo/useRouteMeta';
+
+/**
+ * Applies the per-route title and description from src/seo/routeMeta.js.
+ *
+ * Rendered inside <Router> but outside <Routes> so one mount covers every
+ * static route. It sits above the route elements in the tree, so a page that
+ * computes its own meta from fetched data (SongDetail, BlogPost) still runs
+ * its usePageMeta last and wins.
+ */
+function RouteMeta() {
+  useRouteMeta();
+  return null;
+}
 
 function LandingPage({ onLoginClick }) {
   const { isDarkMode } = useTheme();
@@ -217,6 +231,7 @@ function App() {
         <PendingPreviewClaimRunner />
         <PendingCampaignClaimRunner />
         <LocaleSync />
+        <RouteMeta />
         <Routes>
           <Route
             path="/zh-CN/*"
