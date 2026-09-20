@@ -196,6 +196,52 @@ curl -sS -X PATCH "https://api.vercel.com/v9/projects/prj_yC0C22IWDpgjw1tkhNmk4o
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"branch":"main"}'
 ```
 
+### The deployment builds, and every URL still 302s
+
+A new Vercel project on a Pro team is created with SSO protection set to
+`all_except_custom_domains`. This project has no custom domain, so that meant
+everything, including the public blog, redirected to `vercel.com/sso-api`. The
+build is green and the site is unreachable, which reads like a routing bug and
+is not one.
+
+It is set to `preview` here: preview deployments stay behind the team login,
+production is public. That is what a public blog needs and it matches
+`groovesheet-fe`, which has no SSO at all. Nothing is lost by it: `/internal`
+and `/api/internal` are gated by `src/middleware.ts` and a signed session
+cookie, not by Vercel.
+
+It matters for the rewrite too. `www.groovesheet.net/blog` proxies to this
+project's URL, so if that URL is behind SSO the rewrite proxies visitors into
+a login wall.
+
+```bash
+curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' https://groovesheet-content-kelin-studio.vercel.app/blog
+# 302 https://vercel.com/sso-api?url=...   <- protection, not routing
+```
+
+### Checking a deployment actually works
+
+The build going green is not the test. This is:
+
+```bash
+B=https://groovesheet-content-kelin-studio.vercel.app
+curl -sS -o /dev/null -w 'blog        %{http_code}\n' $B/blog                       # 200
+curl -sS -o /dev/null -w 'a post      %{http_code}\n' $B/blog/understanding-ghost-notes-detection  # 200
+curl -sS -o /dev/null -w 'bad topic   %{http_code}\n' $B/blog/category/nope          # 404
+curl -sS -o /dev/null -w 'portal      %{http_code}\n' $B/internal                    # 307 to /internal/login
+curl -sS -o /dev/null -w 'cron naked  %{http_code}\n' $B/api/cron/content            # 401
+```
+
+The cron is registered per deployment, not per project. `GET /v1/projects/<id>/crons`
+returns 404 because that endpoint does not exist; look at `crons` on the
+deployment object instead:
+
+```bash
+curl -sS "https://api.vercel.com/v13/deployments/<dpl_id>?teamId=team_sdgtRsTJTOsKrM2ahYMIsj0q" \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys;print(json.load(sys.stdin).get('crons'))"
+# [{'path': '/api/cron/content', 'schedule': '0 1 */3 * *'}]
+```
+
 ### A second reason not to deploy from the CLI
 
 `.vercelignore` exists because without it the CLI uploads `.next` and
