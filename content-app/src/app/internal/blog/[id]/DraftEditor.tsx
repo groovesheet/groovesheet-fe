@@ -59,17 +59,6 @@ function SocialTiles({
 }) {
   if (social.length === 0) return null;
   const failed = social.filter((s) => s.status === "failed" && s.error);
-  const tile: React.CSSProperties = {
-    width: 44,
-    height: 44,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    border: "1px solid var(--hairline)",
-    borderRadius: "var(--radius-sm, 6px)",
-    background: "transparent",
-    padding: 0,
-  };
   return (
     <div className="int-form-field" style={{ gap: 8 }}>
       <div className="int-card-head">
@@ -77,12 +66,12 @@ function SocialTiles({
         <span className="int-tip" tabIndex={0} aria-label="What the colours mean">
           <Info size={15} aria-hidden="true" />
           <span className="int-tip-body" role="tooltip">
-            Blue is live: click to open the post. Red failed and dashed grey has not gone out: click
-            either to send it now.
+            Blue is live: click to open the post. Red failed and grey has not gone out: click either
+            to send it now.
           </span>
         </span>
       </div>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="int-social-tiles">
         {social.map((s) => {
           const icon = SOCIAL_ICONS[s.platform];
           const name = PLATFORM_LABEL[s.platform] ?? s.platform;
@@ -93,11 +82,11 @@ function SocialTiles({
           );
           if (s.status === "published") {
             return s.platformUrl ? (
-              <a key={s.id} href={s.platformUrl} target="_blank" rel="noreferrer" title={`Open the ${name} post`} aria-label={`Open the ${name} post`} style={{ ...tile, color: "var(--primary)", borderColor: "var(--primary)" }}>
+              <a key={s.id} href={s.platformUrl} target="_blank" rel="noreferrer" title={`Open the ${name} post`} aria-label={`Open the ${name} post`} className="int-social-tile is-live">
                 {glyph}
               </a>
             ) : (
-              <span key={s.id} title={`Sent to ${name}. The network gave no link back.`} aria-label={`Sent to ${name}`} style={{ ...tile, color: "var(--primary)", borderColor: "var(--primary)" }}>
+              <span key={s.id} title={`Sent to ${name}. The network gave no link back.`} aria-label={`Sent to ${name}`} className="int-social-tile is-live">
                 {glyph}
               </span>
             );
@@ -105,8 +94,8 @@ function SocialTiles({
           const bad = s.status === "failed";
           if (sendingId === s.id) {
             return (
-              <span key={s.id} aria-label={`Sending to ${name}`} style={{ ...tile, color: "var(--primary)", borderColor: "var(--primary)" }}>
-                <span className="int-spinner" aria-hidden="true" />
+              <span key={s.id} aria-label={`Sending to ${name}`} className="int-social-tile is-sending">
+                <span className="int-spinner int-spinner-sm" aria-hidden="true" />
               </span>
             );
           }
@@ -118,13 +107,7 @@ function SocialTiles({
               onClick={() => onPost(s.id)}
               title={bad ? `${name} failed. Click to try again.` : `Not sent. Click to post to ${name} now.`}
               aria-label={bad ? `Retry ${name}` : `Post to ${name} now`}
-              style={{
-                ...tile,
-                cursor: "pointer",
-                color: bad ? "var(--semantic-down)" : "var(--muted-soft)",
-                borderColor: bad ? "var(--semantic-down)" : "var(--hairline)",
-                borderStyle: bad ? "solid" : "dashed",
-              }}
+              className={`int-social-tile ${bad ? "is-failed" : "is-idle"}`}
             >
               {glyph}
             </button>
@@ -132,12 +115,12 @@ function SocialTiles({
         })}
       </div>
       {sendingId !== null ? (
-        <span className="int-form-hint" role="status" style={{ color: "var(--primary)", fontWeight: 600 }}>
+        <span className="int-form-hint is-info" role="status">
           Sending to {PLATFORM_LABEL[social.find((x) => x.id === sendingId)?.platform ?? ""] ?? "the network"}. This can take up to a minute, stay on this page.
         </span>
       ) : null}
       {failed.map((s) => (
-        <span key={s.id} className="int-form-hint" style={{ color: "var(--semantic-down)", overflowWrap: "anywhere" }}>
+        <span key={s.id} className="int-form-hint is-error">
           {PLATFORM_LABEL[s.platform] ?? s.platform}: {s.error}
         </span>
       ))}
@@ -161,7 +144,7 @@ function Field({
       <div className="int-card-head">
         <span className="int-form-label">{label}</span>
         {hint ? (
-          <span className="int-form-hint" style={bad ? { color: "var(--semantic-down)" } : undefined}>
+          <span className={`int-form-hint${bad ? " is-error" : ""}`}>
             {hint}
           </span>
         ) : null}
@@ -281,19 +264,15 @@ export default function DraftEditor({
       {/* Main column: title, body, FAQs */}
       <div className="int-detail-main">
         <input
-          className="gs-input"
-          style={{ fontSize: 20, fontWeight: 600, height: 56 }}
+          className="gs-input int-title-input"
           placeholder="Post title"
           value={form.title}
           onChange={(e) => set("title", e.target.value)}
           aria-label="Post title"
         />
-        <div className="int-card-head" style={{ marginTop: -12 }}>
+        <div className="int-card-head int-title-meta">
           <span className="int-form-hint">{words} words</span>
-          <span
-            className="int-form-hint"
-            style={form.title.length > limits.title ? { color: "var(--semantic-down)" } : undefined}
-          >
+          <span className={`int-form-hint${form.title.length > limits.title ? " is-error" : ""}`}>
             Title {form.title.length}/{limits.title}
           </span>
         </div>
@@ -306,7 +285,7 @@ export default function DraftEditor({
             <span className="int-form-hint">Shown under the post and sent to search engines as FAQ data</span>
           </div>
           {form.faqs.map((f, i) => (
-            <div key={i} className="int-form-field" style={{ gap: 8 }}>
+            <div key={i} className="int-form-field int-faq">
               <input
                 className="gs-input"
                 placeholder="Question"
@@ -323,7 +302,6 @@ export default function DraftEditor({
               <button
                 type="button"
                 className="gs-btn gs-btn--tertiary-text"
-                style={{ alignSelf: "flex-start", padding: 0 }}
                 onClick={() => set("faqs", form.faqs.filter((_, j) => j !== i))}
               >
                 Remove
@@ -332,11 +310,10 @@ export default function DraftEditor({
           ))}
           <button
             type="button"
-            className="gs-btn gs-btn--secondary-light int-btn-sm"
-            style={{ alignSelf: "flex-start" }}
+            className="gs-btn gs-btn--secondary-light int-btn-sm int-self-start"
             onClick={() => set("faqs", [...form.faqs, { q: "", a: "" }])}
           >
-            Add a question
+            Add a Question
           </button>
         </div>
       </div>
@@ -346,16 +323,16 @@ export default function DraftEditor({
         <div className="int-form-card">
           <span className="gs-caption-strong">{live ? "Live" : "Approval"}</span>
           {live ? (
-            <a href={liveUrl} target="_blank" rel="noreferrer" style={{ overflowWrap: "anywhere", fontSize: 13.5 }}>
+            <a href={liveUrl} target="_blank" rel="noreferrer" className="int-live-link">
               {liveUrl.replace(/^https?:\/\/(www\.)?/, "")}
             </a>
           ) : (
-            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13.5, color: "var(--body)" }}>
-              <input type="checkbox" checked={withSocial} onChange={(e) => setWithSocial(e.target.checked)} style={{ marginTop: 3 }} />
+            <label className="int-check-label">
+              <input type="checkbox" checked={withSocial} onChange={(e) => setWithSocial(e.target.checked)} />
               Send the ticked social posts as soon as the page is live
             </label>
           )}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="int-actions">
             {live ? null : (
               <button
                 type="button"
@@ -363,7 +340,7 @@ export default function DraftEditor({
                 disabled={pending}
                 onClick={() => act(() => approve(draft.id, form, withSocial))}
               >
-                {pending ? "Publishing, then sending social…" : "Approve and publish"}
+                {pending ? "Publishing, then sending social…" : "Approve and Publish"}
               </button>
             )}
             <button
@@ -372,7 +349,7 @@ export default function DraftEditor({
               disabled={pending}
               onClick={() => act(() => saveDraft(draft.id, form))}
             >
-              {live ? "Update post" : "Save draft"}
+              {live ? "Update Post" : "Save Draft"}
             </button>
             {live ? (
               <button
@@ -391,8 +368,7 @@ export default function DraftEditor({
             {live ? null : (
               <button
                 type="button"
-                className="gs-btn gs-btn--secondary-light int-btn-sm"
-                style={{ border: "1px solid var(--semantic-down)", color: "var(--semantic-down)", background: "transparent" }}
+                className="gs-btn gs-btn--secondary-light int-btn-sm int-btn-danger"
                 disabled={pending}
                 onClick={() => {
                   if (window.confirm("Delete this draft and its captions? This cannot be undone.")) {
@@ -419,12 +395,12 @@ export default function DraftEditor({
           {result ? (
             result.ok ? (
               result.message ? (
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--semantic-up)", overflowWrap: "anywhere" }} role="status">
+                <div className="int-status-msg is-success" role="status">
                   {result.message.startsWith("Live at") ? "Published. The icons above show each social post." : result.message}
                 </div>
               ) : null
             ) : (
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--semantic-down)", overflowWrap: "anywhere" }} role="alert">
+              <ul className="int-status-msg is-error" role="alert">
                 {result.errors.map((e) => (
                   <li key={e}>{e}</li>
                 ))}
@@ -436,8 +412,7 @@ export default function DraftEditor({
         <div className="int-form-card">
           <Field label="Slug" hint={live ? "locked while live" : undefined}>
             <input
-              className="gs-input"
-              style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}
+              className="gs-input int-mono-input"
               value={form.slug}
               disabled={live}
               onChange={(e) => set("slug", e.target.value)}
@@ -455,11 +430,11 @@ export default function DraftEditor({
             <img
               src={form.image || "/og.png"}
               alt=""
-              style={{ width: "100%", aspectRatio: "1200 / 630", objectFit: "cover", border: "1px solid var(--hairline)" }}
+              className="int-cover"
             />
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/avif" disabled={coverBusy} onChange={(e) => uploadCover(e.target.files?.[0])} style={{ fontSize: 13 }} />
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/avif" disabled={coverBusy} onChange={(e) => uploadCover(e.target.files?.[0])} className="int-file" />
             {coverBusy ? <span className="int-form-hint">Uploading…</span> : null}
-            {coverError ? <span className="int-form-hint" style={{ color: "var(--semantic-down)" }}>{coverError}</span> : null}
+            {coverError ? <span className="int-form-hint is-error">{coverError}</span> : null}
           </Field>
 
           <Field label="Author">
@@ -552,8 +527,9 @@ export default function DraftEditor({
             <div key={s.id} className="int-form-card">
               <div className="int-card-head">
                 <span className="gs-caption-strong">{PLATFORM_LABEL[row.platform] ?? row.platform}</span>
-                <span className="gs-badge" style={{ fontSize: 11, color: sent ? "var(--semantic-up)" : row.status === "failed" ? "var(--semantic-down)" : "var(--muted)" }}>
-                  {row.status}
+                <span className={`int-status-pill ${sent ? "is-published" : row.status === "failed" ? "is-failed" : "is-draft"}`}>
+                  <span className="int-status-dot" aria-hidden="true" />
+                  {sent ? "Published" : row.status === "failed" ? "Failed" : "Draft"}
                 </span>
               </div>
               <textarea
@@ -564,7 +540,7 @@ export default function DraftEditor({
                 onChange={(e) => set("social", form.social.map((x, j) => (j === i ? { ...x, content: e.target.value } : x)))}
               />
               <div className="int-card-head">
-                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "var(--body)" }}>
+                <label className="int-check-label">
                   <input
                     type="checkbox"
                     checked={s.enabled}
@@ -573,16 +549,16 @@ export default function DraftEditor({
                   />
                   Post this one
                 </label>
-                <span className="int-form-hint" style={over ? { color: "var(--semantic-down)" } : undefined}>
+                <span className={`int-form-hint${over ? " is-error" : ""}`}>
                   {s.content.length}/{SOCIAL_LIMIT[row.platform]}
                 </span>
               </div>
-              {row.error && !sent ? <div style={{ fontSize: 12.5, color: "var(--semantic-down)" }}>{row.error}</div> : null}
+              {row.error && !sent ? <div className="int-form-hint is-error">{row.error}</div> : null}
               {sent ? (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <div className="int-actions">
                   {row.platformUrl ? (
                     <a className="gs-btn gs-btn--secondary-light int-btn-sm" href={row.platformUrl} target="_blank" rel="noreferrer">
-                      View the post
+                      View the Post
                     </a>
                   ) : null}
                   <button
@@ -598,15 +574,14 @@ export default function DraftEditor({
                       if (window.confirm(ask)) act(() => reopenSocial(s.id));
                     }}
                   >
-                    {row.platform === "instagram" || row.platform === "pinterest" ? "Fix and repost" : "Take down and repost"}
+                    {row.platform === "instagram" || row.platform === "pinterest" ? "Fix and Repost" : "Take Down and Repost"}
                   </button>
                 </div>
               ) : null}
               {live && !sent ? (
                 <button
                   type="button"
-                  className="gs-btn gs-btn--secondary-light int-btn-sm"
-                  style={{ alignSelf: "flex-start" }}
+                  className="gs-btn gs-btn--secondary-light int-btn-sm int-self-start"
                   disabled={pending}
                   onClick={() =>
                     act(async () => {
@@ -615,7 +590,7 @@ export default function DraftEditor({
                     })
                   }
                 >
-                  Post to {PLATFORM_LABEL[row.platform] ?? row.platform} now
+                  Post to {PLATFORM_LABEL[row.platform] ?? row.platform} Now
                 </button>
               ) : null}
             </div>
@@ -625,15 +600,14 @@ export default function DraftEditor({
         {social.some((s) => s.status !== "published") || social.length === 0 ? (
           <button
             type="button"
-            className="gs-btn gs-btn--tertiary-text"
-            style={{ padding: 0, alignSelf: "flex-start" }}
+            className="gs-btn gs-btn--tertiary-text int-self-start"
             disabled={pending}
             onClick={() => act(() => rewriteCaptions(draft.id, form), () => window.location.reload())}
           >
-            Rewrite the captions from the current post
+            Rewrite the Captions From the Current Post
           </button>
         ) : null}
-        <p className="int-resource-note" style={{ margin: 0 }}>
+        <p className="int-side-note">
           The token {"{url}"} in a caption becomes the post&apos;s address when it is sent. Instagram
           and Pinterest go out with the cover image, and the pin links to the post by itself.
         </p>

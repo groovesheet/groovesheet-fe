@@ -12,10 +12,19 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu, PanelLeftClose, PanelLeftOpen, PenLine, Share2, X, type LucideIcon } from "lucide-react";
 import { NAV, PAGE_META, SETTINGS_ITEM, activeHref, type Badges, type NavItem } from "../_lib/nav";
 import { editorName } from "../_lib/editors";
 
 const COLLAPSE_KEY = "groovesheet.internal.collapsed";
+
+/* nav.ts keeps a text glyph so it stays plain serialisable data. The design
+   system draws icons as SVG, never as Unicode, so the shell swaps the glyph for
+   a Lucide icon by route and only falls back to the glyph for a new module. */
+const NAV_ICONS: Record<string, LucideIcon> = {
+  "/internal/blog": PenLine,
+  "/internal/social": Share2,
+};
 
 export default function Chrome({
   user,
@@ -93,29 +102,45 @@ export default function Chrome({
           aria-expanded={drawerOpen}
           onClick={() => setDrawerOpen((o) => !o)}
         >
-          {drawerOpen ? "✕" : "☰"}
+          {drawerOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
         </button>
         <div className="int-brand">
-          <Link href="/internal" aria-label="GrooveSheet internal">
-            {/* The white logotype is the dark-theme asset. In light mode the
-                filter inverts it, which is cheaper than shipping both files
-                into an app that has no other images. */}
+          <Link href="/internal" aria-label="GrooveSheet internal" className="int-brand-link">
+            {/* Both wordmarks ship and internal.css shows the one that reads
+                on the current theme: the white one on dark surfaces, the dark
+                one on light. Inverting the white file with a filter also
+                inverted the blue mark, which must stay blue. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/Logo_White.png"
-              width={112}
+              width={118}
               height={20}
               alt="GrooveSheet"
-              className="int-logo"
+              className="int-logo int-logo--on-dark"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/Logo_Dark.png"
+              width={118}
+              height={20}
+              alt=""
+              aria-hidden="true"
+              className="int-logo int-logo--on-light"
             />
           </Link>
           <span className="int-divider" />
           <nav className="int-crumbs" aria-label="Breadcrumb">
-            <Link href="/internal" className="int-crumb">
-              Internal
-            </Link>
-            <span className="int-crumb-sep">/</span>
-            <span className="int-crumb-current">{moduleTitle}</span>
+            {active === "/internal" ? (
+              <span className="int-crumb-current">Internal</span>
+            ) : (
+              <>
+                <Link href="/internal" className="int-crumb">
+                  Internal
+                </Link>
+                <span className="int-crumb-sep">/</span>
+                <span className="int-crumb-current">{moduleTitle}</span>
+              </>
+            )}
           </nav>
         </div>
         <div className="int-spacer" />
@@ -136,7 +161,7 @@ export default function Chrome({
               <div className="int-menu-rule" />
               <form action="/api/internal/logout" method="post">
                 <button type="submit" className="int-menu-item" role="menuitem">
-                  Sign out
+                  Sign Out
                 </button>
               </form>
             </div>
@@ -181,7 +206,13 @@ export default function Chrome({
               <NavLink item={SETTINGS_ITEM} active={active} badges={badges} />
             ) : null}
             <button type="button" className="int-collapse" onClick={toggleCollapse}>
-              <span className="int-nav-glyph">{collapsed ? "»" : "«"}</span>
+              <span className="int-nav-glyph">
+                {collapsed ? (
+                  <PanelLeftOpen size={16} aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose size={16} aria-hidden="true" />
+                )}
+              </span>
               <span className="int-nav-label">Collapse</span>
             </button>
           </div>
@@ -206,6 +237,7 @@ function NavLink({
 }) {
   const isActive = active === item.href;
   const badge = item.badge ? badges[item.badge] : undefined;
+  const Icon = NAV_ICONS[item.href];
   return (
     <Link
       href={item.href}
@@ -213,7 +245,9 @@ function NavLink({
       title={item.label}
       aria-current={isActive ? "page" : undefined}
     >
-      <span className="int-nav-glyph">{item.glyph}</span>
+      <span className="int-nav-glyph">
+        {Icon ? <Icon size={16} aria-hidden="true" /> : item.glyph}
+      </span>
       <span className="int-nav-label">{item.label}</span>
       {badge ? <span className="int-nav-badge">{badge}</span> : null}
     </Link>

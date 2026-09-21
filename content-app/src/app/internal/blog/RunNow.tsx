@@ -30,15 +30,15 @@ export default function RunNow() {
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-      {note ? <span className="int-module-meta" style={{ maxWidth: 420 }}>{note}</span> : null}
+    <div className="int-run-now">
+      {note ? <span className="int-run-note" role="status">{note}</span> : null}
       <button
         type="button"
         className="gs-btn gs-btn--primary int-btn-sm"
         onClick={run}
         disabled={busy}
       >
-        {busy ? "Running…" : "Run now"}
+        {busy ? "Running…" : "Run Now"}
       </button>
     </div>
   );

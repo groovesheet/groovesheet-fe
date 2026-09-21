@@ -43,18 +43,31 @@ export default function LoginForm({ sharedPassword }: { sharedPassword: boolean 
 
   return (
     <form className="int-login-card" onSubmit={submit}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="int-login-brand">
+        {/* Both wordmarks, switched by theme in internal.css: the white one
+            disappears on the light card. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/Logo_White.png"
-          width={122}
+          width={130}
           height={22}
           alt="GrooveSheet"
-          style={{ height: 22, width: "auto", display: "block" }}
+          className="int-logo int-logo--on-dark"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/Logo_Dark.png"
+          width={130}
+          height={22}
+          alt=""
+          aria-hidden="true"
+          className="int-logo int-logo--on-light"
         />
         <span className="int-divider" />
-        <span style={{ fontSize: 13, color: "var(--muted)" }}>Internal</span>
+        <span className="int-login-tag">Internal</span>
       </div>
+
+      <h1 className="int-login-title">Staff Sign In</h1>
 
       <p className="int-login-copy">
         {sharedPassword
@@ -78,7 +91,6 @@ export default function LoginForm({ sharedPassword }: { sharedPassword: boolean 
                   </option>
                 ))}
               </select>
-              <span className="int-select-chevron">▾</span>
             </div>
           </label>
         ) : (
@@ -113,14 +125,13 @@ export default function LoginForm({ sharedPassword }: { sharedPassword: boolean 
 
       <button
         type="submit"
-        className="gs-btn gs-btn--primary"
-        style={{ width: "100%" }}
+        className="gs-btn gs-btn--primary int-btn-block"
         disabled={busy}
       >
-        {busy ? "Signing in" : "Sign in"}
+        {busy ? "Signing In" : "Sign In"}
       </button>
 
-      <p className="int-login-foot">session cookie · 30-day expiry</p>
+      <p className="int-login-foot">Session cookie, 30-day expiry.</p>
     </form>
   );
 }

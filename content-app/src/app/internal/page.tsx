@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PenLine, Share2 } from "lucide-react";
 import PageHeader from "./_components/PageHeader";
 import { countDraftsToReview, listSocial, publishedDrafts, recentRuns } from "@/lib/content/store";
 
@@ -53,15 +54,14 @@ export default async function InternalIndex() {
   const modules = [
     {
       href: "/internal/blog",
-      glyph: "✎",
       title: "Blog",
       desc: "Drafts written from the week's music tech news. Read, edit, approve.",
-      meta: toReview > 0 ? `${toReview} waiting` : "nothing waiting",
-      metaClass: toReview > 0 ? "is-due" : "",
+      meta: toReview > 0 ? `${toReview} waiting` : "Nothing waiting",
+      // Waiting is a to-do, not a fault: emphasis, not the danger colour.
+      metaClass: toReview > 0 ? "is-attn" : "",
     },
     {
       href: "/internal/social",
-      glyph: "◎",
       title: "Social",
       desc: "The LinkedIn, Facebook, Instagram and Pinterest posts written from each one.",
       meta: failed > 0 ? `${failed} failed` : `${live} live`,
@@ -79,21 +79,27 @@ export default async function InternalIndex() {
       <div className="int-stack">
         <div className="int-counters">
           {counters.map((c) => (
-            <div key={c.label}>
-              <div className="gs-stat-value">{c.value}</div>
-              <div className="gs-stat-label">{c.label}</div>
+            <div key={c.label} className="int-stat">
+              <p className="int-stat-label">{c.label}</p>
+              <p className="int-stat-value">{c.value}</p>
             </div>
           ))}
         </div>
 
-        <p className="int-module-meta">{lastLine}</p>
+        <p className="int-last-run">{lastLine}</p>
 
         <div className="int-modules">
           {modules.map((m) => (
-            <Link key={m.href} href={m.href} className="gs-card gs-card--hover int-module-card">
+            <Link key={m.href} href={m.href} className="int-module-card">
               <div className="int-module-head">
-                <span className="gs-glyph-plate int-module-glyph">{m.glyph}</span>
-                <span className="gs-title-md">{m.title}</span>
+                <span className="int-module-glyph">
+                  {m.href === "/internal/blog" ? (
+                    <PenLine size={16} aria-hidden="true" />
+                  ) : (
+                    <Share2 size={16} aria-hidden="true" />
+                  )}
+                </span>
+                <span className="int-module-title">{m.title}</span>
               </div>
               <p className="int-module-desc">{m.desc}</p>
               <span className={`int-module-meta ${m.metaClass}`}>{m.meta}</span>

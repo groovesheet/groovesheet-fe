@@ -15,10 +15,22 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
+/* Filled status pills, the design system's job-status recipe. */
 const TONE: Record<SocialStatus, string> = {
-  draft: "var(--muted)",
-  published: "var(--semantic-up)",
-  failed: "var(--semantic-down)",
+  draft: "is-draft",
+  published: "is-published",
+  failed: "is-failed",
+};
+const STATUS_LABEL: Record<SocialStatus, string> = {
+  draft: "Draft",
+  published: "Published",
+  failed: "Failed",
+};
+const PLATFORM_LABEL: Record<string, string> = {
+  linkedin: "LinkedIn",
+  facebook: "Facebook",
+  instagram: "Instagram",
+  pinterest: "Pinterest",
 };
 
 export default async function SocialPage() {
@@ -34,60 +46,66 @@ export default async function SocialPage() {
       {rows.length === 0 ? (
         <EmptyState
           glyph="◎"
-          title="No social posts yet"
+          title="No Social Posts Yet"
           desc="Captions are written alongside every blog draft. Edit them on the draft itself."
         />
       ) : (
         <div className="int-table-panel">
-          <div className="int-table-scroll">
-            <table className="gs-table" style={{ minWidth: 1000 }}>
-              <thead>
-                <tr>
-                  <th style={{ width: 110 }}>Platform</th>
-                  <th>Caption</th>
-                  <th style={{ width: 260 }}>Blog post</th>
-                  <th style={{ width: 110 }}>Status</th>
-                  <th style={{ width: 200 }} />
+          <table className="gs-table int-table int-table-social">
+            <colgroup>
+              <col className="int-col-platform" />
+              <col />
+              <col className="int-col-post" />
+              <col className="int-col-status" />
+              <col className="int-col-action" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>Caption</th>
+                <th>Blog Post</th>
+                <th>Status</th>
+                <th aria-label="Actions" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((s) => (
+                <tr key={s.id}>
+                  <td className="int-td-meta int-td-platform">{PLATFORM_LABEL[s.platform] ?? s.platform}</td>
+                  <td className="int-td-main">
+                    <div className="int-caption">{s.content}</div>
+                    {s.error && s.status === "failed" ? (
+                      <div className="int-note int-note-error">{s.error}</div>
+                    ) : null}
+                  </td>
+                  <td className="int-td-meta int-td-post">
+                    <Link href={`/internal/blog/${s.draftId}`} className="int-row-title int-clamp-2">
+                      {s.draftTitle}
+                    </Link>
+                    <div className="int-note">Blog: {s.draftStatus}</div>
+                  </td>
+                  <td className="int-td-meta">
+                    <span className={`int-status-pill ${TONE[s.status]}`}>
+                      <span className="int-status-dot" aria-hidden="true" />
+                      {STATUS_LABEL[s.status]}
+                    </span>
+                    {s.publishedAt ? <div className="int-note">{s.publishedAt.slice(0, 10)}</div> : null}
+                  </td>
+                  <td className="int-td-meta int-td-action">
+                    {s.status === "published" ? (
+                      s.platformUrl ? (
+                        <a href={s.platformUrl} target="_blank" rel="noreferrer">View</a>
+                      ) : null
+                    ) : s.draftStatus === "published" ? (
+                      <PostNow id={s.id} label={s.status === "failed" ? "Try Again" : "Post Now"} />
+                    ) : (
+                      <span className="int-note">Waits for approval</span>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {rows.map((s) => (
-                  <tr key={s.id}>
-                    <td style={{ textTransform: "capitalize", color: "var(--ink)" }}>{s.platform}</td>
-                    <td className="int-cell-tight">
-                      <div style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", whiteSpace: "pre-line" }}>
-                        {s.content}
-                      </div>
-                      {s.error && s.status === "failed" ? (
-                        <div className="int-note" style={{ color: "var(--semantic-down)", whiteSpace: "normal" }}>{s.error}</div>
-                      ) : null}
-                    </td>
-                    <td className="int-cell-tight">
-                      <Link href={`/internal/blog/${s.draftId}`}>{s.draftTitle}</Link>
-                      <div className="int-note">blog: {s.draftStatus}</div>
-                    </td>
-                    <td>
-                      <span className="gs-badge" style={{ color: TONE[s.status], fontSize: 11 }}>
-                        {s.status}
-                      </span>
-                      {s.publishedAt ? <div className="int-note">{s.publishedAt.slice(0, 10)}</div> : null}
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      {s.status === "published" ? (
-                        s.platformUrl ? (
-                          <a href={s.platformUrl} target="_blank" rel="noreferrer">View</a>
-                        ) : null
-                      ) : s.draftStatus === "published" ? (
-                        <PostNow id={s.id} label={s.status === "failed" ? "Try again" : "Post now"} />
-                      ) : (
-                        <span className="int-note">waits for approval</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </>

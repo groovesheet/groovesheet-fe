@@ -10,7 +10,7 @@ export default function PostNow({ id, label }: { id: number; label: string }) {
   const [error, setError] = useState("");
 
   return (
-    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+    <span className="int-post-now">
       <button
         type="button"
         className="gs-btn gs-btn--secondary-light int-btn-sm"
@@ -26,14 +26,14 @@ export default function PostNow({ id, label }: { id: number; label: string }) {
       >
         {pending ? (
           <>
-            <span className="int-spinner" aria-hidden="true" style={{ width: 14, height: 14, marginRight: 8 }} />
+            <span className="int-spinner int-spinner-sm" aria-hidden="true" />
             Posting, up to a minute…
           </>
         ) : (
           label
         )}
       </button>
-      {error ? <span style={{ fontSize: 12, color: "var(--semantic-down)", maxWidth: 260, textAlign: "right" }}>{error}</span> : null}
+      {error ? <span className="int-post-now-error">{error}</span> : null}
     </span>
   );
 }

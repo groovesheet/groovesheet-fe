@@ -146,12 +146,7 @@ function ToolbarButton({
       aria-label={label}
       title={label}
       aria-pressed={active}
-      className="rte-btn"
-      style={{
-        borderColor: active ? "var(--primary)" : "var(--hairline)",
-        backgroundColor: active ? "var(--surface-strong)" : "transparent",
-        color: active ? "var(--primary)" : "var(--ink)",
-      }}
+      className={active ? "rte-btn is-active" : "rte-btn"}
     >
       {children}
     </button>
@@ -252,10 +247,7 @@ function Toolbar({
   }
 
   return (
-    <div
-      className="rte-toolbar"
-      style={{ borderColor: "var(--hairline)" }}
-    >
+    <div className="rte-toolbar">
       <ToolbarButton
         label="Bold"
         active={ui.bold}
@@ -351,11 +343,8 @@ function Toolbar({
       </ToolbarButton>
 
       {ui.image && (
-        <span
-          className="rte-group"
-          style={{ borderColor: "var(--primary)" }}
-        >
-          <Type size={14} style={{ color: "var(--primary)" }} aria-hidden />
+        <span className="rte-group">
+          <Type size={14} className="rte-group-icon" aria-hidden />
           <TableTextButton onClick={editAlt}>
             {ui.imageAlt ? `Alt: ${ui.imageAlt.slice(0, 24)}` : "Add alt text"}
           </TableTextButton>
@@ -363,10 +352,7 @@ function Toolbar({
       )}
 
       {ui.table && (
-        <span
-          className="rte-group"
-          style={{ borderColor: "var(--primary)" }}
-        >
+        <span className="rte-group">
           <TableTextButton onClick={() => editor.chain().focus().addColumnAfter().run()}>
             +Col
           </TableTextButton>
@@ -523,8 +509,7 @@ export default function RichTextEditor({
 
   return (
     <div
-      className="rte"
-      style={{ borderColor: dragActive ? "var(--primary)" : "var(--hairline)" }}
+      className={dragActive ? "rte is-dragging" : "rte"}
       onDragOver={(e) => {
         if (dragHasImage(e.dataTransfer)) setDragActive(true)
       }}
@@ -545,11 +530,7 @@ export default function RichTextEditor({
       />
       {(uploads > 0 || imageError || dragActive) && (
         <p
-          className="rte-foot"
-          style={{
-            borderColor: "var(--hairline)",
-            color: imageError ? "var(--semantic-down)" : "var(--muted)",
-          }}
+          className={imageError ? "rte-foot is-error" : "rte-foot"}
           role="status"
         >
           {uploads > 0

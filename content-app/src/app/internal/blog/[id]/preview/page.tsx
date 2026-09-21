@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { getDraft } from "@/lib/content/store";
 import { prepareBody } from "@/lib/posts";
+/* The article classes below live in the public blog stylesheet. Loading it
+   here is what makes the preview look like the page the reader will get;
+   every rule in it is class-scoped, so nothing leaks into the portal. */
+import "../../../../blog.css";
 
 export const metadata: Metadata = {
   title: "Preview",
@@ -25,7 +29,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
   });
 
   return (
-    <div style={{ background: "var(--canvas)", border: "1px solid var(--hairline)", padding: "40px clamp(20px, 4vw, 64px)" }}>
+    <div className="int-preview">
       <span className="gs-overline">Blog · {draft.category}</span>
       <h1 style={{ maxWidth: 820, margin: "16px 0" }}>{draft.title}</h1>
       <p className="hero-sub" style={{ maxWidth: 640 }}>{draft.summary}</p>

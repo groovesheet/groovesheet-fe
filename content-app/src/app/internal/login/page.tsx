@@ -23,7 +23,7 @@ export default async function LoginPage() {
         </Suspense>
       ) : (
         <div className="int-login-card">
-          <span className="gs-caption-strong">Not configured</span>
+          <h1 className="int-login-title">Not Configured</h1>
           <p className="int-login-copy">
             Set <code>INTERNAL_PASSWORD</code> in the environment and redeploy. On Vercel
             that is Settings, then Environment Variables, then a redeploy: env changes do not

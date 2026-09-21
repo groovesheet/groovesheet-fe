@@ -1,40 +1,117 @@
 /* ============================================================
-   Volumet internal portal.
+   GrooveSheet internal portal (/internal).
 
-   Every class here is prefixed .int- so nothing can collide with
-   the public site. site.css is not touched and not loaded here:
-   this file plus the design-system tokens in colors_and_type.css
-   are the whole stylesheet for /internal.
+   Every class here is prefixed .int- (or .rte- for the post editor) so
+   nothing can collide with the public blog. theme.css and primitives.css
+   are shared with /blog and are not edited for the portal: where the
+   portal needs something different, it is set on .int-root below and
+   only reaches the portal's own subtree.
 
-   Values are ported from the Claude Design implementation
-   ("Volumet Internal Portal.dc.html"). Colours, type and spacing
-   are all existing tokens. Nothing new is invented.
+   Follows the GrooveSheet Design System (claude.ai/design project, and
+   gs-fe-main/design-system/VISUAL_GUIDE.md):
+     - Panels and cards are filled surfaces with no border. Depth, not a
+       drawn edge, separates them. Only inputs get a hairline.
+     - Brand blue is a fill with white text. It is never text on a dark
+       surface; the light info blue stands in for links there.
+     - Buttons are the .gs-btn recipe; status pills are solid fills.
+     - Dark by default; light through prefers-color-scheme or
+       [data-theme="light"], matching theme.css.
    ============================================================ */
 
+/* ---------- Portal tokens ---------- */
+
 .int-root {
+  /* primitives.css bridges Volumet's token names onto GrooveSheet's. Two of
+     its mappings are wrong for this portal: --muted-soft pointed at
+     --color-surface-muted, which is #ffffff in light mode and made every
+     "soft" label white on white. Re-pointed here, not in primitives.css,
+     because the public blog reads the same names. */
+  --muted-soft: var(--color-muted-foreground);
+  --canvas: var(--color-panel2);
+  --surface-soft: var(--color-background);
+  --surface-strong: var(--color-panel1);
+  --hairline: var(--color-border);
+  --hairline-soft: var(--color-border-light);
+
+  /* A card on the page, and something lifted inside a card. panel2 over the
+     canvas in both themes; panel1 is #323033 in dark and #ffffff in light,
+     so a raised item reads on its card either way. */
+  --int-surface: var(--color-panel2);
+  --int-raised: var(--color-panel1);
+  --int-divider: var(--color-border-light);
+  --int-hover: var(--color-surface-light);
+  /* Links and active icons. #93b4ff is the design system's info blue, the
+     readable stand-in for brand blue on dark; light mode gets the brand
+     blue itself. */
+  --int-link: var(--color-info);
+  --int-active-bg: rgba(1, 47, 167, 0.18);
+  --int-input-bg: #232226;
+  --int-queued: #5f5e60;
+  --int-glow: 0 4px 12px rgba(1, 47, 167, 0.3);
+  --int-shadow: 0 8px 24px rgba(0, 0, 0, 0.37);
+  --int-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238d8c8d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+
+  position: relative;
   min-height: 100vh;
-  background: var(--surface-soft);
-  color: var(--ink);
-  font-family: var(--font-sans);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
 }
-/* Default link colour for plain prose links.
 
-   Wrapped in :where() so it carries ZERO specificity and loses to any
-   component rule below. Written as `.int-root a` it scored (0,1,1) and
-   outranked every single-class rule it sat above: nav items, breadcrumbs,
-   company cells and pager buttons all rendered --primary blue, and an <a> with
-   .gs-btn--primary got blue text on the blue plate, which is invisible. */
-:where(.int-root a) {
-  color: var(--primary);
+/* Light mode, by either route theme.css recognises. Inputs go white so they
+   still read as fields on the light grey cards. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .int-root {
+    --int-link: var(--color-primary);
+    --int-input-bg: #ffffff;
+    --int-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  :root:not([data-theme="dark"]) .int-logo--on-dark {
+    display: none;
+  }
+  :root:not([data-theme="dark"]) .int-logo--on-light {
+    display: block;
+  }
 }
+[data-theme="light"] .int-root {
+  --int-link: var(--color-primary);
+  --int-input-bg: #ffffff;
+  --int-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .int-logo--on-dark {
+  display: none;
+}
+[data-theme="light"] .int-logo--on-light {
+  display: block;
+}
+
+/* The brand dot grid, behind the content well. The chrome and every card
+   are opaque, so it only shows in the gaps between them. */
+.int-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+}
+
+/* Without this, width: 100% plus padding overflowed: the sidebar badge was
+   clipped and header buttons grew to 60px tall. */
+.int-root *,
+.int-root *::before,
+.int-root *::after {
+  box-sizing: border-box;
+}
+
+/* Default link colour for plain prose links. Wrapped in :where() so it has
+   zero specificity and loses to every component rule below. */
 :where(.int-root a) {
+  color: var(--int-link);
   text-decoration: none;
 }
-/* The hover underline is wrapped in :where() for the same reason the colour
-   above is. Written as `.int-root a:hover` it scored (0,2,1) and beat
-   `.int-module-card:hover`, so every card that is a link grew an underline
-   across its whole body the moment the pointer touched it. */
 :where(.int-root a):hover {
   text-decoration: underline;
 }
@@ -44,6 +121,32 @@
 .int-root button {
   font-family: inherit;
 }
+.int-root input[type="checkbox"] {
+  accent-color: var(--color-primary);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 16px;
+}
+
+/* ---------- Wordmark ---------- */
+.int-logo {
+  height: 20px;
+  width: auto;
+  display: block;
+}
+/* Dark is the default theme, so the dark-surface wordmark shows unless one
+   of the light-mode blocks above swaps it. */
+.int-logo--on-light {
+  display: none;
+}
+.int-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--int-divider);
+  display: inline-block;
+  flex: 0 0 1px;
+}
 
 /* ---------- Top bar ---------- */
 .int-topbar {
@@ -51,54 +154,43 @@
   top: 0;
   z-index: 40;
   height: 56px;
-  background: var(--canvas);
-  border-bottom: 1px solid var(--hairline);
+  background: var(--int-surface);
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   padding: 0 20px;
 }
 .int-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
-.int-logo {
-  height: 20px;
-  width: auto;
+.int-brand-link {
   display: block;
-}
-.int-divider {
-  width: 1px;
-  height: 18px;
-  background: var(--hairline);
-  display: inline-block;
-  flex: 0 0 1px;
+  flex: 0 0 auto;
 }
 .int-crumbs {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  font-size: 13px;
 }
 .int-crumb {
-  font-size: 13px;
-  color: var(--muted);
+  color: var(--color-muted-foreground);
   white-space: nowrap;
 }
 a.int-crumb:hover {
-  color: var(--ink);
+  color: var(--color-text);
   text-decoration: none;
 }
 .int-crumb-sep {
-  font-size: 13px;
-  color: var(--muted-soft);
+  color: var(--color-muted-foreground);
 }
 .int-crumb-current {
-  font-size: 13px;
-  color: var(--ink);
-  font-weight: 600;
+  color: var(--color-text);
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,72 +206,84 @@ a.int-crumb:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 36px;
+  height: 40px;
   padding: 0 6px 0 12px;
   background: none;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
+  color: var(--color-foreground);
+  transition: background-color 0.2s ease;
+}
+.int-user-button:hover {
+  background: var(--int-hover);
 }
 .int-user-name {
   font-size: 13px;
-  color: var(--body);
+  font-weight: 500;
 }
 .int-root .int-avatar {
   width: 28px;
   height: 28px;
   flex: 0 0 28px;
   font-size: 11px;
-  background: var(--surface-strong);
-  color: var(--ink);
+  font-weight: 600;
+  background: linear-gradient(135deg, #93b4ff, #012fa7);
+  color: #ffffff;
 }
 .int-menu {
   position: absolute;
   right: 0;
-  top: 40px;
-  width: 180px;
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  box-shadow: var(--shadow-soft);
-  padding: 8px 0;
+  top: 46px;
+  width: 200px;
+  background: var(--int-raised);
+  border-radius: 10px;
+  box-shadow: var(--int-shadow);
+  padding: 6px;
   z-index: 50;
 }
 .int-menu-label {
-  padding: 8px 14px;
-  font-size: 13px;
-  color: var(--muted);
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
 }
 .int-menu-rule {
   height: 1px;
-  background: var(--hairline-soft);
+  background: var(--int-divider);
   margin: 4px 0;
 }
 .int-menu-item {
   width: 100%;
   text-align: left;
-  padding: 8px 14px;
+  padding: 8px 10px;
   background: none;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
-  color: var(--ink);
+  font-weight: 500;
+  color: var(--color-foreground);
 }
 .int-menu-item:hover {
-  background: var(--surface-soft);
+  background: var(--int-hover);
 }
 
 /* Hamburger. Hidden until the sidebar becomes a drawer. */
 .int-burger {
   display: none;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   align-items: center;
   justify-content: center;
   background: none;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
-  color: var(--ink);
-  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+.int-burger:hover {
+  background: var(--int-hover);
 }
 
 /* ---------- Frame ---------- */
@@ -189,155 +293,294 @@ a.int-crumb:hover {
   min-height: calc(100vh - 56px);
 }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar (design system: 232px, 32px rows, 56px rail) ---------- */
 .int-sidebar {
-  width: 220px;
+  width: 232px;
   flex: 0 0 auto;
-  background: var(--canvas);
-  border-right: 1px solid var(--hairline);
+  background: var(--int-surface);
   position: sticky;
   top: 56px;
   height: calc(100vh - 56px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 16px 0;
+  padding: 8px 10px 14px;
   transition: width 150ms var(--ease-out);
   overflow: hidden;
 }
 .int-sidebar.is-collapsed {
   width: 56px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 .int-nav-groups {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 8px;
 }
 .int-nav-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .int-nav-group-label {
-  padding: 0 16px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted-soft);
-  white-space: nowrap;
-  transition: opacity 150ms var(--ease-out);
-}
-.int-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 14px;
-  background: transparent;
-  border: none;
-  border-left: 2px solid transparent;
-  cursor: pointer;
-  font-size: 13.5px;
+  padding: 14px 10px 6px;
+  font-size: 10px;
   font-weight: 500;
-  color: var(--body);
-  text-align: left;
-}
-.int-nav-item:hover {
-  background: var(--surface-soft);
-  text-decoration: none;
-}
-.int-nav-item.is-active {
-  background: var(--surface-soft);
-  border-left-color: var(--primary);
-  font-weight: 600;
-  color: var(--primary);
-}
-.int-nav-glyph {
-  width: 18px;
-  flex: 0 0 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-family: var(--font-mono);
-}
-.int-nav-label {
-  flex: 1;
-  text-align: left;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
   white-space: nowrap;
-  overflow: hidden;
-  transition: opacity 150ms var(--ease-out);
 }
-.int-nav-badge {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-strong);
-  color: var(--muted);
-}
-.int-nav-item.is-active .int-nav-badge {
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.is-collapsed .int-nav-label,
-.is-collapsed .int-nav-group-label {
-  opacity: 0;
-}
-.is-collapsed .int-nav-badge {
-  display: none;
-}
-.int-sidebar-foot {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border-top: 1px solid var(--hairline-soft);
-  padding-top: 12px;
-}
+.int-nav-item,
 .int-collapse {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 16px;
-  background: none;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  background: transparent;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
-  color: var(--muted);
+  font-weight: 500;
+  color: var(--color-foreground);
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+.int-nav-item:hover,
+.int-collapse:hover {
+  background: var(--int-hover);
+  text-decoration: none;
+}
+.int-nav-item.is-active {
+  background: var(--int-active-bg);
+  color: var(--color-text);
+}
+.int-nav-glyph {
+  width: 16px;
+  flex: 0 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  opacity: 0.75;
+}
+.int-nav-item.is-active .int-nav-glyph {
+  opacity: 1;
+  color: var(--int-link);
+}
+.int-nav-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The one badge counts drafts waiting for review, so it takes the
+   design system's alert badge: blue fill, white numerals. */
+.int-nav-badge {
+  margin-left: auto;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #ffffff;
+}
+.is-collapsed .int-nav-label,
+.is-collapsed .int-nav-group-label,
+.is-collapsed .int-nav-badge {
+  display: none;
+}
+.is-collapsed .int-nav-item,
+.is-collapsed .int-collapse {
+  justify-content: center;
+  padding: 0;
+  height: 36px;
+}
+.int-sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.int-collapse {
+  color: var(--color-muted-foreground);
 }
 
-/* ------------------------------------------------------------
-   Overrides of design-system classes.
-
-   The .int-root-prefixed rules below sit on the same element as a
-   .gs-* class and set the same properties. At equal
-   specificity the winner would be decided by whichever stylesheet
-   the browser linked first, which is not something this file
-   controls. The prefix settles it: these always win inside the
-   portal, and can never reach the public site.
-   ------------------------------------------------------------ */
-
-/* A design-system button rendered as an <a> must keep its own label colour. */
+/* ---------- Buttons: the design system's .gs-btn recipe ----------
+   primitives.css draws pill buttons at 42px for the public blog. Inside the
+   portal every button is the recipe verbatim: 10px 20px, 6px radius,
+   14px/500, primary blue with the glow, outline on a hairline. */
+.int-root .gs-btn {
+  height: auto;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18.2px;
+  border: 1px solid transparent;
+}
+.int-root .gs-btn--primary,
 .int-root a.gs-btn--primary {
-  color: var(--on-primary);
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: var(--int-glow);
 }
+.int-root .gs-btn--primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: var(--int-glow);
+}
+.int-root .gs-btn--primary:active {
+  background: #0138c0;
+}
+.int-root .gs-btn--primary[disabled] {
+  background: #666666;
+  color: #ffffff;
+  opacity: 0.6;
+  box-shadow: none;
+}
+.int-root .gs-btn--secondary-light,
 .int-root a.gs-btn--secondary-light {
-  color: var(--ink);
+  background: transparent;
+  color: var(--color-foreground);
+  border-color: var(--color-border-lighter);
 }
-.int-root a.gs-btn--secondary-dark,
-.int-root a.gs-btn--outline-on-dark {
-  color: var(--on-dark);
+.int-root .gs-btn--secondary-light:hover {
+  background: var(--int-hover);
+  border-color: var(--color-border-lighter);
 }
 .int-root a.gs-btn:hover {
   text-decoration: none;
 }
+/* Destructive: the outline recipe with the label in the danger colour,
+   filling on hover. */
+.int-root .int-btn-danger {
+  color: var(--color-danger);
+}
+.int-root .int-btn-danger:hover:not([disabled]) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #ffffff;
+}
+.int-root .gs-btn--tertiary-text {
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.int-root .gs-btn--tertiary-text:hover {
+  color: var(--color-text);
+  transform: none;
+}
+.int-btn-block {
+  width: 100%;
+}
+.int-self-start {
+  align-self: flex-start;
+}
 
-/* ---------- Content ---------- */
+/* ---------- Inputs: hairline, the one place a stroke is allowed ---------- */
+.int-root .gs-input,
+.int-root .int-select {
+  width: 100%;
+  height: 44px;
+  padding: 12px 14px;
+  background-color: var(--int-input-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+.int-root textarea.gs-input {
+  height: auto;
+  line-height: 1.55;
+}
+.int-root .gs-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+.int-root .gs-input:focus,
+.int-root .int-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: none;
+}
+.int-root .gs-input:disabled,
+.int-root .int-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* appearance: none removes the native arrow, so the chevron is drawn in.
+   It is the muted grey that reads on both themes. */
+.int-root .int-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  background-image: var(--int-chevron);
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 12px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+.int-select-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.int-select-full {
+  display: flex;
+  width: 100%;
+}
+.int-mono-input {
+  font-family: var(--font-family-mono);
+}
+.int-root .int-mono-input {
+  font-size: 13px;
+}
+.int-title-input {
+  font-weight: 500;
+}
+.int-root .int-title-input {
+  height: 56px;
+  font-size: 22px;
+}
+.int-file {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  max-width: 100%;
+}
+.int-file::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-lighter);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-foreground);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.int-file::file-selector-button:hover {
+  background: var(--int-hover);
+}
+
+/* ---------- Content well ---------- */
 .int-content {
   flex: 1;
   min-width: 0;
-  padding: 28px 32px 64px;
+  padding: 32px 40px 72px;
 }
 .int-content-inner {
   max-width: 1400px;
@@ -348,350 +591,447 @@ a.int-crumb:hover {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 .int-page-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 32px;
+  line-height: 40px;
   font-weight: 400;
-  letter-spacing: -0.6px;
-  color: var(--ink);
-  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
 }
 .int-page-desc {
-  margin: 6px 0 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--body);
+  margin: 8px 0 0;
+  max-width: 780px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-muted-foreground);
 }
 .int-page-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   flex: 0 0 auto;
 }
-/* Page-header scale for the design-system button, which is 44px by default. */
-.int-root .int-btn-sm {
-  height: 38px;
-  font-size: 14px;
-  padding: 10px 18px;
-}
-
-/* ---------- Index ---------- */
 .int-stack {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 32px;
 }
+.int-section-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--color-text);
+}
+.int-root .gs-caption-strong {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--color-muted-foreground);
+}
+.int-root .gs-overline {
+  color: var(--int-link);
+}
+
+/* ---------- Index: stat tiles and module cards ---------- */
 .int-counters {
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  padding: 24px 32px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
-.int-counters .gs-stat-value {
-  font-size: 32px;
+.int-stat {
+  background: var(--int-surface);
+  border-radius: 13px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.int-stat-label {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted-foreground);
+}
+/* The pricing-card numeral: big and light, so the figure is handsome
+   rather than loud. Sans, not mono. */
+.int-stat-value {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 300;
+  letter-spacing: -1px;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.int-last-run {
+  margin: -16px 0 0;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
 }
 .int-modules {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
 .int-root .int-module-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 13px;
+  background: var(--int-surface);
   color: inherit;
+  transition: transform 0.2s ease;
 }
-.int-module-card:hover {
+.int-root .int-module-card:hover {
   text-decoration: none;
+  transform: translateY(-2px);
 }
 .int-module-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .int-module-glyph {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--primary);
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.int-module-glyph.is-soon {
-  color: var(--muted-soft);
+.int-module-title {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--color-text);
 }
 .int-module-desc {
   margin: 0;
   font-size: 14px;
-  line-height: 1.5;
-  color: var(--body);
+  line-height: 1.55;
+  color: var(--color-foreground);
 }
 .int-module-meta {
-  font-size: 12px;
-  font-family: var(--font-mono);
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+.int-module-meta.is-attn {
+  color: var(--color-text);
+  font-weight: 500;
 }
 .int-module-meta.is-due {
-  color: var(--semantic-down);
-}
-.int-module-meta.is-soon {
-  color: var(--muted-soft);
+  color: var(--color-danger);
+  font-weight: 500;
 }
 
-/* ---------- Filter bar ---------- */
-.int-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.int-activity {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: var(--body);
-}
-.int-activity-value {
-  font-family: var(--font-mono);
-  color: var(--ink);
-}
-.int-count {
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--muted);
-}
-
-/* Native select, restyled. The chevron is a sibling span because
-   appearance:none removes the built-in one. */
-.int-select-wrap {
-  position: relative;
+/* ---------- Status pills (design system job status) ---------- */
+.int-status-pill {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 120px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  color: #ffffff;
+  background: var(--int-queued);
 }
-.int-select {
-  appearance: none;
-  -webkit-appearance: none;
-  height: 40px;
-  padding: 0 34px 0 14px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-none);
-  background: var(--canvas);
+.int-status-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.int-status-pill.is-review {
+  background: var(--color-primary);
+}
+.int-status-pill.is-published {
+  background: var(--color-success);
+}
+.int-status-pill.is-failed {
+  background: var(--color-danger);
+}
+.int-status-pill.is-draft,
+.int-status-pill.is-rejected {
+  background: var(--int-queued);
+}
+/* The checks column: plain text with a status dot, so a passing row does
+   not shout. */
+.int-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
-  color: var(--ink);
-  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-foreground);
+  white-space: nowrap;
 }
-/* The lead bar carries six controls, and a native select sizes itself to its
-   widest option: the segment list holds combined labels up to 59 characters
-   ("Civil / infrastructure + Interior fit-out + Main contractor"), which
-   stretched that one control to ~390px and pushed Status and Owner onto a
-   second row. Cap the closed control on that bar only. Every placeholder
-   still fits at this width, a long selected value ellipses, and the open
-   dropdown shows the full label either way. The quote bar is not capped:
-   it has room, and its value bands need the full label. */
-.int-toolbar-leads .int-select {
-  max-width: 130px;
+.int-check.is-pass .int-status-dot {
+  background: var(--color-success);
+}
+.int-check.is-fail .int-status-dot {
+  background: var(--color-danger);
+}
+.int-check.is-fail {
+  color: var(--color-danger);
+}
+
+/* ---------- Tables ----------
+   Fixed layout inside the card, so a long headline wraps or ellipses in
+   its own column instead of pushing the table past the viewport. */
+.int-table-panel {
+  background: var(--int-surface);
+  border-radius: 13px;
+  overflow: hidden;
+}
+.int-root .int-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+.int-root .int-table th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  border-bottom: 1px solid var(--int-divider);
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Same row, second half of the problem: flex wraps a line before it shrinks
-   anything on it, so the fixed 280px search box decided where the break fell.
-   Give it a smaller flex basis and let it grow back: it still renders at its
-   designed 280px wherever there is room, and gives the row up to 80px rather
-   than pushing Owner onto a second line. */
-.int-root .int-toolbar-leads .int-search {
-  flex: 1 1 200px;
-  min-width: 0;
-  max-width: 280px;
+.int-root .int-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--int-divider);
+  color: var(--color-foreground);
+  vertical-align: top;
+  overflow: hidden;
 }
-.int-select-chevron {
-  position: absolute;
-  right: 13px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-size: 9px;
-  color: var(--muted);
+.int-root .int-table tbody tr:last-child td {
+  border-bottom: 0;
 }
-.int-root .int-search {
-  width: 280px;
-  height: 40px;
-  padding: 10px 18px;
-  font-size: 14px;
+.int-root .int-table tbody tr:hover {
+  background: var(--int-hover);
 }
-.int-root .int-search-wide {
-  width: 320px;
+.int-col-score {
+  width: 84px;
 }
-.int-tab {
-  border: none;
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  font-size: 13.5px;
+.int-col-from,
+.int-col-source {
+  width: 170px;
+}
+.int-col-date {
+  width: 118px;
+}
+.int-col-status {
+  width: 156px;
+}
+.int-col-checks {
+  width: 112px;
+}
+.int-col-platform {
+  width: 112px;
+}
+.int-col-post {
+  width: 240px;
+}
+.int-col-action {
+  width: 150px;
+}
+.int-root .int-row-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--color-text);
   font-weight: 500;
-  color: var(--body);
-  background: transparent;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
-.int-tab.is-active {
-  font-weight: 600;
-  color: var(--ink);
-  background: var(--canvas);
-  box-shadow: var(--shadow-soft);
+.int-note {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-/* ---------- Tables ---------- */
-.int-table-panel {
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
+.int-note-clamp {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
-.int-table-scroll {
-  overflow-x: auto;
-}
-.int-table-leads {
-  min-width: 1680px;
-  table-layout: fixed;
-}
-.int-table-quotes {
-  min-width: 1180px;
-  table-layout: fixed;
+.int-note-error {
+  color: var(--color-danger);
+  white-space: normal;
 }
 .int-cell-tight {
-  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .int-cell-mono {
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 13px;
   white-space: nowrap;
+  color: var(--color-muted-foreground);
 }
-.int-cell-muted {
-  color: var(--muted-soft);
+.int-td-score {
+  color: var(--color-text);
 }
-.int-company {
-  font-size: 13.5px;
+.int-td-platform {
+  color: var(--color-text);
   font-weight: 500;
-  color: var(--ink);
-  cursor: pointer;
-  white-space: nowrap;
+}
+.int-caption {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
+  white-space: pre-line;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
-.int-row-won {
-  background: rgba(0, 103, 255, 0.04);
+.int-root .int-table td.int-td-action {
+  text-align: right;
 }
-.int-row-won .int-company {
-  color: var(--primary);
-}
-.int-row-dnc {
-  opacity: 0.45;
-}
-.int-row-dnc .int-company {
-  text-decoration: line-through;
-}
-.int-next-due {
-  color: var(--semantic-down);
-}
-.int-note {
-  font-size: 13px;
-  color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Inline status dropdown. Saves on change, no modal, no save button. */
-.int-status-wrap {
-  position: relative;
+.int-post-now {
   display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  max-width: 100%;
 }
-.int-status {
-  appearance: none;
-  -webkit-appearance: none;
-  height: 30px;
-  padding: 0 30px 0 12px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-pill);
-  background: var(--surface-strong);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  color: var(--ink);
+.int-post-now .gs-btn {
+  max-width: 100%;
 }
-.int-status:disabled {
-  cursor: progress;
-  opacity: 0.6;
-}
-.int-status-chevron {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-size: 9px;
-  color: var(--muted);
-}
-.int-status-won {
-  color: var(--primary);
-}
-.int-status-declined {
-  color: var(--semantic-down);
-}
-.int-status-up {
-  color: var(--semantic-up);
-}
-.int-status-dnc {
-  color: var(--muted-soft);
-}
-
-.int-table-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-top: 1px solid var(--hairline);
-}
-.int-pager {
-  display: flex;
-  gap: 8px;
-}
-.int-pager-btn {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--hairline);
-  background: var(--canvas);
-  font-size: 13px;
-  color: var(--ink);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-}
-.int-pager-btn:hover {
-  text-decoration: none;
-}
-.int-pager-btn.is-disabled {
-  color: var(--muted-soft);
-  cursor: default;
-  pointer-events: none;
-}
-.int-page-range {
+.int-post-now-error {
+  max-width: 260px;
   font-size: 12px;
-  font-family: var(--font-mono);
-  color: var(--muted);
-}
-.int-download {
-  font-size: 13px;
-  color: var(--primary);
-  cursor: pointer;
+  color: var(--color-danger);
+  text-align: right;
 }
 
-/* ---------- Lead detail ---------- */
+/* ---------- Blog page ---------- */
+.int-run-now {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.int-run-note {
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-muted-foreground);
+}
+/* A deployment missing keys: a filled note with a warning dot, not a
+   bordered box. */
+.int-config-note {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--int-surface);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-foreground);
+}
+.int-config-note::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  transform: translateY(-1px);
+}
+.int-resource-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.int-runs {
+  background: var(--int-surface);
+  border-radius: 13px;
+  overflow: hidden;
+}
+.int-run {
+  display: grid;
+  grid-template-columns: 150px 150px minmax(0, 1fr);
+  gap: 16px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--int-divider);
+}
+.int-run:last-child {
+  border-bottom: 0;
+}
+.int-run-outcome {
+  color: var(--color-foreground);
+  font-weight: 500;
+}
+.int-run-detail {
+  color: var(--color-muted-foreground);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Empty state ---------- */
+.int-soon {
+  background: var(--int-surface);
+  border-radius: 13px;
+  padding: 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.int-soon-icon {
+  color: var(--color-muted-foreground);
+  margin-bottom: 16px;
+}
+.int-soon-title {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--color-text);
+}
+.int-soon-desc {
+  margin: 0;
+  max-width: 420px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-muted-foreground);
+}
+
+/* ---------- Post editor ---------- */
 .int-detail {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   gap: 24px;
   align-items: start;
 }
@@ -699,301 +1039,534 @@ a.int-crumb:hover {
 .int-detail-side {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-/* The hand-written opener. The one thing she reads as she dials, so it gets
-   the dark canvas and the largest type on the page. */
-.int-opener {
-  background: var(--surface-dark);
-  color: var(--on-dark);
-  padding: 28px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.int-opener-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  /* The lightened blue from the announcement bar: --primary does not pass
-     contrast on the dark canvas, this does. */
-  color: #5c9dff;
-}
-.int-opener-trigger {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--on-dark-soft);
-}
-.int-opener-rule {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.12);
-}
-.int-opener-text {
-  margin: 0;
-  font-size: 19px;
-  line-height: 1.45;
-  color: var(--on-dark);
-}
-.int-card-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.int-log-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.int-root .int-log-note {
-  flex: 1;
-  min-width: 200px;
-  height: 40px;
-  padding: 10px 14px;
-  font-size: 14px;
-}
-.int-history {
-  display: flex;
-  flex-direction: column;
-}
-.int-history-row {
-  display: flex;
   gap: 16px;
-  padding: 14px 0;
-  border-top: 1px solid var(--hairline-soft);
-}
-.int-history-when {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted);
-  flex: 0 0 110px;
-}
-.int-history-outcome {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  flex: 0 0 130px;
-}
-.int-history-note {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--body);
-  flex: 1;
-}
-.int-history-user {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted-soft);
-}
-/* The archive's file column: a download link when there is one, and always a
-   way to put one there. The input is hidden inside its own label, which is the
-   one reliable way to restyle a file picker. */
-.int-quote-file {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  white-space: nowrap;
-}
-.int-attach {
-  display: inline-block;
-  padding: 5px 10px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-none);
-  background: var(--canvas);
-  font-size: 11.5px;
-  color: var(--muted);
-  cursor: pointer;
-}
-.int-attach:hover {
-  color: var(--ink);
-  border-color: var(--ink);
-}
-.int-attach input {
-  display: none;
-}
-.int-attach-error {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 2;
-  padding: 4px 8px;
-  background: var(--semantic-down);
-  color: #fff;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-/* The editable deal value, on the prospects table and in the detail panel.
-   Sized to sit on the same baseline as the status pill beside it, and the
-   prefix is a static label rather than part of the value so the box holds a
-   plain number that can be typed over. */
-.int-money {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 10px;
-  gap: 2px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-none);
-  background: var(--canvas);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  max-width: 100%;
-}
-.int-money:focus-within {
-  border-color: var(--primary);
-}
-.int-money-prefix {
-  color: var(--muted);
-}
-.int-money-input {
-  appearance: none;
-  width: 100%;
   min-width: 0;
-  border: 0;
-  padding: 0;
-  background: none;
-  font: inherit;
-  color: var(--ink);
-  text-align: right;
 }
-.int-money-input:focus {
-  outline: none;
+.int-title-meta {
+  margin-top: -6px;
 }
-.int-money-input:disabled {
-  color: var(--muted);
-}
-/* Floated, so a refused save does not reflow the row it is in. */
-.int-money-error {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 2;
-  white-space: nowrap;
-  padding: 4px 8px;
-  border-radius: var(--radius-none);
-  background: var(--semantic-down);
-  color: #fff;
-  font-family: var(--font-sans);
-  font-size: 11px;
-}
-
-/* The inbound-tap feed on /internal/prospects reuses the call-history rows,
-   with a quieter outcome column: a tap is a signal, not a status change, and
-   it must not read as loudly as "Meeting booked" three rows above it. */
-.int-signal-note {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-  margin: 0;
-}
-.int-signal-row .int-history-outcome {
-  color: var(--muted);
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 500;
-  font-family: var(--font-mono);
-}
-
-.int-history-empty {
-  font-size: 13px;
-  color: var(--muted);
-  padding-top: 14px;
-  border-top: 1px solid var(--hairline-soft);
-}
-.int-field {
+.int-form-card {
+  background: var(--int-surface);
+  border-radius: 13px;
+  padding: 20px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 16px;
-  font-size: 13px;
+  min-width: 0;
 }
+.int-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.int-faq {
+  gap: 8px;
+}
+.int-form-label,
 .int-field-label {
-  color: var(--muted);
-  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-foreground);
 }
-.int-field-value {
-  color: var(--ink);
-  text-align: right;
-  min-width: 0;
+.int-form-hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-muted-foreground);
   overflow-wrap: anywhere;
 }
-.int-field-value.is-mono {
-  font-family: var(--font-mono);
+.int-form-hint.is-error {
+  color: var(--color-danger);
 }
-.int-field-value.is-empty {
-  color: var(--muted-soft);
+.int-form-hint.is-info {
+  color: var(--int-link);
+  font-weight: 500;
 }
 .int-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
-.int-select-full {
-  display: flex;
-  width: 100%;
-}
-.int-select-full .int-select {
-  width: 100%;
-}
-
-.int-drawer-scrim {
-  display: none;
-}
-
-/* ---------- Placeholder module ---------- */
-.int-soon {
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  padding: 72px 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-}
-.int-soon-desc {
-  margin: 0;
-  max-width: 420px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--body);
-}
-
-/* ---------- Declined-reason dialog ---------- */
-.int-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  background: rgba(10, 15, 28, 0.45);
+.int-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.int-dialog {
-  width: 440px;
-  max-width: 100%;
-  background: var(--canvas);
-  padding: 28px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.int-dialog-text {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--body);
-}
-.int-dialog-actions {
+.int-check-label {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+.int-check-label input[type="checkbox"] {
+  margin-top: 1px;
+}
+.int-live-link {
+  overflow-wrap: anywhere;
+  font-size: 13.5px;
+}
+.int-side-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+}
+.int-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--int-raised);
+}
+
+/* Validation results above the editor: a filled panel. */
+.int-callout {
+  background: var(--int-surface);
+  border-radius: 13px;
+  padding: 20px 24px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.int-callout-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+.int-callout-title.is-error {
+  color: var(--color-danger);
+}
+.int-callout-list {
+  margin: 8px 0 16px;
+  padding-left: 18px;
+  color: var(--color-foreground);
+}
+.int-callout-list:last-child {
+  margin-bottom: 0;
+}
+.int-callout-list li + li {
+  margin-top: 4px;
+}
+
+/* Action results: the design system's status message, a solid accent fill
+   with white text. */
+.int-status-msg {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+ul.int-status-msg {
+  padding-left: 30px;
+}
+.int-status-msg.is-success {
+  background: var(--color-success);
+}
+.int-status-msg.is-error {
+  background: var(--color-danger);
+}
+
+/* Category chips: borderless, raised on the card, cobalt when selected. */
+.int-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.int-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 120px;
+  background: var(--int-raised);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-foreground);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.int-chip:hover {
+  color: var(--color-text);
+}
+.int-chip.is-on {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+.int-chip.is-on:hover {
+  background: var(--color-primary-hover);
+}
+
+/* The search-result preview. */
+.int-serp {
+  background: var(--int-raised);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.int-serp-url {
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-mono);
+  overflow-wrap: anywhere;
+}
+.int-serp-title {
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--int-link);
+}
+.int-serp-desc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-foreground);
+}
+
+/* One tile per network on a live post: filled, never outlined. Blue is
+   live, red failed, a raised grey tile has not gone out yet. */
+.int-social-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.int-root .int-social-tile {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: var(--int-raised);
+  color: var(--color-muted-foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.int-root .int-social-tile.is-live {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+.int-root .int-social-tile.is-failed {
+  background: var(--color-danger);
+  color: #ffffff;
+  cursor: pointer;
+}
+.int-root .int-social-tile.is-idle {
+  cursor: pointer;
+}
+.int-root .int-social-tile.is-idle:hover {
+  color: var(--color-text);
+}
+.int-root .int-social-tile.is-sending {
+  color: var(--int-link);
+}
+.int-root .int-social-tile:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Something is in flight. Drawn in currentColor so it reads on a blue
+   button, an outline button and a grey tile alike. */
+.int-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: int-spin 0.7s linear infinite;
+}
+.int-spinner-sm {
+  width: 14px;
+  height: 14px;
+}
+@keyframes int-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .int-spinner {
+    animation-duration: 2s;
+  }
+}
+
+/* An information mark whose note appears on hover or keyboard focus. */
+.int-tip {
+  position: relative;
+  display: inline-flex;
+  color: var(--color-muted-foreground);
+  cursor: help;
+  outline: none;
+}
+.int-tip:hover,
+.int-tip:focus-visible {
+  color: var(--color-text);
+}
+.int-tip-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 5;
+  width: 240px;
+  padding: 10px 12px;
+  background: var(--int-raised);
+  color: var(--color-foreground);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  border-radius: 8px;
+  box-shadow: var(--int-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.int-tip:hover .int-tip-body,
+.int-tip:focus-visible .int-tip-body {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ---------- Rich text editor (RichTextEditor.tsx) ----------
+   A filled panel, not a bordered box. Prose inside it is set like the
+   article it becomes, so what the reviewer approves is what the reader
+   gets. overflow: clip keeps the rounded corners without making this a
+   scroll container, so the toolbar can stick under the top bar. */
+.rte {
+  background: var(--int-surface);
+  border-radius: 13px;
+  overflow: clip;
+}
+/* Dragging an image over it: the design system's drop target goes solid
+   brand blue. */
+.rte.is-dragging {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--int-divider);
+  position: sticky;
+  top: 56px;
+  z-index: 2;
+  background: var(--int-surface);
+}
+.rte-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.rte-btn:hover:not(:disabled) {
+  background: var(--int-hover);
+}
+.rte-btn.is-active,
+.rte-btn.is-active:hover {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+.rte-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.rte-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background: var(--int-divider);
+}
+.rte-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: var(--int-raised);
+}
+.rte-group-icon {
+  color: var(--int-link);
+}
+.rte-mini {
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+.rte-mini:hover {
+  background: var(--int-hover);
+}
+.rte-content {
+  min-height: 640px;
+  padding: 20px 24px;
+  font-size: 15px;
+}
+.rte-foot {
+  margin: 0;
+  border-top: 1px solid var(--int-divider);
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+.rte-foot.is-error {
+  color: var(--color-danger);
+}
+.blog-tiptap {
+  min-height: 600px;
+  color: var(--color-foreground);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+.blog-tiptap:focus {
+  outline: none;
+}
+.blog-tiptap > * + * {
+  margin-top: 0.85em;
+}
+.blog-tiptap h1,
+.blog-tiptap h2,
+.blog-tiptap h3,
+.blog-tiptap h4 {
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 0;
+}
+.blog-tiptap h1 { font-size: 26px; line-height: 1.25; }
+.blog-tiptap h2 { font-size: 22px; line-height: 1.35; }
+.blog-tiptap h3 { font-size: 17px; line-height: 1.4; }
+.blog-tiptap h4 { font-size: 15.5px; }
+.blog-tiptap strong { font-weight: 600; color: var(--color-text); }
+.blog-tiptap em { font-style: italic; }
+.blog-tiptap a { color: var(--int-link); text-decoration: underline; }
+.blog-tiptap ul { list-style: disc; padding-left: 1.5rem; }
+.blog-tiptap ol { list-style: decimal; padding-left: 1.5rem; }
+.blog-tiptap li > p { margin: 0; }
+.blog-tiptap blockquote {
+  margin-left: 0;
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--color-muted-foreground);
+}
+.blog-tiptap p.is-editor-empty:first-child::before,
+.blog-tiptap .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+/* Video nodes keep a 16:9 frame, and the iframe is inert so a click selects
+   the node (to delete it) instead of starting the player. */
+.blog-tiptap div[data-youtube-video],
+.blog-tiptap .blog-video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+}
+.blog-tiptap div[data-youtube-video] iframe,
+.blog-tiptap .blog-video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+}
+.blog-tiptap .ProseMirror-selectednode {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.blog-tiptap img.blog-body-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.blog-tiptap table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+  table-layout: fixed;
+  overflow: hidden;
+}
+/* Cell rules here are part of the post's own table, not panel chrome. */
+.blog-tiptap th,
+.blog-tiptap td {
+  border: 1px solid var(--color-border);
+  padding: 6px 10px;
+  vertical-align: top;
+  text-align: left;
+  min-width: 3rem;
+  position: relative;
+}
+.blog-tiptap th {
+  background: var(--int-raised);
+  font-weight: 500;
+  color: var(--color-text);
+}
+.blog-tiptap td > p,
+.blog-tiptap th > p { margin: 0; }
+.blog-tiptap .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  pointer-events: none;
+}
+.blog-tiptap .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-primary);
+  cursor: col-resize;
+}
+
+/* ---------- Saved-version preview ---------- */
+.int-preview {
+  background: var(--int-surface);
+  border-radius: 16px;
+  padding: 40px clamp(20px, 4vw, 64px);
 }
 
 /* ---------- Login ---------- */
@@ -1002,45 +1575,78 @@ a.int-crumb:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-dark);
-  padding: 24px;
+  padding: 24px 16px;
 }
 .int-login-card {
-  width: 380px;
+  width: 400px;
   max-width: 100%;
-  background: var(--canvas);
-  padding: 40px 32px;
+  background: var(--int-surface);
+  border-radius: 16px;
+  padding: 40px 32px 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
+.int-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.int-login-brand .int-logo {
+  height: 22px;
+}
+.int-login-tag {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+.int-login-title {
+  margin: 8px 0 -8px;
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--color-text);
+}
 .int-login-copy {
   margin: 0;
   font-size: 14px;
-  line-height: 1.5;
-  color: var(--body);
+  line-height: 1.55;
+  color: var(--color-muted-foreground);
+}
+.int-login-copy code {
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  color: var(--color-foreground);
 }
 .int-login-fields {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+.int-login-who {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .int-login-foot {
   margin: 0;
   font-size: 12px;
-  color: var(--muted-soft);
-  font-family: var(--font-mono);
+  color: var(--color-muted-foreground);
+  text-align: center;
 }
 .int-login-error {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--semantic-down);
+  color: var(--color-danger);
+}
+
+.int-drawer-scrim {
+  display: none;
 }
 
 /* ============================================================
-   Responsive. The design is desktop-only; the drawer below is
-   this site's own behaviour, matching the public nav pattern.
+   Responsive. The sidebar becomes a drawer at 900px; tables turn
+   into stacked rows at 720px.
    ============================================================ */
 @media (max-width: 1100px) {
   .int-counters {
@@ -1056,33 +1662,37 @@ a.int-crumb:hover {
     display: inline-flex;
   }
   .int-content {
-    padding: 24px;
+    padding: 24px 20px 56px;
   }
   /* Sidebar becomes an overlay drawer, closed by default, closing on
-     navigation and on Escape (see Sidebar.tsx). */
-  .int-sidebar {
+     navigation and on Escape (see Chrome.tsx). */
+  .int-sidebar,
+  .int-sidebar.is-collapsed {
     position: fixed;
     top: 56px;
     left: 0;
     z-index: 45;
-    width: 240px;
+    width: 248px;
+    padding: 8px 10px 14px;
     transform: translateX(-100%);
     transition: transform 150ms var(--ease-out);
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--int-shadow);
   }
   .int-sidebar.is-open {
     transform: translateX(0);
   }
   /* Collapse is a desktop affordance; the drawer has no room for it. */
-  .int-sidebar.is-collapsed {
-    width: 240px;
-  }
   .is-collapsed .int-nav-label,
   .is-collapsed .int-nav-group-label {
-    opacity: 1;
+    display: block;
   }
   .is-collapsed .int-nav-badge {
     display: inline;
+  }
+  .is-collapsed .int-nav-item {
+    justify-content: flex-start;
+    padding: 0 10px;
+    height: 32px;
   }
   .int-collapse {
     display: none;
@@ -1092,427 +1702,118 @@ a.int-crumb:hover {
     position: fixed;
     inset: 56px 0 0;
     z-index: 44;
-    background: rgba(10, 15, 28, 0.35);
+    background: rgba(0, 0, 0, 0.5);
     border: none;
     padding: 0;
+  }
+  .int-table-panel .int-col-post {
+    width: 180px;
+  }
+}
+
+/* Stacked rows: the headline takes the full width and the other cells
+   flow underneath it as a line of metadata. */
+@media (max-width: 720px) {
+  .int-root .int-table,
+  .int-root .int-table tbody {
+    display: block;
+  }
+  .int-root .int-table thead,
+  .int-root .int-table colgroup {
+    display: none;
+  }
+  .int-root .int-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--int-divider);
+  }
+  .int-root .int-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .int-root .int-table td,
+  .int-root .int-table td.int-td-action {
+    display: block;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    min-width: 0;
+  }
+  .int-root .int-table td.int-td-main {
+    order: -1;
+    flex: 1 0 100%;
+  }
+  .int-root .int-table td.int-td-platform {
+    order: -2;
+    flex: 1 0 100%;
+  }
+  .int-root .int-table td.int-td-post,
+  .int-root .int-table td.int-td-action {
+    flex: 1 0 100%;
+  }
+  .int-root .int-table td.int-cell-tight {
+    max-width: 50%;
+  }
+  .int-post-now {
+    align-items: flex-start;
+  }
+  .int-post-now-error {
+    text-align: left;
+  }
+  .int-run {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
   }
 }
 
 @media (max-width: 640px) {
-  .int-counters {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 20px 24px;
+  .int-topbar {
+    gap: 10px;
+    padding: 0 12px;
   }
-  .int-page-header {
-    flex-direction: column;
-    gap: 16px;
+  .int-brand {
+    gap: 10px;
+  }
+  .int-crumb,
+  .int-crumb-sep {
+    display: none;
   }
   .int-user-name {
     display: none;
   }
-  .int-root .int-search,
-  .int-root .int-search-wide {
-    width: 100%;
+  .int-content {
+    padding: 20px 16px 48px;
   }
-}
-
-/* ============================================================
-   Resources: the collateral library.
-   ============================================================ */
-.int-featured {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: 0;
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  align-items: stretch;
-}
-.int-featured-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 32px;
-  min-width: 0;
-}
-.int-featured-title {
-  margin: 0;
-}
-.int-featured-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-}
-/* The embedded PDF. A fixed height because an <object> has no intrinsic one
-   and would otherwise collapse to nothing. */
-.int-featured-preview {
-  width: 100%;
-  height: 420px;
-  border: none;
-  border-left: 1px solid var(--hairline);
-  background: var(--surface-soft);
-  display: block;
-}
-.int-resource-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.int-resource-note {
-  margin: 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--hairline);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-@media (max-width: 900px) {
-  .int-featured {
-    grid-template-columns: minmax(0, 1fr);
+  .int-page-header {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
   }
-  .int-featured-preview {
-    height: 320px;
-    border-left: none;
-    border-top: 1px solid var(--hairline);
+  .int-page-title {
+    font-size: 26px;
+    line-height: 32px;
   }
-}
-
-/* Login: the "I am" picker that sits above the shared password. */
-.int-login-who {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* ---------- Sortable column headers ---------- */
-.int-root .int-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  cursor: pointer;
-  /* The th already carries the uppercase caption styling; inherit it so the
-     header reads identically whether or not the column is sortable. */
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-}
-.int-root .int-sort:hover {
-  color: var(--ink);
-  text-decoration: none;
-}
-.int-root .int-sort.is-active {
-  color: var(--ink);
-}
-/* Idle marker is nearly invisible: it signals "sortable" without turning the
-   header row into a line of arrows. */
-.int-sort-caret {
-  font-size: 7px;
-  color: var(--muted-soft);
-  opacity: 0.45;
-  line-height: 1;
-}
-.int-sort:hover .int-sort-caret {
-  opacity: 1;
-}
-.int-sort.is-active .int-sort-caret {
-  font-size: 8px;
-  color: var(--primary);
-  opacity: 1;
-}
-
-/* ---------- Rich text editor (RichTextEditor.tsx) ----------
-   The WYSIWYG for a post body. Prose inside it is set like the article it
-   becomes, so what the reviewer approves is what the reader gets. */
-.rte {
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  overflow: hidden;
-}
-.rte-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 8px;
-  border-bottom: 1px solid var(--hairline);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--canvas);
-}
-.rte-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm, 6px);
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-}
-.rte-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.rte-mini {
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink);
-  cursor: pointer;
-}
-.rte-mini:hover {
-  background: var(--surface-strong);
-}
-.rte-sep {
-  width: 1px;
-  height: 20px;
-  margin: 0 4px;
-  background: var(--hairline);
-}
-.rte-group {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  margin-left: 4px;
-  padding: 4px 6px;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-sm, 6px);
-}
-.rte-content {
-  min-height: 640px;
-  padding: 16px 20px;
-  font-size: 15px;
-}
-.rte-foot {
-  border-top: 1px solid var(--hairline);
-  padding: 8px 16px;
-  font-size: 12px;
-}
-.blog-tiptap {
-  min-height: 600px;
-  color: var(--body);
-  font-size: 15.5px;
-  line-height: 1.7;
-}
-.blog-tiptap:focus {
-  outline: none;
-}
-.blog-tiptap > * + * {
-  margin-top: 0.85em;
-}
-.blog-tiptap h1,
-.blog-tiptap h2,
-.blog-tiptap h3,
-.blog-tiptap h4 {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 0;
-}
-.blog-tiptap h1 { font-size: 26px; line-height: 1.25; }
-.blog-tiptap h2 { font-size: 22px; line-height: 1.35; }
-.blog-tiptap h3 { font-size: 17px; line-height: 1.4; }
-.blog-tiptap h4 { font-size: 15.5px; }
-.blog-tiptap strong { font-weight: 600; color: var(--ink); }
-.blog-tiptap em { font-style: italic; }
-.blog-tiptap a { color: var(--primary); text-decoration: underline; }
-.blog-tiptap ul { list-style: disc; padding-left: 1.5rem; }
-.blog-tiptap ol { list-style: decimal; padding-left: 1.5rem; }
-.blog-tiptap li > p { margin: 0; }
-.blog-tiptap blockquote {
-  border-left: 3px solid var(--primary);
-  padding-left: 1rem;
-  font-style: italic;
-  color: var(--muted);
-}
-.blog-tiptap p.is-editor-empty:first-child::before,
-.blog-tiptap .is-empty::before {
-  content: attr(data-placeholder);
-  color: var(--muted-soft);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-/* Video nodes keep a 16:9 frame, and the iframe is inert so a click selects
-   the node (to delete it) instead of starting the player. */
-.blog-tiptap div[data-youtube-video],
-.blog-tiptap .blog-video-embed {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background: #000;
-}
-.blog-tiptap div[data-youtube-video] iframe,
-.blog-tiptap .blog-video-embed iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  pointer-events: none;
-}
-.blog-tiptap .ProseMirror-selectednode {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-.blog-tiptap img.blog-body-image {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-.blog-tiptap table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 0.5rem 0;
-  table-layout: fixed;
-  overflow: hidden;
-}
-.blog-tiptap th,
-.blog-tiptap td {
-  border: 1px solid var(--hairline);
-  padding: 6px 10px;
-  vertical-align: top;
-  text-align: left;
-  min-width: 3rem;
-  position: relative;
-}
-.blog-tiptap th {
-  background: var(--surface-soft);
-  font-weight: 600;
-  color: var(--ink);
-}
-.blog-tiptap td > p,
-.blog-tiptap th > p { margin: 0; }
-.blog-tiptap .selectedCell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-  pointer-events: none;
-}
-.blog-tiptap .column-resize-handle {
-  position: absolute;
-  right: -2px;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--primary);
-  cursor: col-resize;
-}
-
-/* ---------- Post editor layout ---------- */
-.int-form-card {
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.int-form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.int-form-label {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--muted);
-}
-.int-form-hint {
-  font-size: 12px;
-  color: var(--muted-soft);
-}
-.int-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.int-chip {
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  padding: 5px 12px;
-  font-size: 12.5px;
-  color: var(--body);
-  cursor: pointer;
-}
-.int-chip.is-on {
-  border-color: var(--primary);
-  color: var(--primary);
-  font-weight: 600;
-}
-.int-serp {
-  border: 1px solid var(--hairline);
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.int-serp-url { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
-.int-serp-title { font-size: 17px; color: var(--primary); line-height: 1.3; }
-.int-serp-desc { font-size: 13px; color: var(--body); line-height: 1.45; }
-
-/* Something is in flight. Used where a click starts a slow network send, so
-   the person is never left wondering whether it registered. */
-.int-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid color-mix(in srgb, var(--primary) 25%, transparent);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: int-spin 0.7s linear infinite;
-}
-@keyframes int-spin {
-  to { transform: rotate(360deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .int-spinner { animation-duration: 2s; }
-}
-
-/* An information mark whose note appears on hover or keyboard focus. For help
-   that is worth having once and would be noise if it sat on screen for good. */
-.int-tip {
-  position: relative;
-  display: inline-flex;
-  color: var(--muted-soft);
-  cursor: help;
-  outline: none;
-}
-.int-tip:hover,
-.int-tip:focus-visible {
-  color: var(--primary);
-}
-.int-tip-body {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  z-index: 5;
-  width: 240px;
-  padding: 10px 12px;
-  background: var(--ink);
-  color: var(--canvas);
-  font-size: 12.5px;
-  font-weight: 400;
-  line-height: 1.45;
-  border-radius: var(--radius-sm, 6px);
-  box-shadow: var(--shadow-soft);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--duration-fast, 120ms) var(--ease-out, ease-out);
-  pointer-events: none;
-}
-.int-tip:hover .int-tip-body,
-.int-tip:focus-visible .int-tip-body {
-  opacity: 1;
-  visibility: visible;
+  .int-run-now {
+    justify-content: flex-start;
+  }
+  .int-counters {
+    gap: 12px;
+  }
+  .int-stat {
+    padding: 18px;
+  }
+  .int-stat-value {
+    font-size: 32px;
+  }
+  .int-callout {
+    padding: 18px;
+  }
+  .rte-content {
+    padding: 16px;
+  }
+  .int-login-card {
+    padding: 32px 20px 24px;
+  }
 }

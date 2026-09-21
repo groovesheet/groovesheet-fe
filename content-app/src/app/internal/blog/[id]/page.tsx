@@ -57,10 +57,10 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
               target="_blank"
               rel="noreferrer"
             >
-              Preview saved version
+              Preview Saved Version
             </a>
             <Link className="gs-btn gs-btn--secondary-light int-btn-sm" href="/internal/blog">
-              All posts
+              All Posts
             </Link>
           </>
         }
@@ -68,13 +68,11 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
 
       <div className="int-stack">
         {errors.length || warnings.length ? (
-          <div style={{ background: "var(--canvas)", border: "1px solid var(--hairline)", padding: 20, fontSize: 13.5 }}>
+          <div className="int-callout">
             {errors.length ? (
               <>
-                <span className="gs-caption-strong" style={{ color: "var(--semantic-down)" }}>
-                  Fix before approval
-                </span>
-                <ul style={{ margin: "8px 0 16px", paddingLeft: 18, color: "var(--body)" }}>
+                <span className="int-callout-title is-error">Fix Before Approval</span>
+                <ul className="int-callout-list">
                   {errors.map((e) => (
                     <li key={e}>{e}</li>
                   ))}
@@ -83,8 +81,8 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
             ) : null}
             {warnings.length ? (
               <>
-                <span className="gs-caption-strong">Check by eye</span>
-                <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "var(--body)" }}>
+                <span className="int-callout-title">Check by Eye</span>
+                <ul className="int-callout-list">
                   {warnings.map((w) => (
                     <li key={w}>{w}</li>
                   ))}
