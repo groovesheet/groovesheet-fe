@@ -21,7 +21,7 @@
       "permanent": false
     },
     {
-      "source": "/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)",
+      "source": "/:path((?!api/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
       "has": [
         {
           "type": "header",
@@ -65,7 +65,7 @@
       "permanent": false
     },
     {
-      "source": "/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)",
+      "source": "/:path((?!api/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
       "has": [
         {
           "type": "header",
@@ -90,6 +90,34 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/internal/:path*",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/api/internal/:path*"
+    },
+    {
+      "source": "/blog",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/blog"
+    },
+    {
+      "source": "/blog/:path*",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/blog/:path*"
+    },
+    {
+      "source": "/blog-media/:path*",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/blog-media/:path*"
+    },
+    {
+      "source": "/internal",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/internal"
+    },
+    {
+      "source": "/internal/:path*",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/internal/:path*"
+    },
+    {
+      "source": "/blog-sitemap.xml",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/sitemap.xml"
+    },
     {
       "source": "/api/:path*",
       "destination": "https://api.groovesheet.net/:path*"
