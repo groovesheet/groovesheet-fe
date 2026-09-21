@@ -39,7 +39,6 @@ export default defineConfig([
     'src/**',
     'vendor/**',
     'public/**',
-    'scripts/prerender.mjs',
     'content-app/**',
     'design-system/**',
     'supabase/**',
