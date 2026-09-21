@@ -1,0 +1,255 @@
+.element-section {
+  width: 100%;
+  padding: 80px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-tinted-background);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 1.2s ease;
+}
+
+.element-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--color-dot-pattern-dark) 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+  background-position: 0 0;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+  transition: background-image 1.2s ease;
+}
+
+/* Light Mode Override */
+[data-theme='light'] .element-section::before {
+  background-image: radial-gradient(circle, var(--color-dot-pattern-light) 1.5px, transparent 1.5px);
+}
+
+.element-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1190px;
+  padding: 0 20px;
+  gap: 60px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Layout that the markup used to carry as Tailwind utility classes. Tailwind
+   is gone, so the same values live here; the media queries below still
+   override them. */
+.element-header {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+  width: 100%;
+}
+
+.element-title-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 420px;
+  max-width: 420px;
+}
+
+.element-title-inner {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  width: 100%;
+}
+
+.element-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  margin-top: -1px;
+  font-family: 'Hubot_Sans-Regular', Helvetica;
+  font-weight: 400;
+  color: var(--color-text);
+  font-size: 40px;
+  letter-spacing: -0.8px;
+  line-height: 52px;
+}
+
+.element-lede {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 430px;
+  font-family: 'DM_Sans-Regular', Helvetica;
+  font-weight: 400;
+  color: var(--color-text);
+  font-size: 20px;
+  letter-spacing: 0;
+  line-height: 24px;
+}
+
+.element-media {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: stretch;
+  width: 100%;
+  height: 617.04px;
+}
+
+.element-frame {
+  position: relative;
+  display: flex;
+  flex: 1 1 0%;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 100%;
+  border-radius: 17.63px;
+  overflow: hidden;
+}
+
+.element-frame-inner {
+  position: relative;
+  display: flex;
+  flex: 1 1 0%;
+  flex-grow: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.element-image {
+  position: relative;
+  flex: 1 1 0%;
+  flex-grow: 1;
+  align-self: stretch;
+  width: 100%;
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+.element-play {
+  position: absolute;
+  top: 42.86%;
+  left: calc(50% - 44px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 14.29%;
+  background-color: #ffffff80;
+  border-radius: 188.42px;
+  overflow: hidden;
+}
+
+.element-play .element-play-icon {
+  height: 33.06px;
+  width: 27.55px;
+}
+
+.element-play-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: 188.42px;
+  border: 2.2px solid #ffffff80;
+}
+
+/* =========================================================
+   Mobile
+   ---------------------------------------------------------
+   The header is a fixed two-column flex (420px and 430px columns) with no
+   responsive variant, so on a phone the
+   title column was crushed to ~180px and wrapped one word per line while the
+   lede sat squeezed beside it. Stack them and let both use the full width.
+   The .element-container prefix keeps these ahead of the base rules above.
+   ========================================================= */
+@media (max-width: 900px) {
+  .element-container .element-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .element-container .element-title-col,
+  .element-container .element-lede {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* The base rules centre these; left-align once stacked. */
+  .element-container .element-title,
+  .element-container .element-lede {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 768px) {
+  .element-section {
+    padding: 60px 0;
+  }
+
+  .element-container {
+    gap: 32px;
+    padding: 0 16px;
+  }
+
+  .element-container .element-title {
+    font-size: 30px;
+    line-height: 38px;
+    letter-spacing: -0.5px;
+  }
+
+  .element-container .element-lede {
+    font-size: 17px;
+    line-height: 24px;
+  }
+
+  /* 617px of fixed height is three quarters of a phone screen for what is a
+     supporting visual. */
+  .element-container .element-media {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .element-container {
+    padding: 0 12px;
+    gap: 24px;
+  }
+
+  .element-container .element-title {
+    font-size: 26px;
+    line-height: 33px;
+  }
+
+  .element-container .element-lede {
+    font-size: 16px;
+    line-height: 23px;
+  }
+
+  .element-container .element-media {
+    height: 200px;
+  }
+}
