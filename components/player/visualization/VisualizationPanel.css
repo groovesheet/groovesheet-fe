@@ -1,0 +1,349 @@
+/* VisualizationPanel — full-width post-transcription view */
+
+.viz-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+/* ── Download Section (top dashed area) ── */
+.viz-download-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px 17px 24px;
+  min-height: 400px;
+  background: rgba(50, 48, 51, 0.5);
+  border: 2.842px dashed var(--color-border-light, white);
+  border-radius: 12px 12px 0 0;
+  box-sizing: border-box;
+}
+
+.viz-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+.viz-close-btn:hover {
+  opacity: 1;
+}
+
+.viz-download-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.viz-download-title {
+  margin: 0;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--color-text, white);
+  text-align: center;
+}
+
+.viz-filename {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #8d8c8d;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 18px;
+}
+
+.viz-download-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.viz-download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 60px;
+  padding: 1px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.viz-download-btn:hover {
+  filter: brightness(1.15);
+}
+
+.viz-download-primary {
+  width: 100%;
+  background: #012fa7;
+}
+
+.viz-download-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.viz-download-secondary {
+  flex: 1;
+  background: #666;
+}
+
+.viz-download-error {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Viewer Section (bottom dark panel) ── */
+.viz-viewer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  background: #323033;
+  border-radius: 0 0 12px 12px;
+}
+
+/* ── Tabs Bar ── */
+.viz-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.viz-tabs-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 50px;
+  border-radius: 7px;
+}
+
+.viz-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 50px;
+  padding: 0 18px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: #8d8c8d;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.viz-tab:hover {
+  color: #bbb;
+}
+
+.viz-tab-active {
+  background: #012fa7;
+  color: white;
+}
+
+.viz-tab-active:hover {
+  color: white;
+}
+
+.viz-tabs-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 50px;
+}
+
+.viz-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: #8d8c8d;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.viz-control-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Content Area ── */
+.viz-viewer-content {
+  width: 100%;
+  min-height: 500px;
+}
+
+.viz-content-area {
+  width: 100%;
+  min-height: 500px;
+  border: 1px solid #3d3b3e;
+  overflow: hidden;
+  position: relative;
+}
+
+.viz-sheet-bg {
+  background: white;
+  border-radius: 4px;
+}
+
+.viz-dark-bg {
+  background: rgba(50, 48, 51, 0.5);
+}
+
+.viz-osmd-container {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.viz-iframe {
+  width: 100%;
+  height: 600px;
+  border: none;
+}
+
+/* ── Loading / Error states ── */
+.viz-loading,
+.viz-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 300px;
+  padding: 40px;
+}
+
+.viz-loading p {
+  color: #8d8c8d;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 18px;
+}
+
+.viz-error p {
+  color: #ff6b6b;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .viz-panel {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .viz-download-section {
+    padding: 24px 12px 16px;
+    min-height: 300px;
+    gap: 20px;
+  }
+
+  .viz-download-title {
+    font-size: 24px;
+  }
+
+  .viz-filename {
+    font-size: 14px;
+  }
+
+  .viz-download-btn {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .viz-tabs-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .viz-tabs-left {
+    flex-wrap: wrap;
+    height: auto;
+  }
+
+  .viz-tab {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .viz-tabs-right {
+    justify-content: flex-end;
+    height: 40px;
+  }
+
+  .viz-control-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .viz-viewer-section {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .viz-iframe {
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .viz-download-title {
+    font-size: 20px;
+  }
+
+  .viz-download-btn {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .viz-tab {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}

@@ -1,0 +1,1358 @@
+/* GrooveSheet — Song detail page styles.
+   Ported from the Anthropic design pack (styles.css + song-styles.css).
+   All rules are scoped under .gs-song-page to avoid colliding with the rest
+   of the app. Color tokens come from src/styles/tokens.css; the radius /
+   mono-font / status tokens the prototype relied on are redeclared here. */
+
+.gs-song-page {
+  /* Radius scale (from prototype styles.css) */
+  --radius-pill: 120px;
+  --radius-card-lg: 16px;
+  --radius-card: 13px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --radius-xxs: 4px;
+
+  /* Mono + status tokens not present in the shared token file */
+  --font-family-mono: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  --color-success: #22c55e;
+  --color-warn: #f59e0b;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+}
+
+/* ----- Site header: full-bleed, exactly like /explore -----
+   Header.css caps .header-inner at the site-wide 1414px; the Explore page
+   overrides that to span the viewport (.explore-page rules in Explore.css).
+   Mirror those overrides here so both pages' top navs look identical. */
+.gs-song-page .header {
+  padding-bottom: 22px;
+}
+.gs-song-page .header-container {
+  padding: 0;
+}
+.gs-song-page .header-inner {
+  max-width: none;
+  padding: 0 36px;
+}
+@media (max-width: 1024px) {
+  .gs-song-page .header-inner {
+    padding: 0 20px;
+  }
+}
+@media (max-width: 640px) {
+  .gs-song-page .header-inner {
+    padding: 0 14px;
+  }
+}
+/* Same hairline divider Explore renders under the nav (.explore-nav-divider) */
+.gs-song-page .gs-nav-divider {
+  height: 1px;
+  width: 100%;
+  background: var(--color-border);
+}
+
+/* ----- Signature dot grid ----- */
+.gs-song-page .gs-dotgrid {
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+  background-attachment: fixed;
+  opacity: 0.35;
+}
+
+/* ----- Horizontal scroll rows ----- */
+.gs-song-page .gs-row-scroll {
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.gs-song-page .gs-row-scroll::-webkit-scrollbar {
+  display: none;
+}
+.gs-song-page .gs-row-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* ----- Cards ----- */
+.gs-song-page .gs-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.gs-song-page .gs-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-lighter);
+}
+.gs-song-page .gs-card-bg {
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-card);
+}
+[data-theme='light'] .gs-song-page .gs-card-bg {
+  background: var(--color-panel1);
+  border-color: var(--color-border);
+}
+
+/* ----- Thumb wrapper ----- */
+.gs-song-page .gs-thumb {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* ----- Truncate ----- */
+.gs-song-page .gs-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ----- Difficulty badges ----- */
+.gs-song-page .gs-diff {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.gs-song-page .gs-diff::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+}
+.gs-song-page .gs-diff.beginner {
+  color: #fff;
+  background: #16a34a;
+}
+.gs-song-page .gs-diff.intermediate {
+  color: #fff;
+  background: #f59e0b;
+}
+.gs-song-page .gs-diff.advanced {
+  color: #fff;
+  background: #ef4444;
+}
+
+/* ----- Section header arrow buttons ----- */
+.gs-song-page .gs-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.gs-song-page .gs-arrow-btn:hover {
+  background: var(--color-surface-lighter);
+  border-color: var(--color-border-lighter);
+}
+.gs-song-page .gs-arrow-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   Layout
+   ========================================================= */
+.gs-song-page .gs-song-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  gap: 0;
+}
+@media (max-width: 1280px) {
+  .gs-song-page .gs-song-shell {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+@media (max-width: 1024px) {
+  .gs-song-page .gs-song-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Upload CTA shown only where the desktop sidebar is hidden. The sidebar
+   carries the same link, but below lg it lives inside the drawer, which is
+   shut until the visitor taps the info toggle — so on the widths most of the
+   YouTube traffic arrives at, the only route to the paid flow was behind a
+   tap. Breakpoint mirrors .gs-song-sidebar-desktop exactly. */
+.gs-song-page .gs-song-upload-cta-mobile {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .gs-song-page .gs-song-upload-cta-mobile {
+    display: block;
+    margin: 18px 0 96px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .gs-song-page .gs-song-upload-cta-mobile strong {
+    display: block;
+    font-weight: 600;
+  }
+  .gs-song-page .gs-song-upload-cta-mobile span {
+    color: var(--color-muted-foreground);
+  }
+}
+
+/* Desktop-only sidebar column (drawer takes over below lg) */
+.gs-song-page .gs-song-sidebar-desktop {
+  min-width: 0;
+}
+@media (max-width: 1024px) {
+  .gs-song-page .gs-song-sidebar-desktop {
+    display: none;
+  }
+}
+
+/* =========================================================
+   Playback bar
+   ========================================================= */
+.gs-song-page .gs-playbar {
+  background: var(--color-tinted-background);
+  border-bottom: 1px solid var(--color-border-light);
+  position: relative;
+  z-index: 20;
+}
+.gs-song-page .gs-playbar-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+  padding: 10px 24px;
+}
+.gs-song-page .gs-playbar-inner > .gs-pb-divider {
+  flex: 0 0 auto;
+}
+.gs-song-page .gs-playbar-scrub {
+  height: 6px;
+  position: relative;
+  background: var(--color-surface-light);
+  cursor: pointer;
+}
+.gs-song-page .gs-playbar-scrub-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--color-primary);
+  pointer-events: none;
+}
+.gs-song-page .gs-playbar-scrub-loop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.18);
+  border-left: 1px solid #fff;
+  border-right: 1px solid #fff;
+  pointer-events: none;
+}
+[data-theme='light'] .gs-song-page .gs-playbar-scrub-loop {
+  background: rgba(1, 47, 167, 0.18);
+  border-left: 1px solid var(--color-primary);
+  border-right: 1px solid var(--color-primary);
+}
+.gs-song-page .gs-playbar-scrub-head {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+[data-theme='light'] .gs-song-page .gs-playbar-scrub-head {
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(1, 47, 167, 0.15);
+}
+.gs-song-page .gs-ctrl {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--color-foreground);
+  border-radius: 8px;
+  position: relative;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.gs-song-page .gs-ctrl:hover {
+  background: var(--color-surface-light);
+  color: var(--color-text);
+}
+.gs-song-page .gs-ctrl.gs-ctrl-on {
+  color: var(--color-primary);
+  background: var(--color-surface-lighter);
+}
+.gs-song-page .gs-ctrl.gs-ctrl-play {
+  width: 40px;
+  height: 40px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 50%;
+}
+.gs-song-page .gs-ctrl.gs-ctrl-play:hover {
+  background: var(--color-primary-hover);
+}
+.gs-song-page .gs-ctrl.gs-ctrl-play:active {
+  background: var(--color-primary-press);
+  transform: scale(0.97);
+}
+.gs-song-page .gs-pb-time {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.gs-song-page .gs-pb-time .now {
+  color: var(--color-text);
+}
+.gs-song-page .gs-pb-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--color-border-light);
+}
+.gs-song-page .gs-pb-knob {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-foreground);
+  font-size: 12px;
+  font-family: var(--font-family-mono);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.gs-song-page .gs-pb-knob:hover {
+  background: var(--color-surface-lighter);
+  border-color: var(--color-border-lighter);
+}
+.gs-song-page .gs-pb-knob-label {
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 500;
+}
+.gs-song-page .gs-pb-knob-val {
+  color: var(--color-text);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Range sliders */
+.gs-song-page .gs-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: transparent;
+  cursor: pointer;
+  width: 110px;
+}
+.gs-song-page .gs-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--color-primary) 0%,
+    var(--color-primary) var(--fill, 50%),
+    var(--color-surface-lighter) var(--fill, 50%),
+    var(--color-surface-lighter) 100%
+  );
+}
+.gs-song-page .gs-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-surface-lighter);
+}
+.gs-song-page .gs-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+.gs-song-page .gs-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--color-primary);
+  margin-top: -5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.gs-song-page .gs-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* =========================================================
+   Viewer toggles
+   ========================================================= */
+.gs-song-page .gs-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px 0;
+  flex-wrap: wrap;
+}
+.gs-song-page .gs-seg {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  gap: 2px;
+}
+.gs-song-page .gs-seg button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 13px;
+  font-weight: 500;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gs-song-page .gs-seg button:hover {
+  color: var(--color-text);
+}
+.gs-song-page .gs-seg button.on {
+  background: var(--color-primary);
+  color: #fff;
+}
+.gs-song-page .gs-seg button .gs-seg-kbd {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+}
+.gs-song-page .gs-seg button:not(.on) .gs-seg-kbd {
+  background: var(--color-surface-lighter);
+  color: var(--color-muted-foreground);
+}
+
+/* =========================================================
+   Viewer surface
+   ========================================================= */
+.gs-song-page .gs-viewer {
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-card-lg);
+  overflow: hidden;
+  margin: 16px 24px 0;
+  position: relative;
+}
+[data-theme='light'] .gs-song-page .gs-viewer {
+  background: var(--color-panel1);
+  border-color: var(--color-border);
+}
+
+/* Sheet music page (paper) */
+.gs-song-page .gs-sheet-page {
+  background: #fbfaf4;
+  color: #111;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+[data-theme='light'] .gs-song-page .gs-sheet-page {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eee;
+}
+.gs-song-page .gs-sheet-page::after {
+  content: attr(data-page);
+  position: absolute;
+  bottom: 14px;
+  right: 22px;
+  font-family: 'Times New Roman', serif;
+  font-size: 12px;
+  color: #555;
+  font-style: italic;
+}
+
+/* Piano roll surface */
+.gs-song-page .gs-pianoroll {
+  background: #151515;
+  position: relative;
+}
+[data-theme='light'] .gs-song-page .gs-pianoroll {
+  background: #f4f4f5;
+}
+
+/* Stems list */
+.gs-song-page .gs-stems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px;
+}
+.gs-song-page .gs-stem-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 200px;
+  gap: 18px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+}
+.gs-song-page .gs-stem-row.muted .gs-stem-wave {
+  opacity: 0.25;
+}
+.gs-song-page .gs-stem-row.soloed {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.gs-song-page .gs-stem-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gs-song-page .gs-stem-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.gs-song-page .gs-stem-sub {
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-stem-swatch {
+  width: 8px;
+  height: 24px;
+  border-radius: 2px;
+}
+.gs-song-page .gs-ms-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-muted-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.gs-song-page .gs-ms-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-lighter);
+}
+.gs-song-page .gs-ms-btn.m.on {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+.gs-song-page .gs-ms-btn.s.on {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+}
+.gs-song-page .gs-stem-wave-wrap {
+  position: relative;
+  height: 52px;
+  display: flex;
+  align-items: center;
+}
+.gs-song-page .gs-stem-wave {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* =========================================================
+   Right sidebar
+   ========================================================= */
+.gs-song-page .gs-rsidebar {
+  background: var(--color-tinted-background);
+  border-left: 1px solid var(--color-border-light);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+}
+.gs-song-page .gs-rsidebar::-webkit-scrollbar {
+  width: 8px;
+}
+.gs-song-page .gs-rsidebar::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+.gs-song-page .gs-rsidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-muted);
+}
+.gs-song-page .gs-rs-section {
+  padding: 22px 22px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.gs-song-page .gs-rs-section:last-child {
+  border-bottom: 0;
+}
+.gs-song-page .gs-rs-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-text);
+  margin: 0 0 14px;
+}
+.gs-song-page .gs-rs-cover {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.gs-song-page .gs-rs-cover-thumb {
+  width: 72px;
+  height: 92px;
+  border-radius: 6px;
+  background: #fbfaf4;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-light);
+}
+.gs-song-page .gs-rs-publisher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+/* Score info kv list */
+.gs-song-page .gs-kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 8px;
+  font-size: 13px;
+}
+.gs-song-page .gs-kv dt {
+  color: var(--color-muted-foreground);
+  font-weight: 400;
+}
+.gs-song-page .gs-kv dd {
+  color: var(--color-text);
+  font-weight: 500;
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact list rows */
+.gs-song-page .gs-rs-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-top: 1px dashed var(--color-border-light);
+}
+.gs-song-page .gs-rs-row:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.gs-song-page .gs-rs-row-thumb {
+  width: 56px;
+  height: 40px;
+  border-radius: 4px;
+  background: #fbfaf4;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-light);
+}
+.gs-song-page .gs-rs-row-body {
+  min-width: 0;
+  flex: 1;
+}
+.gs-song-page .gs-rs-row-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+}
+.gs-song-page .gs-rs-row-meta {
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gs-song-page .gs-rs-row-rating {
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Big download CTA */
+.gs-song-page .gs-cta-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  width: 100%;
+  background: var(--color-primary);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.gs-song-page .gs-cta-download:hover {
+  background: var(--color-primary-hover);
+}
+.gs-song-page .gs-cta-download:active {
+  background: var(--color-primary-press);
+}
+.gs-song-page .gs-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.gs-song-page .gs-quad button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  background: var(--color-surface-light);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.gs-song-page .gs-quad button:hover {
+  background: var(--color-surface-lighter);
+  border-color: var(--color-border-lighter);
+}
+
+/* Native-looking select */
+.gs-song-page .gs-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 32px 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238d8c8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  width: 100%;
+}
+.gs-song-page .gs-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Tag chips */
+.gs-song-page .gs-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--color-surface-light);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border-light);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.gs-song-page .gs-tag:hover {
+  background: var(--color-surface-lighter);
+  border-color: var(--color-border-lighter);
+  color: var(--color-text);
+}
+
+/* Stat row */
+.gs-song-page .gs-statrow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.gs-song-page .gs-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-stat strong {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Mobile sidebar drawer */
+.gs-song-page .gs-rs-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 25;
+  background: var(--color-primary);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+@media (min-width: 1025px) {
+  .gs-song-page .gs-rs-toggle {
+    display: none;
+  }
+}
+.gs-song-page .gs-rs-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 40;
+}
+.gs-song-page .gs-rs-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 92vw);
+  z-index: 50;
+  background: var(--color-tinted-background);
+  border-left: 1px solid var(--color-border-light);
+  overflow-y: auto;
+  transform: translateX(0);
+}
+
+/* Loop region marker */
+.gs-song-page .gs-loop-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(1, 47, 167, 0.18);
+  border-left: 1.5px dashed var(--color-primary);
+  border-right: 1.5px dashed var(--color-primary);
+  pointer-events: none;
+}
+
+/* Viewer helpers */
+.gs-song-page .gs-viewer-body {
+  padding: 18px 24px 24px;
+}
+.gs-song-page .gs-viewer-rail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-surface-light);
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-viewer-rail .pill {
+  background: var(--color-surface-lighter);
+  color: var(--color-text);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Below-viewer section */
+.gs-song-page .gs-bv-section {
+  margin-top: 36px;
+  padding: 0 24px;
+}
+
+/* =========================================================
+   Mobile / touch refinements
+   ---------------------------------------------------------
+   Measured on a 375x812 viewport before this block: the site header (77px),
+   playbar (197px) and viewer toolbar (90px) stacked to 364px — 45% of the
+   screen — before a single note was visible. These rules compact the
+   transport, make the seek bar touchable, and turn wrapping strips into
+   single-row scrollers.
+   ========================================================= */
+@media (max-width: 768px) {
+  /* --- Transport ------------------------------------------------------- */
+  .gs-song-page .gs-playbar-inner {
+    gap: 8px 10px;
+    /* 18px of top padding gives the seek bar's enlarged touch area somewhere
+       to live without covering the transport buttons below it. */
+    padding: 18px 12px 8px;
+  }
+
+  /* Dividers and the flex spacer only earn their keep on a wide single-row
+     bar; on mobile they force extra wraps. */
+  .gs-song-page .gs-playbar-inner > .gs-pb-divider,
+  .gs-song-page .gs-pb-divider,
+  .gs-song-page .gs-pb-spacer {
+    display: none;
+  }
+
+  /* "Tempo" / "Transpose" captions cost a whole row each. The slider and the
+     stepper are self-evident, and the live value is still shown. */
+  .gs-song-page .gs-pb-knob-label {
+    display: none;
+  }
+
+  .gs-song-page .gs-pb-group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .gs-song-page .gs-pb-time {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Seek bar -------------------------------------------------------- */
+  /* The 6px rail is far below the ~44px touch minimum. Keep the rail thin
+     visually but pad the hit area out with a transparent ::before. */
+  .gs-song-page .gs-playbar-scrub {
+    height: 10px;
+    touch-action: none;
+  }
+
+  /* Grow the hit area to ~34px without thickening the rail. The downward
+     extension is absorbed by .gs-playbar-inner's top padding, so it never
+     sits over the transport buttons. */
+  .gs-song-page .gs-playbar-scrub::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    bottom: -14px;
+  }
+
+  .gs-song-page .gs-playbar-scrub-head {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* --- Toolbar + tab strip --------------------------------------------- */
+  .gs-song-page .gs-viewer-toolbar {
+    gap: 8px;
+    padding: 10px 12px 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gs-song-page .gs-viewer-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gs-song-page .gs-seg {
+    flex: 0 0 auto;
+  }
+
+  .gs-song-page .gs-seg button {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* Keyboard-shortcut chips are dead weight without a keyboard. */
+  .gs-song-page .gs-seg button .gs-seg-kbd {
+    display: none;
+  }
+
+  /* --- Viewer surface --------------------------------------------------- */
+  .gs-song-page .gs-viewer {
+    margin: 12px 12px 0;
+  }
+
+  .gs-song-page .gs-viewer-body {
+    padding: 12px;
+  }
+
+  .gs-song-page .gs-bv-section {
+    padding: 0 12px;
+    margin-top: 24px;
+  }
+
+  /* --- Drawer ----------------------------------------------------------- */
+  /* Respect the notch / home indicator on iOS. */
+  .gs-song-page .gs-rs-drawer {
+    width: min(420px, 100vw);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .gs-song-page .gs-rs-toggle {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  /* The right sidebar's 100vh fights mobile browser chrome; dvh tracks the
+     visible viewport as the URL bar collapses. */
+  .gs-song-page .gs-rsidebar {
+    height: 100dvh;
+  }
+}
+
+/* =========================================================
+   Spectrum view — overlaid stem spectrograms
+   ========================================================= */
+.gs-song-page .gs-spec-view {
+  display: grid;
+  grid-template-columns: 208px 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+.gs-song-page .gs-spec-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px;
+  border-right: 1px solid var(--color-border-light);
+  background: var(--color-surface-light);
+}
+.gs-song-page .gs-spec-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  margin-bottom: 4px;
+}
+.gs-song-page .gs-spec-all {
+  border: 1px solid var(--color-border-light);
+  background: transparent;
+  color: var(--color-muted-foreground);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  text-transform: none;
+}
+.gs-song-page .gs-spec-all:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-lighter);
+}
+.gs-song-page .gs-spec-layer {
+  display: grid;
+  grid-template-columns: 14px 1fr 26px;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.gs-song-page .gs-spec-layer:hover {
+  background: var(--color-surface-lighter);
+}
+.gs-song-page .gs-spec-layer.off {
+  opacity: 0.42;
+}
+.gs-song-page .gs-spec-swatch {
+  width: 14px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--layer);
+  background: var(--layer);
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 0 10px -2px var(--layer);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.gs-song-page .gs-spec-layer.off .gs-spec-swatch {
+  background: transparent;
+  box-shadow: none;
+}
+.gs-song-page .gs-spec-layer-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+}
+.gs-song-page .gs-spec-layer-sub {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-gain {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.gs-song-page .gs-spec-gain label {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-note {
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+}
+
+.gs-song-page .gs-spec-main {
+  min-width: 0;
+  padding: 16px 20px;
+}
+.gs-song-page .gs-spec-plot {
+  position: relative;
+}
+.gs-song-page .gs-spec-axis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-axis span {
+  position: absolute;
+  right: 8px;
+  transform: translateY(50%);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-canvas-wrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #05060f;
+  border: 1px solid var(--color-border-light);
+}
+.gs-song-page .gs-spec-canvas {
+  display: block;
+  cursor: crosshair;
+}
+.gs-song-page .gs-spec-unplayed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--gs-prog, 0%);
+  right: 0;
+  background: rgba(5, 6, 15, 0.42);
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--gs-prog, 0%);
+  width: 1.5px;
+  background: #fff;
+  opacity: 0.9;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-hover {
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  min-height: 320px;
+  color: var(--color-muted-foreground);
+  font-size: 12px;
+}
+.gs-song-page .gs-spec-bar {
+  width: 220px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.gs-song-page .gs-spec-bar > div {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s linear;
+}
+.gs-song-page .gs-spec-ruler {
+  position: relative;
+  margin-top: 4px;
+}
+.gs-song-page .gs-spec-ruler span {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-spec-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
+
+@media (max-width: 900px) {
+  .gs-song-page .gs-spec-view {
+    grid-template-columns: 1fr;
+  }
+  .gs-song-page .gs-spec-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+  .gs-song-page .gs-spec-main {
+    padding: 14px 12px;
+  }
+}
+.gs-song-page .gs-spec-strip {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.82);
+  pointer-events: none;
+}
+.gs-song-page .gs-spec-strip .gs-spec-bar {
+  width: 90px;
+}
+
+/* A stem row whose audio is still downloading. The empty waveform is a flat
+   baseline, which otherwise reads as a real measurement of a silent stem —
+   sweep it like SkeletonPanel so it reads as "not here yet". */
+.gs-song-page .gs-stem-wave-pending {
+  position: relative;
+  overflow: hidden;
+  opacity: 0.55;
+}
+
+.gs-song-page .gs-stem-wave-pending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--color-surface-lighter) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.gs-song-page .gs-stem-row:nth-child(2) .gs-stem-wave-pending::after {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-song-page .gs-stem-wave-pending::after { animation: none; display: none; }
+}
