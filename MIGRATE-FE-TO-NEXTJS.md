@@ -1,16 +1,50 @@
 # Migrating the GrooveSheet frontend to Next.js
 
-This is a brief for Claude Code. Open a session in `groovesheet-fe` and say:
+This is a brief for a **parallel multi-agent rewrite**, not a phased hand
+migration. It is written to be read by an orchestrator that will fan out work
+packages to many agents at once.
 
-> Read `MIGRATE-FE-TO-NEXTJS.md` and start at Phase 0.
-
-Everything below is written to be followed top to bottom. Sections 1 and 2 are
-the survey: what exists and why it is worth changing. Sections 3 onward are the
-work. Section 5 is the list of things that are verified to break, each one
-already paid for by somebody.
+**Read sections 0 to 3 before dispatching anything.** Section 0 is the
+non-negotiable constitution every agent must follow. Section 4 is the work
+packages and the one wave that must finish before the others start.
 
 Written 2026-09-21, against commit `6736a8f`. Every number in section 1 was
 measured, not estimated. Re-measure before trusting them.
+
+---
+
+## 0. Constitution: rules every agent follows
+
+These exist because parallel agents cannot negotiate. Break one and another
+agent's work breaks silently, usually at build time, sometimes in production.
+
+1. **Own your files. Never edit another package's.** File ownership is declared
+   per package in section 4. If you need a change in someone else's file, the
+   change belongs in Wave 0's contracts instead, which means stopping and
+   escalating rather than editing across the line.
+
+2. **The two contracts are frozen after Wave 0.** `lib/api.ts` (47 exports,
+   imported by 18 files) and `lib/auth` (9 exports, imported by 23 files) keep
+   their existing names and signatures. Change the insides, never the surface.
+
+3. **A server-rendered page is user-agnostic.** Anything that varies per user
+   is a Client Component. This is not style: Tier B pages use ISR, and a cached
+   page that embedded one user's state would serve it to everyone. See 5.9.
+
+4. **Do not rewrite the player.** `src/player/`, `src/components/visualization/`,
+   `src/components/PreviewPanel/`, `src/components/video/` and
+   `src/components/TranscriptionResult/` are ported **verbatim** and wrapped.
+   A diff that changes their internals is a bug unless it is fixing a named
+   breakage from section 5.
+
+5. **No `any`, no `@ts-ignore`, no skipped tests to make a build pass.** If it
+   does not compile, the design is wrong. Say so.
+
+6. **Every route you own gets a `generateMetadata` with a distinct title.**
+   One shared title across 280 URLs is the exact defect being fixed.
+
+7. **Do not deploy.** This team is Git-only for production and the CLI fails
+   silently. One agent does the cutover, at the end. See `content-app/README.md`.
 
 ---
 
@@ -144,27 +178,56 @@ A successful migration **deletes all three**. That is the acceptance test, not
 
 ---
 
-## 2. Scope, and one thing to decide before starting
+## 2. The auth question, answered
 
-The goal is SEO. That means **Tier A and Tier B must be server-rendered**.
-Tier C and Tier D can stay client-rendered forever and nobody loses anything;
-inside Next they are just Client Components.
+You asked whether this needs cookies, and whether `/explore` should require
+sign-in to download scores. The second is already true. The first is more
+subtle than it looks, so here is what the code actually does.
 
-So this is not "rewrite 34,000 lines". It is:
+### 2.1 How downloads are gated today
 
-- ~12 routes that need real server rendering and `generateMetadata`
-- ~26 routes that move across roughly as-is
-- one subsystem (23% of the code) that is quarantined behind `ssr: false`
-- one genuinely structural change: auth
+`SongDetail.js` line 988 calls `downloadLibraryTrackZip(track.id, getToken)`,
+which goes through `authenticatedFetch` in `src/utils/api.js`:
 
-**The decision to make first:** whether auth moves to cookies now or later.
-It is the single biggest blocker (see 5.3), and you can defer it, because
-**every Tier B route fetches from unauthenticated endpoints.** `Explore.js` has
-zero auth references. So Tier B can server-render with the existing localStorage
-auth still in place, as long as the server never tries to read a session.
+```js
+const token = await getToken();
+if (token) headers['Authorization'] = `Bearer ${token}`;
+else throw new AuthError('Authentication required - no token available', 401);
+```
 
-Recommended: **defer auth to Phase 5.** Get the SEO win first. Do not let the
-hardest problem gate the most valuable one.
+So the gate is a **bearer token in a request header**, enforced by the backend
+with a 401, and the UI opens the sign-in modal when there is no token. The
+behaviour you want already exists.
+
+### 2.2 Therefore: cookies are NOT required for that gate
+
+A bearer token read from localStorage works identically in Next.js, because
+the download is a **client-side action in a Client Component**. Nothing about
+`/explore` requiring sign-in to download forces a cookie migration.
+
+### 2.3 But do the cookie migration anyway, for different reasons
+
+Cookies are required when the **server** needs to know who the user is:
+
+- gating `/account/*` in `proxy.ts` before the page renders, instead of
+  rendering a shell and redirecting in the browser
+- server-rendering any personalised content
+- removing the signed-in/signed-out flash on first paint
+
+None of that is `/explore`. All of it is Tier C. Since this is a single
+big-bang rewrite rather than a phased one, do it once, properly, now. Doing it
+later means touching all 23 files that import `auth` a second time.
+
+### 2.4 The rule that keeps both true at once
+
+**`/explore`, `/explore/search`, `/explore/:songId` and `/u/:username` must
+server-render without reading the session at all.** They are public, cached
+with ISR, and identical for every visitor. The download button inside them is
+a Client Component that reads auth in the browser and 401s if absent, exactly
+as it does today.
+
+Get this wrong and you either lose the SEO win (the page becomes dynamic and
+per-user) or leak one user's state into another's cached page. See 5.9.
 
 ---
 
@@ -202,98 +265,90 @@ OSMD and Web Audio leaf components. Ignore the rest.
 
 ---
 
-## 4. The plan
+## 4. Work packages
 
-Each phase ends in something shippable and verifiable. Do not start the next
-phase until the current one is green in production.
+One wave blocks. Everything after it runs at once.
 
-### Phase 0: Scaffold, and prove one page
+### Wave 0: contracts. One agent. Nothing else starts until this is merged.
 
-Create `groovesheet-next/` beside the CRA app, as its own Vercel project. Do
-**not** touch `src/`.
+This exists so that eight agents can work without talking to each other. Its
+output is not features, it is **the interfaces everyone else codes against**.
 
-- Next 16, App Router, TypeScript, no Tailwind (see 5.6)
-- One route, `/about`, ported by hand
-- `generateMetadata` returning a real title and description
+Owns: `next.config.ts`, `tsconfig.json`, `package.json`, `proxy.ts`,
+`app/layout.tsx`, `app/[locale]/layout.tsx`, `app/globals.css`, `lib/**`,
+`components/chrome/**`, `components/ClientOnly.tsx`, `i18n/**`.
 
-Done when: `curl` on the deployed preview returns `<h1>` text and a per-page
-`<title>` in the HTML body, with JavaScript disabled.
+Deliver, in this order:
 
-This proves the pipeline end to end before any volume of work rides on it.
+1. **Scaffold.** Next 16, App Router, TypeScript. No Tailwind (see 5.7).
+2. **`lib/api.ts`.** Port all 47 exports from `src/utils/api.js`. Same names,
+   same signatures. Delete the two `console.log` calls (see 5.10).
+3. **`lib/auth/`.** Cookie-based `@supabase/ssr`. Must export the same 9 names:
+   `supabase`, `AuthProvider`, `useUser`, `useAuth`, `useSignIn`, `useSignUp`,
+   `useAuthActions`, `SignedIn`, `SignedOut`. Plus, new and server-only:
+   `getClaims()` (never `getSession()`, see 5.3).
+4. **`components/ClientOnly.tsx`.** The one sanctioned `ssr: false` wrapper.
+   Every browser-only component goes through it, so the pattern is in one place
+   and not reinvented 20 times.
+5. **Root layout.** `<html lang>`, Hubot Sans, analytics (GA4 `G-LJ5P8PF3YH`,
+   Ads `AW-18426875153`, GTM `GTM-PHXB57NW`, matching `public/index.html`).
+6. **`app/[locale]/`** with next-intl, English unprefixed (see 5.5).
+7. **Tokens and globals.** `src/styles/tokens.css` into the root layout.
+8. **Header and Footer** as Client Components.
+9. **Env.** Rename 15 `REACT_APP_*` to `NEXT_PUBLIC_*`; fix `PUBLIC_URL` in 11
+   files (see 5.2).
+10. **One proof route**, `/about`, server-rendered with `generateMetadata`.
 
-### Phase 1: Foundation
+Wave 0 is done when `curl` on `/about` returns an `<h1>` and a real `<title>`
+**with JavaScript disabled**, in all three locales. Publish the contract file
+paths to every other agent before they start.
 
-- Root layout: `<html lang>`, fonts (Hubot Sans, from Google Fonts), analytics
-  (GA4 `G-LJ5P8PF3YH`, Ads `AW-18426875153`, GTM `GTM-PHXB57NW`, matching
-  `public/index.html`)
-- `src/styles/tokens.css` and any global CSS move into the root layout. Per-component
-  `.css` files keep being imported by their components; the App Router allows this
-- `Header` / `Footer`, as Client Components (they own dropdowns and a theme toggle)
-- i18n via **next-intl** (see 5.5), with `app/[locale]/`
-- Env: rename all 15 `REACT_APP_*` to `NEXT_PUBLIC_*`, and fix `PUBLIC_URL` (5.2)
+### Wave 1: eight packages, all at once
 
-Done when: `/about` and `/help` render server-side in all three locales with the
-real site chrome.
+Each owns a disjoint set of files. None edits `lib/**`.
 
-### Phase 2: Tier A, the static marketing routes
+| # | Package | Owns | Depends on |
+|---|---|---|---|
+| **P1** | **Player islands.** Port the 39 files verbatim into `components/player/**`. Wrap each browser-only entry in `ClientOnly`. Do not change internals. Export a stable prop contract for P2 and P5. | `components/player/**` | Wave 0 |
+| **P2** | **Tier B: `/explore`, `/explore/search`, `/explore/:songId`, `/u/:username`.** Server Components, fetch server-side, `generateMetadata` per song and per creator, ISR. Download button is a Client island. **The highest-value package.** | `app/[locale]/explore/**`, `app/[locale]/u/**` | Wave 0, P1 |
+| **P3** | **Tier A: the 8 marketing routes.** Server Components with metadata. Auth-aware ones keep auth as a small client island inside a server-rendered page. | `app/[locale]/(marketing)/**` | Wave 0 |
+| **P4** | **Tier C: account routes.** Client Components. `/account/*` gated in `proxy.ts` using `getClaims()`. | `app/[locale]/account/**`, `app/[locale]/transcription-history/**`, `app/[locale]/billing/**` | Wave 0 |
+| **P5** | **Tier D: demo, video, campaign.** `/preview1`, `/video1`, the four `video2for*`, `/service-status`, `/signup/:code`. Mostly client islands over P1. | `app/[locale]/(demo)/**`, `app/[locale]/signup/**` | Wave 0, P1 |
+| **P6** | **Auth flows.** Sign-in modal, sign-up, sign-out, and `/sso-callback` as a route handler. **The OAuth flow must move from implicit to PKCE** (see 5.11). | `app/[locale]/sso-callback/**`, `components/auth/**` | Wave 0 |
+| **P7** | **Shared components and CSS.** The ~40 remaining components nobody else owns, plus the 49 `.css` files. | `components/ui/**`, `components/**` not claimed above | Wave 0 |
+| **P8** | **Verification harness.** Port the 7 tests. Write the section 7 checks as a runnable script. Run it against every other package's output. **Starts immediately, finishes last.** | `scripts/verify.mjs`, `**/*.test.ts` | Wave 0 |
 
-Port the 8 Tier A routes. Server Components with `generateMetadata`. The
-auth-aware ones (`Hero`, `StemSplitter`, `MidiConverter`, `Pricing`) keep their
-auth as a small `'use client'` island inside an otherwise server-rendered page:
-the marketing copy is what needs indexing, not the upload widget.
+### Wave 2: cutover. One agent. Only after P8 is green.
 
-**Delete `scripts/prerender.mjs` and drop it from `npm run build`.**
+1. Point `groovesheet.net` at the Next project. Keep `/blog*`, `/blog-media*`,
+   `/internal*` and `/api/internal*` rewritten to `content-app`.
+2. **Delete `scripts/prerender.mjs`** and remove it from `npm run build`.
+3. **Delete the user-agent rewrites** for `/explore/:id` and `/u/:username`
+   from `vercel.json`.
+4. **Delete `_og_page` and the OG routes** from `groovesheet-be`'s `seo.py`.
+   Keep `/seo/sitemap.xml`.
+5. Delete `src/`, `setupProxy.js`, `react-scripts`, and the CRA `Blog.js` /
+   `BlogPost.js`.
+6. Watch Search Console for two weeks before deleting anything unrecoverable.
 
-Done when: all 8 return real HTML with distinct titles, and the Puppeteer step
-is gone.
+Steps 2 to 4 are the acceptance test. If they cannot be done, the migration
+did not achieve its purpose.
 
-### Phase 3: The client-island harness
+### What runs in parallel with what
 
-Before touching Tier B, prove the player works under Next in isolation. Use
-`/preview1` or one of the `video2for*` routes, which nobody indexes.
+```
+Wave 0  ──────────────────────►  (blocks everything)
+                                  │
+        ┌─────────────────────────┼──────────────────────┐
+        ▼                         ▼                      ▼
+       P1 ──► P2                 P3, P4, P6, P7         P8 (continuous)
+        └───► P5
+                                  │
+                                  ▼
+                               Wave 2 (cutover)
+```
 
-- `next/dynamic` with `ssr: false`, inside a `'use client'` file (5.4)
-- Confirm the vendored `osmd-extended` resolves under Next's bundler; `file:`
-  dependencies plus a 17MB prebuilt `.min.js` are the risk
-- Confirm `AudioContext` initialises only on user gesture, as now
-- Run `player/transport.test.js` and `PreviewPanel/osmdPlaybackClock.test.js`
-
-Done when: a score renders and plays in the Next app, and the two timing tests
-pass. **If this phase goes badly, stop and reconsider the whole plan** rather
-than pushing on into Tier B.
-
-### Phase 4: Tier B, the actual payoff
-
-`/explore`, `/explore/search`, `/explore/:songId`, `/u/:username`.
-
-These become Server Components that fetch on the server, with `generateMetadata`
-per song and per creator, and ISR. The player sits inside them as the Phase 3
-island.
-
-**Then delete the user-agent rewrites from `vercel.json` and the OG-page routes
-from `seo.py`.**
-
-Done when: `curl -A Googlebot /explore/<real-id>` returns the song title in an
-`<h1>`, a per-song `<title>`, and JSON-LD. And the crutch is gone.
-
-### Phase 5: Auth
-
-Move to cookie-based `@supabase/ssr` (5.3). This unblocks server-rendering
-anything behind a login, which matters for Tier C and for nothing else.
-
-### Phase 6: Tier C and D
-
-Straight ports as Client Components. No SEO work. This is volume, not risk.
-
-### Phase 7: Cutover
-
-- Point `groovesheet.net` at the Next project
-- Keep `/blog*`, `/blog-media*`, `/internal*` and `/api/internal*` rewritten to
-  `content-app` (or fold `content-app` in; see 6)
-- Delete `src/`, `scripts/prerender.mjs`, `setupProxy.js`, `react-scripts`
-- Watch Search Console for two weeks before deleting anything you cannot restore
-
----
+P1 is on the critical path twice. Start it first and staff it best.
 
 ## 5. What breaks
 
@@ -414,20 +469,68 @@ with custom properties.
 
 `vendor/osmd-extended` is 17MB of prebuilt bundle referenced as a `file:`
 dependency, `main: build/opensheetmusicdisplay.min.js`. It has not been touched
-since the repo's visible history begins. Verify early (Phase 3) that Next's
-bundler resolves and tree-shakes it acceptably. If it fights you, the fallback
-is loading it from `public/` via a `<script>` in the island, which is ugly but
+since the repo's visible history begins. P1 verifies on day one that Next's
+bundler resolves and tree-shakes it acceptably, and reports immediately if not,
+because P2 and P5 are both blocked behind it. If it fights, the fallback is
+loading it from `public/` via a `<script>` in the island, which is ugly but
 contained.
 
 ---
 
-## 6. Two open questions worth answering before Phase 7
+### 5.9 ISR plus per-user state is a cache leak, not a bug you will see
+
+Tier B pages are cached and served to everyone. If a Server Component reads the
+session and renders anything user-specific, **the first visitor's state is
+cached and served to every subsequent visitor.** It will not show up in
+development, where every request re-renders. It will not show up for the author,
+who is always signed in. It shows up in production as one user seeing another's
+state.
+
+The rule from section 0 exists for this: a server-rendered page is
+user-agnostic. Sign-in state, owned/not-owned, download buttons: all Client
+Components, all reading auth in the browser.
+
+P8 must test this explicitly: request a Tier B page signed in, then request it
+signed out from a clean context, and diff the HTML. They must be identical.
+
+### 5.10 `api.js` logs the bearer token to the console
+
+`src/utils/api.js` line 43 logs a token prefix, and a few lines later:
+
+```js
+console.log('Request headers:', headers);
+```
+
+`headers` contains `Authorization: Bearer <full JWT>`. Every authenticated
+request prints a usable token into the browser console. It is the user's own
+token in their own console, so the severity is low, but it should not survive
+the rewrite. Wave 0 deletes both lines when porting `lib/api.ts`.
+
+### 5.11 The OAuth callback uses the implicit flow, which cannot be done server-side
+
+`SSOCallback.js` handles two shapes. One is PKCE:
+
+```js
+await supabase.auth.exchangeCodeForSession(window.location.href)
+```
+
+The other reads `access_token` and `refresh_token` out of
+`window.location.hash`. **A URL fragment is never sent to the server.** So the
+hash path cannot become a route handler, and any cookie-based session
+established from it has to be set by the browser after the fact.
+
+P6 must move the flow to PKCE end to end, with the callback as a route handler
+that exchanges the code and sets the cookie server-side. Then test the whole
+round trip, per provider, not just email sign-in. Getting this wrong means
+users appear signed in in one place and signed out in another.
+
+## 6. Two open questions to answer before cutover
 
 **Does `content-app` fold in?** Once the main site is Next, the blog and portal
 could become routes in it rather than a second project and a rewrite. That is
 simpler to operate. It is also a migration inside a migration. Recommendation:
-leave it separate until Phase 7 is done and stable, then decide with the benefit
-of a working system.
+leave it separate until the cutover is done and stable, then decide with the
+benefit of a working system.
 
 **Does `seo.py` die completely?** Its sitemap section is still useful and is
 independent of rendering. Its OG-page and prerender sections should go. Keep
@@ -435,7 +538,7 @@ independent of rendering. Its OG-page and prerender sections should go. Keep
 
 ---
 
-## 7. Definition of done
+## 7. Definition of done, and how P8 checks it
 
 - `tsc`, lint and a production build pass
 - Every Tier A and Tier B route returns real HTML with a **distinct `<title>`**
@@ -456,11 +559,13 @@ independent of rendering. Its OG-page and prerender sections should go. Keep
 ## 8. Do not
 
 - Follow the official CRA migration guide past Steps 7 and 9 (section 3)
+- Start any Wave 1 package before Wave 0 has published the contracts
+- Edit a file another package owns
 - Rewrite anything under `src/player/`, `src/components/visualization/`,
   `src/components/PreviewPanel/` or `src/components/video/`. Wrap it, do not
   touch it
 - Re-migrate `/blog*`. It already moved to `content-app`
-- Server-render anything behind auth before Phase 5
+- Server-render anything user-specific on a Tier B page (5.9)
 - Trust `supabase.auth.getSession()` in server code, ever
 - Deploy by CLI. This team is Git-only for production and fails silently;
   see `content-app/README.md`
