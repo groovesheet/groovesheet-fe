@@ -202,7 +202,11 @@
         "feature3": "All formats included",
         "feature4": "Priority queue"
       }
-    }
+    },
+    "minutesPerMonth": "{minutes} minutes / month",
+    "minutesAdded": "{minutes} minutes added",
+    "canceledNotice": "Checkout canceled \u2014 you were not charged.",
+    "dismiss": "Dismiss"
   },
   "testimonials": {
     "title": "Trusted by Musicians and Educators",

@@ -54,8 +54,21 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 
 const allSourceFiles = () => SCANNED_DIRS.flatMap((dir) => sourceFiles(path.join(ROOT, dir)));
 
-/** The one ported component with this base name, e.g. `Hero` finds `.../Hero.tsx`. */
-function findComponent(baseName: string): string {
+/**
+ * P3 split the CRA pages into a server page plus a client island, so the code
+ * these checks guard now lives under a different base name. Keyed by the CRA
+ * component name, which is what the assertions describe.
+ */
+const PORTED_AS: Record<string, string> = {
+  Hero: 'HeroUploader',
+  StemSplitter: 'StemSplitterUploader',
+  MidiConverter: 'MidiConverterUploader',
+  PricingPage: 'PricingCompare',
+};
+
+/** The one ported component with this base name, e.g. `Hero` finds `.../HeroUploader.tsx`. */
+function findComponent(craName: string): string {
+  const baseName = PORTED_AS[craName] ?? craName;
   const matches = allSourceFiles().filter((file) => path.basename(file).replace(/\.[jt]sx?$/, '') === baseName);
   if (matches.length !== 1) {
     const found = matches.map((m) => path.relative(ROOT, m)).join(', ') || 'none';
@@ -96,7 +109,10 @@ describe('upload limit is stated once and stated correctly', () => {
 
     // The changelog states what was true at each release. Rewriting its history
     // to match today's limit would make it a worse changelog, not a truer one.
-    const isExempt = (file: string) => /^Changelog\.[jt]sx?$/.test(path.basename(file));
+    // P3 ported it as the /changelog route's page.tsx, not a Changelog component.
+    const isExempt = (file: string) =>
+      /^Changelog\.[jt]sx?$/.test(path.basename(file)) ||
+      path.relative(ROOT, file).split(path.sep).includes('changelog');
 
     const offenders: string[] = [];
     for (const file of allSourceFiles()) {

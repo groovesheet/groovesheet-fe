@@ -13,6 +13,23 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
+  {
+    // The player JS is a verbatim port of the CRA code (brief section 0, rule 4).
+    // Fixing these React Compiler and unused-var findings would change its
+    // internals, so they are silenced for the JS only; the TS entry files
+    // (index.ts, engine.ts, types.ts) stay under the full rules.
+    files: ['components/player/**/*.js'],
+    linterOptions: { reportUnusedDisableDirectives: 'off' },
+    rules: {
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/use-memo': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@next/next/no-img-element': 'off',
+    },
+  },
   globalIgnores([
     '.next/**',
     'out/**',

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import './globals.css';
 
 /**
@@ -33,7 +34,7 @@ export default function GlobalNotFound() {
           />
           <noscript>
             <p style={{ textAlign: 'center', padding: 24 }}>
-              <a href="/">Back to GrooveSheet</a>
+              <Link href="/">Back to GrooveSheet</Link>
             </p>
           </noscript>
         </main>

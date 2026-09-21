@@ -202,7 +202,11 @@
         "feature3": "包含所有格式",
         "feature4": "优先队列"
       }
-    }
+    },
+    "minutesPerMonth": "每月 {minutes} 分钟",
+    "minutesAdded": "增加 {minutes} 分钟",
+    "canceledNotice": "已取消结账，未向您收费。",
+    "dismiss": "关闭"
   },
   "testimonials": {
     "title": "音乐人与教育者的信赖之选",
