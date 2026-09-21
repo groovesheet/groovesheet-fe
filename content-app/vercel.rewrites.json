@@ -33,13 +33,11 @@
     "custom domain if one is set. Do not point it at the git-branch URL, which",
     "changes on every deploy."
   ],
-
   "_redirectSourceFix": {
     "before": "/:path((?!api/|zh-CN|zh-TW|static/|.*\\.).*)",
     "after": "/:path((?!api/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
     "note": "Apply to BOTH redirect entries that use this source. There are two: one for the CN geo rule on the bare path and one for the cookie-missing case."
   },
-
   "_rewritesToAdd": [
     {
       "_note": "FIRST. Before the existing /api/:path* entry.",
@@ -67,12 +65,16 @@
       "destination": "CONTENT_APP_URL/internal/:path*"
     },
     {
+      "_note": "The app's JS and CSS. next.config.mjs sets assetPrefix to /content-assets. Without this every page arrives as bare HTML: the CRA catch-all answers /_next/* and /content-assets/* with index.html and a 200, so nothing hydrates and /internal/login cannot sign in. Do not rewrite /_next/* instead; the main app will own that path once it is Next.js.",
+      "source": "/content-assets/:path*",
+      "destination": "CONTENT_APP_URL/content-assets/:path*"
+    },
+    {
       "_note": "The blog's own sitemap. The site-wide /sitemap.xml stays pointed at api.groovesheet.net; this is a second sitemap, and both get submitted in Search Console. See src/app/sitemap.ts for why there are two.",
       "source": "/blog-sitemap.xml",
       "destination": "CONTENT_APP_URL/sitemap.xml"
     }
   ],
-
   "_notRewritten": {
     "/api/cron/content": [
       "Deliberately absent. Vercel Cron calls the cron path on the project that",
@@ -81,13 +83,13 @@
       "public door to a job that only CRON_SECRET protects."
     ]
   },
-
   "_afterwards": [
     "Once the main project is redeployed, check all four on the real domain:",
     "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/blog",
     "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/blog/understanding-ghost-notes-detection",
     "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/blog-sitemap.xml",
     "  curl -o /dev/null -w '%{http_code}\\n' https://www.groovesheet.net/internal   (expect 307 to /internal/login)",
+    "  curl -sI https://www.groovesheet.net/internal/login, then fetch one /content-assets/_next/static/... src from its HTML: expect application/javascript, not text/html",
     "The second one is the important one: it is an existing indexed URL that",
     "must not break on the day this ships."
   ]
