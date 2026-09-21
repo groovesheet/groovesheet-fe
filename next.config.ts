@@ -7,9 +7,29 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const CONTENT_APP = 'https://groovesheet-content-kelin-studio.vercel.app';
 const API_ORIGIN = (process.env.API_ORIGIN || 'https://api.groovesheet.net').replace(/\/+$/, '');
 
+/**
+ * The Vercel project still holds these under their CRA names, and the CRA app
+ * on main reads them there until this branch merges. Falling back to the old
+ * name lets the switch happen with the merge instead of a dashboard rename
+ * that would break whichever app is live. Once the project env is renamed,
+ * the fallback is dead code and can go.
+ */
+const PUBLIC_ENV = [
+  'ADS_PURCHASE_LABEL', 'AIRWALLEX_ENV', 'API_BASE_URL', 'API_URL', 'CLARITY_ID',
+  'ENABLE_ANALYTICS', 'ENABLE_CHAT', 'HUBSPOT_FORM_GUID', 'HUBSPOT_PORTAL_ID',
+  'NAME', 'POSTHOG_HOST', 'POSTHOG_KEY', 'SUPABASE_ANON_KEY', 'SUPABASE_URL', 'URL',
+];
+const publicEnv = Object.fromEntries(
+  PUBLIC_ENV.flatMap((name) => {
+    const value = process.env[`NEXT_PUBLIC_${name}`] ?? process.env[`REACT_APP_${name}`];
+    return value === undefined ? [] : [[`NEXT_PUBLIC_${name}`, value]];
+  }),
+);
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  env: publicEnv,
 
   /**
    * These mirror vercel.json. On Vercel, vercel.json rewrites run at the edge
