@@ -115,6 +115,10 @@
       "destination": "https://groovesheet-content-kelin-studio.vercel.app/internal/:path*"
     },
     {
+      "source": "/content-assets/:path*",
+      "destination": "https://groovesheet-content-kelin-studio.vercel.app/content-assets/:path*"
+    },
+    {
       "source": "/blog-sitemap.xml",
       "destination": "https://groovesheet-content-kelin-studio.vercel.app/sitemap.xml"
     },

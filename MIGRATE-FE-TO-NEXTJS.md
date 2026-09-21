@@ -321,7 +321,10 @@ Each owns a disjoint set of files. None edits `lib/**`.
 ### Wave 2: cutover. One agent. Only after P8 is green.
 
 1. Point `groovesheet.net` at the Next project. Keep `/blog*`, `/blog-media*`,
-   `/internal*` and `/api/internal*` rewritten to `content-app`.
+   `/internal*`, `/api/internal*` and `/content-assets/*` rewritten to
+   `content-app`. The last one carries the content app's JS and CSS (its
+   `assetPrefix`); drop it and the blog and portal render with no styles and
+   no scripts. Never rewrite `/_next/*` there: that is this app's own path.
 2. **Delete `scripts/prerender.mjs`** and remove it from `npm run build`.
 3. **Delete the user-agent rewrites** for `/explore/:id` and `/u/:username`
    from `vercel.json`.
