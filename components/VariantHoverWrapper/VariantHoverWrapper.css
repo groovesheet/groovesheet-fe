@@ -1,0 +1,10 @@
+/* Replaces the Tailwind `flex items-center justify-center` and `block` utilities. */
+.variant-hover-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.variant-hover-wrapper__img {
+  display: block;
+}
