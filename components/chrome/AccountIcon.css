@@ -1,0 +1,159 @@
+/* Account Button - grouped hover effect for icon + text */
+.account-button button {
+  transition: color 0.2s;
+}
+
+/* Icon and label styling */
+.account-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  transform: translateY(2px);
+}
+
+.account-icon svg,
+.account-icon svg * {
+  color: var(--color-muted-foreground);
+  transition: color 0.2s;
+}
+
+.account-label {
+  transition: color 0.2s;
+}
+
+/* Grouped hover: both icon and label light up together */
+.account-button button:hover .account-icon,
+.account-button button:hover .account-label {
+  color: var(--color-foreground);
+}
+
+.account-button button:hover .account-icon svg,
+.account-button button:hover .account-icon svg * {
+  color: var(--color-foreground);
+}
+
+/* Account Dropdown Menu */
+.account-dropdown-menu {
+  background: var(--color-panel2);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px var(--color-shadow);
+  z-index: 2147483647;
+  min-width: 280px;
+  padding: 8px 0;
+}
+
+.account-dropdown-menu.desktop {
+  position: fixed;
+}
+
+.account-dropdown-menu.mobile {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+}
+
+.account-dropdown-menu .account-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  margin: 2px 8px;
+  color: var(--color-muted-foreground);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 400;
+  font-family: 'Hubot_Sans-Regular', Helvetica, var(--font-family-sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  width: calc(100% - 16px);
+  text-align: left;
+  border-radius: 8px;
+}
+
+.account-dropdown-menu .account-dropdown-item > span {
+  color: inherit;
+  font: inherit;
+}
+
+.account-dropdown-menu .account-dropdown-item:hover {
+  background: var(--color-surface-light);
+  color: var(--color-foreground);
+}
+
+.account-dropdown-menu .account-dropdown-item.danger,
+.account-dropdown-menu .account-dropdown-item.danger > span {
+  color: #e5484d;
+}
+
+.account-dropdown-menu .account-dropdown-item.danger:hover,
+.account-dropdown-menu .account-dropdown-item.danger:hover > span {
+  background: rgba(229, 72, 77, 0.12);
+  color: #ff6369;
+}
+
+.account-dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 8px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .account-dropdown-menu.mobile {
+    top: 50px;
+    right: 16px;
+  }
+
+  .account-dropdown-item {
+    font-size: 20px;
+    line-height: 28px;
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-dropdown-menu {
+    min-width: 200px;
+  }
+}
+
+/* Light Mode: panel2/bg, border, and text tokens auto-switch via CSS vars */
+
+/* Layout that used to come from Tailwind utility classes on the markup. */
+.account-button {
+  position: relative;
+}
+
+.account-button.desktop-layout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1.5rem;
+}
+
+.account-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  background-color: transparent;
+  border-width: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.account-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-label.compact-label {
+  text-align: left;
+}

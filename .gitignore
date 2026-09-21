@@ -33,3 +33,8 @@ yarn-error.log*
 
 # Raw stem audio downloaded by run_multiinstrument_benchmark.py — intermediate inputs, not app assets
 public/transcription-samples/*/_*_stem.*
+
+# Next.js
+/.next/
+next-env.d.ts
+*.tsbuildinfo

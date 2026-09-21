@@ -1,0 +1,710 @@
+/*
+ * Global styles, loaded once by app/[locale]/layout.tsx. In order:
+ *   1. Tailwind v3's preflight reset, inlined (MIT, see below). Tailwind is
+ *      gone (brief 5.7), but every page was built on top of this reset, so it
+ *      stays or every heading margin and button style in the app shifts.
+ *   2. Design tokens (was src/styles/tokens.css).
+ *   3. Document-level rules (was src/index.css, minus the Tailwind directives
+ *      and the #root rule, which has no element to target any more).
+ *   4. Shared page scaffolding: .app-container, .dot-grid, .hero-background
+ *      (was src/App.css).
+ * Component styles stay in their own .css files next to their components.
+ */
+
+/* ==== 1. Preflight: tailwindcss 3.4.18 src/css/preflight.css, MIT License,
+   Copyright (c) Tailwind Labs, Inc. theme() calls resolved to this app's
+   config (font family from tailwind.config.js, default gray palette). ==== */
+
+/*
+1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
+2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
+*/
+
+*,
+::before,
+::after {
+  box-sizing: border-box; /* 1 */
+  border-width: 0; /* 2 */
+  border-style: solid; /* 2 */
+  border-color: #e5e7eb; /* 2 */
+}
+
+::before,
+::after {
+  --tw-content: '';
+}
+
+/*
+1. Use a consistent sensible line-height in all browsers.
+2. Prevent adjustments of font size after orientation changes in iOS.
+3. Use a more readable tab size.
+4. Use the user's configured `sans` font-family by default.
+5. Use the user's configured `sans` font-feature-settings by default.
+6. Use the user's configured `sans` font-variation-settings by default.
+7. Disable tap highlights on iOS
+*/
+
+html,
+:host {
+  line-height: 1.5; /* 1 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+  -moz-tab-size: 4; /* 3 */
+  tab-size: 4; /* 3 */
+  font-family: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* 4 */
+  font-feature-settings: normal; /* 5 */
+  font-variation-settings: normal; /* 6 */
+  -webkit-tap-highlight-color: transparent; /* 7 */
+}
+
+/*
+1. Remove the margin in all browsers.
+2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.
+*/
+
+body {
+  margin: 0; /* 1 */
+  line-height: inherit; /* 2 */
+}
+
+/*
+1. Add the correct height in Firefox.
+2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
+3. Ensure horizontal rules are visible by default.
+*/
+
+hr {
+  height: 0; /* 1 */
+  color: inherit; /* 2 */
+  border-top-width: 1px; /* 3 */
+}
+
+/*
+Add the correct text decoration in Chrome, Edge, and Safari.
+*/
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+/*
+Remove the default font size and weight for headings.
+*/
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+Reset links to optimize for opt-in styling instead of opt-out.
+*/
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/*
+Add the correct font weight in Edge and Safari.
+*/
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+/*
+1. Use the user's configured `mono` font-family by default.
+2. Use the user's configured `mono` font-feature-settings by default.
+3. Use the user's configured `mono` font-variation-settings by default.
+4. Correct the odd `em` font sizing in all browsers.
+*/
+
+code,
+kbd,
+samp,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; /* 1 */
+  font-feature-settings: normal; /* 2 */
+  font-variation-settings: normal; /* 3 */
+  font-size: 1em; /* 4 */
+}
+
+/*
+Add the correct font size in all browsers.
+*/
+
+small {
+  font-size: 80%;
+}
+
+/*
+Prevent `sub` and `sup` elements from affecting the line height in all browsers.
+*/
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/*
+1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)
+2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)
+3. Remove gaps between table borders by default.
+*/
+
+table {
+  text-indent: 0; /* 1 */
+  border-color: inherit; /* 2 */
+  border-collapse: collapse; /* 3 */
+}
+
+/*
+1. Change the font styles in all browsers.
+2. Remove the margin in Firefox and Safari.
+3. Remove default padding in all browsers.
+*/
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit; /* 1 */
+  font-feature-settings: inherit; /* 1 */
+  font-variation-settings: inherit; /* 1 */
+  font-size: 100%; /* 1 */
+  font-weight: inherit; /* 1 */
+  line-height: inherit; /* 1 */
+  letter-spacing: inherit; /* 1 */
+  color: inherit; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0; /* 3 */
+}
+
+/*
+Remove the inheritance of text transform in Edge and Firefox.
+*/
+
+button,
+select {
+  text-transform: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Remove default button styles.
+*/
+
+button,
+input:where([type='button']),
+input:where([type='reset']),
+input:where([type='submit']) {
+  -webkit-appearance: button; /* 1 */
+  background-color: transparent; /* 2 */
+  background-image: none; /* 2 */
+}
+
+/*
+Use the modern Firefox focus style for all focusable elements.
+*/
+
+:-moz-focusring {
+  outline: auto;
+}
+
+/*
+Remove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)
+*/
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+Add the correct vertical alignment in Chrome and Firefox.
+*/
+
+progress {
+  vertical-align: baseline;
+}
+
+/*
+Correct the cursor style of increment and decrement buttons in Safari.
+*/
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/*
+1. Correct the odd appearance in Chrome and Safari.
+2. Correct the outline style in Safari.
+*/
+
+[type='search'] {
+  -webkit-appearance: textfield; /* 1 */
+  outline-offset: -2px; /* 2 */
+}
+
+/*
+Remove the inner padding in Chrome and Safari on macOS.
+*/
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Change font properties to `inherit` in Safari.
+*/
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button; /* 1 */
+  font: inherit; /* 2 */
+}
+
+/*
+Add the correct display in Chrome and Safari.
+*/
+
+summary {
+  display: list-item;
+}
+
+/*
+Removes the default spacing and border for appropriate elements.
+*/
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+Reset default styling for dialogs.
+*/
+dialog {
+  padding: 0;
+}
+
+/*
+Prevent resizing textareas horizontally by default.
+*/
+
+textarea {
+  resize: vertical;
+}
+
+/*
+1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)
+2. Set the default placeholder color to the user's configured gray 400 color.
+*/
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1; /* 1 */
+  color: #9ca3af; /* 2 */
+}
+
+/*
+Set the default cursor for buttons.
+*/
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/*
+Make sure disabled buttons don't get the pointer cursor.
+*/
+:disabled {
+  cursor: default;
+}
+
+/*
+1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)
+2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)
+   This can trigger a poorly considered lint error in some tools but is included by design.
+*/
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block; /* 1 */
+  vertical-align: middle; /* 2 */
+}
+
+/*
+Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
+*/
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make elements with the HTML hidden attribute stay hidden by default */
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none;
+}
+
+/* ==== 2. Tokens ==== */
+
+/* ============================================================================
+   BREAKPOINT SCALE
+   ----------------------------------------------------------------------------
+   Media queries cannot read CSS custom properties, so these values cannot be
+   tokens. They are listed here because this file is where people look for the
+   design system's constants, and mirrored in lib/breakpoints.ts, which
+   is what the JS hooks (useIsMobile / useIsTablet / useIsDesktop) read.
+   Change one, change both.
+
+     xs    480px   small phone
+     sm    640px   large phone
+     md    768px   phone landscape / small tablet: the main mobile cutoff
+     lg   1024px   tablet landscape / small laptop: desktop nav appears here
+     xl   1280px   desktop
+     xxl  1440px   wide desktop
+
+   Plus exactly one CONTENT breakpoint, which is deliberately off the scale:
+
+     900px  two-column editorial content collapses (About, ApiPage,
+            HelpSupport, PreviewPanel). This is a property of the content, not
+            of the device; pinning it to lg would collapse those layouts on
+            tablets that still have room for two columns.
+
+   Do not introduce a new width. If a layout seems to need one, it usually
+   wants the content breakpoint or a container query instead.
+   ============================================================================ */
+
+:root {
+  /* Progress Bar Token */
+  --color-progress-bar-dark: #3b82f6;
+  --color-progress-bar-light: #2563eb;
+  --color-progress-bar: var(--color-progress-bar-dark);
+  /* Input Field Tokens */
+  --color-input-bg-dark: #232226;
+  --color-input-bg-light: #f6f6f6;
+  --color-input-border-dark: #3d3b3e;
+  --color-input-border-light: #e5e5e5;
+  --color-input-placeholder-dark: #8d8c8d;
+  --color-input-placeholder-light: #b0b0b0;
+  --color-input-text-dark: #ffffff;
+  --color-input-text-light: #000000;
+
+  /* Default to dark mode */
+  --color-input-bg: var(--color-input-bg-dark);
+  --color-input-border: var(--color-input-border-dark);
+  --color-input-placeholder: var(--color-input-placeholder-dark);
+  --color-input-text: var(--color-input-text-dark);
+  /* Dark Mode (Default) */
+  /* Base Colors */
+  --color-background-dark: #171717;
+  --color-tinted-background-dark: #151515;
+  --color-panel1-dark: #323033;
+  --color-panel2-dark: #212121;
+  --color-panel3-dark: #1a1a1a;
+  --color-border-dark: #3d3b3e;
+  --color-primary: #012fa7;
+  --color-text-dark: #ffffff;
+  --color-muted-foreground-dark: #8d8c8d;
+  --color-foreground-dark: #f4f4f4;
+  --color-surface-muted-dark: #5f5e60;
+
+  /* Status (see design-system/preview/color-status.html + component-toast-banner.html) */
+  --color-danger: #ff6b6b;
+  --color-success: #22c55e;
+  --color-warning: #ffb020;
+  --color-info: #93b4ff;
+
+  /* Button Colors */
+  --color-button-light: #ffffff;
+  --color-button-dark: #ffffff;
+
+  /* Utility Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Semantic Opacity Colors - Dark Mode */
+  --color-overlay-dark: rgba(0, 0, 0, 0.8);
+  --color-overlay-light: rgba(0, 0, 0, 0.5);
+  --color-border-light: rgba(255, 255, 255, 0.1);
+  --color-border-lighter: rgba(255, 255, 255, 0.18);
+  --color-surface-light: rgba(255, 255, 255, 0.05);
+  /* Unfilled part of a progress bar (Figma: load-bar) */
+  --color-load-bar: #5f5e60;
+  --color-surface-lighter: rgba(255, 255, 255, 0.08);
+  --color-surface-lightest: rgba(255, 255, 255, 0.04);
+  --color-inset-light: rgba(255, 255, 255, 0.15);
+  --color-inset-dark: rgba(0, 0, 0, 0.1);
+  --color-shadow-dark: rgba(0, 0, 0, 0.37);
+  --color-primary-shadow: rgba(1, 47, 167, 0.3);
+
+  /* Pattern & Dot Colors */
+  --color-dot-pattern-dark: #171e43;
+  --color-dot-pattern-light: #b8d4ff;
+  --color-dot-pattern: var(--color-dot-pattern-dark);
+
+  /* Apply Dark Mode as Default */
+  --color-background: var(--color-background-dark);
+  --color-tinted-background: var(--color-tinted-background-dark);
+  --color-panel1: var(--color-panel1-dark);
+  --color-panel2: var(--color-panel2-dark);
+  --color-panel3: var(--color-panel3-dark);
+  --color-border: var(--color-border-dark);
+  --color-text: var(--color-text-dark);
+  --color-muted-foreground: var(--color-muted-foreground-dark);
+  --color-foreground: var(--color-foreground-dark);
+  --color-surface-muted: var(--color-surface-muted-dark);
+  --color-shadow: var(--color-shadow-dark);
+
+  /* Typography */
+  --font-family-sans: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-alt: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Light Mode */
+[data-theme='light'] {
+  --color-progress-bar: var(--color-progress-bar-light);
+  /* Input Field Tokens */
+  --color-input-bg: var(--color-input-bg-light);
+  --color-input-border: var(--color-input-border-light);
+  --color-input-placeholder: var(--color-input-placeholder-light);
+  --color-input-text: var(--color-input-text-light);
+  /* Light Mode Base Colors */
+  --color-background-light: #ffffff;
+  --color-tinted-background-light: #f6f6f6;
+  --color-panel1-light: #ffffff;
+  --color-panel2-light: #f6f6f6;
+  --color-panel3-light: #ffffff;
+  --color-border-light-mode: #e5e5e5;
+  --color-text-light: #000000;
+  --color-muted-foreground-light: #666666;
+  --color-foreground-light: #000000;
+  --color-surface-muted-light: #ffffff;
+  --color-shadow-light: rgba(0, 0, 0, 0.08);
+
+  /* Apply Light Mode */
+  --color-background: var(--color-background-light);
+  --color-tinted-background: var(--color-tinted-background-light);
+  --color-panel1: var(--color-panel1-light);
+  --color-panel2: var(--color-panel2-light);
+  --color-panel3: var(--color-panel3-light);
+  --color-border: var(--color-border-light-mode);
+  --color-text: var(--color-text-light);
+  --color-muted-foreground: var(--color-muted-foreground-light);
+  --color-foreground: var(--color-foreground-light);
+  --color-surface-muted: var(--color-surface-muted-light);
+  --color-shadow: var(--color-shadow-light);
+
+  /* Semantic Opacity Colors - Light Mode Override */
+  --color-overlay-dark: rgba(255, 255, 255, 0.98);
+  --color-overlay-light: rgba(0, 0, 0, 0.5);
+  --color-border-light: rgba(0, 0, 0, 0.08);
+  --color-border-lighter: rgba(0, 0, 0, 0.1);
+  --color-surface-light: rgba(0, 0, 0, 0.05);
+  --color-load-bar: #d9d8da;
+  --color-surface-lighter: rgba(240, 240, 240, 0.5);
+  --color-surface-lightest: rgba(248, 248, 248, 0.95);
+  --color-inset-light: rgba(0, 0, 0, 0.05);
+  --color-inset-dark: rgba(0, 0, 0, 0.03);
+  --color-primary-shadow: rgba(1, 47, 167, 0.3);
+  /* Dot pattern color for light theme */
+  --color-dot-pattern: var(--color-dot-pattern-light);
+}
+
+/* Global Theme Transition Utility */
+/* Apply smooth 1.2s transitions to all theme-aware color properties */
+* {
+  transition-property: background-color, color, border-color, background-image;
+  transition-duration: 1.2s;
+  transition-timing-function: ease;
+}
+
+/* ==== 3. Document ==== */
+
+* {
+  box-sizing: border-box;
+}
+
+/* Hide scrollbar for HTML element */
+html {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Minimal variables used by the new section */
+:root {
+  --gradient: rgba(240, 84, 84, 1);
+}
+
+/* The one component rule Tailwind generated; kept as plain CSS. */
+.all-\[unset\] {
+  all: unset;
+}
+
+/* ==== 4. Page scaffolding ==== */
+
+/* Global font override to ensure all text uses Hubot Sans */
+* {
+  font-family: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+}
+
+.app-container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-background);
+  color: var(--color-text);
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 1.2s ease, color 1.2s ease;
+}
+
+.dot-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, var(--color-dot-pattern) 1.5px, transparent 1.5px);
+  background-size: 43px 43px;
+  background-position: 0 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: background-image 1.2s ease;
+}
+
+/* Dot grid color is driven by the --color-dot-pattern variable (set in tokens.css by theme) */
+
+.hero-background {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  background-size: contain;
+  background-position: top center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.hero-background.fade-out {
+  opacity: 0;
+}
+
+/* Features gradient overlay: positioned above features without taking layout space */
+.features-gradient {
+  position: absolute;
+  top: 520px;
+  left: 0;
+  width: 100%;
+  height: 249px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, var(--color-tinted-background) 100%);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0; /* default hidden */
+  transition: opacity 0.8s ease-in-out;
+}
+
+.features-gradient.visible {
+  opacity: 1; /* fade in */
+}
+
+/* Force instant hide (no transition) used at the moment of toggle */
+.features-gradient.instant-hide {
+  opacity: 0;
+  transition: none;
+}
+
+.app-container > *:not(.dot-grid):not(.hero-background):not(.features-gradient) {
+  position: relative;
+  z-index: 10;
+}
