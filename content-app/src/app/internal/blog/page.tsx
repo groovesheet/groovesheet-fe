@@ -60,7 +60,7 @@ export default async function BlogPage() {
     <>
       <PageHeader
         title="Blog"
-        desc="Every three days the pipeline reads the music tech press, drafts one post from the story worth having a view on, and holds it here. Nothing goes public until you approve it."
+        desc="Every three days the pipeline reads the music tech press and writes one post from the story worth having a view on. A post that passes the checks goes live on its own. Anything the checks reject waits here for you, and you can edit or take down any post at any time."
         actions={<RunNow />}
       />
 

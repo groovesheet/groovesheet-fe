@@ -73,7 +73,7 @@ export default async function InternalIndex() {
     <>
       <PageHeader
         title="Internal"
-        desc="The content pipeline runs itself every three days. Nothing it writes goes out until someone here approves it."
+        desc="The content pipeline runs itself every three days. It publishes what passes its own checks, and holds anything that does not for you here."
       />
 
       <div className="int-stack">

@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 /* Starts the same run the cron does. It takes a minute or two: a feed scan,
-   a ranking call, a researched draft and the captions. */
+   a ranking call, a researched draft and the captions. With automatic
+   publishing on, the run also puts the post live and sends the captions, so
+   this button is not a dry run. */
 export default function RunNow() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -15,8 +17,15 @@ export default function RunNow() {
     setNote("Reading the feeds and drafting. This takes a minute or two.");
     try {
       const res = await fetch("/api/internal/content/run", { method: "POST" });
-      const json = (await res.json()) as { outcome?: string; detail?: string; draftId?: number };
-      if (json.outcome === "drafted" && json.draftId) {
+      const json = (await res.json()) as {
+        outcome?: string;
+        detail?: string;
+        draftId?: number;
+        url?: string;
+      };
+      /* Either way the draft page is where the detail is: what was written,
+         what the checks said, and for a published post, where it went. */
+      if ((json.outcome === "drafted" || json.outcome === "published") && json.draftId) {
         router.push(`/internal/blog/${json.draftId}`);
         return;
       }

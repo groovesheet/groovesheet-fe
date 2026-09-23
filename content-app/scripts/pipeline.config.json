@@ -16,6 +16,10 @@
     "briefDir": "content/briefs",
     "fileExtension": ".mdx",
     "urlPrefix": "/blog",
+    "autoPublish": {
+      "enabled": true,
+      "withSocial": true
+    },
     "defaultAuthor": "GrooveSheet Editorial",
     "defaultCategory": "Guide",
     "defaultImage": "/og.png",
@@ -176,11 +180,11 @@
     ],
     "bannedPatterns": [
       {
-        "pattern": "—",
+        "pattern": "\u2014",
         "reason": "No em dashes. Use a colon, a full stop, or rewrite."
       },
       {
-        "pattern": "–",
+        "pattern": "\u2013",
         "reason": "No en dashes in prose. Use 'to' for ranges."
       },
       {

@@ -24,14 +24,41 @@ Vercel Cron, every 3 days             src/app/api/cron/content/route.ts
   4. file    topics, audience, SEO keyword (from measured volumes), SEO title
   5. cover   the source article's own lead image, re-hosted to /blog-media
   6. social  LinkedIn, Facebook, Instagram and Pinterest captions from the post
-  7. hold    status "review" in /internal/blog. Nothing is public yet.
-
-A person, in /internal/blog/<id>
-  8. edit in the rich text editor, with the full metadata panel
-  9. Approve and publish: live on /blog at once, no deploy
- 10. the URL is checked for a 200, then each ticked caption is sent
- 11. /internal/social shows what is live, retries failures, takes down and reposts
+  7. publish the validator runs again; a clean post goes live on /blog at
+             once, the URL is checked for a 200, and then each caption is sent
+             a post that fails any check is NOT published. It waits at status
+             "review" in /internal/blog with the reasons
 ```
+
+Automatic publishing is `content.autoPublish` in `scripts/pipeline.config.json`
+(`enabled`, and `withSocial` for the captions). Two environment variables win
+over the file at runtime, so a run can be stopped from the Vercel dashboard
+with a redeploy and no commit:
+
+```
+CONTENT_AUTO_PUBLISH=0          # draft and hold, the old behaviour
+CONTENT_AUTO_PUBLISH_SOCIAL=0   # publish the post, send nothing
+CONTENT_PIPELINE_PAUSED=1       # do not run at all
+```
+
+Nothing about the manual path changed, and it is still the way to fix
+anything the pipeline gets wrong:
+
+```
+A person, in /internal/blog/<id>
+  edit in the rich text editor, with the full metadata panel
+  Approve and publish a held post: live on /blog at once, no deploy
+  Unpublish takes a post off /blog. Social posts already sent are not recalled
+  /internal/social shows what is live, retries failures, takes down and reposts
+```
+
+**What automatic publishing means in practice.** An LLM writes the post and
+nobody reads it before the public does. The guards are the validator in
+`src/lib/content/validate.ts` (the claims rules, the banned phrases, the
+length and slug limits) and the relevance floor that decides whether to write
+anything at all. They catch the failures that have a shape. They do not catch
+a post that is merely dull or subtly wrong about a competitor. Read
+/internal/blog after a run, and unpublish rather than regret.
 
 ## Where things are
 

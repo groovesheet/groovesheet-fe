@@ -1,9 +1,11 @@
 /* One pipeline run: scan the industry, pick the story worth a post, draft the
-   post, draft the social captions from it, and leave everything in review.
+   post, draft the social captions from it, and, when automatic publishing is
+   on, put it live.
 
-   Nothing here publishes. A run ends with a row in content_drafts at status
-   "review" and its captions in content_social at status "draft". Publishing
-   is ./publish.ts, and only a signed-in person can reach it. */
+   Publishing itself still lives in ./publish.ts and still refuses anything the
+   validator rejects. A run that drafts something the validator fails ends at
+   status "review" in /internal/blog, with the reasons, exactly as every run
+   did before. See autoPublishOn() below for the switches. */
 import cfg from "../../../scripts/pipeline.config.json";
 import measured from "../../../content/seo-keywords.json";
 import { complete, extractJson, llmHasWeb } from "./llm";
@@ -29,9 +31,11 @@ import {
 } from "./store";
 import { SOCIAL_LIMIT, SOCIAL_PLATFORMS, type Draft, type Faq, type NewsItem } from "./types";
 import { validateCaption, validateDraft, type Checkable } from "./validate";
+import { approveDraft } from "./publish";
 
 export type RunOutcome =
   | { outcome: "drafted"; draftId: number; title: string; detail: string }
+  | { outcome: "published"; draftId: number; title: string; url: string; detail: string }
   | { outcome: "no-story" | "busy" | "failed"; detail: string };
 
 const BLOG_MODELS: string[] = (process.env.CONTENT_BLOG_MODELS?.split(",") ?? cfg.generation.portalModels)
@@ -603,14 +607,66 @@ export async function runPipeline(trigger: "cron" | "manual"): Promise<RunOutcom
       socialNote = `captions failed: ${err instanceof Error ? err.message : err}`;
     }
 
-    const detail = `"${saved.title}" from ${story.source} (score ${best.score}). ${validation.errors.length} validation errors, ${socialNote}. ${scan.feedErrors.length} feed errors.`;
-    await finishRun(runId, "drafted", detail, saved.id);
-    return { outcome: "drafted", draftId: saved.id, title: saved.title, detail };
+    const base = `"${saved.title}" from ${story.source} (score ${best.score}). ${validation.errors.length} validation errors, ${socialNote}. ${scan.feedErrors.length} feed errors.`;
+
+    /* Publish without waiting for a person, when that is switched on.
+
+       Only a draft the validator passes clean goes out: approveDraft checks
+       again and refuses on any error, so a run that drafts something broken
+       falls back to holding it for review rather than failing. Warnings do not
+       block, by design. They are style notes, and nothing would ever publish
+       if they did. */
+    if (autoPublishOn() && validation.errors.length === 0) {
+      const result = await approveDraft(saved.id, AUTO_PUBLISH_BY, autoPublishSocial());
+      if (result.ok) {
+        const failed = result.social.filter((s) => !s.ok);
+        const detail = `${base} Auto-published to ${result.url}. Social: ${
+          result.social.length - failed.length
+        } sent${failed.length ? `, ${failed.length} failed (${failed.map((f) => f.platform).join(", ")})` : ""}.`;
+        await finishRun(runId, "published", detail, saved.id);
+        return { outcome: "published", draftId: saved.id, title: saved.title, url: result.url, detail };
+      }
+      /* Held rather than lost: it is in /internal/blog with the reasons. */
+      const detail = `${base} Auto-publish refused, held for review: ${result.errors.join("; ")}`;
+      await finishRun(runId, "drafted", detail, saved.id);
+      return { outcome: "drafted", draftId: saved.id, title: saved.title, detail };
+    }
+
+    await finishRun(runId, "drafted", base, saved.id);
+    return { outcome: "drafted", draftId: saved.id, title: saved.title, detail: base };
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await finishRun(runId, "failed", detail, null).catch(() => {});
     return { outcome: "failed", detail };
   }
+}
+
+/* ---------- Automatic publishing ----------
+
+   A run publishes what it wrote, with no person in the loop. Switched on in
+   pipeline.config.json; CONTENT_AUTO_PUBLISH overrides it at runtime with
+   "1" or "0", so it can be stopped from the Vercel dashboard in the time it
+   takes to redeploy, without a commit. CONTENT_PIPELINE_PAUSED=1 still stops
+   the whole run earlier, which is the bigger hammer.
+
+   The approval path itself is unchanged: /internal/blog can still publish,
+   unpublish and retry by hand, and a draft the validator rejects still waits
+   there for someone. */
+const AUTO_PUBLISH_BY = "pipeline";
+
+function envFlag(name: string): boolean | null {
+  const raw = process.env[name];
+  if (raw === "1" || raw === "true") return true;
+  if (raw === "0" || raw === "false") return false;
+  return null;
+}
+
+export function autoPublishOn(): boolean {
+  return envFlag("CONTENT_AUTO_PUBLISH") ?? cfg.content.autoPublish.enabled;
+}
+
+function autoPublishSocial(): boolean {
+  return envFlag("CONTENT_AUTO_PUBLISH_SOCIAL") ?? cfg.content.autoPublish.withSocial;
 }
 
 /** Rewrite the captions for a draft after the post itself has been edited. */
