@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DEFAULT_EDITOR, EDITORS } from "../_lib/editors";
+import UserCombobox from "./UserCombobox";
 
 export default function LoginForm({ sharedPassword }: { sharedPassword: boolean }) {
   const router = useRouter();
@@ -94,15 +95,7 @@ export default function LoginForm({ sharedPassword }: { sharedPassword: boolean 
             </div>
           </label>
         ) : (
-          <input
-            className="gs-input"
-            name="user"
-            autoComplete="username"
-            placeholder="Username"
-            value={user}
-            onChange={(e) => setUser(e.target.value)}
-            required
-          />
+          <UserCombobox value={user} onChange={setUser} options={EDITORS} />
         )}
         <input
           className="gs-input"
