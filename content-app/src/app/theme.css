@@ -46,6 +46,18 @@
   /* The brand signature. 43px grid, per design-system/VISUAL_GUIDE.md. */
   --color-dot-pattern: #171e43;
 
+  /* Raw palette entries, not theme-mapped: tokens.css holds the same value in
+     both themes and the ported header/footer CSS reads them directly. */
+  --color-white: #ffffff;
+  --color-background-dark: #171717;
+  --color-border-dark: #3d3b3e;
+
+  /* ThemeContext.js sets these inline on <html>; so does our boot script, but
+     only when a choice is stored. Declaring them here means the header keeps
+     legible hover colours for a visitor who has never toggled. */
+  --text-primary: #ffffff;
+  --text-secondary: #8d8c8d;
+
   /* Type */
   --font-family-sans: "Hubot Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", sans-serif;
@@ -72,6 +84,9 @@
   --color-surface-lightest: rgba(248, 248, 248, 0.95);
   --color-shadow: rgba(0, 0, 0, 0.08);
   --color-dot-pattern: #b8d4ff;
+
+  --text-primary: #171717;
+  --text-secondary: #666666;
 }
 
 /* A viewer whose OS says light, who has not chosen otherwise, gets light. The
@@ -96,6 +111,9 @@
     --color-surface-lightest: rgba(248, 248, 248, 0.95);
     --color-shadow: rgba(0, 0, 0, 0.08);
     --color-dot-pattern: #b8d4ff;
+
+    --text-primary: #171717;
+    --text-secondary: #666666;
   }
 }
 

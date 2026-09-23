@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { THEME_BOOT_SCRIPT } from "@/lib/themeBoot";
 import "./theme.css";
 import "./primitives.css";
 
@@ -37,6 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* Before first paint, so a visitor who chose light on the rest of
+            groovesheet.net does not get a dark flash here. next/script would
+            defer it past paint, which is the whole thing this avoids. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* The rule this suppresses is about pages/_document, which the App
