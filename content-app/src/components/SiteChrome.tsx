@@ -86,7 +86,7 @@ export function SiteHeader() {
   // Catch up with whatever the boot script already applied, so the sun/moon
   // glyph matches the page a visitor is actually looking at.
   useEffect(() => {
-    setIsDarkMode(resolveIsDarkMode());
+    setIsDarkMode(resolveIsDarkMode(true));
   }, []);
 
   const toggleTheme = useCallback(() => {
