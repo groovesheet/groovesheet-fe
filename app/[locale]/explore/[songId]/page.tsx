@@ -12,11 +12,13 @@ import { setRequestLocale } from 'next-intl/server';
 import { getLibraryTrack, getLibraryTracks } from '@/lib/api-server';
 import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo/metadata';
 import { buildLocalePath } from '@/lib/locales';
+import { hubPath, hubsForTrack } from '@/lib/seo/instrumentHubs';
 import { breadcrumbJsonLd } from '@/lib/seo/jsonld';
 import type { LibraryTrack } from '@/lib/types';
 import JsonLd from '../_components/JsonLd';
 import { slimTrack } from '../_components/trackToCard';
 import SongDetail from './_components/SongDetail';
+import TrackFacts from './_components/TrackFacts';
 import {
   isoDuration,
   songDescription,
@@ -47,6 +49,11 @@ export async function generateMetadata({ params }: SongPageProps) {
   if (!track) {
     return { title: 'Track not found', robots: { index: false, follow: false } };
   }
+  // A track whose processing produced nothing has no score, no stems and no
+  // downloads: an empty page Google's guidance says to keep out of the index
+  // until it carries something. It stays reachable, and the next successful
+  // run makes it indexable again on the next revalidation.
+  const noindex = trackAssets(track).length === 0;
   return pageMetadata({
     title: songTitle(track),
     description: songDescription(track),
@@ -54,6 +61,7 @@ export async function generateMetadata({ params }: SongPageProps) {
     locale,
     image: track.cover_url || null,
     ogType: 'music.song',
+    noindex,
   });
 }
 
@@ -85,6 +93,26 @@ function songJsonLd(track: LibraryTrack, locale: string): Record<string, unknown
   };
 }
 
+/**
+ * Home > Explore > <instrument hub, when the track has one> > the track.
+ * Naming the section is what turns the crumb trail Google shows from a URL
+ * into something a reader can place.
+ */
+function trackCrumbs(track: LibraryTrack) {
+  const assets = trackAssets(track);
+  const partsOf = (types: string[]) =>
+    [...new Set(assets.filter((a) => types.includes(a.asset_type || '')).map((a) => a.stem_name))].filter(
+      (n): n is string => Boolean(n)
+    );
+  const [hub] = hubsForTrack({ notated: partsOf(['musicxml', 'midi']), stems: partsOf(['stem']) });
+  return [
+    { name: SITE_NAME, path: '/' },
+    { name: 'Explore', path: '/explore' },
+    ...(hub ? [{ name: hub.noun, path: hubPath(hub) }] : []),
+    { name: track.artist ? `${track.title} by ${track.artist}` : track.title, path: trackPath(track) },
+  ];
+}
+
 export default async function SongPage({ params }: SongPageProps) {
   const { locale, songId } = await params;
   setRequestLocale(locale);
@@ -106,14 +134,8 @@ export default async function SongPage({ params }: SongPageProps) {
   return (
     <>
       <JsonLd data={songJsonLd(track, locale)} />
-      <JsonLd
-        data={breadcrumbJsonLd(locale, [
-          { name: SITE_NAME, path: '/' },
-          { name: 'Explore', path: '/explore' },
-          { name: track.artist ? `${track.title} by ${track.artist}` : track.title, path: trackPath(track) },
-        ])}
-      />
-      <SongDetail key={track.id} track={track} related={related} />
+      <JsonLd data={breadcrumbJsonLd(locale, trackCrumbs(track))} />
+      <SongDetail key={track.id} track={track} related={related} facts={<TrackFacts track={track} />} />
     </>
   );
 }

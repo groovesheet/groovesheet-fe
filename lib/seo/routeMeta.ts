@@ -20,12 +20,23 @@
  * that reality rather than the company's self-image.
  */
 
+import { INSTRUMENT_HUBS, hubPath } from '@/lib/seo/instrumentHubs';
+
 export interface RouteMeta {
   title: string;
   description?: string;
 }
 
-export const ROUTE_META: Record<string, RouteMeta> = {
+/**
+ * The instrument hubs (/sheet-music/drums, /stems/vocals, ...). They are
+ * generated from lib/seo/instrumentHubs.ts rather than repeated here, so a hub
+ * cannot exist as a page without also being titled and listed in the sitemap.
+ */
+const HUB_ROUTE_META: Record<string, RouteMeta> = Object.fromEntries(
+  INSTRUMENT_HUBS.map((hub) => [hubPath(hub), { title: hub.title, description: hub.description }])
+);
+
+const STATIC_ROUTE_META: Record<string, RouteMeta> = {
   '/': {
     title: 'Audio to Sheet Music, Stems & MIDI',
     description:
@@ -83,6 +94,8 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   '/refund-policy': { title: 'Refund Policy' },
   '/business-information': { title: 'Business Information' },
 };
+
+export const ROUTE_META: Record<string, RouteMeta> = { ...STATIC_ROUTE_META, ...HUB_ROUTE_META };
 
 /**
  * Strip a locale prefix so /zh-CN/pricing resolves to the same entry as

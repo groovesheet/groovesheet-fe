@@ -143,6 +143,14 @@ export interface SearchLibraryParams {
   formats?: string[];
   /** Lowercase stem names. */
   instruments?: string[];
+  /**
+   * Keep only tracks that carry notation (MusicXML/MIDI) for this part, e.g.
+   * 'drums'. The instrument filter alone matches a separated stem, which is a
+   * superset: a track can have a bass stem and only drum notation. An API
+   * that predates this parameter ignores it and answers the instrument filter,
+   * so sending it is safe before the backend ships.
+   */
+  notation?: string | null;
   /** under2|2to5|over5 */
   lengths?: string[];
   /** 1-based page number. */
@@ -160,6 +168,7 @@ export function searchLibraryQuery({
   formats = [],
   instruments = [],
   lengths = [],
+  notation = null,
   page = 1,
   limit = null,
   facets = false,
@@ -169,6 +178,7 @@ export function searchLibraryQuery({
   if (sort) params.set('sort', sort);
   if (formats.length) params.set('format', formats.join(','));
   if (instruments.length) params.set('instrument', instruments.join(','));
+  if (notation) params.set('notation', notation);
   if (lengths.length) params.set('length', lengths.join(','));
   params.set('page', String(page));
   if (limit) params.set('limit', String(limit));

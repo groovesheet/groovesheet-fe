@@ -274,9 +274,15 @@ interface SongDetailProps {
   track: LibraryTrack;
   /** Recent library tracks for the rails, already without this one. */
   related: LibraryTrack[];
+  /**
+   * The server-rendered facts block (album, parts, downloads, links up to the
+   * instrument hubs). Passed in rather than built here so it is in the HTML
+   * for crawlers without this client component having to hydrate first.
+   */
+  facts?: ReactNode;
 }
 
-export default function SongDetail({ track: initialTrack, related }: SongDetailProps) {
+export default function SongDetail({ track: initialTrack, related, facts }: SongDetailProps) {
   // The page is keyed by track id, and a server refresh (after sign-in, say)
   // must not hand over a new object for the same track: every engine below is
   // keyed on it and would be torn down mid-playback.
@@ -1201,6 +1207,9 @@ export default function SongDetail({ track: initialTrack, related }: SongDetailP
               )}
               {!view && <CenteredNotice title="No playable assets yet" body="This track has not been processed." />}
             </div>
+
+            {/* What this track is, server-rendered (see TrackFacts). */}
+            {facts}
 
             {/* Below-viewer rails: design-style slices of the related tracks */}
             {rails.map((rail) => (
