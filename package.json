@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "indexnow": "node scripts/indexnow.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
