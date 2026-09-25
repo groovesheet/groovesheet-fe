@@ -1,0 +1,79 @@
+.button {
+  font-family: var(--font-family-sans);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* Variants */
+.button--primary {
+  background-color: var(--color-primary);
+  color: var(--color-button-light);
+}
+
+.button--primary:hover:not(:disabled) {
+  background-color: rgba(1, 57, 192, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--color-primary-shadow);
+}
+
+.button--secondary {
+  background-color: var(--color-surface-muted);
+  color: var(--color-button-light);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-muted);
+  transform: translateY(-1px);
+}
+
+.button--outline {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.button--outline:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-button-light);
+  transform: translateY(-1px);
+}
+
+/* Sizes */
+.button--small {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+.button--medium {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.button--large {
+  padding: 16px 32px;
+  font-size: 18px;
+  border-radius: 10px;
+}
+
+/* States */
+.button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

@@ -1,4 +1,5 @@
 {
+  "framework": "nextjs",
   "redirects": [
     {
       "source": "/",
@@ -127,30 +128,8 @@
       "destination": "https://api.groovesheet.net/:path*"
     },
     {
-      "source": "/sitemap.xml",
-      "destination": "https://api.groovesheet.net/seo/sitemap.xml"
-    },
-    {
-      "source": "/explore/:id",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Pinterestbot|redditbot).*"
-        }
-      ],
-      "destination": "https://api.groovesheet.net/seo/track/:id"
-    },
-    {
-      "source": "/u/:username",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Pinterestbot|redditbot).*"
-        }
-      ],
-      "destination": "https://api.groovesheet.net/seo/creator/:username"
+      "source": "/sitemaps/library.xml",
+      "destination": "https://api.groovesheet.net/seo/sitemap.xml?scope=library"
     }
   ],
   "headers": [

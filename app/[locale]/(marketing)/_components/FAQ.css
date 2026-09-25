@@ -1,0 +1,247 @@
+.faq {
+  width: 100%;
+  padding: 80px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.faq-container {
+  width: 100%;
+  max-width: 1190px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+}
+
+.faq-title {
+  font-family: var(--font-family-sans);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 44px;
+  color: var(--color-foreground);
+  text-align: center;
+  margin: 0;
+}
+
+.faq-sections {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.faq-section {
+  width: 100%;
+  border-top: 1px solid var(--color-foreground);
+}
+
+.faq-section:last-child .faq-questions-column .faq-question-row:last-child {
+  border-bottom: 1px solid var(--color-foreground);
+}
+
+.faq-section-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.faq-section-label {
+  flex: 1;
+  max-width: 349px;
+  padding: 32px 20px 32px 0;
+  display: flex;
+  align-items: flex-start;
+}
+
+.faq-section-title {
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.faq-questions-column {
+  width: 841px;
+  display: flex;
+  flex-direction: column;
+}
+
+.faq-question-row {
+  width: 100%;
+  border-top: 1px solid var(--color-foreground);
+}
+
+.faq-section .faq-questions-column .faq-question-row:first-child {
+  border-top: none;
+}
+
+.faq-question-button {
+  width: 100%;
+  padding: 28px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 20px;
+}
+
+.faq-question-text {
+  flex: 1;
+  text-align: left;
+  max-width: 804px;
+}
+
+.faq-question-text span {
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--color-foreground);
+  transition: color 0.15s ease;
+}
+
+.faq-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-foreground);
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+.faq-icon-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* when the question is open, rotate the icon 180deg to point upward */
+.faq-question-row.open .faq-icon {
+  transform: rotate(180deg);
+}
+
+/* answer area */
+.faq-answer {
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  line-height: 32px;
+  /* start closed with no padding so it does not take up space */
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.22s ease, opacity 0.22s ease, padding 0.18s ease;
+}
+
+.faq-question-row.open .faq-answer {
+  /* when open, allow space and show content */
+  max-height: 400px;
+  opacity: 1;
+  padding: 0 0 24px 0;
+}
+
+.faq-question-button:hover .faq-question-text span {
+  color: var(--color-muted-foreground);
+}
+
+[data-theme='light'] .faq-question-button:hover .faq-question-text span,
+[data-theme='light'] .faq-question-button:hover .faq-icon {
+  color: var(--color-primary);
+}
+
+/* No hover color change in dark mode for FAQ items */
+
+@media (max-width: 1024px) {
+  .faq-section-header {
+    flex-direction: column;
+  }
+
+  .faq-section-label {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .faq-questions-column {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .faq {
+    padding: 60px 0;
+  }
+
+  .faq-container {
+    gap: 40px;
+  }
+
+  .faq-title {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  /* Stacked, the category and the questions under it were the same size with
+     the same padding, so nothing said which was the heading. Demote the
+     category to a quiet label and pull it tight to the questions it owns. */
+  .faq-section-title {
+    font-size: 13px;
+    line-height: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+
+  .faq-section-label {
+    padding: 26px 0 10px;
+  }
+
+  .faq-question-text span {
+    font-size: 18px;
+    line-height: 25px;
+  }
+
+  .faq-question-button {
+    padding: 18px 0;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .faq-title {
+    font-size: 28px;
+    line-height: 32px;
+  }
+
+  .faq-section-title {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .faq-question-text span {
+    font-size: 17px;
+    line-height: 24px;
+  }
+
+  .faq-question-button {
+    padding: 16px 0;
+  }
+
+  .faq-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .faq-icon-line {
+    width: 14px;
+  }
+}

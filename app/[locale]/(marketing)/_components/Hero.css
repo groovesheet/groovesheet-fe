@@ -1,0 +1,1289 @@
+.progress-bar.animated .progress-fill {
+  animation: progressFill 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes progressFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 38px 20px;
+  position: relative;
+}
+
+.hero-container {
+  display: flex;
+  width: 100%;
+  max-width: 1414px;
+  min-height: 500px;
+  height: auto;
+  justify-content: space-between;
+  align-items: start;
+  gap: 68px;
+  transition: gap 0.3s ease;
+}
+
+/* Success: the hero copy collapses away and the card claims the full width. */
+.hero-container.success-expanded {
+  justify-content: center;
+  gap: 0;
+  max-width: 100%;
+}
+
+.hero-container.success-expanded .hero-content {
+  max-width: 0;
+  min-height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 522.47px;
+  min-height: 480px;
+  height: auto;
+  padding: 20px 0;
+  box-sizing: border-box;
+  transition: max-width 0.45s ease, opacity 0.3s ease, padding 0.45s ease;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 28.8px;
+}
+
+.hero-title {
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 60px;
+  font-weight: 400;
+  line-height: 76.8px;
+  margin: 0;
+  max-width: 522.47px;
+}
+
+.hero-subtitle {
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 38.4px;
+  margin: 0;
+  max-width: 522.47px;
+}
+
+.hero-disclaimer {
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 20.8px;
+}
+
+.hero-disclaimer a {
+  color: var(--color-text);
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+/* Desktop: show disclaimer in hero-content, hide mobile version */
+.hero-disclaimer-desktop {
+  display: block;
+}
+
+.hero-disclaimer-mobile {
+  display: none;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  max-width: 757.736px;
+  min-height: 480.648px;
+  padding: 8px 14px 14px 14px;
+  border: 1px solid var(--color-border-lighter);
+  background: linear-gradient(
+    135deg,
+    var(--color-surface-lighter) 0%,
+    var(--color-surface-lightest) 50%,
+    var(--color-surface-lighter) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 8px 32px 0 var(--color-shadow), inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
+  box-sizing: border-box;
+  gap: 8.527px;
+  border-radius: 16px;
+  position: relative;
+  overflow: visible;
+  --mouse-x: 0px;
+  --mouse-y: 0px;
+  --corner-offset: 1rem;
+  --corner-size: 4rem;
+  transition: max-width 0.4s ease, all 0.4s ease-in-out, translate 0.4s ease-out;
+}
+
+.upload-area.expanded {
+  max-width: 1414px;
+}
+
+.upload-area::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: calc(100% + 2 * var(--corner-offset));
+  height: calc(100% + 2 * var(--corner-offset));
+  left: calc(-1 * var(--corner-offset));
+  right: calc(-1 * var(--corner-offset));
+  top: calc(-1 * var(--corner-offset));
+  bottom: calc(-1 * var(--corner-offset));
+  margin: auto;
+  box-shadow: inset 0 0 0px 0.06rem var(--color-inset-light);
+  border-radius: 1.8rem;
+  pointer-events: none;
+  clip-path: polygon(
+    var(--corner-size) 0,
+    0 0,
+    0 var(--corner-size),
+    var(--corner-size) var(--corner-size),
+    var(--corner-size) calc(100% - var(--corner-size)),
+    0 calc(100% - var(--corner-size)),
+    0 100%,
+    var(--corner-size) 100%,
+    var(--corner-size) calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) 100%,
+    100% 100%,
+    100% calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) calc(100% - var(--corner-size)),
+    calc(100% - var(--corner-size)) var(--corner-size),
+    100% var(--corner-size),
+    100% 0,
+    calc(100% - var(--corner-size)) 0,
+    calc(100% - var(--corner-size)) var(--corner-size),
+    var(--corner-size) var(--corner-size)
+  );
+  transition: all 0.4s ease-in-out;
+  z-index: 0;
+}
+
+.upload-area:hover {
+  transform: scale(1.005);
+}
+
+.upload-area:hover::before {
+  --corner-offset: 0.5rem;
+  --corner-size: 8rem;
+  border-radius: 1.4rem;
+  box-shadow: inset 0 0 0 0.08rem var(--color-inset-light);
+}
+
+.upload-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22.738px;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.upload-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 17.053px;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 17.053px 17.053px 17.053px;
+  background: rgba(50, 48, 51, 0.5);
+  border: 2.842px dashed var(--color-border-light);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 496.84px;
+  padding: 0 20px 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 0;
+  width: 100%;
+  max-width: 496.84px;
+}
+
+.upload-visual-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.file-formats-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 182px;
+  height: 150.3px;
+}
+
+.file-formats-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.upload-text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6.869px;
+  text-align: center;
+}
+
+.upload-main-text {
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 22.898px;
+  font-weight: 400;
+  line-height: 25.187px;
+  margin: 0;
+}
+
+.upload-sub-text {
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 13.739px;
+  font-weight: 400;
+  line-height: 25.187px;
+  margin: 0;
+}
+
+.browse-files-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8.527px;
+  width: 152.769px;
+  height: 46.186px;
+  padding: 0.711px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  border: none;
+  color: var(--color-button-light);
+  font-family: var(--font-family-sans);
+  font-size: 17.053px;
+  font-weight: 400;
+  line-height: 22.738px;
+  cursor: pointer;
+  transition: background 1.2s;
+  box-sizing: border-box;
+}
+
+.browse-files-btn:hover {
+  background: var(--color-primary);
+}
+
+.browse-files-btn:disabled {
+  background: var(--color-muted-foreground);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Instrument Selector - Horizontal Tabs Layout */
+
+.instrument-tabs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.instrument-tab {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 10px;
+  flex: 1 1 0;
+  background: transparent;
+  border: none;
+  border-radius: 8.527px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 22.738px;
+  font-weight: 400;
+  line-height: 32.709px;
+  min-width: 0;
+  text-align: center;
+}
+
+.instrument-tab:hover {
+  background: var(--color-surface-light);
+}
+
+.instrument-tab.active {
+  background-color: var(--color-panel2);
+  color: var(--color-foreground);
+}
+
+.instrument-tab svg {
+  width: 22.738px;
+  height: 22.738px;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.instrument-tab span {
+  white-space: nowrap;
+}
+
+/* Old Instrument Selector - Hidden */
+.instrument-selector {
+  display: none;
+}
+
+.instrument-dropdown-btn {
+  display: none;
+}
+
+.instrument-dropdown-menu {
+  display: none;
+}
+
+.instrument-option {
+  display: none;
+}
+
+/* Upload Status */
+.upload-status {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.status-message {
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  margin: 0;
+  text-align: center;
+}
+
+.status-message.error,
+.error {
+  color: var(--color-danger);
+}
+
+/* Progress Bar - Horizontal Layout for Upload/Processing States */
+.progress-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progress-bar-row {
+  display: flex;
+  width: 100%;
+  height: 46px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill.compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  height: 100%;
+  min-width: 0;
+  padding: 0 8px;
+  transition: width 0.3s ease;
+  border-radius: 6px 0 0 6px;
+}
+
+.progress-percentage.compact {
+  color: var(--color-white);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 32px;
+  font-family: 'Hubot Sans', sans-serif;
+  min-width: 45px;
+  text-align: center;
+}
+
+.progress-bar-remaining.compact {
+  flex: 1;
+  background: var(--color-surface-muted);
+  height: 100%;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Cancel Button */
+/* Only the word itself is clickable. A full-width transparent 46px target
+   sat right under the progress bar and swallowed stray clicks, cancelling
+   uploads people meant to leave running. */
+.cancel-btn.compact {
+  display: inline-flex;
+  align-self: center;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  height: auto;
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 25px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color 0.2s, text-decoration-color 0.2s;
+  font-family: 'Hubot Sans', sans-serif;
+}
+
+.cancel-btn.compact:hover {
+  color: #e53e3e;
+  text-decoration-color: currentColor;
+}
+
+/* Compact layout for upload/processing/success states (Figma spec) */
+.upload-content-top.compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.upload-controls.compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 23px;
+  width: 100%;
+  padding: 0 16px 16px;
+  box-sizing: border-box;
+}
+
+.upload-icon svg {
+  width: 64px;
+  height: 64px;
+}
+
+.upload-text h3 {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: 22.9px;
+  font-weight: 400;
+  line-height: 25.2px;
+  text-align: center;
+}
+
+.upload-text.success-text p.filename-text {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: 13.7px;
+  line-height: 25.2px;
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.download-transcription-btn.compact {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: var(--color-button-light);
+  font-family: var(--font-family-sans);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
+}
+
+.download-options-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.download-option-btn {
+  flex: 1;
+  height: 46px;
+  min-height: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-muted-foreground);
+  color: var(--color-white);
+  font-family: var(--font-family-sans);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 46px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.download-option-btn.full-width {
+  width: 100%;
+}
+
+/* Drag and Drop States */
+.upload-area.state-uploading,
+.upload-area.state-processing {
+  justify-content: center;
+}
+
+/* Success: card expands leftward to fill the screen and hosts the
+   explore-style transcription viewer. */
+.upload-area.state-success {
+  justify-content: flex-start;
+  max-width: 100%;
+  min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - 160px);
+}
+
+.upload-area.state-success:hover {
+  transform: none;
+}
+
+.upload-area.dragging {
+  border-color: var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    rgba(1, 47, 167, 0.15) 0%,
+    rgba(1, 47, 167, 0.08) 50%,
+    rgba(1, 47, 167, 0.15) 100%
+  );
+  box-shadow: 0 8px 32px 0 var(--color-primary-shadow), inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
+}
+
+.upload-area.processing {
+  opacity: 0.9;
+}
+
+.upload-area.completed {
+  border-color: rgba(34, 197, 94, 0.8);
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.12) 0%,
+    rgba(34, 197, 94, 0.06) 50%,
+    rgba(34, 197, 94, 0.12) 100%
+  );
+  box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.3), inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 1.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  z-index: 10;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Success State */
+.upload-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px;
+  position: relative;
+}
+
+.close-btn-corner {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  transition: all 1.2s;
+  z-index: 10;
+}
+
+.close-btn-corner:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  transform: scale(1.05);
+}
+
+.success-icon {
+  margin-bottom: 10px;
+  display: flex;
+  padding-top: 3px;
+}
+
+.success-icon svg {
+  width: auto;
+  height: auto;
+}
+
+.success-title {
+  color: var(--color-text);
+  font-size: 28px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.success-filename {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  margin: 0;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.success-message {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  margin: 0;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background: linear-gradient(90deg, #012fa7, #0139c7);
+  border: none;
+  border-radius: 8px;
+  color: var(--color-white);
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(1, 47, 167, 0.3);
+}
+
+.download-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Tablet Breakpoint */
+@media (max-width: 1280px) {
+  .hero {
+    padding: 30px 20px;
+    min-height: auto;
+  }
+
+  .hero-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 40px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-text {
+    order: 1;
+  }
+
+  .upload-area {
+    max-width: 100%;
+    min-height: 500px;
+    order: 2;
+  }
+
+  .upload-content-top,
+  .upload-controls {
+    max-width: 90%;
+    padding: 0 16px;
+  }
+
+  .hero-disclaimer-desktop {
+    display: none;
+  }
+
+  .hero-disclaimer-mobile {
+    display: block;
+    order: 3;
+    text-align: left;
+    font-size: 16px;
+    line-height: 20.8px;
+    width: 100%;
+  }
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 768px) {
+  .hero {
+    padding: 24px 16px;
+    min-height: auto;
+  }
+
+  .hero-container {
+    gap: 32px;
+  }
+
+  .hero-content {
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-text {
+    gap: 20px;
+    order: 1;
+  }
+
+  .upload-area {
+    order: 2;
+  }
+
+  .hero-disclaimer-desktop {
+    display: none;
+  }
+
+  .hero-disclaimer-mobile {
+    display: block;
+    order: 3;
+    text-align: left;
+    font-size: 16px;
+    line-height: 20.8px;
+    width: 100%;
+  }
+
+  .hero-title {
+    font-size: 48px;
+    line-height: 52px;
+  }
+
+  .hero-subtitle {
+    font-size: 20px;
+    line-height: 28px;
+    max-width: 100%;
+  }
+
+  .upload-area {
+    min-height: 420px;
+    /* Desktop insets the drop zone with 8px 14px 14px. Mobile zeroed it, so
+       the dashed zone sat flush against the card's own border with only the
+       1px border between them. Keep the inset, just tighter. */
+    padding: 8px 12px 12px;
+    gap: 12px;
+  }
+
+  /* Tab strip: one row that never wraps. With flex-wrap the 5-instrument strip
+     on /stem-splitter dropped "Bass" onto its own line at <=360px, where it
+     stretched full width and read as a broken pill. */
+  .instrument-tabs {
+    padding: 4px 0 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .instrument-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe default: size to content and scroll. This is what a five-instrument
+     strip needs, and what browsers without :has() fall back to. */
+  .instrument-tab {
+    flex: 0 0 auto;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px 10px;
+    font-size: 15px;
+    line-height: 20px;
+    scroll-snap-align: start;
+  }
+
+  /* Three instruments or fewer, the home page, fit comfortably, so let them
+     share the row equally the way the desktop layout does instead of huddling
+     at content width and leaving ~140px of the card empty. Sizing every strip
+     for the worst case made the common case look starved. */
+  .instrument-tabs:not(:has(.instrument-tab:nth-child(4))) .instrument-tab {
+    flex: 1 1 0;
+  }
+
+  .instrument-tab svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .upload-content-top {
+    max-width: 100%;
+    padding: 30px 16px;
+  }
+
+  .upload-controls {
+    max-width: 100%;
+    padding: 0 16px 16px;
+  }
+
+  .upload-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .upload-text {
+    gap: 12px;
+  }
+
+  .upload-text h3 {
+    font-size: 24px;
+    line-height: 28px;
+  }
+
+  /* Idle drop zone. These are the classes Hero.js/StemSplitter/MidiConverter
+     actually render, the old `.upload-text p` / `.browse-btn` rules here
+     matched nothing, so the drop zone had no mobile treatment at all. */
+  .upload-drop-zone {
+    padding: 24px 14px 28px;
+  }
+
+  .upload-content-wrapper {
+    gap: 20px;
+  }
+
+  .file-formats-visual img {
+    max-width: 180px;
+  }
+
+  .upload-main-text {
+    font-size: 22px;
+    line-height: 28px;
+  }
+
+  .upload-sub-text {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .browse-files-btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 17px;
+  }
+}
+
+/* Small Mobile Breakpoint */
+@media (max-width: 480px) {
+  .hero {
+    padding: 20px 12px;
+  }
+
+  .hero-container {
+    gap: 24px;
+  }
+
+  .hero-text {
+    gap: 16px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+    line-height: 40px;
+  }
+
+  .hero-subtitle {
+    font-size: 18px;
+    line-height: 26px;
+  }
+
+  .upload-area {
+    min-height: 380px;
+    padding: 6px 10px 10px;
+    gap: 10px;
+    border-width: 2px;
+  }
+
+  .instrument-tabs {
+    padding: 2px 0 0;
+  }
+
+  .instrument-tab {
+    padding: 10px 8px;
+    font-size: 14px;
+    line-height: 19px;
+  }
+
+  .instrument-tab svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .upload-content-top {
+    max-width: 100%;
+    padding: 24px 12px;
+  }
+
+  .upload-controls {
+    max-width: 100%;
+    padding: 0 12px 12px;
+  }
+
+  .upload-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .upload-text h3 {
+    font-size: 20px;
+    line-height: 24px;
+  }
+
+  .upload-drop-zone {
+    padding: 20px 12px 24px;
+  }
+
+  .upload-content-wrapper {
+    gap: 16px;
+  }
+
+  .file-formats-visual img {
+    max-width: 148px;
+  }
+
+  .upload-main-text {
+    font-size: 19px;
+    line-height: 25px;
+  }
+
+  .upload-sub-text {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .browse-files-btn {
+    width: 100%;
+    min-height: 50px;
+    font-size: 16px;
+  }
+}
+
+/* Hide the mobile disclaimer while the expanded result view is on screen */
+.hero-container.success-expanded .hero-disclaimer-mobile {
+  display: none;
+}
+
+/* Success State Specific Styles */
+.success-text {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.success-text h3 {
+  margin: 0;
+}
+
+.filename-text {
+  font-size: 18px !important;
+  line-height: 24px !important;
+  color: var(--color-white);
+  opacity: 1;
+}
+
+.success-controls.compact {
+  gap: 8px;
+  width: 100%;
+}
+
+.download-transcription-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 98px;
+  padding: 1px;
+  border-radius: 6px;
+  background: #012fa7;
+  border: none;
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
+  transition: background 1.2s;
+  font-family: 'Hubot Sans', sans-serif;
+}
+
+.download-transcription-btn:hover {
+  background: #0139c7;
+}
+
+.download-stem-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 98px;
+  padding: 1px;
+  border-radius: 6px;
+  background: var(--color-surface-muted);
+  border: none;
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
+  transition: background 1.2s;
+  font-family: 'Hubot Sans', sans-serif;
+}
+
+.download-stem-btn:hover {
+  background: #6f6e70;
+}
+
+/* Error Overlay */
+.error-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--color-danger);
+  border-radius: 6px;
+  padding: 12px;
+  z-index: 20;
+}
+
+.error-message {
+  color: var(--color-danger);
+  font-size: 16px;
+  margin: 0;
+  text-align: center;
+}
+
+/* Light Mode Overrides */
+[data-theme='light'] .upload-area {
+  border: 1px solid var(--color-border-lighter);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  box-shadow: 0 8px 32px 0 var(--color-shadow), inset 0 1px 1px 0 var(--color-inset-light),
+    inset 0 -1px 1px 0 var(--color-inset-dark);
+}
+
+[data-theme='light'] .upload-area::before {
+  box-shadow: inset 0 0 0px 0.06rem var(--color-inset-light);
+}
+
+[data-theme='light'] .upload-area:hover::before {
+  box-shadow: inset 0 0 0 0.08rem var(--color-inset-light);
+}
+
+[data-theme='light'] .upload-drop-zone {
+  background: rgba(240, 240, 240, 0.35);
+  border: 2.842px dashed var(--color-border-lighter);
+}
+
+[data-theme='light'] .instrument-tab.active {
+  color: var(--color-primary);
+}
+
+/* Cold Start State */
+.upload-area.state-cold_starting {
+  justify-content: center;
+}
+
+.cold-start-pulse {
+  animation: cold-start-pulse-anim 2s ease-in-out infinite;
+}
+
+@keyframes cold-start-pulse-anim {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.cold-start-message {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-white);
+  margin: 0;
+}
+
+.cold-start-sub {
+  font-size: 14px;
+  color: var(--color-muted-foreground);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.cold-start-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-primary) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: cold-start-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes cold-start-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* =========================================================
+   Mobile: post-upload states
+   ---------------------------------------------------------
+   Everything from the success/error/cold-start section above is declared
+   after this file's @media blocks, so those rules win the cascade at every
+   width. Their mobile treatment has to live here, at the end.
+   ========================================================= */
+@media (max-width: 768px) {
+  /* 100vh overshoots the visible viewport on mobile browsers while the URL
+     bar is expanded, so the result card ran past the fold. dvh tracks it. */
+  .upload-area.state-success {
+    min-height: calc(100dvh - 120px);
+  }
+
+  /* 98px download buttons ate a third of the screen; two of them stacked
+     pushed the score itself out of view. */
+  .download-transcription-btn,
+  .download-stem-btn {
+    height: 56px;
+    font-size: 17px;
+    line-height: 22px;
+  }
+
+  .success-controls.compact {
+    flex-direction: column;
+  }
+
+  .success-text {
+    gap: 8px;
+  }
+
+  .filename-text {
+    font-size: 15px !important;
+    line-height: 20px !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The overlay is absolutely positioned 20px off each edge of the card; on a
+     narrow card that left the message ~2 words wide. */
+  .error-overlay {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 10px;
+  }
+
+  .cold-start-message {
+    font-size: 17px;
+  }
+
+  .cold-start-sub {
+    font-size: 13px;
+  }
+
+  /* Cancel read as plain text with no affordance. Give it an outline so it
+     is recognisably a control under a thumb, sized to the label, not the
+     full row, so a stray tap near the progress bar cannot cancel an upload. */
+  .cancel-btn.compact {
+    min-height: 44px;
+    padding: 0 20px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+  }
+}

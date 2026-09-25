@@ -1,0 +1,258 @@
+/* Comparison pages (/compare, /compare/:competitor). Tokens only, so the
+   pages follow the app's light and dark themes. */
+
+.cmp-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+}
+
+.cmp-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding-block: 32px 72px;
+  padding-inline: 20px;
+}
+
+.cmp-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  margin-bottom: 20px;
+}
+
+.cmp-crumbs a {
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+}
+
+.cmp-crumbs a:hover {
+  color: var(--color-foreground);
+  text-decoration: underline;
+}
+
+.cmp-hero {
+  max-width: 760px;
+  margin-bottom: 44px;
+}
+
+.cmp-title {
+  margin: 0 0 14px;
+  font-size: clamp(28px, 4.4vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--color-foreground);
+  text-wrap: balance;
+}
+
+.cmp-lede {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+  max-width: 68ch;
+}
+
+.cmp-main h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.cmp-fit,
+.cmp-lists,
+.cmp-cta,
+.cmp-others {
+  margin-bottom: 48px;
+}
+
+.cmp-fit-grid,
+.cmp-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.cmp-fit-card {
+  padding: 18px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-tinted-background, transparent);
+}
+
+/* The one place the page takes a side: our card gets the accent edge. */
+.cmp-fit-ours {
+  border-color: var(--color-primary, #012fa7);
+}
+
+.cmp-fit-card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.cmp-fit-card p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+}
+
+.cmp-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-muted-foreground);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.cmp-list li {
+  margin-bottom: 8px;
+}
+
+.cmp-tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  margin-bottom: 48px;
+}
+
+.cmp-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 14.5px;
+}
+
+.cmp-caption {
+  caption-side: bottom;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+  border-top: 1px solid var(--color-border);
+}
+
+.cmp-caption a {
+  color: var(--color-foreground);
+}
+
+.cmp-table th,
+.cmp-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+  color: var(--color-foreground);
+}
+
+.cmp-table thead th {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+  background: var(--color-tinted-background, transparent);
+}
+
+.cmp-table tbody th {
+  font-weight: 600;
+  width: 26%;
+}
+
+.cmp-table tbody tr:last-child th,
+.cmp-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.cmp-unlisted {
+  color: var(--color-muted-foreground);
+}
+
+.cmp-cta p {
+  margin: 0 0 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+  max-width: 68ch;
+}
+
+.cmp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cmp-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--color-primary, #012fa7);
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.cmp-btn:hover {
+  opacity: 0.9;
+}
+
+.cmp-btn-quiet {
+  background: transparent;
+  color: var(--color-foreground);
+  border-color: var(--color-border);
+}
+
+.cmp-others ul,
+.cmp-index-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.cmp-others a,
+.cmp-index-list a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--color-foreground);
+  background: var(--color-tinted-background, transparent);
+  font-weight: 600;
+}
+
+.cmp-others a:hover,
+.cmp-index-list a:hover {
+  border-color: var(--color-muted-foreground);
+}
+
+.cmp-index-list span {
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+}
+
+@media (max-width: 640px) {
+  .cmp-main {
+    padding-inline: 16px;
+  }
+}

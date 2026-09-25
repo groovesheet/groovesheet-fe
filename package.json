@@ -1,60 +1,45 @@
 {
   "name": "groovesheet-fe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "indexnow": "node scripts/indexnow.mjs",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
-    "@supabase/supabase-js": "^2.105.3",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
     "@tonejs/midi": "^2.0.28",
     "canvas-confetti": "^1.9.4",
-    "i18next": "^26.2.0",
-    "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^0.469.0",
+    "next": "16.3.5",
+    "next-intl": "^4.14.5",
     "opensheetmusicdisplay": "^1.9.3",
     "osmd-extended": "file:vendor/osmd-extended",
     "posthog-js": "^1.425.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-i18next": "^17.0.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-icons": "^5.5.0",
-    "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.9.6",
-    "react-scripts": "5.0.1",
-    "rehype-sanitize": "^6.0.0",
-    "remark-gfm": "^4.0.1",
-    "soundfont-player": "^0.12.0",
-    "tailwindcss": "^3.4.18"
-  },
-  "scripts": {
-    "start": "NODE_OPTIONS=--max-http-header-size=81920 react-scripts start",
-    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build && node scripts/prerender.mjs",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "build:spa": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "prerender": "node scripts/prerender.mjs"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "server-only": "^0.0.1",
+    "soundfont-player": "^0.12.0"
   },
   "devDependencies": {
-    "@sparticuz/chromium": "^149.0.0",
-    "autoprefixer": "^10.4.21",
-    "http-proxy-middleware": "^3.0.5",
-    "postcss": "^8.5.6",
-    "puppeteer-core": "^25.5.0"
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.5",
+    "jsdom": "^30.1.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   }
 }

@@ -1,0 +1,445 @@
+{
+  "nav": {
+    "products": "产品",
+    "musicTranscription": "音乐转谱",
+    "stemSplitter": "音轨分离",
+    "midiConverter": "MIDI 转换器",
+    "explore": "探索",
+    "pricing": "价格",
+    "help": "帮助",
+    "about": "关于",
+    "blog": "博客",
+    "login": "登录",
+    "account": "账户",
+    "profile": "个人资料",
+    "history": "转谱记录",
+    "billing": "账单与用量",
+    "signOut": "退出登录",
+    "toggleMenuAria": "切换菜单"
+  },
+  "theme": {
+    "toggleAria": "切换深色/浅色模式",
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式"
+  },
+  "language": {
+    "selectAria": "选择语言",
+    "searchPlaceholder": "搜索语言",
+    "noResults": "未找到语言"
+  },
+  "footer": {
+    "explore": "探索",
+    "pricing": "价格",
+    "api": "API",
+    "help": "帮助",
+    "support": "技术支持",
+    "changelog": "更新日志",
+    "apps": "应用",
+    "desktopApp": "桌面端",
+    "iosApp": "iOS 应用",
+    "androidApp": "Android 应用",
+    "copyright": "© {year} GrooveSheet",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "refund": "退款政策"
+  },
+  "hero": {
+    "title": "音频输入,乐谱输出。",
+    "subtitle": "上传音频,几分钟内获得准确、可编辑、可打印的乐谱。",
+    "disclaimerPrefix": "上传文件即表示您同意我们的 ",
+    "termsOfService": "服务条款",
+    "dragDrop": "拖入音频文件",
+    "tapToUpload": "点击上传音频文件",
+    "fileTypes": "MP3、WAV、FLAC、M4A,最大 {size}MB",
+    "browseFiles": "浏览文件",
+    "chooseFile": "选择文件",
+    "uploading": "上传中...",
+    "startingServer": "正在排队",
+    "inQueue": "正在排队",
+    "inQueueBody": "分离与转录一首歌大约需要 20\u201330 分钟处理时间，且任务逐个执行。你的歌曲已进入队列，会自动处理\u2014\u2014可以放心关闭此页面，稍后在“转录历史”查看。",
+    "viewHistory": "查看转录历史",
+    "reconnecting": "正在重新连接服务器……你的任务仍在运行，稍后会出现在转录历史中。",
+    "transcribing": "转谱中...",
+    "cancel": "取消",
+    "instruments": {
+      "vocal": "人声",
+      "drums": "鼓",
+      "piano": "钢琴",
+      "guitar": "吉他",
+      "bass": "贝斯"
+    },
+    "errors": {
+      "fileFormat": "暂不支持该格式\u2014\u2014目前支持 MP3、WAV、FLAC、OGG 和 M4A。",
+      "fileSize": "文件过大。最大 32MB。"
+    }
+  },
+  "features": {
+    "title": "几秒出谱,不再等数周。",
+    "subtitle": "为速度与精度而生,让您专注于练习、教学和演出。",
+    "card1": {
+      "title": "上传你的曲目",
+      "body": "拖入一首 MP3(或选择文件)。我们自动识别速度、拍号和鼓点。单文件最大 {size} MB。"
+    },
+    "card2": {
+      "title": "即时自定义",
+      "body": "调整速度图、小节线、鼓组映射、ghost note 灵敏度,实时预览改动。"
+    },
+    "card3": {
+      "title": "导出!",
+      "body": "导出干净的 PDF、MusicXML 或 MIDI 乐谱。打印、分享,或导入你的编辑器。"
+    },
+    "stems": {
+      "title": "几分钟得到干净分轨,而非几小时。",
+      "subtitle": "专注分离质量,让你只用需要的声部来编曲、排练与练习。",
+      "card1": {
+        "title": "上传音频",
+        "body": "拖入 MP3、WAV 或 FLAC(或选择文件)。单文件最大 {size} MB。"
+      },
+      "card2": {
+        "title": "选择声部",
+        "body": "分离人声、鼓、贝斯、吉他或钢琴。下载前可逐轨试听。"
+      },
+      "card3": {
+        "title": "下载",
+        "body": "导出可直接用于 DAW、练习循环或伴奏的分离音频。"
+      }
+    },
+    "midi": {
+      "title": "几秒完成音频转 MIDI,而非几周。",
+      "subtitle": "兼顾速度与准确度,无需再靠耳朵扒谱即可编曲、编辑与制作。",
+      "card1": {
+        "title": "上传音频",
+        "body": "拖入 MP3、WAV 或 FLAC(或选择文件)。单文件最大 {size} MB。"
+      },
+      "card2": {
+        "title": "检查音符",
+        "body": "导出前可在实时预览中查看识别到的音高、速度与节奏。"
+      },
+      "card3": {
+        "title": "导出",
+        "body": "下载可直接用于 DAW 的 MIDI,需要乐谱时还可导出 PDF 与 MusicXML。"
+      }
+    }
+  },
+  "pricing": {
+    "title": "人人负担得起的方案。",
+    "subtitle": "今天免费试用。需要更高额度和高级功能时再升级,价格合理。",
+    "tabs": {
+      "plans": "套餐",
+      "topups": "充值"
+    },
+    "billing": {
+      "monthly": "月付",
+      "annual": "年付",
+      "threeMonthsFree": "立省 3 个月"
+    },
+    "processing": "处理中...",
+    "perMonth": "/月",
+    "perUserMonth": "用户/月",
+    "oneTime": "一次性",
+    "popular": "最受欢迎",
+    "plans": {
+      "free": {
+        "name": "免费版",
+        "badge": "爱好者",
+        "subtitle": "适合个人",
+        "cta": "免费开始",
+        "feature1": "每首歌曲可免费预览 10 秒",
+        "feature2": "完整歌曲需付费套餐或加时包",
+        "feature3": "单文件 {size} MB",
+        "feature4": "标准队列"
+      },
+      "lite": {
+        "name": "轻享版",
+        "badge": "专业",
+        "subtitle": "适合小团队",
+        "cta": "订阅",
+        "feature1": "每月 120 分钟",
+        "feature2": "结果下载(PDF、MusicXML、MIDI)",
+        "feature3": "单文件 {size} MB",
+        "feature4": "批量处理",
+        "feature5": "在线聊天优先支持"
+      },
+      "pro": {
+        "name": "专业版",
+        "badge": "企业",
+        "subtitle": "为公司设计",
+        "cta": "订阅",
+        "feature1": "包含轻享版全部功能",
+        "feature2": "快速队列",
+        "feature3": "单文件 {size} MB",
+        "feature4": "新功能抢先体验"
+      }
+    },
+    "topups": {
+      "starter": {
+        "name": "入门包",
+        "badge": "入门",
+        "subtitle": "快速补给",
+        "cta": "购买",
+        "feature1": "新增 30 分钟",
+        "feature2": "永不过期",
+        "feature3": "包含所有格式",
+        "feature4": "标准队列"
+      },
+      "plus": {
+        "name": "增强包",
+        "badge": "增强",
+        "subtitle": "最具性价比",
+        "cta": "购买",
+        "feature1": "新增 60 分钟",
+        "feature2": "永不过期",
+        "feature3": "包含所有格式",
+        "feature4": "优先队列"
+      },
+      "power": {
+        "name": "豪华包",
+        "badge": "豪华",
+        "subtitle": "最大补给",
+        "cta": "购买",
+        "feature1": "新增 120 分钟",
+        "feature2": "永不过期",
+        "feature3": "包含所有格式",
+        "feature4": "优先队列"
+      }
+    },
+    "minutesPerMonth": "每月 {minutes} 分钟",
+    "minutesAdded": "增加 {minutes} 分钟",
+    "canceledNotice": "已取消结账，未向您收费。",
+    "dismiss": "关闭"
+  },
+  "testimonials": {
+    "title": "音乐人与教育者的信赖之选",
+    "subtitle": "看看大家如何使用我们。真实用户,真实曲目,练习更快,谱子更干净。",
+    "roles": {
+      "sessionDrummer": "录音室鼓手",
+      "drumTeacher": "鼓老师",
+      "bandleader": "乐队队长",
+      "student": "学生",
+      "producer": "制作人",
+      "musicEducator": "音乐教师",
+      "contentCreator": "内容创作者",
+      "studioOwner": "工作室主理人",
+      "beginner": "初学者"
+    }
+  },
+  "faq": {
+    "title": "常见问题",
+    "sections": {
+      "overview": {
+        "title": "概览",
+        "questions": {
+          "signup": {
+            "q": "如何注册/登录?",
+            "a": "点击右上角的注册/登录按钮创建账户或使用 SSO 登录。登录后即可在账户页使用付费功能。"
+          },
+          "split": {
+            "q": "如何切分完整曲目?",
+            "a": "上传完整曲目,在编辑器中使用切分控件选择片段,然后逐段处理。"
+          }
+        }
+      },
+      "packs": {
+        "title": "套餐与分钟数",
+        "questions": {
+          "expiration": {
+            "q": "付费套餐的有效期是多久?",
+            "a": "除非套餐说明另有规定,付费套餐自购买之日起 12 个月内有效。"
+          },
+          "minutesMean": {
+            "q": "套餐中的“分钟数”是什么意思?",
+            "a": "分钟数表示套餐包含的总处理音频时长;曲目越长按比例消耗的分钟数越多。"
+          },
+          "deducted": {
+            "q": "分钟数如何从账户中扣除?",
+            "a": "按处理音频长度扣除,不足一分钟按秒向上取整,详见账单说明。"
+          },
+          "remaining": {
+            "q": "在哪里查看剩余分钟数?",
+            "a": "在账户面板的“账单与用量”中可以查看剩余分钟数。"
+          },
+          "jobFails": {
+            "q": "任务失败怎么办?",
+            "a": "失败任务会自动重试;若仍失败则不会扣分钟,系统会显示失败通知并提供重试或联系客服的选项。"
+          },
+          "addMinutes": {
+            "q": "如何为账户增加分钟数?",
+            "a": "前往价格页选择加购包或升级到更高套餐以增加分钟数。"
+          }
+        }
+      },
+      "features": {
+        "title": "功能",
+        "questions": {
+          "quality": {
+            "q": "如何提高乐谱质量?",
+            "a": "使用更高音质的录音、减少背景噪声、保证清晰的乐器分离,效果最好。"
+          },
+          "live": {
+            "q": "现场录音可以用吗?",
+            "a": "现场录音可处理但结果不稳定;录音室级或干净的录音效果最好。"
+          },
+          "meters": {
+            "q": "支持变拍和速度变化吗?",
+            "a": "支持\u2014\u2014系统会识别速度变化和复杂拍号,节奏越清晰准确度越高。"
+          },
+          "format": {
+            "q": "结果以什么格式提供?",
+            "a": "根据您的套餐,可以下载 PDF、MusicXML 和 MIDI。"
+          }
+        }
+      }
+    }
+  },
+  "login": {
+    "welcome": "欢迎使用 GrooveSheet",
+    "continueWith": "使用以下方式继续",
+    "subscribeLong": "订阅 GrooveSheet 更新,不错过任何节奏!",
+    "subscribeShort": "订阅 GrooveSheet 更新",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple",
+    "email": "邮箱",
+    "termsPrefix": "点击「使用 Google / Apple / Facebook / 邮箱继续」即表示您同意我们的 ",
+    "privacyPolicy": "隐私政策",
+    "back": "返回",
+    "emailPrompt": "我们将向以下邮箱发送 6 位验证码:",
+    "emailPlaceholder": "groovesheet@gmail.com",
+    "confirm": "确认",
+    "codePrompt": "请输入 6 位验证码:",
+    "closeAria": "关闭弹窗"
+  },
+  "campaign": {
+    "fallbackGroup": "你的社团",
+    "hero": {
+      "title": "{minutes} 分钟免费额度，为 {name} 准备。",
+      "sub": "注册账号，{minutes} 分钟的处理额度立即到账，大约 {lo}\u2013{hi} 首完整歌曲。无需信用卡，也不是试用。",
+      "subWithInviter": "{inviter} 邀请你加入。注册账号，{minutes} 分钟的处理额度立即到账，大约 {lo}\u2013{hi} 首完整歌曲。无需信用卡，也不是试用。"
+    },
+    "assurance": {
+      "noCard": "无需信用卡",
+      "instant": "注册即到账",
+      "noCharge": "不会自动扣费"
+    },
+    "codeApplied": "优惠码已自动应用",
+    "continueWith": "选择登录方式",
+    "email": "邮箱",
+    "back": "返回",
+    "emailPrompt": "我们会向你的邮箱发送 6 位验证码，无需记密码。",
+    "emailPlaceholder": "you@school.edu",
+    "sendCode": "发送验证码",
+    "sending": "发送中…",
+    "codePrompt": "请输入 6 位验证码",
+    "digitAria": "第 {n} 位，共 6 位",
+    "confirm": "确认",
+    "confirming": "验证中…",
+    "claiming": "领取中…",
+    "optIn": "订阅 GrooveSheet 更新，不错过新功能。",
+    "disclaimerA": "继续即表示你同意我们的",
+    "disclaimerB": "与",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "errors": {
+      "badEmail": "请输入有效的邮箱地址。",
+      "sendFailed": "验证码没能发出去。检查邮箱地址后再试一次。",
+      "shortCode": "请输入完整的 6 位验证码。",
+      "badCode": "验证码不对。检查一下，或者重新获取一个。",
+      "authFailed": "登录没有完成，请再试一次。",
+      "claimFailed": "额度没能加上。你的账号没问题，稍后再试一次。"
+    },
+    "balanceLabel": "处理额度",
+    "balanceSub": "当前可用",
+    "grantedLabel": "大约",
+    "grantedSub": "按每首 4 分钟估算",
+    "success": {
+      "title": "{minutes} 分钟已到账。",
+      "body": "额度来自 {name} 的链接，已经存入你的账号。不会过期，用完也不会自动扣费。",
+      "cta": "上传一首歌",
+      "cta2": "查看账号"
+    },
+    "signedIn": {
+      "title": "已登录。领取你的 {minutes} 分钟。",
+      "body": "当前账号：{email}。这个链接可以给你的账号充 {minutes} 分钟额度，每个账号只能领取一次。",
+      "cta": "领取 {minutes} 分钟",
+      "cta2": "换个账号",
+      "bodyNoEmail": "这个链接可以给你的账号充 {minutes} 分钟额度，每个账号只能领取一次。"
+    },
+    "ineligible": {
+      "title": "你的套餐已经包含这些额度。",
+      "body": "活动额度只面向免费版账号。你当前是付费套餐，本身就含每月额度，所以这里没有需要领取的东西。如果想把链接转给 {name} 里还没注册的人，直接转发即可。",
+      "cta": "回到工作区",
+      "cta2": "复制链接"
+    },
+    "redeemed": {
+      "title": "已领取！{name} 额度已经在你的账号里。",
+      "body": "这个账号已经领过 {name} 的额度\u2014\u2014每个账号只能领一次，而你没用完的每一分钟都还在，随时可以用来做下一首歌。",
+      "cta": "上传一首歌",
+      "cta2": "查看充值包"
+    },
+    "next": {
+      "title": "先做这三件事",
+      "s1": "选一首歌",
+      "s1b": "MP3、WAV、FLAC 或 OGG，最大 32 MB。",
+      "s2": "选一个乐器",
+      "s2b": "鼓、钢琴、贝斯或吉他\u2014\u2014也可以先分轨。",
+      "s3": "把谱带走",
+      "s3b": "每个结果都能下载 PDF、MusicXML 和 MIDI。"
+    },
+    "proof": {
+      "kicker": "你会得到什么",
+      "title": "上传你们在练的那首歌，拿到鼓谱。",
+      "body": "丢一个 MP3，选一个乐器，几秒后屏幕上就是真正的乐谱\u2014\u2014速度、拍号、每一下击打。可导出 PDF、MusicXML 或 MIDI。"
+    },
+    "what": {
+      "title": "它能做三件事",
+      "f1": "乐谱转写",
+      "f1b": "输入音频，输出乐谱\u2014\u2014鼓、钢琴、贝斯或吉他。",
+      "f2": "乐器分轨",
+      "f2b": "把混音拆成单独的乐器轨，只跟着贝斯练也行。",
+      "f3": "MIDI 生成",
+      "f3b": "得到可以在 DAW 或打谱软件里逐音修改的 MIDI。"
+    },
+    "credit": {
+      "title": "{minutes} 分钟能用多久",
+      "body": "额度是一个共用池，按音频时长计算。转写、分轨、MIDI 随你怎么搭配。一首 4 分钟的歌就扣 4 分钟，用哪项服务都一样。",
+      "refund": "处理失败会自动退回额度，不会白白消耗。",
+      "unit": "分钟音频",
+      "songs": "约 {lo}\u2013{hi} 首完整歌曲",
+      "note": "免费版没有任何额度，只能听 10 秒预览。"
+    },
+    "faq": {
+      "title": "常见问题",
+      "section": "注册之前",
+      "q1": "我的乐器支持吗？",
+      "a1": "目前支持鼓、钢琴、贝斯和吉他。录音室版本输出最干净；手机现场录音也能用，但效果不一定。",
+      "q2": "可以上传什么文件？",
+      "a2": "MP3、WAV、FLAC 和 OGG，单个文件最大 32 MB。",
+      "q3": "{minutes} 分钟用完之后会怎样？",
+      "a3": "不会扣费，账号也不会失效。你会回到免费版的 10 秒预览，想继续用再充值就行。",
+      "q4": "能导入 MuseScore 吗？",
+      "a4": "可以。每个结果都能下载 PDF、MusicXML 和 MIDI，MuseScore、Sibelius 和任何 DAW 都能打开。"
+    },
+    "bottom": {
+      "title": "领取你的 {minutes} 分钟。",
+      "body": "大概二十秒。无需信用卡，也不会事后扣费。",
+      "cta": "返回注册"
+    },
+    "invalid": {
+      "title": "这个优惠码没有匹配到任何活动。",
+      "sub": "链接可能是手敲的，或者在聊天里被截断了。找发链接的人再确认一下。你仍然可以先注册一个免费账号，听听 10 秒预览。",
+      "bottomTitle": "没有优惠码也能开始。",
+      "bottomBody": "免费账号可以听 10 秒预览，随时充值。"
+    },
+    "expired": {
+      "title": "{name} 的活动已经结束。",
+      "sub": "这个活动已经结束，{minutes} 分钟的免费额度不再发放。你仍然可以在下面注册免费账号\u2014\u2014如果你们社团想要一个新的优惠码，跟我们说一声。",
+      "bottomTitle": "想要一个新的社团优惠码？",
+      "bottomBody": "告诉我们社团的名字和大概人数，我们会开一个。",
+      "bottomCta": "联系我们"
+    },
+    "anim": {
+      "drop": "拖入一个 MP3",
+      "sheet": "乐谱"
+    }
+  }
+}

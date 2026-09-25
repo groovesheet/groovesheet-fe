@@ -1,0 +1,155 @@
+/* Instrument hub pages (/sheet-music/:instrument, /stems/:instrument).
+   Tokens only, so the pages follow the app's light and dark themes. */
+
+.hub-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+}
+
+.hub-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-block: 32px 72px;
+  padding-inline: 20px;
+}
+
+.hub-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  margin-bottom: 20px;
+}
+
+.hub-crumbs a {
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+}
+
+.hub-crumbs a:hover {
+  color: var(--color-foreground);
+  text-decoration: underline;
+}
+
+.hub-hero {
+  max-width: 760px;
+  margin-bottom: 40px;
+}
+
+.hub-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+.hub-title {
+  margin: 0 0 14px;
+  font-size: clamp(28px, 4.4vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--color-foreground);
+  text-wrap: balance;
+}
+
+.hub-lede {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
+  max-width: 64ch;
+}
+
+.hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.hub-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--color-primary, #012fa7);
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.hub-cta:hover {
+  opacity: 0.9;
+}
+
+.hub-cta-quiet {
+  background: transparent;
+  color: var(--color-foreground);
+  border-color: var(--color-border);
+}
+
+.hub-empty {
+  padding: 32px 0;
+  color: var(--color-muted-foreground);
+}
+
+.hub-siblings {
+  margin-top: 56px;
+}
+
+.hub-siblings h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.hub-siblings ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.hub-siblings a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--color-foreground);
+  background: var(--color-tinted-background, transparent);
+}
+
+.hub-siblings a:hover {
+  border-color: var(--color-muted-foreground);
+}
+
+.hub-siblings strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.hub-siblings span {
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+
+@media (max-width: 640px) {
+  .hub-main {
+    padding-inline: 16px;
+  }
+}

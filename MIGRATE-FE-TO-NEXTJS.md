@@ -572,3 +572,133 @@ independent of rendering. Its OG-page and prerender sections should go. Keep
 - Trust `supabase.auth.getSession()` in server code, ever
 - Deploy by CLI. This team is Git-only for production and fails silently;
   see `content-app/README.md`
+
+---
+
+## 9. What actually happened, and what to do differently
+
+Written 2026-09-23, after running this plan end to end on groovesheet.net.
+The migration took one orchestrator and ten agents; the numbers below are
+measured from that run. Read this section first when doing the same thing to
+another site: it is the part that saves the time.
+
+### 9.1 The plan held. Three things were missing from it
+
+The wave structure worked: Wave 0 then eight packages then an integrator
+produced a build that passed `tsc`, lint, 83 tests and 124 of the section 7
+checks on the first integration pass. What the brief did not say, and should
+have:
+
+1. **Name the compatibility shims in Wave 0, explicitly.** The single highest
+   leverage decision was giving Wave 0 a `useTranslation()` that wraps
+   next-intl with the old signature, and a `lib/navigation` with the old
+   router names. Porting ~150 components then meant changing imports, not
+   call sites. Do this before any page work starts, and say so in the brief.
+2. **Say where private page components live.** "P3 owns the marketing routes"
+   is not enough: two agents will both reach for `components/Hero.tsx`. The
+   convention that worked is a `_components` folder inside each owned route
+   directory, and it belongs in the constitution, not in an agent's head.
+3. **Budget for a stub protocol.** Wave 0 has to import things nobody has
+   written yet (the login modal, the shared UI). Let it create clearly marked
+   stub files inside other packages' directories and require it to list them.
+   Without that rule an agent either blocks or silently invents a second
+   version of a component someone else owns.
+
+### 9.2 Verification is worth more than another feature package
+
+`scripts/verify.mjs` (P8) found more real problems than any review would
+have, because the checks are the acceptance criteria in executable form: a
+distinct `<title>` per route, an `<h1>` with JavaScript disabled, the
+signed-in and signed-out HTML of a cached page compared byte for byte, and a
+grep for server-side `getSession()`. Write it first, run it against every
+environment, and treat a warning as a finding.
+
+Two things it could not check, and which needed a browser and a person:
+
+- **OAuth.** The PKCE round trip only proves itself against a real provider
+  on a real origin. It passed on the preview deploy, which is where to test
+  it, not locally.
+- **Anything behind CORS.** The API allows the production origin and
+  localhost, so on a Vercel preview every authenticated page shows a fetch
+  failure that looks exactly like a migration bug and is not. Know this
+  before it costs an hour, or add the preview origin to the API's allow list
+  at the start.
+
+### 9.3 The bugs that cost the most time were all infrastructure, not code
+
+None of these were React problems:
+
+- **The asset path of a second app.** `/blog` and `/internal` were rewritten
+  to a second Vercel project, but `/_next/*` was not, so every script tag
+  returned the main app's `index.html` with a 200. The pages rendered and
+  nothing worked. The fix is an `assetPrefix` on the second app plus one more
+  rewrite, never a rewrite of `/_next` itself, which the main app will claim
+  the moment it becomes a Next app. **Test for it by fetching a script tag's
+  URL and asserting the content type, not the status.** A 200 proves nothing.
+- **Server actions behind a rewrite.** The same second app rejected every
+  portal action, because Next compares the request Origin against the host
+  and a rewrite makes those differ. `experimental.serverActions.allowedOrigins`
+  is the fix.
+- **Production config that cannot be changed twice.** Switching the Vercel
+  framework preset or renaming `REACT_APP_*` to `NEXT_PUBLIC_*` in the
+  dashboard breaks whichever app is live: the old one before the merge, the
+  new one after. Put `"framework": "nextjs"` in `vercel.json` and have
+  `next.config` fall back to the old variable names, so the cutover is the
+  merge itself and needs no dashboard change and no coordination.
+
+### 9.4 Framework behaviour to expect on the next one
+
+- `notFound()` thrown from a page in Next 16 returns a correct 404 status
+  with an empty `__next_error__` body: the not-found UI renders client side.
+  Reproduced in a seven-file app with no custom layout, so it is the
+  framework. Unmatched URLs are fine.
+- A path with a dot that gets past the proxy matcher can match `[locale]` and
+  be written into the ISR cache as a 404 entry, one per junk URL. Handle
+  non-locale dotted paths in the proxy.
+- `'use client'` is not "browser only": those modules still execute during
+  the build. Anything touching `window`, `AudioContext` or `canvas` at import
+  time needs `next/dynamic` with `ssr: false`, from inside a file that is
+  already a client component.
+- Presigned media URLs and ISR fight: a cached page can serve an expired URL.
+  Refetch on the client rather than shortening the revalidate window.
+
+### 9.5 Porting a subsystem verbatim works, with one caveat
+
+The 39 player files moved unchanged behind `ssr: false` wrappers and did not
+break. The caveat is lint: a modern config finds 126 errors in old code that
+you have forbidden anyone to touch. Decide up front that the verbatim
+directory gets a lint override, or the rule and the build contradict each
+other on day one. The same applies to house style rules such as the em dash
+ban: exempt the verbatim tree, or you will be rewriting UI copy you promised
+not to touch.
+
+### 9.6 Multi-agent economics, measured
+
+Ten agents, 3.28M tokens, 710 tool calls, about 70 minutes of wall clock for
+the whole migration, plus one integrator pass. What made that work:
+
+- **A frozen contract file.** `lib/api.ts` and `lib/auth` keeping their exact
+  export names meant no agent had to wait for another to decide anything.
+- **Disjoint file ownership, written down before dispatch.** The two
+  collisions that did happen were both in files the brief forgot to assign
+  (`app/[locale]/not-found.tsx` and one shared result view).
+- **An integrator with permission to edit anything.** Parallel agents leave
+  seams. One pass with a wide remit closed them in a single run.
+- **Telling agents not to run the build.** Concurrent `next build` calls
+  fight over `.next`. Give them `tsc --noEmit` and lint; give the build to
+  the integrator.
+
+### 9.7 The order that works for a site like this
+
+1. Fix the infrastructure that is already broken, and verify it in
+   production, before starting the rewrite. It is the smallest change with
+   the biggest payoff, and it is the thing you will otherwise blame the
+   rewrite for.
+2. Wave 0: scaffold, contracts, compat shims, one proof route, verify with
+   JavaScript disabled.
+3. The packages in parallel, verification harness among them.
+4. Integrate, then a preview deploy, then OAuth and anything CORS bound.
+5. Cut over by merge, with all production config changes already encoded in
+   the repo.
+6. Only then delete the old app, the prerender script and the backend's
+   crawler workarounds.

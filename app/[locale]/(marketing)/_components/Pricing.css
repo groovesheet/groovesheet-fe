@@ -1,0 +1,574 @@
+.pricing {
+  width: 100%;
+  padding: 80px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pricing-container {
+  width: 100%;
+  max-width: 1190px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.pricing-header-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pricing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+}
+
+.pricing-title-wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+.pricing-title {
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 52px;
+  letter-spacing: -0.8px;
+  margin: 0;
+}
+
+.pricing-description {
+  width: 100%;
+  max-width: 430px;
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0;
+}
+
+.pricing-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--color-border);
+  position: relative;
+}
+
+.pricing-tab {
+  flex: 1;
+  padding: 0 46px 4px 46px;
+  background: none;
+  border: none;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  cursor: pointer;
+  transition: color 1.2s ease;
+}
+
+.pricing-tab.active {
+  color: var(--color-foreground);
+}
+.pricing-tab-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  /* span half the tabs container (works well when there are two equally sized tabs) */
+  width: 50%;
+  height: 2px;
+  background: var(--color-muted-foreground);
+  transition: left 0.3s ease;
+}
+
+.pricing-toggle-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.pricing-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 12px;
+  background-color: var(--color-panel2);
+  position: relative;
+}
+
+.toggle-option {
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.toggle-option.active {
+  color: var(--color-foreground);
+}
+
+.toggle-option.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-panel3);
+  border-radius: 8px;
+  z-index: -1;
+}
+
+.toggle-option .highlight {
+  color: var(--color-primary);
+}
+
+.pricing-cards {
+  display: flex;
+  gap: 24px;
+}
+
+.pricing-card {
+  flex: 1;
+  border-radius: 13px;
+  background: var(--color-panel2);
+  border: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-card.featured {
+  padding: 0;
+  border-radius: 16px;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  position: relative;
+}
+
+.popular-badge {
+  width: 100%;
+  background-color: var(--color-primary);
+  color: var(--color-button-light);
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20.8px;
+  text-align: center;
+  padding: 12px 0 8px 0;
+  border-radius: 13px 13px 0 0;
+}
+
+.pricing-card-inner {
+  margin: 12px;
+  border-radius: 13px;
+  background: var(--color-panel2);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pricing-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 16px 16px 16px 16px;
+  background-color: var(--color-panel1);
+  border: 1px solid var(--color-border-light);
+}
+
+.pricing-card-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plan-name {
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 31.2px;
+  margin: 0;
+}
+
+.plan-badge {
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.pricing-card-price {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 62px;
+}
+
+.price {
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 48px;
+  font-weight: 300;
+  line-height: 62.4px;
+}
+
+.period {
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20.8px;
+  padding-bottom: 10px;
+}
+
+.pricing-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 120px;
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18.2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+/* Remove default browser focus outline (black) for these buttons. Replace with custom focus styles if accessibility
+   requires a visible focus state (e.g. box-shadow or border color). */
+.pricing-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.pricing-btn.outline {
+  background-color: transparent;
+  color: var(--color-foreground);
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--color-border-light-mode) !important;
+  background-clip: padding-box;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .pricing-btn.outline {
+  border: 1px solid var(--color-border-lighter) !important;
+}
+
+.pricing-btn.outline:hover {
+  background-color: var(--color-surface-light);
+}
+
+.pricing-btn.primary {
+  background: var(--color-primary);
+  color: var(--color-button-light);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border-light-mode);
+  background-clip: padding-box;
+  box-shadow: none;
+}
+
+[data-theme='dark'] .pricing-btn.primary {
+  border: 1px solid transparent;
+}
+
+/* Guard rails: prevent any inherited focus rings or thick outlines on pricing buttons */
+.pricing-card .pricing-btn {
+  border-width: 1px !important;
+  border-style: solid !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-clip: padding-box;
+}
+
+[data-theme='light'] .pricing-card .pricing-btn.outline {
+  border-color: var(--color-border-light-mode) !important;
+  background-color: transparent;
+}
+
+[data-theme='dark'] .pricing-card .pricing-btn.outline {
+  border-color: var(--color-border-lighter) !important;
+  background-color: transparent;
+}
+
+[data-theme='light'] .pricing-card .pricing-btn.primary {
+  border-color: var(--color-border-light-mode) !important;
+}
+
+[data-theme='dark'] .pricing-card .pricing-btn.primary {
+  border-color: transparent !important;
+}
+
+.pricing-btn.primary:hover {
+  background: rgba(1, 56, 192, 1);
+}
+
+.pricing-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Remove any browser default edges/appearance for these buttons */
+.pricing-btn,
+.pricing-btn.outline,
+.pricing-btn.primary {
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: none;
+}
+
+/* Ensure focus/active states don't show a black outline; keep accessible focus styling if you want to add one later */
+.pricing-btn:focus,
+.pricing-btn:active,
+.pricing-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Firefox inner focus fix */
+.pricing-btn::-moz-focus-inner {
+  border: 0;
+}
+
+.pricing-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 23px 24px 24px 24px;
+  background-color: var(--color-panel2);
+  border-top: none;
+  border-radius: 0 0 13px 13px;
+}
+
+.plan-subtitle {
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 23.4px;
+  margin: 0;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20.8px;
+}
+
+/* Muted foreground for Pro plan feature list */
+.pricing-card:nth-child(3) .feature-item {
+  color: var(--color-muted-foreground);
+}
+
+.pricing-card:nth-child(3) .feature-item svg path {
+  stroke: currentColor;
+}
+
+/* Muted foreground for Lite and Free plan feature lists */
+.pricing-card:nth-child(1) .feature-item,
+.pricing-card:nth-child(2) .feature-item {
+  color: var(--color-muted-foreground);
+}
+
+.pricing-card:nth-child(1) .feature-item svg path,
+.pricing-card:nth-child(2) .feature-item svg path {
+  stroke: currentColor;
+}
+
+.feature-item svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 15px;
+}
+
+@media (max-width: 1024px) {
+  .pricing-header {
+    flex-direction: column;
+    align-items: flex-start;
+    /* Row gap becomes vertical air between a heading and its own subtitle. */
+    gap: 14px;
+  }
+
+  .pricing-title-wrapper,
+  .pricing-description {
+    max-width: 100%;
+  }
+
+  .pricing-cards {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .pricing {
+    padding: 60px 0;
+  }
+
+  .pricing-title {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .pricing-description {
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .pricing-tab {
+    padding: 0 20px 4px 20px;
+    font-size: 20px;
+  }
+
+  .pricing-toggle {
+    width: 100%;
+  }
+
+  .toggle-option {
+    flex: 1;
+    text-align: center;
+    /* "Annually · 3 Months Free" wrapped to two lines while "Monthly" stayed
+       on one, so the two halves of the pill rendered at different heights.
+       Centre both and let the pill grow to the taller label. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  /* Stronger rules to remove any visible edge/outline around the outline buttons */
+  .pricing-btn.outline {
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+    background-clip: padding-box;
+  }
+
+  .pricing-btn.outline svg {
+    /* ensure SVG doesn't add any stroke outside bounds */
+    display: block;
+  }
+
+  .pricing-btn.outline:focus,
+  .pricing-btn.outline:active,
+  .pricing-btn.outline:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .plan-name {
+    font-size: 20px;
+  }
+
+  .price {
+    font-size: 40px;
+    line-height: 52px;
+  }
+}
+
+/* Light Mode Overrides */
+[data-theme='light'] .pricing-card:not(.featured) {
+  background-color: var(--color-panel2);
+}
+
+[data-theme='light'] .popular-badge {
+  color: var(--color-white);
+}
+
+[data-theme='light'] .pricing-btn.primary:hover {
+  background: rgba(0, 82, 214, 1);
+}
+
+/* Subtle, non-error notice shown when Stripe returns the user via ?canceled */
+.pricing-canceled-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.pricing-canceled-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pricing-canceled-dismiss:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-foreground);
+}
+
+.pricing-canceled-dismiss:focus,
+.pricing-canceled-dismiss:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  /* At 320-360px the annual label needs the extra room more than the pill
+     needs its padding. */
+  .toggle-option {
+    padding: 8px 6px;
+    font-size: 12px;
+    line-height: 16px;
+  }
+}

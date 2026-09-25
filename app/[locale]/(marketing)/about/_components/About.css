@@ -1,0 +1,916 @@
+/* About Page Styles */
+
+.about-page {
+  background: var(--color-background);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.about-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.about-content {
+  max-width: 1414px;
+  width: 100%;
+  padding: 40px 0 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+}
+
+/* Hero Section */
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.about-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  align-items: center;
+}
+
+.about-label {
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
+
+.about-title {
+  font-family: var(--font-family-sans);
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 78px;
+  color: var(--color-text);
+  text-align: center;
+  max-width: 866px;
+  margin: 0;
+}
+
+.about-description {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 24px;
+  color: var(--color-text);
+  text-align: center;
+  max-width: 570px;
+  margin: 0;
+}
+
+.about-images {
+  display: flex;
+  gap: 36px;
+  height: 551px;
+}
+
+.about-image-large {
+  flex: 1;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  background: var(--color-panel1);
+}
+
+.about-image-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-image-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  min-height: 0;
+}
+
+.about-image-row {
+  flex: 1;
+  display: flex;
+  gap: 36px;
+  min-height: 0;
+}
+
+.about-image-small {
+  flex: 1;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.about-image-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-image-bottom {
+  flex: 1;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.about-image-bottom img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center -100px;
+}
+
+.about-image-row .about-image-small:last-child img {
+  object-fit: cover;
+  object-position: center -130px;
+}
+
+/* Who We Are Section */
+.about-section {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.about-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.about-section-description {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 37px;
+  color: var(--color-text);
+  max-width: 879px;
+  margin: 0;
+  flex: 1;
+  min-width: 280px;
+}
+
+/* Our Values Section */
+.about-values {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  align-items: center;
+}
+
+.about-values-header {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+}
+
+.about-values-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 37px;
+  color: var(--color-text);
+  text-align: center;
+  max-width: 1050px;
+  margin: 0;
+}
+
+.values-grid {
+  display: flex;
+  gap: 36px;
+  width: 100%;
+}
+
+.value-card {
+  flex: 1;
+  background: var(--color-panel1);
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  text-align: center;
+}
+
+.value-icon {
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.value-title {
+  font-family: var(--font-family-sans);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 31.2px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.value-description {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 24px;
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+/* Partner With Us Section */
+.about-partner {
+  display: flex;
+  gap: 160px;
+  align-items: flex-start;
+}
+
+.partner-text {
+  flex: 0 0 610px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.partner-text .about-label {
+  text-align: left;
+}
+
+.partner-description {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 37px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.partner-form {
+  flex: 1;
+  max-width: 644px;
+}
+
+.partner-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.form-input {
+  width: 100%;
+  height: 98px;
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-input-border);
+  border-radius: 6px;
+  padding: 0 20px;
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--color-input-text);
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form-input::placeholder {
+  color: var(--color-input-placeholder);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(1, 47, 167, 0.08);
+}
+
+.form-textarea {
+  width: 100%;
+  height: 211px;
+  background: var(--color-surface-muted);
+  border: 1.5px solid var(--color-input-border);
+  border-radius: 6px;
+  padding: 36px 20px;
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--color-input-text);
+  box-sizing: border-box;
+  resize: none;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form-textarea::placeholder {
+  color: var(--color-input-placeholder);
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(1, 47, 167, 0.08);
+}
+
+.form-checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.checkbox-wrapper {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: var(--color-surface-muted);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  cursor: pointer;
+  transition: background 1.2s ease;
+}
+
+.checkbox-wrapper.checked {
+  background: var(--color-primary);
+}
+
+.checkbox-wrapper:hover {
+  background: #4f4e50;
+}
+
+.checkbox-wrapper.checked:hover {
+  background: #0139c7;
+}
+
+.checkbox-label {
+  flex: 1;
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 16px;
+  color: var(--color-muted-foreground);
+  margin: 0;
+}
+
+.form-submit {
+  width: 100%;
+  height: 98px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-family-sans);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--color-button-light);
+  cursor: pointer;
+  transition: background 0.3s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-submit:hover {
+  background: #0139c7;
+}
+
+.form-submit:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.form-submit:disabled {
+  background: #666;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-message {
+  width: 100%;
+  padding: 20px;
+  border-radius: 6px;
+  font-family: 'Hubot Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: center;
+}
+
+.form-message.success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid #22c55e;
+  color: #22c55e;
+}
+
+.form-message.error {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* Responsive Design */
+
+/* Light mode: restore input field contrast since surface-muted is white in light mode */
+[data-theme='light'] .form-input,
+[data-theme='light'] .form-textarea {
+  background: var(--color-input-bg);
+}
+
+/* Large Desktop and Tablet Landscape - 1200px to 1400px */
+@media (max-width: 1440px) {
+  .about-content {
+    gap: 100px;
+  }
+
+  .about-partner {
+    gap: 80px;
+  }
+
+  .partner-text {
+    flex: 0 0 500px;
+  }
+
+  .partner-description {
+    font-size: 28px;
+    line-height: 34px;
+  }
+}
+
+/* Medium Desktop and Tablet - 1024px to 1200px */
+@media (max-width: 1280px) {
+  .about-content {
+    gap: 80px;
+  }
+
+  .about-title {
+    font-size: 52px;
+    line-height: 64px;
+  }
+
+  .about-section {
+    gap: 28px;
+  }
+
+  .about-section-description,
+  .about-values-subtitle {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .values-grid {
+    gap: 24px;
+  }
+
+  .value-card {
+    padding: 28px 20px;
+  }
+
+  .value-title {
+    font-size: 32px;
+    line-height: 38px;
+  }
+
+  .value-description {
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .about-partner {
+    gap: 60px;
+  }
+
+  .partner-text {
+    flex: 0 0 450px;
+  }
+
+  .partner-description {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .form-input,
+  .form-submit {
+    height: 88px;
+    font-size: 22px;
+  }
+
+  .form-textarea {
+    height: 190px;
+    font-size: 22px;
+    padding: 32px 20px;
+  }
+
+  .checkbox-wrapper {
+    width: 26px;
+    height: 26px;
+  }
+
+  .checkbox-wrapper svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+/* Medium Desktop: tighten image row gaps */
+@media (max-width: 1280px) {
+  .about-image-row {
+    gap: 24px;
+  }
+  .about-image-group {
+    gap: 24px;
+  }
+}
+
+/* Small Desktop and Tablet Portrait - 900px to 1024px */
+@media (max-width: 1024px) {
+  .about-content {
+    gap: 70px;
+  }
+
+  .about-title {
+    font-size: 48px;
+    line-height: 58px;
+  }
+
+  .about-description {
+    font-size: 18px;
+    line-height: 23px;
+  }
+
+  .about-section {
+    gap: 24px;
+  }
+
+  .about-section-header {
+    gap: 20px;
+  }
+
+  .about-section-description,
+  .about-values-subtitle {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .values-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .value-card {
+    padding: 32px 24px;
+  }
+
+  .about-partner {
+    gap: 50px;
+  }
+
+  .partner-text {
+    flex: 0 0 400px;
+  }
+
+  .partner-description {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .form-input,
+  .form-submit {
+    height: 80px;
+    font-size: 20px;
+  }
+
+  .form-textarea {
+    height: 170px;
+    font-size: 20px;
+    padding: 28px 18px;
+  }
+
+  .checkbox-wrapper {
+    width: 24px;
+    height: 24px;
+  }
+
+  .checkbox-wrapper svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Tablet - 768px to 900px */
+@media (max-width: 900px) {
+  .about-content {
+    gap: 60px;
+  }
+
+  .about-partner {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .partner-text {
+    flex: none;
+    max-width: 100%;
+  }
+
+  .partner-form {
+    max-width: 100%;
+  }
+}
+
+/* Mobile - 768px and below */
+@media (max-width: 768px) {
+  .about-container {
+    padding: 0 16px;
+  }
+
+  .about-content {
+    padding: 20px 0 40px;
+    gap: 60px;
+  }
+
+  .about-hero {
+    gap: 40px;
+  }
+
+  .about-hero-text {
+    gap: 24px;
+  }
+
+  .about-label {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .about-title {
+    font-size: 36px;
+    line-height: 44px;
+  }
+
+  .about-description {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .about-images {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .about-image-large,
+  .about-image-small,
+  .about-image-bottom {
+    min-height: 250px;
+  }
+
+  .about-image-row {
+    gap: 16px;
+  }
+
+  .about-image-group {
+    gap: 16px;
+  }
+
+  .about-section {
+    gap: 32px;
+  }
+
+  .about-section-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .about-section-description {
+    font-size: 20px;
+    line-height: 26px;
+    max-width: 100%;
+  }
+
+  /* Our Values Section - Mobile Optimizations */
+  .about-values {
+    gap: 40px;
+  }
+
+  .about-values-header {
+    gap: 20px;
+  }
+
+  .about-values-subtitle {
+    font-size: 18px;
+    line-height: 24px;
+    padding: 0 12px;
+  }
+
+  .values-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .value-card {
+    padding: 28px 20px;
+    gap: 20px;
+  }
+
+  .value-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .value-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .value-title {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .value-description {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  /* Partner With Us Section - Mobile Optimizations */
+  .about-partner {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .partner-text {
+    flex: none;
+    gap: 24px;
+  }
+
+  .partner-description {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .partner-form {
+    gap: 12px;
+  }
+
+  .form-input {
+    height: 64px;
+    font-size: 18px;
+    line-height: 24px;
+    padding: 0 16px;
+  }
+
+  .form-textarea {
+    height: 140px;
+    font-size: 18px;
+    line-height: 24px;
+    padding: 20px 16px;
+  }
+
+  .form-checkbox {
+    gap: 12px;
+  }
+
+  .checkbox-wrapper {
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+  }
+
+  .checkbox-wrapper svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .checkbox-label {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .form-submit {
+    height: 64px;
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .form-message {
+    padding: 16px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+}
+
+/* Additional Mobile Optimization for smaller screens */
+@media (max-width: 480px) {
+  .about-container {
+    padding: 0 12px;
+  }
+
+  .about-title {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .about-description {
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .about-section {
+    gap: 28px;
+  }
+
+  .about-section-header {
+    gap: 16px;
+  }
+
+  .about-section-description {
+    font-size: 17px;
+    line-height: 23px;
+  }
+
+  .about-values-subtitle {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .value-card {
+    padding: 24px 16px;
+    gap: 16px;
+  }
+
+  .value-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .value-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .value-title {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .value-description {
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .partner-description {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .form-input {
+    height: 56px;
+    font-size: 16px;
+    padding: 0 14px;
+  }
+
+  .form-textarea {
+    height: 120px;
+    font-size: 16px;
+    padding: 16px 14px;
+  }
+
+  .checkbox-label {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .form-submit {
+    height: 56px;
+    font-size: 16px;
+  }
+}

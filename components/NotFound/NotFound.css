@@ -1,0 +1,25 @@
+.gs-notfound {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.gs-notfound__frame {
+  display: block;
+  width: 100%;
+  border: none;
+}
+
+/* The design's own <h1> lives inside the iframe; this one gives the host page
+   a heading for screen readers and no-JS crawlers without showing twice. */
+.gs-notfound__heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

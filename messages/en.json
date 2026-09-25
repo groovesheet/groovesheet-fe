@@ -1,0 +1,445 @@
+{
+  "nav": {
+    "products": "Products",
+    "musicTranscription": "Music Transcription",
+    "stemSplitter": "Stem Splitter",
+    "midiConverter": "MIDI Converter",
+    "explore": "Explore",
+    "pricing": "Pricing",
+    "help": "Help",
+    "about": "About",
+    "blog": "Blog",
+    "login": "Log in",
+    "account": "Account",
+    "profile": "Profile",
+    "history": "Transcription History",
+    "billing": "Billing & Usage",
+    "signOut": "Sign out",
+    "toggleMenuAria": "Toggle menu"
+  },
+  "theme": {
+    "toggleAria": "Toggle dark/light mode",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "language": {
+    "selectAria": "Select language",
+    "searchPlaceholder": "Search language",
+    "noResults": "No languages found"
+  },
+  "footer": {
+    "explore": "Explore",
+    "pricing": "Pricing",
+    "api": "API",
+    "help": "Help",
+    "support": "Support",
+    "changelog": "Changelog",
+    "apps": "Apps",
+    "desktopApp": "Desktop App",
+    "iosApp": "iOS App",
+    "androidApp": "Android App",
+    "copyright": "© {year} GrooveSheet",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "refund": "Refund Policy"
+  },
+  "hero": {
+    "title": "Audio In. Music Notation Out.",
+    "subtitle": "Upload an audio. Receive accurate, editable & printable music notation in minutes.",
+    "disclaimerPrefix": "By uploading a file, you agree to our ",
+    "termsOfService": "Terms of Service",
+    "dragDrop": "Drag and drop an audio file",
+    "tapToUpload": "Tap to upload an audio file",
+    "fileTypes": "MP3, WAV, FLAC, M4A up to {size}MB",
+    "browseFiles": "Browse Files",
+    "chooseFile": "Choose File",
+    "uploading": "Uploading...",
+    "startingServer": "You're in the queue",
+    "inQueue": "You're in the queue",
+    "inQueueBody": "Separating and transcribing a song takes around 20\u201330 minutes of processing, and jobs run one at a time. Your song is queued and will be processed automatically \u2014 you can safely close this page and check back on your Transcription History.",
+    "viewHistory": "View Transcription History",
+    "reconnecting": "Reconnecting to the server… your job is still running and will appear in your Transcription History.",
+    "transcribing": "Transcribing...",
+    "cancel": "Cancel",
+    "instruments": {
+      "vocal": "Vocal",
+      "drums": "Drums",
+      "piano": "Piano",
+      "guitar": "Guitar",
+      "bass": "Bass"
+    },
+    "errors": {
+      "fileFormat": "That format isn't supported \u2014 we accept MP3, WAV, FLAC, OGG and M4A.",
+      "fileSize": "File size too large. Max 32MB."
+    }
+  },
+  "features": {
+    "title": "Get Scores in Seconds - Not Weeks.",
+    "subtitle": "Built for speed and accuracy so you can focus on practice, teaching, and performance.",
+    "card1": {
+      "title": "Upload Your Track",
+      "body": "Drag in an MP3 (or choose one). We detect tempo, time signatures, and drum events automatically. Max {size} MB."
+    },
+    "card2": {
+      "title": "Customize Instantly",
+      "body": "Adjust tempo map, barlines, kit mapping, and ghost-note sensitivity. See changes in the live preview."
+    },
+    "card3": {
+      "title": "Export!",
+      "body": "Export clean notation to PDF, MusicXML, or MIDI. Print, share, or import into your editor."
+    },
+    "stems": {
+      "title": "Clean Stems in Minutes - Not Hours.",
+      "subtitle": "Built for separation quality so you can remix, rehearse and practise with just the parts you need.",
+      "card1": {
+        "title": "Upload Your Track",
+        "body": "Drag in an MP3, WAV or FLAC (or choose one). Max {size} MB."
+      },
+      "card2": {
+        "title": "Pick Your Parts",
+        "body": "Isolate vocals, drums, bass, guitar or piano. Preview each stem before you download."
+      },
+      "card3": {
+        "title": "Download",
+        "body": "Export separated audio ready for your DAW, a practice loop, or a backing track."
+      }
+    },
+    "midi": {
+      "title": "Audio to MIDI in Seconds - Not Weeks.",
+      "subtitle": "Built for speed and accuracy so you can arrange, edit and produce without transcribing by ear.",
+      "card1": {
+        "title": "Upload Your Track",
+        "body": "Drag in an MP3, WAV or FLAC (or choose one). Max {size} MB."
+      },
+      "card2": {
+        "title": "Review the Notes",
+        "body": "Check the detected pitches, tempo and timing in the live preview before you export."
+      },
+      "card3": {
+        "title": "Export",
+        "body": "Download DAW-ready MIDI, plus PDF and MusicXML when you need the score."
+      }
+    }
+  },
+  "pricing": {
+    "title": "Affordable Plans For Everyone.",
+    "subtitle": "Try it free today. Upgrade for higher limits and advanced features without breaking the bank.",
+    "tabs": {
+      "plans": "Plans",
+      "topups": "Top-Ups"
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "annual": "Annually",
+      "threeMonthsFree": "3 Months Free"
+    },
+    "processing": "Processing...",
+    "perMonth": "/month",
+    "perUserMonth": "user/month",
+    "oneTime": "one-time",
+    "popular": "MOST POPULAR",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "badge": "HOBBYIST",
+        "subtitle": "For individuals",
+        "cta": "Get Free",
+        "feature1": "10-second preview on every song",
+        "feature2": "Full songs need a paid plan or top-up",
+        "feature3": "{size} MB upload/file",
+        "feature4": "Standard queue"
+      },
+      "lite": {
+        "name": "Lite",
+        "badge": "PROFESSIONAL",
+        "subtitle": "Best for small teams",
+        "cta": "Subscribe",
+        "feature1": "120 minutes / month",
+        "feature2": "Result downloads (PDF, MusicXML, MIDI)",
+        "feature3": "{size} MB upload/file",
+        "feature4": "Batch processing",
+        "feature5": "Priority support with chat"
+      },
+      "pro": {
+        "name": "Pro",
+        "badge": "ENTERPRISE",
+        "subtitle": "Designed for companies",
+        "cta": "Subscribe",
+        "feature1": "Everything in Lite",
+        "feature2": "Fast queue",
+        "feature3": "{size} MB upload/file",
+        "feature4": "Early access to new features"
+      }
+    },
+    "topups": {
+      "starter": {
+        "name": "Starter",
+        "badge": "STARTER",
+        "subtitle": "Quick boost",
+        "cta": "Buy",
+        "feature1": "30 minutes added",
+        "feature2": "Never expire",
+        "feature3": "All formats included",
+        "feature4": "Standard queue"
+      },
+      "plus": {
+        "name": "Plus",
+        "badge": "PLUS",
+        "subtitle": "Best value",
+        "cta": "Buy",
+        "feature1": "60 minutes added",
+        "feature2": "Never expire",
+        "feature3": "All formats included",
+        "feature4": "Priority queue"
+      },
+      "power": {
+        "name": "Power",
+        "badge": "POWER",
+        "subtitle": "Maximum boost",
+        "cta": "Buy",
+        "feature1": "120 minutes added",
+        "feature2": "Never expire",
+        "feature3": "All formats included",
+        "feature4": "Priority queue"
+      }
+    },
+    "minutesPerMonth": "{minutes} minutes / month",
+    "minutesAdded": "{minutes} minutes added",
+    "canceledNotice": "Checkout canceled \u2014 you were not charged.",
+    "dismiss": "Dismiss"
+  },
+  "testimonials": {
+    "title": "Trusted by Musicians and Educators",
+    "subtitle": "See how people are using us. Real users. Real tracks. Faster practice and cleaner charts",
+    "roles": {
+      "sessionDrummer": "Session drummer",
+      "drumTeacher": "Drum Teacher",
+      "bandleader": "Bandleader",
+      "student": "Student",
+      "producer": "Producer",
+      "musicEducator": "Music Educator",
+      "contentCreator": "Content Creator",
+      "studioOwner": "Studio Owner",
+      "beginner": "Beginner"
+    }
+  },
+  "faq": {
+    "title": "FAQ",
+    "sections": {
+      "overview": {
+        "title": "Overview",
+        "questions": {
+          "signup": {
+            "q": "How do I sign up/sign in?",
+            "a": "Use the Sign up / Sign in button in the top-right to create an account or sign in with SSO. After signing in you can access paid features from your account page."
+          },
+          "split": {
+            "q": "How do I split a full track?",
+            "a": "Upload the full track and use the split controls in the editor to choose segments. You can then process each segment separately."
+          }
+        }
+      },
+      "packs": {
+        "title": "Packs and Minutes",
+        "questions": {
+          "expiration": {
+            "q": "What is the expiration date on paid packages?",
+            "a": "Paid packages expire 12 months from the purchase date unless otherwise specified in the package details."
+          },
+          "minutesMean": {
+            "q": "What does the \"number of minutes in a pack\" mean?",
+            "a": "The minutes indicate the total processing audio time included in the pack; longer tracks use more minutes proportionally."
+          },
+          "deducted": {
+            "q": "How are the minutes deducted from my account?",
+            "a": "Minutes are deducted based on the length of audio you process. Partial minutes round up to the nearest second as described in billing."
+          },
+          "remaining": {
+            "q": "Where can I see the number of remaining minutes?",
+            "a": "Your remaining minutes are shown on your account dashboard under 'Billing & Usage'."
+          },
+          "jobFails": {
+            "q": "What happens if a job fails?",
+            "a": "If a job fails we'll retry automatically; if it still fails we won't deduct minutes and you'll see a failure notice with options to retry or contact support."
+          },
+          "addMinutes": {
+            "q": "How can I add more minutes to my account?",
+            "a": "Visit the Pricing page and select an add-on pack or upgrade to a higher plan to increase your minutes."
+          }
+        }
+      },
+      "features": {
+        "title": "Features",
+        "questions": {
+          "quality": {
+            "q": "How do I improve the notation quality?",
+            "a": "Use higher-quality recordings, reduce background noise, and provide clear instrument separation for best results."
+          },
+          "live": {
+            "q": "Will it work on live recordings?",
+            "a": "Live recordings may work but results vary; studio-quality or clean recordings produce the best notation."
+          },
+          "meters": {
+            "q": "Does it handle odd meters and tempo changes?",
+            "a": "Yes \u2014 the system detects tempo changes and odd meters, but accuracy improves with clear rhythmic content."
+          },
+          "format": {
+            "q": "In what format will I receive the results?",
+            "a": "You can download results as PDF, MusicXML, and MIDI depending on your plan."
+          }
+        }
+      }
+    }
+  },
+  "login": {
+    "welcome": "Welcome to GrooveSheet",
+    "continueWith": "Continue with",
+    "subscribeLong": "Subscribe to GrooveSheet updates and never miss a beat!",
+    "subscribeShort": "Subscribe to GrooveSheet updates",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple",
+    "email": "Email",
+    "termsPrefix": "By clicking 'Continue with Google / Apple / Facebook / Email', you agree to our ",
+    "privacyPolicy": "Privacy Policy",
+    "back": "Back",
+    "emailPrompt": "We will send a 6-digit verification code to the following email address:",
+    "emailPlaceholder": "groovesheet@gmail.com",
+    "confirm": "Confirm",
+    "codePrompt": "Please enter your 6-digit verification code:",
+    "closeAria": "Close modal"
+  },
+  "campaign": {
+    "fallbackGroup": "your group",
+    "hero": {
+      "title": "{minutes} Free Minutes For {name}.",
+      "sub": "Create an account and {minutes} minutes of processing credit lands in it right away: about {lo}\u2013{hi} full songs. No card, no trial.",
+      "subWithInviter": "{inviter} invited you to create an account. {minutes} minutes of processing credit lands in it right away: about {lo}\u2013{hi} full songs. No card, no trial."
+    },
+    "assurance": {
+      "noCard": "No credit card",
+      "instant": "Granted on signup",
+      "noCharge": "Never auto-charges"
+    },
+    "codeApplied": "Promo code applied",
+    "continueWith": "Continue with",
+    "email": "Email",
+    "back": "Back",
+    "emailPrompt": "We will send a 6-digit code to your email. No password to remember.",
+    "emailPlaceholder": "you@school.edu",
+    "sendCode": "Send Code",
+    "sending": "Sending…",
+    "codePrompt": "Enter your 6-digit code",
+    "digitAria": "Digit {n} of 6",
+    "confirm": "Confirm",
+    "confirming": "Confirming…",
+    "claiming": "Claiming…",
+    "optIn": "Subscribe to GrooveSheet updates and never miss a beat!",
+    "disclaimerA": "By continuing you agree to our ",
+    "disclaimerB": " and ",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "errors": {
+      "badEmail": "Enter a valid email address.",
+      "sendFailed": "We couldn't send the code. Check the address and try again.",
+      "shortCode": "Enter all six digits.",
+      "badCode": "That code didn't work. Check it or request a new one.",
+      "authFailed": "Sign-in didn't complete. Try again.",
+      "claimFailed": "We couldn't add the credit. Your account is fine \u2014 try again in a moment."
+    },
+    "balanceLabel": "Processing credit",
+    "balanceSub": "available now",
+    "grantedLabel": "Roughly",
+    "grantedSub": "at 4 minutes per song",
+    "success": {
+      "title": "{minutes} Minutes Are In Your Account.",
+      "body": "Granted from the {name} link. It does not expire, and nothing will auto-charge you when it runs out.",
+      "cta": "Upload A Song",
+      "cta2": "View Account"
+    },
+    "signedIn": {
+      "title": "You're Signed In. Claim Your {minutes} Minutes.",
+      "body": "Signed in as {email}. This link adds {minutes} minutes to your account: one claim per account.",
+      "cta": "Claim {minutes} Minutes",
+      "cta2": "Use A Different Account",
+      "bodyNoEmail": "This link adds {minutes} minutes to your account: one claim per account."
+    },
+    "ineligible": {
+      "title": "Your Plan Already Covers This.",
+      "body": "Campaign credit is for accounts on the free tier. You're on a paid plan, which already includes a monthly minute allowance, so there is nothing to claim here. Forward the link to anyone in {name} who has not signed up yet.",
+      "cta": "Go To Your Workspace",
+      "cta2": "Copy Link To Share"
+    },
+    "redeemed": {
+      "title": "Claimed! Your {name} Credit Is In.",
+      "body": "This account has already picked up the {name} credit \u2014 one claim per account, and every minute you haven't spent is still waiting for your next song.",
+      "cta": "Upload A Song",
+      "cta2": "See Top-Up Packs"
+    },
+    "next": {
+      "title": "What to do first",
+      "s1": "Pick a track",
+      "s1b": "MP3, WAV, FLAC or OGG, up to 32 MB.",
+      "s2": "Choose an instrument",
+      "s2b": "Drums, piano, bass or guitar, or split the stems first.",
+      "s3": "Take the chart away",
+      "s3b": "PDF, MusicXML and MIDI on every result."
+    },
+    "proof": {
+      "kicker": "What you get back",
+      "title": "Upload the song your band is covering. Get the chart.",
+      "body": "Drop in an MP3, pick an instrument, and a few seconds later there is real notation on screen: tempo, time signature, every hit. Export as PDF, MusicXML or MIDI."
+    },
+    "what": {
+      "title": "Three Things It Does",
+      "f1": "Transcription",
+      "f1b": "Audio in, notated sheet music out: drums, piano, bass or guitar.",
+      "f2": "Stem separation",
+      "f2b": "Split a mixed track into isolated instruments, so you can practise along with just the bass.",
+      "f3": "MIDI generation",
+      "f3b": "Get MIDI you can open in a DAW or a notation editor and fix note by note."
+    },
+    "credit": {
+      "title": "What {minutes} Minutes Buys You",
+      "body": "One pool of credit, measured in minutes of audio. Spend it on transcription, stem separation, MIDI, or any mix of the three. A 4-minute song costs 4 minutes, whichever service you use.",
+      "refund": "Jobs that fail are refunded automatically, so errors never eat your credit.",
+      "unit": "minutes of audio",
+      "songs": "≈ {lo}\u2013{hi} full songs",
+      "note": "The free tier grants no credit at all: only a 10-second preview."
+    },
+    "faq": {
+      "title": "FAQ",
+      "section": "Before you sign up",
+      "q1": "Does it work for my instrument?",
+      "a1": "Drums, piano, bass and guitar today. Studio recordings give the cleanest notation; live phone recordings work but results vary.",
+      "q2": "What files can I upload?",
+      "a2": "MP3, WAV, FLAC and OGG, up to 32 MB per file.",
+      "q3": "What happens when the {minutes} minutes run out?",
+      "a3": "Nothing. No charge, no expiring account. You stay on the free tier with 10-second previews, and you can top up whenever you want.",
+      "q4": "Can I export to MuseScore?",
+      "a4": "Yes: every result downloads as PDF, MusicXML and MIDI, so MuseScore, Sibelius and any DAW will open it."
+    },
+    "bottom": {
+      "title": "Claim your {minutes} minutes.",
+      "body": "Takes about twenty seconds. No card, no trial that bills you later.",
+      "cta": "Back To Signup"
+    },
+    "invalid": {
+      "title": "That Code Didn't Match Anything.",
+      "sub": "The link may have been typed by hand, or cut short in a chat message. Worth checking with whoever shared it. You can still create a free account below and try GrooveSheet on a 10-second preview.",
+      "bottomTitle": "You can still start without a code.",
+      "bottomBody": "A free account previews any song for 10 seconds. Top up whenever you need full length."
+    },
+    "expired": {
+      "title": "The {name} Offer Has Closed.",
+      "sub": "This campaign has ended, so the {minutes} free minutes are no longer being granted. You can still create a free account below, and if your CCA wants a code of its own, ask us.",
+      "bottomTitle": "Want a code for your CCA?",
+      "bottomBody": "Tell us the group name and roughly how many members, and we will set one up.",
+      "bottomCta": "Get In Touch"
+    },
+    "anim": {
+      "drop": "Drag in an MP3",
+      "sheet": "Sheet music"
+    }
+  }
+}
