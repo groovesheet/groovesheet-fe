@@ -22,6 +22,7 @@ import {
   PinterestLogo,
   type Icon,
 } from '@phosphor-icons/react';
+import { BRAND_PROFILES } from '@/lib/brandProfiles';
 import { useTheme } from '@/lib/theme';
 import { useTranslation } from '@/lib/i18n';
 import { LocalizedLink } from '@/lib/navigation';
@@ -35,44 +36,37 @@ interface SocialIcon {
   href: string;
 }
 
+/** One icon per brandProfiles entry, keyed by its name. */
+const SOCIAL_ICONS: Record<string, Icon> = {
+  Facebook: FacebookLogo,
+  Instagram: InstagramLogo,
+  X: XLogo,
+  YouTube: YoutubeLogo,
+  TikTok: TiktokLogo,
+  Reddit: RedditLogo,
+  GitHub: GithubLogo,
+  LinkedIn: LinkedinLogo,
+  Discord: DiscordLogo,
+  'Dev.to': DevToLogo,
+  SoundCloud: SoundcloudLogo,
+  Medium: MediumLogo,
+  Threads: ThreadsLogo,
+  Tumblr: TumblrLogo,
+  Twitch: TwitchLogo,
+  Pinterest: PinterestLogo,
+};
+
 function Footer() {
   const { isDarkMode } = useTheme();
   const { t } = useTranslation();
   const year = new Date().getFullYear();
-  const socialIcons: SocialIcon[] = [
-    {
-      name: 'Facebook',
-      component: FacebookLogo,
-      href: 'https://www.facebook.com/profile.php?id=61584710236945',
-    },
-    {
-      name: 'Instagram',
-      component: InstagramLogo,
-      href: 'https://www.instagram.com/groovesheet/',
-    },
-    { name: 'X', component: XLogo, href: 'https://x.com/groovesheet_' },
-    { name: 'YouTube', component: YoutubeLogo, href: 'https://www.youtube.com/@GrooveSheet_AI' },
-    { name: 'TikTok', component: TiktokLogo, href: 'https://www.tiktok.com/@groovesheet' },
-    { name: 'Reddit', component: RedditLogo, href: 'https://www.reddit.com/user/groovesheet/' },
-    { name: 'GitHub', component: GithubLogo, href: 'https://github.com/groovesheet' },
-    {
-      name: 'LinkedIn',
-      component: LinkedinLogo,
-      href: 'https://www.linkedin.com/in/groovesheet/',
-    },
-    { name: 'Discord', component: DiscordLogo, href: 'https://discord.gg/ptfn6ZYDHV' },
-    { name: 'Dev.to', component: DevToLogo, href: 'https://dev.to/groovesheet' },
-    { name: 'SoundCloud', component: SoundcloudLogo, href: 'https://soundcloud.com/groovesheet' },
-    { name: 'Medium', component: MediumLogo, href: 'https://medium.com/@groovesheet/about' },
-    { name: 'Threads', component: ThreadsLogo, href: 'https://www.threads.com/@groovesheet' },
-    { name: 'Tumblr', component: TumblrLogo, href: 'https://www.tumblr.com/groovesheet' },
-    { name: 'Twitch', component: TwitchLogo, href: 'https://www.twitch.tv/groovesheet' },
-    {
-      name: 'Pinterest',
-      component: PinterestLogo,
-      href: 'https://www.pinterest.com/groovesheet/',
-    },
-  ];
+  // URLs live in lib/brandProfiles, which the Organization JSON-LD reads too,
+  // so the footer and the entity's sameAs cannot describe different accounts.
+  const socialIcons: SocialIcon[] = BRAND_PROFILES.map(({ name, url }) => ({
+    name,
+    component: SOCIAL_ICONS[name],
+    href: url,
+  })).filter((icon) => Boolean(icon.component));
 
   return (
     <footer className="footer">

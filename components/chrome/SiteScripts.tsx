@@ -7,6 +7,7 @@
  * still defined inline first so dataLayer pushes queue until GTM arrives.
  */
 import Script from 'next/script';
+import { BRAND_SAME_AS } from '@/lib/brandProfiles';
 
 const GTM_ID = 'GTM-PHXB57NW';
 const GA4_ID = 'G-LJ5P8PF3YH';
@@ -26,12 +27,11 @@ const ORGANIZATION_JSON_LD = {
       alternateName: ['Groove Sheet', 'groovesheet.net'],
       url: 'https://www.groovesheet.net/',
       logo: 'https://www.groovesheet.net/icons/apple-touch-icon.png',
-      sameAs: [
-        'https://www.linkedin.com/in/groovesheet/',
-        'https://www.instagram.com/groovesheet/',
-        'https://www.youtube.com/@GrooveSheet_AI',
-        'https://www.tiktok.com/@groovesheet',
-      ],
+      // Every profile the footer links, from one list. This had drifted to
+      // four of the sixteen, which understates the entity to Google for no
+      // reason: sameAs is how it learns that the GitHub org and the LinkedIn
+      // page ranking for "groovesheet" are this company.
+      sameAs: BRAND_SAME_AS,
     },
     {
       '@type': 'WebSite',
