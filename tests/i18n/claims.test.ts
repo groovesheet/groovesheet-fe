@@ -16,6 +16,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { COMPANY } from '@/lib/company';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/constants';
 
 const LOCALES = ['en', 'zh-CN', 'zh-TW'] as const;
@@ -243,5 +244,33 @@ describe('contact details are stated once', () => {
       }
     }
     expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * The legal pages name a real company. Business registration 77709205 was
+ * incorporated as USEFOOL TECHNOLOGY LIMITED and renamed to Kelin Studio
+ * Limited on 20 August 2026, and for five weeks the site kept naming
+ * "USEFOOL TECHNOLOGY PRIVATE LIMITED": a company that no longer existed
+ * under that name, in a form ("Private Limited") it never had, since Hong
+ * Kong does not use it.
+ */
+describe('the legal entity is named once, and correctly', () => {
+  it('has no entity name typed into a component', () => {
+    const OLD_NAME = /USEFOOL\s+TECHNOLOGY/i;
+    const offenders: string[] = [];
+    for (const file of allSourceFiles()) {
+      // company.ts records the former name deliberately.
+      if (path.relative(ROOT, file) === path.join('lib', 'company.ts')) continue;
+      const text = fs.readFileSync(file, 'utf8');
+      if (OLD_NAME.test(text)) offenders.push(path.relative(ROOT, file));
+    }
+    // The old brand's email domain is still in use and is not the company name.
+    expect(offenders.filter((f) => !/privacy-policy/.test(f))).toEqual([]);
+  });
+
+  it('uses a Hong Kong company form, not a Singapore one', () => {
+    expect(COMPANY.legalName).not.toMatch(/private limited/i);
+    expect(COMPANY.legalName).toMatch(/Limited$/);
   });
 });

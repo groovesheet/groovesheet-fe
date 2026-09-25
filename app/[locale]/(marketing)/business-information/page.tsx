@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: LocaleParams) {
   const { locale } = await params;
   return staticRouteMetadata('/business-information', locale, {
     description:
-      'GrooveSheet is operated by USEFOOL TECHNOLOGY PRIVATE LIMITED, Hong Kong. Registration number, registered address and business contact details.',
+      `GrooveSheet is operated by ${COMPANY.legalName}, ${COMPANY.jurisdiction}. Registration number, registered address and business contact details.`,
   });
 }
 
@@ -25,14 +25,14 @@ export default async function BusinessInformationPage(props: LocaleParams) {
           <div className="legal-body">
             <div className="legal-section">
               <p className="legal-text">
-                GrooveSheet is operated by USEFOOL TECHNOLOGY PRIVATE LIMITED (Hong Kong).
+                GrooveSheet is operated by {COMPANY.legalName} ({COMPANY.jurisdiction}).
               </p>
               <p className="legal-text">Hong Kong Business Registration No.: 77709205 (Established 2025)</p>
               <p className="legal-text">
                 Registered Address: Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy, Central, Hong Kong S.A.R.
               </p>
               <p className="legal-text">Phone: {COMPANY.phone}</p>
-              <p className="legal-text">Email: business@usefool-ai.com</p>
+              <p className="legal-text">Email: {COMPANY.businessEmail}</p>
             </div>
           </div>
         </section>

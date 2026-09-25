@@ -8,6 +8,7 @@
  */
 import Script from 'next/script';
 import { BRAND_SAME_AS } from '@/lib/brandProfiles';
+import { COMPANY } from '@/lib/company';
 
 const GTM_ID = 'GTM-PHXB57NW';
 const GA4_ID = 'G-LJ5P8PF3YH';
@@ -32,6 +33,20 @@ const ORGANIZATION_JSON_LD = {
       // reason: sameAs is how it learns that the GitHub org and the LinkedIn
       // page ranking for "groovesheet" are this company.
       sameAs: BRAND_SAME_AS,
+      // The company behind the brand. Google says it uses some of these to
+      // tell one organization from another, and they are the same values a
+      // Crunchbase profile carries, so the two citations agree by
+      // construction rather than by someone remembering.
+      legalName: COMPANY.legalName,
+      foundingDate: COMPANY.incorporatedOn,
+      email: COMPANY.businessEmail,
+      telephone: COMPANY.phone,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy',
+        addressLocality: 'Central',
+        addressCountry: 'HK',
+      },
     },
     {
       '@type': 'WebSite',

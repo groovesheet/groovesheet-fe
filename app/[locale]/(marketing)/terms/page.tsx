@@ -27,7 +27,8 @@ export default async function TermsPage(props: LocaleParams) {
             <div className="legal-section">
               <h2 className="legal-heading">1. Who we are</h2>
               <p className="legal-text">
-                GrooveSheet (&quot;Service&quot;) is operated by USEFOOL TECHNOLOGY PRIVATE LIMITED (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;), a Hong Kong business.
+                GrooveSheet (&quot;Service&quot;) is operated by {COMPANY.legalName} (&quot;we&quot;, &quot;us&quot;,
+                &quot;our&quot;), a {COMPANY.jurisdiction} business.
               </p>
               <p className="legal-text">Hong Kong Business Registration No.: 77709205</p>
               <p className="legal-text">Registered Address: Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy, Central, Hong Kong S.A.R</p>
