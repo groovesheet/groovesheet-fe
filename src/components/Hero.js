@@ -69,7 +69,9 @@ const UPLOAD_SOURCE = 'transcribe';
 // TODO(launch): piano, drums and bass are production-ready today. The other
 // instruments are temporarily hidden from the picker — add them back here once
 // their pipelines ship.
-const VISIBLE_INSTRUMENTS = ['piano', 'drums', 'bass'];
+// Saxophone is separation-only: it comes from the 53-stem model (bsr-mega-worker),
+// which has no transcription chain behind it yet.
+const VISIBLE_INSTRUMENTS = ['piano', 'drums', 'bass', 'saxophone'];
 
 // NOTE: Download key maps (stemKeyMap, midiKeyMap) and download handlers are shared across
 // Hero.js, MidiConverter.js, StemSplitter.js, and TranscriptionHistory.js.
@@ -111,6 +113,20 @@ const ServerIcon = () => (
     <circle cx="20" cy="36" r="2.5" fill="white"/>
     <path d="M32 48V56" stroke="white" strokeWidth="3" strokeLinecap="round"/>
     <path d="M22 56H42" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+  </svg>
+);
+
+const SaxophoneIcon = ({ size = 20 }) => (
+  <svg className="fill-none stroke-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
+    <title>saxophone-svg</title>
+    <g id="Layer 1">
+      <path d="m14 2.5h3"></path>
+      <path d="m15.5 2.5v3.2"></path>
+      <path d="m15.5 5.7c-2.6 0-3.4 2-3.4 4.1v5.9c0 3.1-2.1 5.3-4.9 5.3-2.3 0-4.2-1.6-4.2-3.8 0-1.9 1.4-3.3 3.3-3.3 1.4 0 2.5 0.8 2.5 2"></path>
+      <path d="m13.2 9.4h3.2"></path>
+      <path d="m13.2 12.6h3.2"></path>
+      <path d="m13.2 15.8h2.6"></path>
+    </g>
   </svg>
 );
 
@@ -473,6 +489,8 @@ function Hero({ onLoginRequired }) {
         workflowName = 'separate_to_piano_score_full';
       } else if (selectedInstrument === 'guitar') {
         workflowName = 'separate_to_guitar_stem';
+      } else if (selectedInstrument === 'saxophone') {
+        workflowName = 'separate_to_sax_stem';
       }
 
       let data;
@@ -697,6 +715,7 @@ function Hero({ onLoginRequired }) {
       bass_separation: 'bs_roformer_bass_stem',
       vocals: 'bs_roformer_vocals_stem',
       guitar: 'bs_roformer_guitar_stem',
+      saxophone: 'bsr_mega_saxophone_stem',
       other: 'bs_roformer_other_stem',
     };
     const midiKeyMap = {
@@ -746,6 +765,8 @@ function Hero({ onLoginRequired }) {
       fileKeys = ['bs_roformer_vocals_stem'];
     } else if (selectedInstrument === 'guitar') {
       fileKeys = ['bs_roformer_guitar_stem'];
+    } else if (selectedInstrument === 'saxophone') {
+      fileKeys = ['bsr_mega_saxophone_stem'];
     } else if (selectedInstrument === 'other') {
       fileKeys = ['bs_roformer_other_stem'];
     } else if (selectedInstrument === 'bass_separation') {
@@ -899,6 +920,7 @@ function Hero({ onLoginRequired }) {
       bass_separation: 'bs_roformer_bass_stem',
       vocals: 'bs_roformer_vocals_stem',
       guitar: 'bs_roformer_guitar_stem',
+      saxophone: 'bsr_mega_saxophone_stem',
       other: 'bs_roformer_other_stem',
     };
     const stemKey = stemKeyMap[selectedInstrument] || selectedInstrument;
@@ -1041,7 +1063,8 @@ function Hero({ onLoginRequired }) {
           { value: 'drums', label: t('hero.instruments.drums'), icon: LuDrum },
           { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
           { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
-          { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon }
+          { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon },
+          { value: 'saxophone', label: t('hero.instruments.saxophone'), icon: SaxophoneIcon }
         ].filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value)).map((instrument) => {
           const IconComp = instrument.icon;
           const isSelected = selectedInstrument === instrument.value;
