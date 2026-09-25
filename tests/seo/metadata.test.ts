@@ -38,6 +38,23 @@ describe('pageMetadata', () => {
   });
 });
 
+describe('untranslated routes', () => {
+  it('canonicalizes every locale of an English-only page onto the English URL', () => {
+    for (const locale of ['en', 'zh-CN', 'zh-TW']) {
+      const meta = staticRouteMetadata('/sheet-music/drums', locale);
+      expect(meta.alternates?.canonical).toBe('/sheet-music/drums');
+      // No cluster to declare when there is only one document.
+      expect(meta.alternates?.languages).toBeUndefined();
+    }
+  });
+
+  it('still clusters a route whose copy is actually translated', () => {
+    const meta = staticRouteMetadata('/pricing', 'zh-TW');
+    expect(meta.alternates?.canonical).toBe('/zh-TW/pricing');
+    expect(meta.alternates?.languages).toBeTruthy();
+  });
+});
+
 describe('generatedOgImage', () => {
   it('encodes title and subtitle as query parameters on an absolute URL', () => {
     const img = generatedOgImage('Stems & MIDI', 'a "quote"');

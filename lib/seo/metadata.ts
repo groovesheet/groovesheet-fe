@@ -15,7 +15,7 @@
  */
 import type { Metadata } from 'next';
 import { buildLocalePath, isLocale, DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from '@/lib/locales';
-import { metaForPath } from '@/lib/seo/routeMeta';
+import { isEnglishOnly, metaForPath } from '@/lib/seo/routeMeta';
 
 export const SITE_URL = 'https://www.groovesheet.net';
 export const SITE_NAME = 'GrooveSheet';
@@ -57,7 +57,13 @@ function asLocale(locale: string): Locale {
  * The canonical is the locale's own URL without any query string, which is
  * what collapses the hundreds of utm-tagged /explore links onto one document.
  */
-export function alternatesFor(path: string, locale: string): { canonical: string; languages: Record<string, string> } {
+export function alternatesFor(path: string, locale: string): { canonical: string; languages?: Record<string, string> } {
+  // A page that is English whatever the URL says has one canonical document,
+  // not three. Pointing every locale's copy at the English URL is what stops
+  // the locale prefixes reading as duplicates, and there is no cluster to
+  // declare, so no hreflang either.
+  if (isEnglishOnly(path)) return { canonical: path };
+
   const languages: Record<string, string> = { 'x-default': path };
   for (const l of SUPPORTED_LOCALES) languages[l] = buildLocalePath(l, path);
   return {

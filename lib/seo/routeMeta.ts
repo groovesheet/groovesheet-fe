@@ -119,6 +119,28 @@ export const ROUTE_META: Record<string, RouteMeta> = {
 };
 
 /**
+ * Routes whose body is English in every locale.
+ *
+ * The marketing pages are translated: next-intl swaps their copy, so
+ * /zh-TW/pricing is a real Traditional Chinese page and deserves to be
+ * advertised as the zh-TW version of /pricing. The hubs and the comparison
+ * pages are not. Their copy lives in lib/seo/instrumentHubs.ts and
+ * lib/seo/competitors.ts as English strings, so /zh-TW/sheet-music/drums is
+ * the English page with a translated header and footer around it.
+ *
+ * Claiming otherwise is the duplicate-content case canonical exists for:
+ * three URLs, one document. These paths therefore get a canonical pointing
+ * at the English URL, no hreflang cluster, and one sitemap entry instead of
+ * three. Move a path out of here once its copy is actually translated.
+ */
+export const ENGLISH_ONLY_PATHS: ReadonlySet<string> = new Set([
+  ...Object.keys(HUB_ROUTE_META),
+  ...Object.keys(COMPARE_ROUTE_META),
+]);
+
+export const isEnglishOnly = (path: string): boolean => ENGLISH_ONLY_PATHS.has(normalizePath(path));
+
+/**
  * Strip a locale prefix so /zh-CN/pricing resolves to the same entry as
  * /pricing, and drop any trailing slash so /pricing/ does not miss.
  */

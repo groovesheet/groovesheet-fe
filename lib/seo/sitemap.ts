@@ -19,7 +19,7 @@
  */
 import { SUPPORTED_LOCALES, buildLocalePath, type Locale } from '@/lib/locales';
 import { LOCALE_HTML_LANG } from '@/lib/locales';
-import { ROUTE_META } from '@/lib/seo/routeMeta';
+import { ROUTE_META, isEnglishOnly } from '@/lib/seo/routeMeta';
 import { SITE_URL } from '@/lib/seo/metadata';
 
 /** Static routes that carry a noindex or exist only as legal boilerplate. */
@@ -57,6 +57,13 @@ export interface SitemapUrl {
 export function staticSitemapUrls(paths: string[] = indexableStaticPaths()): SitemapUrl[] {
   const urls: SitemapUrl[] = [];
   for (const path of paths) {
+    // One entry, no alternates, for a page that is English at every URL: its
+    // locale copies canonicalize to this one, and listing them would submit
+    // three URLs for one document (see ENGLISH_ONLY_PATHS).
+    if (isEnglishOnly(path)) {
+      urls.push({ loc: absolute('en', path), alternates: [] });
+      continue;
+    }
     const alternates = [
       { hreflang: 'x-default', href: absolute('en', path) },
       ...SUPPORTED_LOCALES.map((l) => ({ hreflang: LOCALE_HTML_LANG[l], href: absolute(l, path) })),

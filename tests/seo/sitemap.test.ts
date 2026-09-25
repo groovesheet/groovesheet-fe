@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { indexableStaticPaths, renderSitemapIndex, renderUrlset, staticSitemapUrls } from '@/lib/seo/sitemap';
-import { ROUTE_META } from '@/lib/seo/routeMeta';
+import { ROUTE_META, isEnglishOnly } from '@/lib/seo/routeMeta';
 
 describe('static sitemap', () => {
   it('lists every titled route except the excluded ones, in every locale', () => {
@@ -9,9 +9,30 @@ describe('static sitemap', () => {
     expect(paths).toContain('/stem-splitter');
     expect(paths).not.toContain('/business-information');
     const urls = staticSitemapUrls(paths);
-    expect(urls).toHaveLength(paths.length * 3);
+    // Translated routes get one entry per locale; English-only ones get one.
+    const translated = paths.filter((p) => !isEnglishOnly(p));
+    const englishOnly = paths.filter(isEnglishOnly);
+    expect(urls).toHaveLength(translated.length * 3 + englishOnly.length);
     expect(urls.map((u) => u.loc)).toContain('https://www.groovesheet.net/zh-CN/pricing');
     expect(urls.map((u) => u.loc)).toContain('https://www.groovesheet.net/zh-TW');
+  });
+
+  it('submits one URL, with no hreflang, for a page that is English at every locale', () => {
+    // /zh-TW/sheet-music/drums renders the English hub inside a translated
+    // header and footer. Advertising it as the zh-TW version would submit
+    // three URLs for one document.
+    const hub = staticSitemapUrls(['/sheet-music/drums']);
+    expect(hub).toHaveLength(1);
+    expect(hub[0].loc).toBe('https://www.groovesheet.net/sheet-music/drums');
+    expect(hub[0].alternates).toEqual([]);
+
+    const compare = staticSitemapUrls(['/compare/klangio']);
+    expect(compare).toHaveLength(1);
+    expect(compare[0].loc).toBe('https://www.groovesheet.net/compare/klangio');
+
+    const xml = renderUrlset(hub);
+    expect(xml).not.toContain('xhtml:link');
+    expect(xml).not.toContain('/zh-TW/sheet-music');
   });
 
   it('gives every entry the full hreflang cluster including x-default', () => {
