@@ -21,6 +21,19 @@ import { searchLibraryQuery } from '@/lib/libraryApi';
  * them. Moving vocals or guitar there needs a model, not an edit.
  */
 describe('instrument hubs', () => {
+  // The count on a notation hub comes from ?notation=<part>, so it counts
+  // tracks transcribed for that instrument, not tracks that merely have its
+  // stem. The sentence has to name the set it counts.
+  it('describes notation, not stems, in the notation hub ledes', () => {
+    for (const hub of hubsOfKind('notation')) {
+      expect(hub.lede).toMatch(new RegExp(`carry ${hub.adjective} notation`));
+      expect(hub.lede).not.toMatch(/isolated \w+ part/);
+    }
+    for (const hub of hubsOfKind('stems')) {
+      expect(hub.lede).toMatch(new RegExp(`isolated ${hub.adjective} stem`));
+    }
+  });
+
   it('only puts transcribed instruments under /sheet-music', () => {
     expect(hubsOfKind('notation').map((h) => h.slug).sort()).toEqual(['bass', 'drums', 'piano']);
     for (const hub of hubsOfKind('notation')) expect(hubPath(hub)).toBe(`/sheet-music/${hub.slug}`);
@@ -48,8 +61,10 @@ describe('instrument hubs', () => {
       // template repeating the noun renders "270 tracks tracks in the ...".
       expect(hub.lede).not.toMatch(/\{count\}\s+tracks/);
       // Reads correctly with a number and with the bare-noun fallback.
-      for (const count of ['270 tracks', 'Tracks']) {
-        expect(hub.lede.replace('{count}', count)).toMatch(/^(270 tracks|Tracks) in the GrooveSheet library have/);
+      for (const count of ['242 tracks', 'Tracks']) {
+        expect(hub.lede.replace('{count}', count)).toMatch(
+          /^(242 tracks|Tracks) in the GrooveSheet library (carry|have)/
+        );
       }
     }
   });

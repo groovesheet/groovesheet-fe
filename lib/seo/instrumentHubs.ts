@@ -15,10 +15,13 @@
  *     transcriber behind it; the copy is what the claims test exists to guard.
  *
  * `apiInstrument` is the stem name the library API filters on
- * (?instrument=drums), and `notationInstrument` asks the API for tracks that
- * actually carry notation for that part (?notation=drums). The second
- * parameter is ignored by an API that predates it, which degrades to the
- * instrument filter rather than failing.
+ * (?instrument=drums). A notation hub also sends ?notation=drums, which keeps
+ * only tracks transcribed for that part. That filter is live as of
+ * 2026-09-25, and it is what the counts on these pages now mean: the drums
+ * hub reports 242, not the 270 tracks that merely have a drum stem. The
+ * notation ledes say "carry drum notation" for exactly that reason; saying
+ * "have an isolated drum part" was true of the tracks listed but named the
+ * wrong, larger set.
  */
 
 export type HubKind = 'notation' | 'stems';
@@ -61,7 +64,7 @@ const NOTATION_HUBS: InstrumentHub[] = [
       'Free drum transcriptions: read the notation, hear it play back against the recording, and export PDF, MusicXML or MIDI. Isolated drum stems included.',
     heading: 'Drum sheet music, MIDI and isolated stems',
     lede:
-      '{count} in the GrooveSheet library have an isolated drum part. Open any one to play it back against the recording, follow the notation bar by bar, and download whatever that track carries.',
+      '{count} in the GrooveSheet library carry drum notation. Open any one to play it back against the recording, follow the notation bar by bar, and download whatever that track carries.',
     toolPath: '/',
     faq: [
       {
@@ -92,7 +95,7 @@ const NOTATION_HUBS: InstrumentHub[] = [
       'Free piano transcriptions: read the score, hear it play back against the recording, and export PDF, MusicXML or MIDI. Isolated piano stems included.',
     heading: 'Piano sheet music, MIDI and isolated stems',
     lede:
-      '{count} in the GrooveSheet library have an isolated piano part. Open any one to play it back against the recording, follow the score, and download whatever that track carries.',
+      '{count} in the GrooveSheet library carry piano notation. Open any one to play it back against the recording, follow the score, and download whatever that track carries.',
     toolPath: '/',
     faq: [
       {
@@ -123,7 +126,7 @@ const NOTATION_HUBS: InstrumentHub[] = [
       'Free bass transcriptions: read the line, hear it play back against the recording, and export PDF, MusicXML or MIDI. Isolated bass stems included.',
     heading: 'Bass sheet music, MIDI and isolated stems',
     lede:
-      '{count} in the GrooveSheet library have an isolated bass part. Open any one to play it back against the recording, follow the line note by note, and download whatever that track carries.',
+      '{count} in the GrooveSheet library carry bass notation. Open any one to play it back against the recording, follow the line note by note, and download whatever that track carries.',
     toolPath: '/',
     faq: [
       {
