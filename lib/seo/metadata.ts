@@ -28,6 +28,25 @@ export const DEFAULT_OG_IMAGE = {
   height: 630,
 };
 
+/** og:locale per site locale (Open Graph wants territory-qualified tags). */
+export const OG_LOCALES: Record<Locale, string> = {
+  en: 'en_US',
+  'zh-CN': 'zh_CN',
+  'zh-TW': 'zh_TW',
+};
+
+/**
+ * A 1200x630 card rendered by app/og/route.tsx from the page's own title, so
+ * a shared /pricing or /stem-splitter link unfurls as that page instead of
+ * every marketing URL showing the same static preview. Absolute, because
+ * some scrapers (LinkedIn, iMessage) ignore metadataBase for images.
+ */
+export function generatedOgImage(title: string, subtitle?: string): { url: string; width: number; height: number } {
+  const params = new URLSearchParams({ title });
+  if (subtitle) params.set('subtitle', subtitle);
+  return { url: `${SITE_URL}/og?${params.toString()}`, width: 1200, height: 630 };
+}
+
 function asLocale(locale: string): Locale {
   return isLocale(locale) ? locale : DEFAULT_LOCALE;
 }
@@ -56,6 +75,8 @@ export interface PageMetadataInput {
   locale: string;
   /** Absolute image URL for og:image / twitter:image. Defaults to the site preview. */
   image?: string | null;
+  /** Image dimensions, when known; scrapers render faster with them. */
+  imageSize?: { width: number; height: number };
   /** Use the title as-is, without the site suffix. */
   absoluteTitle?: boolean;
   /** Keep the page out of the index (account, internal and demo pages). */
@@ -70,13 +91,16 @@ export function pageMetadata({
   path,
   locale,
   image,
+  imageSize,
   absoluteTitle = false,
   noindex = false,
   ogType = 'website',
 }: PageMetadataInput): Metadata {
   const fullTitle = absoluteTitle ? title : `${title} | ${SITE_NAME}`;
   const alternates = alternatesFor(path, locale);
-  const images = image ? [{ url: image }] : [DEFAULT_OG_IMAGE];
+  const images = image ? [{ url: image, ...(imageSize ?? {}) }] : [DEFAULT_OG_IMAGE];
+  const ogLocale = OG_LOCALES[asLocale(locale)];
+  const alternateLocale = SUPPORTED_LOCALES.map((l) => OG_LOCALES[l]).filter((l) => l !== ogLocale);
   // Next's metadata merge is shallow: a page's openGraph replaces the layout's
   // wholesale, so every field is restated here rather than inherited.
   return {
@@ -89,6 +113,8 @@ export function pageMetadata({
       title: fullTitle,
       description,
       url: alternates.canonical,
+      locale: ogLocale,
+      alternateLocale,
       images,
     },
     twitter: {
@@ -110,12 +136,16 @@ export function staticRouteMetadata(path: string, locale: string, extra: Partial
   if (!meta) throw new Error(`staticRouteMetadata: no entry for ${path} in lib/seo/routeMeta.ts`);
   // The home page's own title is the site title; the template would double the brand.
   const absoluteTitle = path === '/';
+  // The home page keeps the designed preview; every other static route gets a
+  // card with its own title, so tool and pricing links stop unfurling alike.
+  const og = absoluteTitle ? null : generatedOgImage(meta.title, meta.description);
   const metadata = pageMetadata({
     title: absoluteTitle ? DEFAULT_TITLE : meta.title,
     description: meta.description,
     path,
     locale,
     absoluteTitle,
+    ...(og ? { image: og.url, imageSize: { width: og.width, height: og.height } } : {}),
     ...extra,
   });
   if (path === '/') {

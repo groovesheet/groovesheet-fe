@@ -128,8 +128,8 @@
       "destination": "https://api.groovesheet.net/:path*"
     },
     {
-      "source": "/sitemap.xml",
-      "destination": "https://api.groovesheet.net/seo/sitemap.xml"
+      "source": "/sitemaps/library.xml",
+      "destination": "https://api.groovesheet.net/seo/sitemap.xml?scope=library"
     }
   ],
   "headers": [

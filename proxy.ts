@@ -65,6 +65,9 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
 
 export const config = {
   matcher: [
-    '/((?!(?:api|blog|blog-media|internal|content-assets|_next|_vercel)(?:/|$)|.*\\..*).*)',
+    // `og` and `sitemaps` are locale-less route handlers (the share-card image
+    // and the sitemap children); without the exclusion the locale rewrite
+    // would send them to /en/og and the catch-all 404.
+    '/((?!(?:api|blog|blog-media|internal|content-assets|og|sitemaps|_next|_vercel)(?:/|$)|.*\\..*).*)',
   ],
 };

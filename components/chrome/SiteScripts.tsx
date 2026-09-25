@@ -21,6 +21,9 @@ const ORGANIZATION_JSON_LD = {
       '@type': 'Organization',
       '@id': 'https://www.groovesheet.net/#organization',
       name: 'GrooveSheet',
+      // The two-word spelling is how a good share of people type the brand;
+      // Google's "groove sheet" SERP is MDF panels and Groove Scribe today.
+      alternateName: ['Groove Sheet', 'groovesheet.net'],
       url: 'https://www.groovesheet.net/',
       logo: 'https://www.groovesheet.net/icons/apple-touch-icon.png',
       sameAs: [
@@ -40,6 +43,7 @@ const ORGANIZATION_JSON_LD = {
     {
       '@type': 'SoftwareApplication',
       name: 'GrooveSheet',
+      alternateName: 'Groove Sheet',
       applicationCategory: 'MultimediaApplication',
       operatingSystem: 'Web',
       url: 'https://www.groovesheet.net/',

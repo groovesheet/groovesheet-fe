@@ -47,6 +47,8 @@ export const metadata: Metadata = {
     title: DEFAULT_TITLE,
     description:
       'Upload any audio file and receive professional music notation in seconds with groovesheet.net. Learn faster, practice smarter, and unlock creative ideas.',
+    locale: 'en_US',
+    alternateLocale: ['zh_CN', 'zh_TW'],
     images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
@@ -65,7 +67,7 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.webmanifest',
   other: {
     // Proves to Meta that we own groovesheet.net, which is what lets the
     // Kelin Marketing business portfolio configure the pixel's conversion

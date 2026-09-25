@@ -12,7 +12,8 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { getCreatorProfile } from '@/lib/api-server';
 import { normalizeHandle } from '@/lib/creatorApi';
-import { pageMetadata, SITE_URL } from '@/lib/seo/metadata';
+import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo/metadata';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonld';
 import { buildLocalePath } from '@/lib/locales';
 import type { CreatorProfile as CreatorProfileData } from '@/lib/types';
 import JsonLd from '../../explore/_components/JsonLd';
@@ -104,6 +105,13 @@ export default async function CreatorPage({ params }: CreatorPageProps) {
             url: `${SITE_URL}${buildLocalePath(locale, `/explore/${encodeURIComponent(s.id)}`)}`,
           })),
         }}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd(locale, [
+          { name: SITE_NAME, path: '/' },
+          { name: 'Explore', path: '/explore' },
+          { name: profile.display_name, path: profilePath(profile) },
+        ])}
       />
       <CreatorProfile key={profile.username} initialProfile={profile} />
     </>

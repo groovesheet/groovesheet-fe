@@ -12,6 +12,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { getLibraryTrack, getLibraryTracks } from '@/lib/api-server';
 import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo/metadata';
 import { buildLocalePath } from '@/lib/locales';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonld';
 import type { LibraryTrack } from '@/lib/types';
 import JsonLd from '../_components/JsonLd';
 import { slimTrack } from '../_components/trackToCard';
@@ -105,6 +106,13 @@ export default async function SongPage({ params }: SongPageProps) {
   return (
     <>
       <JsonLd data={songJsonLd(track, locale)} />
+      <JsonLd
+        data={breadcrumbJsonLd(locale, [
+          { name: SITE_NAME, path: '/' },
+          { name: 'Explore', path: '/explore' },
+          { name: track.artist ? `${track.title} by ${track.artist}` : track.title, path: trackPath(track) },
+        ])}
+      />
       <SongDetail key={track.id} track={track} related={related} />
     </>
   );
