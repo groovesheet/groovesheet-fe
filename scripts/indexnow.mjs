@@ -106,10 +106,25 @@ async function main() {
   // 200 accepted, 202 accepted but the key is still being verified. Both fine.
   if (res.status === 200 || res.status === 202) {
     console.log(`Submitted ${urls.length} URLs (HTTP ${res.status}).`);
+    if (res.status === 202) {
+      console.log(`Key verification is still in progress against ${ORIGIN}/${KEY}.txt.`);
+      console.log('A submission sent in the next few minutes may come back 403; that is expected, wait and retry.');
+    }
     return;
   }
+
+  const detail = await res.text().catch(() => '');
+  // The first submission from a new key returns 202 and starts verification.
+  // Anything sent before that finishes is refused with this, which reads like
+  // a misconfiguration and is not one.
+  if (res.status === 403 && detail.includes('SiteVerificationNotCompleted')) {
+    console.error(`IndexNow has not finished verifying ${ORIGIN}/${KEY}.txt yet.`);
+    console.error('Confirm that file is reachable, then retry in a few minutes. Nothing is wrong with the request.');
+    process.exit(1);
+  }
+
   console.error(`IndexNow rejected the submission: HTTP ${res.status} ${res.statusText}`);
-  console.error(await res.text().catch(() => ''));
+  console.error(detail);
   process.exit(1);
 }
 
