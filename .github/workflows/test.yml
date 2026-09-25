@@ -7,17 +7,46 @@ name: Tests
 #   - npm cache keyed on the lockfile, so the usual run installs from cache
 #   - concurrency cancels superseded runs on the same branch
 #
-# It exists because src/i18n/claims.test.js guards the marketing copy against
+# It exists because tests/i18n/claims.test.ts guards the marketing copy against
 # the product it describes, and a guard nobody runs is not a guard. Every
 # conversion defect found in the 2026-09-04 audit was copy that had drifted
 # from a value enforced in code.
+#
+# The paths below moved with the Next.js migration. They used to list `src/**`
+# alone, which was the whole CRA app and is now the dead tree awaiting deletion:
+# left as it was, this workflow would have gone quiet on the very commit that
+# gave it something to guard. `tests/seo/**` is covered by `tests/**`, and it
+# holds the other claims guard: which instruments the hub pages may promise
+# notation for.
 
 on:
   push:
     branches: [main]
-    paths: ['src/**', 'package.json', 'package-lock.json', '.github/workflows/test.yml']
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'i18n/**'
+      - 'messages/**'
+      - 'tests/**'
+      - 'next.config.ts'
+      - 'proxy.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/test.yml'
   pull_request:
-    paths: ['src/**', 'package.json', 'package-lock.json', '.github/workflows/test.yml']
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'i18n/**'
+      - 'messages/**'
+      - 'tests/**'
+      - 'next.config.ts'
+      - 'proxy.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/test.yml'
 
 concurrency:
   group: tests-${{ github.ref }}
@@ -41,8 +70,12 @@ jobs:
 
       - run: npm ci
 
-      # CI=true makes react-scripts run once and exit rather than watch.
+      # `npm test` is `vitest run`: one pass, no watcher, so the CRA-era
+      # `-- --watchAll=false` is gone.
       - name: Run tests
-        run: npm test -- --watchAll=false
-        env:
-          CI: true
+        run: npm test
+
+      # Cheap next to the test run, and it catches the class of break a test
+      # cannot: a route that no longer type-checks still renders in dev.
+      - name: Typecheck
+        run: npm run typecheck
