@@ -45,8 +45,12 @@ export const ServerIcon = () => (
  * stroke width used to come from Tailwind's fill-none and stroke-2 classes.
  */
 export const BassIcon = (_props: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
-    <title>bass-svg</title>
+  // aria-hidden, and no <title>: the icon sits beside its own text label in
+  // the instrument tabs, so a title only repeats it to a screen reader. The
+  // one it carried was the Figma export filename, "bass-svg", which is also
+  // what a naive HTML parser concatenated onto the page title when reading
+  // the tool pages ("... | GrooveSheetbass-svg" in the 2026-09-25 SEO audit).
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" stroke="currentColor" aria-hidden="true" focusable="false">
     <g id="Layer 1">
       <path fillRule="evenodd" d="m11.5 12.5l4.9-4.9"></path>
       <path fillRule="evenodd" d="m21.2 2.9c-0.1-0.1-0.5-0.2-0.6-0.2-0.1-0.1-0.1-0.1-0.4-0.1q-0.2 0-0.3 0.1-0.2 0.1-0.4 0.2l-1.9 1.7c-0.2 0-0.4 0.2-0.5 0.3-0.1 0.1-0.2 0.2-0.3 0.3q0 0.2-0.1 0.3 0 0.2 0 0.4l0.2 0.5c0 0 0 0.3 0 0.3 0 0 0 0.1-0.1 0.2q0 0.2-0.1 0.4-0.1 0.1-0.3 0.3 0.2-0.2 0.3-0.3 0.2-0.1 0.4-0.1 0.1-0.1 0.3-0.2c0.2 0 0.5 0.1 0.6 0.1h0.6q0.2 0 0.3 0 0.2 0 0.4-0.1 0.2-0.1 0.4-0.2c0.1-0.1 0.2-0.1 0.3-0.3 0.2-0.3 0.3-0.7 0.6-1.1 0 0 0.1-0.2 0.7-0.6 0.1-0.1 0.6-0.1 0.6-0.2 0-0.2 0.1-0.2 0-0.3 0-0.1 0-0.4-0.1-0.7-0.2-0.4-0.6-0.7-0.6-0.7z"></path>
