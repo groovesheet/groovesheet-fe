@@ -21,6 +21,7 @@
  */
 
 import { INSTRUMENT_HUBS, hubPath } from '@/lib/seo/instrumentHubs';
+import { COMPETITORS, comparePath } from '@/lib/seo/competitors';
 
 export interface RouteMeta {
   title: string;
@@ -35,6 +36,22 @@ export interface RouteMeta {
 const HUB_ROUTE_META: Record<string, RouteMeta> = Object.fromEntries(
   INSTRUMENT_HUBS.map((hub) => [hubPath(hub), { title: hub.title, description: hub.description }])
 );
+
+/**
+ * The comparison pages, generated from lib/seo/competitors.ts for the same
+ * reason: a page about someone else's product must not be able to ship
+ * untitled or unlisted.
+ */
+const COMPARE_ROUTE_META: Record<string, RouteMeta> = {
+  '/compare': {
+    title: 'GrooveSheet vs the Alternatives',
+    description:
+      'Side-by-side comparisons of GrooveSheet with Klangio, Songscription and AnthemScore: prices, instruments, exports and stem separation, each dated and sourced.',
+  },
+  ...Object.fromEntries(
+    COMPETITORS.map((c) => [comparePath(c), { title: c.title, description: c.description }])
+  ),
+};
 
 const STATIC_ROUTE_META: Record<string, RouteMeta> = {
   '/': {
@@ -95,7 +112,11 @@ const STATIC_ROUTE_META: Record<string, RouteMeta> = {
   '/business-information': { title: 'Business Information' },
 };
 
-export const ROUTE_META: Record<string, RouteMeta> = { ...STATIC_ROUTE_META, ...HUB_ROUTE_META };
+export const ROUTE_META: Record<string, RouteMeta> = {
+  ...STATIC_ROUTE_META,
+  ...HUB_ROUTE_META,
+  ...COMPARE_ROUTE_META,
+};
 
 /**
  * Strip a locale prefix so /zh-CN/pricing resolves to the same entry as
