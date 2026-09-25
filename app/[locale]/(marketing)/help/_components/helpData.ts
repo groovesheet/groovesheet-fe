@@ -1,3 +1,4 @@
+import { COMPANY } from '@/lib/company';
 import { MAX_UPLOAD_MB } from '@/lib/constants';
 
 export interface FaqCategory {
@@ -7,9 +8,11 @@ export interface FaqCategory {
 }
 
 export const CONTACT = {
-  whatsappNumber: '+65 8996 8765',
-  whatsappHref: 'https://wa.me/6589968765',
-  email: 'support@groovesheet.net',
+  // From lib/company, which the legal pages read too: one number, so support
+  // and the terms page can never again offer different ones.
+  whatsappNumber: COMPANY.phone,
+  whatsappHref: COMPANY.phoneHref,
+  email: COMPANY.supportEmail,
 };
 
 export const FAQ_DATA: FaqCategory[] = [

@@ -220,3 +220,28 @@ describe('prices are not hardcoded in the copy', () => {
     });
   }
 });
+
+/**
+ * Contact details are citation data: the legal pages print them and every
+ * directory profile repeats them, so a second copy that drifts weakens the
+ * brand entity rather than merely looking untidy.
+ *
+ * It had drifted. /help offered +65 8996 8765 while /business-information and
+ * /terms printed +65 8575 5666, retired in September 2026. Both numbers were
+ * live on the same site, on its legal pages.
+ */
+describe('contact details are stated once', () => {
+  it('has no phone number typed into a component', () => {
+    // Any Singapore or Hong Kong number written out, in any spacing.
+    const PHONE = /\+?\(?(?:65|852)\)?[\s-]?\d{4}[\s-]?\d{4}/g;
+    const offenders: string[] = [];
+    for (const file of allSourceFiles()) {
+      // The one file allowed to state it.
+      if (path.relative(ROOT, file) === path.join('lib', 'company.ts')) continue;
+      for (const match of fs.readFileSync(file, 'utf8').match(PHONE) || []) {
+        offenders.push(`${path.relative(ROOT, file)}: ${match}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});

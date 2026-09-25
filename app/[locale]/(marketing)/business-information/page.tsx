@@ -1,5 +1,6 @@
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
+import { COMPANY } from '@/lib/company';
 import { staticRouteMetadata } from '@/lib/seo/metadata';
 import { routeLocale, type LocaleParams } from '../_components/routeLocale';
 import '../_components/LegalPage.css';
@@ -30,7 +31,7 @@ export default async function BusinessInformationPage(props: LocaleParams) {
               <p className="legal-text">
                 Registered Address: Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy, Central, Hong Kong S.A.R.
               </p>
-              <p className="legal-text">Phone: +65 8575 5666</p>
+              <p className="legal-text">Phone: {COMPANY.phone}</p>
               <p className="legal-text">Email: business@usefool-ai.com</p>
             </div>
           </div>

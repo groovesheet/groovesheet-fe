@@ -1,6 +1,7 @@
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { Link } from '@/lib/navigation';
+import { COMPANY } from '@/lib/company';
 import { staticRouteMetadata } from '@/lib/seo/metadata';
 import { routeLocale, type LocaleParams } from '../_components/routeLocale';
 import '../_components/LegalPage.css';
@@ -30,7 +31,9 @@ export default async function TermsPage(props: LocaleParams) {
               </p>
               <p className="legal-text">Hong Kong Business Registration No.: 77709205</p>
               <p className="legal-text">Registered Address: Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy, Central, Hong Kong S.A.R</p>
-              <p className="legal-text">Contact: business@usefool-ai.com | +65 8575 5666</p>
+              <p className="legal-text">
+                Contact: {COMPANY.businessEmail} | {COMPANY.phone}
+              </p>
             </div>
 
             <div className="legal-section">
