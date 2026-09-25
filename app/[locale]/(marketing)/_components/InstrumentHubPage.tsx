@@ -10,6 +10,12 @@
  *
  * Everything on it is server-rendered from the live library, so the counts and
  * the track list cannot drift from the catalog the way hand-written copy does.
+ *
+ * The cards lead to the song page, not to /explore/:song/:part, even on a hub
+ * already filtered to one instrument. `?notation=` counts MIDI as notation
+ * while a part page requires a MusicXML score, so a rail here can hold tracks
+ * that have no page for this part: those links would 404. The song page links
+ * down to whichever parts do have one.
  */
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';

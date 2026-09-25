@@ -88,6 +88,12 @@ export interface SongSidebarProps {
   downloading: boolean;
   instrumentOptions?: InstrumentOption[];
   instrument: string | null;
+  /**
+   * Set on /explore/{song}/{instrument}: the instrument half of the h1, so the
+   * page's main heading names the thing it is about ("Drum sheet music")
+   * rather than only the song, which every instrument page would share.
+   */
+  instrumentHeading?: string | null;
   onInstrument?: (name: string) => void;
   /** The score the viewer shows, engraved to PDF on demand. */
   scoreAsset: SongAsset | null;
@@ -104,6 +110,7 @@ export default function SongSidebar({
   downloading,
   instrumentOptions = [],
   instrument,
+  instrumentHeading = null,
   onInstrument,
   scoreAsset,
 }: SongSidebarProps) {
@@ -215,6 +222,14 @@ export default function SongSidebar({
             <>
               {' '}
               <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 400 }}>by {track.artist}</span>
+            </>
+          )}
+          {instrumentHeading && (
+            <>
+              {' '}
+              <span style={{ display: 'block', marginTop: 4, fontSize: 16, color: 'var(--color-muted-foreground)', fontWeight: 400 }}>
+                {instrumentHeading}
+              </span>
             </>
           )}
         </h1>

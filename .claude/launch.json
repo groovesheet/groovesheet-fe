@@ -4,10 +4,31 @@
     {
       "name": "groovesheet-fe",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"],
+      "runtimeArgs": [
+        "start"
+      ],
       "port": 3001,
-      "env": { "PORT": "3001", "BROWSER": "none" },
+      "env": {
+        "PORT": "3001",
+        "BROWSER": "none"
+      },
       "cwd": "groovesheet-fe"
+    },
+    {
+      "name": "next-fe",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3210"
+      ],
+      "port": 3210,
+      "env": {
+        "PORT": "3210",
+        "BROWSER": "none"
+      }
     }
   ]
 }

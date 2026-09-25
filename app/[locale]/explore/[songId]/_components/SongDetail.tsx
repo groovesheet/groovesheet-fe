@@ -280,9 +280,23 @@ interface SongDetailProps {
    * for crawlers without this client component having to hydrate first.
    */
   facts?: ReactNode;
+  /**
+   * The part this page is about, on /explore/{song}/{instrument}. It does the
+   * same job as ?instrument=, but from the server, so the page opens on that
+   * score for a crawler that never runs the query-string reader.
+   */
+  initialInstrument?: string | null;
+  /** The instrument half of the h1, e.g. "Drum sheet music". */
+  instrumentHeading?: string | null;
 }
 
-export default function SongDetail({ track: initialTrack, related, facts }: SongDetailProps) {
+export default function SongDetail({
+  track: initialTrack,
+  related,
+  facts,
+  initialInstrument = null,
+  instrumentHeading = null,
+}: SongDetailProps) {
   // The page is keyed by track id, and a server refresh (after sign-in, say)
   // must not hand over a new object for the same track: every engine below is
   // keyed on it and would be torn down mid-playback.
@@ -378,7 +392,9 @@ export default function SongDetail({ track: initialTrack, related, facts }: Song
     }));
   }, [stems, midiAssets, xmlAssets]);
 
-  const requestedInstrument = (intent.instrument || '').trim().toLowerCase() || null;
+  // ?instrument= still wins, so an in-page link can switch part without a
+  // navigation; the route's own instrument is the default beneath it.
+  const requestedInstrument = (intent.instrument || initialInstrument || '').trim().toLowerCase() || null;
   const instrument = pickInstrument(instrumentOptions, instrumentChoice, requestedInstrument);
 
   const noteView = viewForStem(instrument);
@@ -1054,6 +1070,7 @@ export default function SongDetail({ track: initialTrack, related, facts }: Song
       stems={stems}
       instrumentOptions={instrumentOptions}
       instrument={instrument}
+      instrumentHeading={instrumentHeading}
       onInstrument={selectInstrument}
       relatedTracks={related}
       isSignedIn={isSignedIn}
