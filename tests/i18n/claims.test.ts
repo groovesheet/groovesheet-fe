@@ -184,3 +184,39 @@ describe('locales stay in step with English', () => {
     expect(english.filter((key) => !other.has(key))).toEqual([]);
   });
 });
+
+/**
+ * Prices belong to the billing catalog, not to a translated string.
+ *
+ * The campaign page used to read "The same {minutes} minutes as our paid $4
+ * Starter pack", in all three locales. The Starter pack is $12 for 30 minutes
+ * and had been for some time, so the page was quoting a third of the real
+ * price to every visitor who followed a campaign link. Nothing caught it,
+ * because the copy and the catalog never meet in code: the catalog is fetched
+ * at runtime from /billing/plans, and the sentence was typed once.
+ *
+ * So the rule is that no message hardcodes a currency amount. A price a
+ * visitor sees must have come from the catalog, where changing it is a
+ * deploy, not a memory.
+ */
+describe('prices are not hardcoded in the copy', () => {
+  const PRICE = /[$\u00a5\u20ac\u00a3\uffe5]\s?\d/;
+
+  for (const locale of LOCALES) {
+    it(`${locale} has no currency amount in any message`, () => {
+      const offenders: string[] = [];
+      const walk = (node: Messages, path: string) => {
+        for (const [key, value] of Object.entries(node)) {
+          const here = path ? `${path}.${key}` : key;
+          if (typeof value === 'string') {
+            if (PRICE.test(value)) offenders.push(`${here}: ${value}`);
+          } else {
+            walk(value, here);
+          }
+        }
+      };
+      walk(loadLocale(locale), '');
+      expect(offenders).toEqual([]);
+    });
+  }
+});

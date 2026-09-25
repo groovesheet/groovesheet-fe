@@ -405,7 +405,7 @@
       "refund": "Jobs that fail are refunded automatically, so errors never eat your credit.",
       "unit": "minutes of audio",
       "songs": "≈ {lo}\u2013{hi} full songs",
-      "note": "The same {minutes} minutes as our paid $4 Starter pack. The free tier grants no credit at all: only a 10-second preview."
+      "note": "The free tier grants no credit at all: only a 10-second preview."
     },
     "faq": {
       "title": "FAQ",
