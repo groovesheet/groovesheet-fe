@@ -4,6 +4,7 @@
 // this is a fully controlled component.
 import React, { useEffect, useRef, useState } from 'react';
 import { CaretDown } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import './InstrumentDropdown.css';
 
 /**
@@ -11,6 +12,7 @@ import './InstrumentDropdown.css';
  * value:   selected stem `name`
  */
 function InstrumentDropdown({ options, value, onChange }) {
+  const t = useTranslations('song');
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -43,7 +45,7 @@ function InstrumentDropdown({ options, value, onChange }) {
         className="gs-instr-btn"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="Instrument"
+        aria-label={t('sidebar.instrument')}
         onClick={() => setOpen((o) => !o)}
       >
         <span className="gs-instr-dot" style={{ background: cur.color }} />
@@ -51,7 +53,7 @@ function InstrumentDropdown({ options, value, onChange }) {
         <CaretDown size={11} weight="bold" style={{ opacity: 0.6 }} />
       </button>
       {open && (
-        <div className="gs-instr-menu" role="listbox" aria-label="Instrument">
+        <div className="gs-instr-menu" role="listbox" aria-label={t('sidebar.instrument')}>
           {options.map((o) => {
             const on = o.name === cur.name;
             const audioOnly = anyAttributed && !o.hasNotes && !o.hasScore;
@@ -69,7 +71,7 @@ function InstrumentDropdown({ options, value, onChange }) {
               >
                 <span className="gs-instr-dot" style={{ background: o.color }} />
                 <span className="gs-instr-item-label">{o.label}</span>
-                {audioOnly && <span className="gs-instr-item-note">audio only</span>}
+                {audioOnly && <span className="gs-instr-item-note">{t('viewers.audioOnly')}</span>}
               </button>
             );
           })}

@@ -6,6 +6,7 @@
 // of them keeps its own clock.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Midi } from '@tonejs/midi';
+import { useTranslations } from 'next-intl';
 import OSMDViewer from '../PreviewPanel/OSMDViewer';
 import SkeletonPanel from '@/components/ui/SkeletonPanel';
 import { useMediaQuery } from '@/lib/hooks/useMediaQuery';
@@ -17,6 +18,7 @@ import StatusMessage from '@/components/ui/StatusMessage';
 // `footer` renders under the engraved page, inside the same scroll container —
 // used by the preview result view to continue the page into a blurred teaser.
 export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlaybackStateChange, onSeekRequest, footer }) {
+  const tv = useTranslations('song.viewers');
   // A score with no sounding notes (e.g. piano transcription of a track that
   // has no piano) makes OSMD's cursor init throw inside render() — never
   // mount the viewer for one, show an explanatory empty state instead.
@@ -47,7 +49,7 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
     >
       {loading && (
         <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-muted-foreground)', fontSize: 13 }}>
-          Loading score…
+          {tv('loadingScore')}
         </div>
       )}
       {error && (
@@ -57,9 +59,8 @@ export function SheetMusicView({ musicXmlText, loading, error, osmdRef, onPlayba
       )}
       {!loading && !error && musicXmlText && !hasNotes && (
         <div style={{ maxWidth: 560, margin: '48px auto 0' }}>
-          <StatusMessage variant="info" title="No notes detected">
-            We couldn&apos;t find any piano in this section of the audio. Try a
-            recording where the piano is clearly audible.
+          <StatusMessage variant="info" title={tv('noNotesTitle')}>
+            {tv('noNotesBody')}
           </StatusMessage>
         </div>
       )}
@@ -108,6 +109,7 @@ function fmtClock(s) {
 // selected one so switching instruments keeps musical context:
 //   [{ name, color, buffer: ArrayBuffer }]
 export function PianoRollView({ midiBuffer, transport, loading, error, ghosts }) {
+  const tv = useTranslations('song.viewers');
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const transportRef = useRef(transport);
@@ -122,7 +124,7 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
     try {
       midi = new Midi(midiBuffer);
     } catch (e) {
-      setParseError('Could not parse the MIDI file.');
+      setParseError(tv('midiParseError'));
       return undefined;
     }
     setParseError(null);
@@ -416,6 +418,8 @@ export function StemsView({
 }
 
 function StemRow({ stem, state, onChange, onSeek, anySolo, loading }) {
+  const tv = useTranslations('song.viewers');
+  const tp = useTranslations('song.playback');
   const ref = useRef(null);
   const onClickWave = (e) => {
     const r = ref.current.getBoundingClientRect();
@@ -446,10 +450,10 @@ function StemRow({ stem, state, onChange, onSeek, anySolo, loading }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-        <button className={`gs-ms-btn m ${state.mute ? 'on' : ''}`} onClick={() => onChange({ mute: !state.mute })} title="Mute">
+        <button className={`gs-ms-btn m ${state.mute ? 'on' : ''}`} onClick={() => onChange({ mute: !state.mute })} title={tp('mute')}>
           M
         </button>
-        <button className={`gs-ms-btn s ${state.solo ? 'on' : ''}`} onClick={() => onChange({ solo: !state.solo })} title="Solo">
+        <button className={`gs-ms-btn s ${state.solo ? 'on' : ''}`} onClick={() => onChange({ solo: !state.solo })} title={tv('solo')}>
           S
         </button>
         <input
@@ -461,7 +465,7 @@ function StemRow({ stem, state, onChange, onSeek, anySolo, loading }) {
           value={state.volume}
           onChange={(e) => onChange({ volume: parseInt(e.target.value, 10) })}
           style={{ width: 90, '--fill': state.volume + '%' }}
-          title={`Volume ${state.volume}%`}
+          title={tv('volume', { value: state.volume })}
         />
         <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: 11, color: 'var(--color-muted-foreground)', width: 28, textAlign: 'right' }}>
           {state.volume}

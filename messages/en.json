@@ -441,5 +441,282 @@
       "drop": "Drag in an MP3",
       "sheet": "Sheet music"
     }
+  },
+  "song": {
+    "viewers": {
+      "loadingScore": "Loading score…",
+      "noNotesTitle": "No notes detected",
+      "noNotesBody": "We couldn't find any piano in this section of the audio. Try a recording where the piano is clearly audible.",
+      "midiParseError": "Could not parse the MIDI file.",
+      "drumParseError": "Could not parse the drum MIDI file.",
+      "solo": "Solo",
+      "volume": "Volume {value}%",
+      "audioOnly": "audio only",
+      "loadingNotes": "Loading notes…",
+      "midiLoadError": "Could not load the MIDI",
+      "noMidiTitle": "No MIDI for this instrument yet",
+      "noMidiBody": "Falling keys are drawn from the transcription MIDI. Pick another instrument from the dropdown above.",
+      "layers": "Layers",
+      "showAll": "Show every layer",
+      "allOn": "All on",
+      "brightness": "Brightness",
+      "analysing": "Analysing stems… {percent}%",
+      "adding": "Adding layers… {percent}%",
+      "spectrumUnavailable": "Spectrum unavailable",
+      "noStemAudio": "No stem audio to analyse",
+      "analyseError": "Could not analyse the stems"
+    },
+    "instruments": {
+      "drums": {
+        "name": "Drums",
+        "noun": "drums",
+        "adjective": "drum",
+        "sheet": "drum sheet music",
+        "sheetHeading": "Drum sheet music",
+        "sheetTitle": "Drum Sheet Music",
+        "sub": "kit · percussion"
+      },
+      "piano": {
+        "name": "Piano",
+        "noun": "piano",
+        "adjective": "piano",
+        "sheet": "piano sheet music",
+        "sheetHeading": "Piano sheet music",
+        "sheetTitle": "Piano Sheet Music",
+        "sub": "keys · harmonic"
+      },
+      "bass": {
+        "name": "Bass",
+        "noun": "bass",
+        "adjective": "bass",
+        "sheet": "bass sheet music",
+        "sheetHeading": "Bass sheet music",
+        "sheetTitle": "Bass Sheet Music",
+        "sub": "sub · low end"
+      },
+      "vocals": {
+        "name": "Vocals",
+        "noun": "vocals",
+        "adjective": "vocal",
+        "sub": "lead · voice"
+      },
+      "guitar": {
+        "name": "Guitar",
+        "noun": "guitar",
+        "adjective": "guitar",
+        "sub": "strings · plucked"
+      },
+      "other": {
+        "name": "Other",
+        "noun": "other",
+        "adjective": "other",
+        "sub": "texture · residual"
+      }
+    },
+    "fullMix": "Full mix",
+    "meta": {
+      "subject": "{title} by {artist}",
+      "subjectNoArtist": "{title}",
+      "title": "{subject}: Sheet Music & MIDI",
+      "description": "Free sheet music, MIDI and isolated stems for {subject}. AI-transcribed notation you can play along to, download or edit.",
+      "partTitle": "{subject}: {sheetTitle}",
+      "partDescription": "Free {sheet} for {subject}: read the score, hear it play against the recording{exports}.{stem}",
+      "partExports": " and export {formats}",
+      "partStem": " Isolated {adjective} stem included.",
+      "compositionName": "{title} ({adjective} transcription)",
+      "explore": "Explore",
+      "notFound": "Track not found"
+    },
+    "facts": {
+      "heading": "About this transcription",
+      "headingPart": "About this {adjective} transcription",
+      "stemCount": "{count, plural, =0 {its isolated parts} one {# isolated part} other {# isolated parts}}",
+      "ledePart": "GrooveSheet separated {subject} and transcribed the {adjective} part to notation you can read, hear played back against the recording, and export.",
+      "ledeSiblings": " It transcribed the {adjectives} {count, plural, one {part} other {parts}} too, on {count, plural, one {a page of its own} other {pages of their own}}.",
+      "ledeOnly": " It is the only part of this track with notation so far.",
+      "ledeScored": "GrooveSheet separated {subject} into {stems} and transcribed {scored} to notation you can read, hear played back against the recording, and export.",
+      "ledeMidiTail": " The {adjectives} {count, plural, one {part} other {parts}} came out as MIDI, without an engraved score.",
+      "ledeMidi": "GrooveSheet separated {subject} into {stems} and transcribed {notated} to MIDI you can play back and edit. No part of this track has an engraved score yet.",
+      "ledeStems": "GrooveSheet separated {subject} into {stems} you can solo, mute and download. This track has no notation yet.",
+      "rows": {
+        "part": "Part",
+        "album": "Album",
+        "released": "Released",
+        "length": "Length",
+        "separated": "Separated parts",
+        "scored": "Sheet music",
+        "midiOnly": "MIDI only"
+      },
+      "downloads": {
+        "heading": "What you can download",
+        "musicxml": "opens in MuseScore, Sibelius, Dorico or Finale",
+        "pdf": "engraved score, ready to print",
+        "midi": "editable notes for any DAW",
+        "stemsLabel": "Stems",
+        "stems": "each separated part as its own audio file",
+        "partMusicxml": "the {adjective} part, for MuseScore, Sibelius, Dorico or Finale",
+        "partPdf": "the {adjective} score, engraved and ready to print",
+        "partMidi": "the {adjective} notes, editable in any DAW",
+        "partStemLabel": "Stem",
+        "partStem": "the isolated {adjective} audio on its own"
+      },
+      "siblings": {
+        "headingPart": "Other parts of this song",
+        "headingSong": "Read one part on its own",
+        "link": "{sheetHeading} for {title}",
+        "everyPart": "Every part of {title} on one page"
+      },
+      "more": {
+        "heading": "More like this",
+        "notationHub": "{sheetHeading}, MIDI and stems",
+        "stemsHub": "Isolated {adjective} stems",
+        "byArtist": "Every transcription by {artist}"
+      },
+      "note": {
+        "before": "Transcribed automatically from the recording, so treat it as a strong first draft rather than an official edition. Every export is editable, and you can ",
+        "link": "run your own audio through the same models",
+        "after": " with a free ten-second preview."
+      }
+    },
+    "sidebar": {
+      "byArtist": "by {artist}",
+      "stemCount": "{count, plural, one {# stem} other {# stems}}",
+      "plays": "plays",
+      "downloads": "downloads",
+      "playsAria": "{count} plays",
+      "downloadsAria": "{count} downloads",
+      "instrument": "Instrument",
+      "preparing": "Preparing ZIP…",
+      "signIn": "Sign in to Download",
+      "downloadAll": "Download All (ZIP)",
+      "stemsFallback": "Stems",
+      "ctaTitle": "Not the song you needed?",
+      "ctaBody": "Transcribe your own audio →",
+      "pdfTitle": "Engraved PDF score",
+      "pdfNone": "No score to engrave for this track",
+      "save": "Save",
+      "share": "Share",
+      "report": "Report",
+      "scoreInfo": "Score info",
+      "artist": "Artist",
+      "album": "Album",
+      "year": "Year",
+      "duration": "Duration",
+      "stems": "Stems",
+      "published": "Published",
+      "source": "Source",
+      "tags": "Tags",
+      "tagStems": "Stems",
+      "moreBy": "More by {artist}",
+      "coverAlt": "{title} cover",
+      "profileAlt": "@{handle} profile"
+    },
+    "player": {
+      "songBy": "Song by {artist}",
+      "tabs": {
+        "sheet": "Sheet music",
+        "midi": "MIDI",
+        "keys": "Falling keys",
+        "stems": "Stems",
+        "spectrum": "Spectrum",
+        "notYet": "Not yet transcribed"
+      },
+      "noteView": {
+        "drums": "Drum Visualizer",
+        "fretboard": "Fretboard Notes",
+        "pianoRoll": "Piano roll"
+      },
+      "info": {
+        "stems": "{count} isolated stems · {status}",
+        "scrub": "drag the timeline to scrub",
+        "engravedWith": "Engraved with ",
+        "drums": "Drum visualizer · pieces flash on their hits",
+        "fretboard": "Fretboard notes · falling onto their string and fret",
+        "keys": "Falling keys · notes land on the key they are played on",
+        "spectrum": "Mel spectrograms of every stem, overlaid · toggle a layer to mute it",
+        "pianoRoll": "MIDI piano roll · {name} part"
+      },
+      "stems": {
+        "failed": "Stems failed to load",
+        "decoding": "Decoding stems… {loaded}/{total}",
+        "loading": "Loading stems… {loaded}/{total}"
+      },
+      "errors": {
+        "midiParse": "Failed to parse MIDI",
+        "midi": "Failed to load MIDI",
+        "score": "Failed to load score"
+      },
+      "transcribedBy": "Transcribed by GrooveSheet",
+      "emptyTitle": "No playable assets yet",
+      "emptyBody": "This track has not been processed.",
+      "openInfo": "Open info panel"
+    },
+    "rails": {
+      "artistTitle": "More from {artist}",
+      "artistSubtitle": "Every {artist} track in the GrooveSheet library.",
+      "recommendedTitle": "Recommended scores",
+      "recommendedSubtitle": "Picked from the GrooveSheet library, close in energy and instrumentation.",
+      "trendingTitle": "Trending now",
+      "trendingSubtitle": "What musicians are practicing this week.",
+      "newestTitle": "New this week",
+      "newestSubtitle": "The latest transcriptions and stem packs in the catalog."
+    },
+    "playback": {
+      "tempo": "Tempo",
+      "transpose": "Transpose",
+      "semitones": "st",
+      "previous": "Previous",
+      "next": "Next",
+      "play": "Play",
+      "pause": "Pause",
+      "loop": "Loop: {mode}",
+      "tempoHint": "Tempo · double-click to reset",
+      "resetTempo": "Reset tempo",
+      "semitoneDown": "Down semitone",
+      "semitoneUp": "Up semitone",
+      "resetHint": "Double-click to reset",
+      "metronome": "Metronome",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "volume": "Master volume",
+      "lightTheme": "Light theme",
+      "darkTheme": "Dark theme",
+      "fullscreen": "Fullscreen",
+      "unsupported": "Not supported for this track yet"
+    },
+    "card": {
+      "open": "OPEN",
+      "preview": "Preview",
+      "scorePending": "Score preview processing",
+      "coverAlt": "{title} cover art",
+      "previewAlt": "{title} preview",
+      "byCreator": "by @{creator}",
+      "playsAria": "{count} plays",
+      "downloadsAria": "{count} downloads",
+      "formats": {
+        "musicxml": "SHEET",
+        "midi": "MIDI",
+        "stem": "STEMS"
+      }
+    },
+    "report": {
+      "title": "Report This Track",
+      "thanksBefore": "Thanks, your report was received and this track has been flagged for review. For formal DMCA notices, email ",
+      "thanksAfter": ".",
+      "done": "Done",
+      "reason": "Reason",
+      "reasons": {
+        "copyright": "Copyright infringement",
+        "inappropriate": "Inappropriate content",
+        "other": "Something else"
+      },
+      "details": "Details (optional)",
+      "detailsPlaceholder": "What's the issue? For copyright claims, tell us who owns the work.",
+      "contact": "Contact email (optional, for follow-up)",
+      "cancel": "Cancel",
+      "sending": "Sending…",
+      "send": "Send Report",
+      "error": "Could not send the report"
+    }
   }
 }

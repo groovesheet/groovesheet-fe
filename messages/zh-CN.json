@@ -441,5 +441,282 @@
       "drop": "拖入一个 MP3",
       "sheet": "乐谱"
     }
+  },
+  "song": {
+    "viewers": {
+      "loadingScore": "正在加载乐谱…",
+      "noNotesTitle": "没有检测到音符",
+      "noNotesBody": "在这段音频中没有找到钢琴。请换一段钢琴清晰可闻的录音。",
+      "midiParseError": "无法解析 MIDI 文件。",
+      "drumParseError": "无法解析鼓的 MIDI 文件。",
+      "solo": "独奏",
+      "volume": "音量 {value}%",
+      "audioOnly": "仅音频",
+      "loadingNotes": "正在加载音符…",
+      "midiLoadError": "MIDI 加载失败",
+      "noMidiTitle": "这个乐器还没有 MIDI",
+      "noMidiBody": "下落琴键依据转谱得到的 MIDI 绘制。请从上方的下拉菜单选择其他乐器。",
+      "layers": "图层",
+      "showAll": "显示所有图层",
+      "allOn": "全部开启",
+      "brightness": "亮度",
+      "analysing": "正在分析分轨… {percent}%",
+      "adding": "正在添加图层… {percent}%",
+      "spectrumUnavailable": "频谱不可用",
+      "noStemAudio": "没有可分析的分轨音频",
+      "analyseError": "无法分析分轨"
+    },
+    "instruments": {
+      "drums": {
+        "name": "鼓",
+        "noun": "鼓",
+        "adjective": "鼓",
+        "sheet": "架子鼓谱",
+        "sheetHeading": "架子鼓谱",
+        "sheetTitle": "架子鼓谱",
+        "sub": "鼓组 · 打击乐"
+      },
+      "piano": {
+        "name": "钢琴",
+        "noun": "钢琴",
+        "adjective": "钢琴",
+        "sheet": "钢琴谱",
+        "sheetHeading": "钢琴谱",
+        "sheetTitle": "钢琴谱",
+        "sub": "琴键 · 和声"
+      },
+      "bass": {
+        "name": "贝斯",
+        "noun": "贝斯",
+        "adjective": "贝斯",
+        "sheet": "贝斯谱",
+        "sheetHeading": "贝斯谱",
+        "sheetTitle": "贝斯谱",
+        "sub": "低频 · 低音"
+      },
+      "vocals": {
+        "name": "人声",
+        "noun": "人声",
+        "adjective": "人声",
+        "sub": "主唱 · 歌声"
+      },
+      "guitar": {
+        "name": "吉他",
+        "noun": "吉他",
+        "adjective": "吉他",
+        "sub": "弦乐 · 拨弦"
+      },
+      "other": {
+        "name": "其他",
+        "noun": "其他",
+        "adjective": "其他",
+        "sub": "音色 · 其余"
+      }
+    },
+    "fullMix": "完整混音",
+    "meta": {
+      "subject": "{artist}《{title}》",
+      "subjectNoArtist": "《{title}》",
+      "title": "{subject}乐谱与 MIDI",
+      "description": "{subject}的免费乐谱、MIDI 与独立分轨。AI 转谱，可以跟着播放、下载或编辑。",
+      "partTitle": "{subject}{sheetTitle}",
+      "partDescription": "{subject}的免费{sheet}：在线看谱，对照原曲同步播放{exports}。{stem}",
+      "partExports": "，并可导出 {formats}",
+      "partStem": "附独立{name}分轨。",
+      "compositionName": "《{title}》{sheet}",
+      "explore": "探索",
+      "notFound": "找不到这首歌"
+    },
+    "facts": {
+      "heading": "关于这份转谱",
+      "headingPart": "关于这份{sheet}",
+      "stemCount": "{count, plural, =0 {多个独立声部} other {#个独立声部}}",
+      "ledePart": "GrooveSheet 分离了{subject}的各个声部，并把{name}声部转成了可以阅读、对照原曲播放和导出的乐谱。",
+      "ledeSiblings": "{names}声部也已转谱，可在单独的页面查看。",
+      "ledeOnly": "这是本曲目前唯一有乐谱的声部。",
+      "ledeScored": "GrooveSheet 把{subject}分离成{stems}，并将{scored}转成了可以阅读、对照原曲播放和导出的乐谱。",
+      "ledeMidiTail": "{names}声部目前只有 MIDI，还没有排版好的乐谱。",
+      "ledeMidi": "GrooveSheet 把{subject}分离成{stems}，并将{notated}转成了可播放、可编辑的 MIDI。本曲目前还没有排版好的乐谱。",
+      "ledeStems": "GrooveSheet 把{subject}分离成{stems}，可以单独播放、静音和下载。本曲目前还没有乐谱。",
+      "rows": {
+        "part": "声部",
+        "album": "专辑",
+        "released": "发行年份",
+        "length": "时长",
+        "separated": "分离的声部",
+        "scored": "乐谱",
+        "midiOnly": "仅有 MIDI"
+      },
+      "downloads": {
+        "heading": "可下载的内容",
+        "musicxml": "可在 MuseScore、Sibelius、Dorico 或 Finale 中打开",
+        "pdf": "排版好的乐谱，可直接打印",
+        "midi": "可在任何 DAW 中编辑的音符",
+        "stemsLabel": "分轨",
+        "stems": "每个分离出的声部各为一个音频文件",
+        "partMusicxml": "{name}声部，可在 MuseScore、Sibelius、Dorico 或 Finale 中打开",
+        "partPdf": "排版好的{sheet}，可直接打印",
+        "partMidi": "{name}声部的音符，可在任何 DAW 中编辑",
+        "partStemLabel": "分轨",
+        "partStem": "单独的{name}音轨"
+      },
+      "siblings": {
+        "headingPart": "这首歌的其他声部",
+        "headingSong": "单独查看某个声部",
+        "link": "《{title}》{sheet}",
+        "everyPart": "在同一页查看《{title}》的所有声部"
+      },
+      "more": {
+        "heading": "更多同类曲目",
+        "notationHub": "{sheet}、MIDI 与分轨",
+        "stemsHub": "独立{name}分轨",
+        "byArtist": "{artist}的所有转谱"
+      },
+      "note": {
+        "before": "本谱由录音自动转录，请把它当作可靠的初稿，而非官方版本。所有导出文件都可以编辑，你也可以",
+        "link": "用同样的模型转录你自己的音频",
+        "after": "，前十秒可免费预览。"
+      }
+    },
+    "sidebar": {
+      "byArtist": "· {artist}",
+      "stemCount": "{count} 条分轨",
+      "plays": "次播放",
+      "downloads": "次下载",
+      "playsAria": "{count} 次播放",
+      "downloadsAria": "{count} 次下载",
+      "instrument": "乐器",
+      "preparing": "正在打包 ZIP…",
+      "signIn": "登录后下载",
+      "downloadAll": "全部下载（ZIP）",
+      "stemsFallback": "分轨",
+      "ctaTitle": "没有找到你要的歌？",
+      "ctaBody": "转录你自己的音频 →",
+      "pdfTitle": "排版好的 PDF 乐谱",
+      "pdfNone": "这首歌没有可排版的乐谱",
+      "save": "收藏",
+      "share": "分享",
+      "report": "举报",
+      "scoreInfo": "乐谱信息",
+      "artist": "艺人",
+      "album": "专辑",
+      "year": "年份",
+      "duration": "时长",
+      "stems": "分轨数",
+      "published": "发布日期",
+      "source": "来源",
+      "tags": "标签",
+      "tagStems": "分轨",
+      "moreBy": "{artist}的更多作品",
+      "coverAlt": "《{title}》封面",
+      "profileAlt": "@{handle} 的主页"
+    },
+    "player": {
+      "songBy": "原曲：{artist}",
+      "tabs": {
+        "sheet": "乐谱",
+        "midi": "MIDI",
+        "keys": "下落琴键",
+        "stems": "分轨",
+        "spectrum": "频谱",
+        "notYet": "尚未转谱"
+      },
+      "noteView": {
+        "drums": "鼓组可视化",
+        "fretboard": "指板音符",
+        "pianoRoll": "钢琴卷帘"
+      },
+      "info": {
+        "stems": "{count} 条独立分轨 · {status}",
+        "scrub": "拖动时间轴即可定位",
+        "engravedWith": "排版引擎：",
+        "drums": "鼓组可视化 · 鼓件在击打时亮起",
+        "fretboard": "指板音符 · 落在对应的弦和品上",
+        "keys": "下落琴键 · 音符落在弹奏的琴键上",
+        "spectrum": "所有分轨的梅尔频谱叠加显示 · 切换图层即可静音",
+        "pianoRoll": "MIDI 钢琴卷帘 · {name}声部"
+      },
+      "stems": {
+        "failed": "分轨加载失败",
+        "decoding": "正在解码分轨… {loaded}/{total}",
+        "loading": "正在加载分轨… {loaded}/{total}"
+      },
+      "errors": {
+        "midiParse": "MIDI 解析失败",
+        "midi": "MIDI 加载失败",
+        "score": "乐谱加载失败"
+      },
+      "transcribedBy": "GrooveSheet 转谱",
+      "emptyTitle": "暂无可播放的内容",
+      "emptyBody": "这首歌还没有处理完成。",
+      "openInfo": "打开信息面板"
+    },
+    "rails": {
+      "artistTitle": "{artist}的更多作品",
+      "artistSubtitle": "GrooveSheet 曲库中{artist}的全部曲目。",
+      "recommendedTitle": "推荐乐谱",
+      "recommendedSubtitle": "从 GrooveSheet 曲库中挑选，风格与编制相近。",
+      "trendingTitle": "正在流行",
+      "trendingSubtitle": "音乐人本周都在练什么。",
+      "newestTitle": "本周新增",
+      "newestSubtitle": "曲库中最新的转谱和分轨。"
+    },
+    "playback": {
+      "tempo": "速度",
+      "transpose": "移调",
+      "semitones": "半音",
+      "previous": "回到开头",
+      "next": "跳到结尾",
+      "play": "播放",
+      "pause": "暂停",
+      "loop": "循环：{mode}",
+      "tempoHint": "速度 · 双击重置",
+      "resetTempo": "重置速度",
+      "semitoneDown": "降半音",
+      "semitoneUp": "升半音",
+      "resetHint": "双击重置",
+      "metronome": "节拍器",
+      "mute": "静音",
+      "unmute": "取消静音",
+      "volume": "主音量",
+      "lightTheme": "浅色主题",
+      "darkTheme": "深色主题",
+      "fullscreen": "全屏",
+      "unsupported": "这首歌暂不支持此功能"
+    },
+    "card": {
+      "open": "打开",
+      "preview": "试听",
+      "scorePending": "乐谱预览生成中",
+      "coverAlt": "《{title}》封面",
+      "previewAlt": "《{title}》预览",
+      "byCreator": "@{creator} 发布",
+      "playsAria": "{count} 次播放",
+      "downloadsAria": "{count} 次下载",
+      "formats": {
+        "musicxml": "乐谱",
+        "midi": "MIDI",
+        "stem": "分轨"
+      }
+    },
+    "report": {
+      "title": "举报这首歌",
+      "thanksBefore": "谢谢，我们已收到你的举报，这首歌已被标记待审核。正式的 DMCA 通知请发送邮件至 ",
+      "thanksAfter": "。",
+      "done": "完成",
+      "reason": "原因",
+      "reasons": {
+        "copyright": "侵犯版权",
+        "inappropriate": "不当内容",
+        "other": "其他问题"
+      },
+      "details": "详细说明（可选）",
+      "detailsPlaceholder": "遇到了什么问题？如涉及版权，请告诉我们作品的权利人是谁。",
+      "contact": "联系邮箱（可选，用于后续跟进）",
+      "cancel": "取消",
+      "sending": "正在发送…",
+      "send": "提交举报",
+      "error": "举报发送失败"
+    }
   }
 }

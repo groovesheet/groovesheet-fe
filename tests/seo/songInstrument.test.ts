@@ -1,17 +1,33 @@
 import { describe, expect, it } from 'vitest';
+import { createTranslator } from 'next-intl';
 import {
   SONG_INSTRUMENTS,
   hasScoreFor,
-  instrumentAdjective,
   instrumentExportFormats,
+  instrumentWord,
   scoredInstruments,
   songInstrumentDescription,
   songInstrumentHeading,
   songInstrumentPath,
   songInstrumentTitle,
+  type SongCopy,
+  type SongT,
 } from '@/app/[locale]/explore/[songId]/_components/songData';
 import { hubsOfKind } from '@/lib/seo/instrumentHubs';
 import type { LibraryTrack } from '@/lib/types';
+import en from '@/messages/en.json';
+import zhCN from '@/messages/zh-CN.json';
+import zhTW from '@/messages/zh-TW.json';
+
+const MESSAGES = { en, 'zh-CN': zhCN, 'zh-TW': zhTW } as const;
+type TestLocale = keyof typeof MESSAGES;
+
+/** The real `song` messages for a locale, through the same translator the pages use. */
+function copyFor(locale: TestLocale): SongCopy {
+  const t = createTranslator({ locale, messages: MESSAGES[locale], namespace: 'song' }) as unknown as SongT;
+  return { t, locale };
+}
+const EN = copyFor('en');
 
 /**
  * /explore/{song}/{instrument} turns ~300 track pages into several hundred
@@ -82,28 +98,31 @@ describe('song instrument pages', () => {
 
   // "drums sheet music" is not what anyone types; "drum sheet music" is.
   it('uses the adjective form, not the stem name', () => {
-    expect(instrumentAdjective('drums')).toBe('Drum');
-    expect(instrumentAdjective('piano')).toBe('Piano');
-    expect(instrumentAdjective('bass')).toBe('Bass');
+    expect(instrumentWord(EN.t, 'drums', 'adjective')).toBe('drum');
+    expect(instrumentWord(EN.t, 'drums', 'sheetHeading')).toBe('Drum sheet music');
+    expect(instrumentWord(EN.t, 'piano', 'sheetTitle')).toBe('Piano Sheet Music');
+    expect(instrumentWord(EN.t, 'bass', 'name')).toBe('Bass');
+    // A stem the messages do not know keeps its own name rather than a key path.
+    expect(instrumentWord(EN.t, 'ukulele', 'name')).toBe('Ukulele');
   });
 
   it('puts the searched phrase in the title, artist included', () => {
-    expect(songInstrumentTitle(DRUMS_AND_PIANO, 'drums')).toBe('Sample Song by Sample Artist: Drum Sheet Music');
-    expect(songInstrumentTitle({ title: 'Untitled', artist: null }, 'piano')).toBe('Untitled: Piano Sheet Music');
+    expect(songInstrumentTitle(EN.t, DRUMS_AND_PIANO, 'drums')).toBe('Sample Song by Sample Artist: Drum Sheet Music');
+    expect(songInstrumentTitle(EN.t, { title: 'Untitled', artist: null }, 'piano')).toBe('Untitled: Piano Sheet Music');
     // Each part must produce a different title, or the split buys nothing.
-    const titles = SONG_INSTRUMENTS.map((i) => songInstrumentTitle(DRUMS_AND_PIANO, i));
+    const titles = SONG_INSTRUMENTS.map((i) => songInstrumentTitle(EN.t, DRUMS_AND_PIANO, i));
     expect(new Set(titles).size).toBe(SONG_INSTRUMENTS.length);
   });
 
   it('describes the part, and only claims what the page offers', () => {
-    const description = songInstrumentDescription(DRUMS_AND_PIANO, 'drums');
+    const description = songInstrumentDescription(EN, DRUMS_AND_PIANO, 'drums');
     expect(description).toContain('drum sheet music for Sample Song by Sample Artist');
     expect(description).toContain('PDF, MusicXML or MIDI');
     expect(description).toContain('Isolated drum stem included');
     // Google truncates around 160 characters; a description longer than that is
     // a sentence nobody reads the end of.
     expect(description.length).toBeLessThanOrEqual(200);
-    expect(songInstrumentHeading('drums')).toBe('Drum sheet music');
+    expect(songInstrumentHeading(EN.t, 'drums')).toBe('Drum sheet music');
   });
 
   // The export list is read off the record, so it cannot offer a MIDI the
@@ -111,15 +130,15 @@ describe('song instrument pages', () => {
   it('lists only the exports the part actually has', () => {
     expect(instrumentExportFormats(DRUMS_AND_PIANO, 'drums')).toEqual(['PDF', 'MusicXML', 'MIDI']);
     expect(instrumentExportFormats(DRUMS_AND_PIANO, 'piano')).toEqual(['PDF', 'MusicXML']);
-    expect(songInstrumentDescription(DRUMS_AND_PIANO, 'piano')).toContain('export PDF or MusicXML');
-    expect(songInstrumentDescription(DRUMS_AND_PIANO, 'piano')).not.toContain('MIDI');
+    expect(songInstrumentDescription(EN, DRUMS_AND_PIANO, 'piano')).toContain('export PDF or MusicXML');
+    expect(songInstrumentDescription(EN, DRUMS_AND_PIANO, 'piano')).not.toContain('MIDI');
   });
 
   // A stem is a separate promise from a score, and the sentence only makes it
   // when the audio is there.
   it('mentions the stem only when the track has one', () => {
     const noStem = track([{ asset_type: 'musicxml', stem_name: 'drums' }]);
-    expect(songInstrumentDescription(noStem, 'drums')).not.toContain('stem');
+    expect(songInstrumentDescription(EN, noStem, 'drums')).not.toContain('stem');
   });
 
   // The part page hangs off the song page's own URL, so the two agree on

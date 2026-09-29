@@ -14,6 +14,7 @@
 // gain or the size changes. The playhead and the unplayed dimming are DOM
 // layers driven by a `--gs-prog` CSS variable — no canvas work per frame.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { computeMelSpectrogram, DEFAULTS, hzToMelFraction } from '../core/melSpectrogram';
 
@@ -102,6 +103,7 @@ export default function SpectrogramView({
   trackId,
   statusText,
 }) {
+  const tv = useTranslations('song.viewers');
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const [specs, setSpecs] = useState(null); // Map<name, spec>
@@ -168,10 +170,10 @@ export default function SpectrogramView({
           },
         });
         if (cancelled) return;
-        if (!any) throw new Error('No stem audio to analyse');
+        if (!any) throw new Error(tv('noStemAudio'));
         setProgress(1);
       } catch (e) {
-        if (!cancelled) setError(e.message || 'Could not analyse the stems');
+        if (!cancelled) setError(e.message || tv('analyseError'));
       }
     })();
     return () => {
@@ -328,16 +330,16 @@ export default function SpectrogramView({
       {/* Left rail — one switch per layer */}
       <aside className="gs-spec-rail">
         <div className="gs-spec-rail-head">
-          <span>Layers</span>
+          <span>{tv('layers')}</span>
           <button
             type="button"
             className="gs-spec-all"
             onClick={() =>
               stems.forEach((s) => onStemChange(s.name, { mute: false, solo: false }))
             }
-            title="Show every layer"
+            title={tv('showAll')}
           >
-            All on
+            {tv('allOn')}
           </button>
         </div>
 
@@ -366,7 +368,7 @@ export default function SpectrogramView({
                 type="button"
                 className={`gs-ms-btn s ${st.solo ? 'on' : ''}`}
                 onClick={() => onStemChange(s.name, { solo: !st.solo })}
-                title="Solo"
+                title={tv('solo')}
               >
                 S
               </button>
@@ -375,7 +377,7 @@ export default function SpectrogramView({
         })}
 
         <div className="gs-spec-gain">
-          <label htmlFor="gs-spec-gain">Brightness</label>
+          <label htmlFor="gs-spec-gain">{tv('brightness')}</label>
           <input
             id="gs-spec-gain"
             className="gs-slider"
@@ -419,12 +421,12 @@ export default function SpectrogramView({
                 <div className="gs-spec-bar">
                   <div style={{ width: `${Math.round(progress * 100)}%` }} />
                 </div>
-                <span>Analysing stems… {Math.round(progress * 100)}%</span>
+                <span>{tv('analysing', { percent: Math.round(progress * 100) })}</span>
               </div>
             )}
             {error && (
               <div style={{ padding: 24, maxWidth: 460 }}>
-                <StatusMessage variant="error" title="Spectrum unavailable">
+                <StatusMessage variant="error" title={tv('spectrumUnavailable')}>
                   {error}
                 </StatusMessage>
               </div>
@@ -453,7 +455,7 @@ export default function SpectrogramView({
                     <div className="gs-spec-bar">
                       <div style={{ width: `${Math.round(progress * 100)}%` }} />
                     </div>
-                    <span>Adding layers… {Math.round(progress * 100)}%</span>
+                    <span>{tv('adding', { percent: Math.round(progress * 100) })}</span>
                   </div>
                 )}
               </>

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Play, DownloadSimple } from '@phosphor-icons/react';
 import { Link } from '@/lib/navigation';
 import { FORMAT_LABELS, fmtCount, songPath } from '@/lib/exploreConstants';
+import { instrumentWord, type SongT } from '../[songId]/_components/songData';
 import resolveThumb, { CardThumb, type CardVariant } from './thumbs/resolveThumb';
 import type { SongCardModel } from './trackToCard';
 import './SongCard.css';
@@ -24,6 +26,8 @@ interface SongCardProps {
  * rail on the server-rendered page is a set of crawlable links.
  */
 function SongCard({ song, variant, href }: SongCardProps) {
+  const tSong = useTranslations('song');
+  const t = useTranslations('song.card');
   const [coverFailed, setCoverFailed] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
   const thumbKind = resolveThumb(song, variant);
@@ -34,7 +38,8 @@ function SongCard({ song, variant, href }: SongCardProps) {
   const formats = song.formats || [];
   const parts = song.parts || [];
 
-  const primary = parts.length > 0 ? parts[0] : 'Full mix';
+  // Parts arrive capitalized for display ('Drums'); name them in the page's language.
+  const primary = parts.length > 0 ? instrumentWord(tSong as unknown as SongT, parts[0], 'name') : tSong('fullMix');
   const creator = song.owner && song.owner.username ? song.owner.username : null;
   const target = href || songPath(song.id, variant);
 
@@ -48,7 +53,7 @@ function SongCard({ song, variant, href }: SongCardProps) {
           <img
             className="sc-cover"
             src={song.coverUrl}
-            alt={`${song.title} cover art`}
+            alt={t('coverAlt', { title: song.title })}
             loading="lazy"
             onError={() => setCoverFailed(true)}
           />
@@ -57,25 +62,25 @@ function SongCard({ song, variant, href }: SongCardProps) {
           <img
             className={`sc-cover${variant === 'sheet' ? ' sc-score-preview' : ''}`}
             src={previewUrl}
-            alt={`${song.title} ${variant} preview`}
+            alt={t('previewAlt', { title: song.title })}
             loading="lazy"
             onError={() => setPreviewFailed(true)}
           />
         ) : variant === 'sheet' ? (
-          <div className="sc-sheet-processing" role="img" aria-label="Score preview processing">
-            <span>Score preview processing</span>
+          <div className="sc-sheet-processing" role="img" aria-label={t('scorePending')}>
+            <span>{t('scorePending')}</span>
           </div>
         ) : (
           <CardThumb kind={thumbKind} song={song} peaks={(song.thumbData && song.thumbData.stems) || null} />
         )}
         <div className="sc-overlay" />
         <div className="sc-overlay-play">
-          <span className="sc-play-btn" aria-label="Preview">
+          <span className="sc-play-btn" aria-label={t('preview')}>
             <Play size={20} weight="fill" />
           </span>
         </div>
         <div className="sc-overlay-cta">
-          <span className="sc-open-pill">OPEN</span>
+          <span className="sc-open-pill">{t('open')}</span>
         </div>
       </div>
       <div className="sc-meta">
@@ -87,17 +92,17 @@ function SongCard({ song, variant, href }: SongCardProps) {
         <div className="sc-artist">{song.artist}</div>
         {creator && (
           <Link className="sc-creator" href={`/u/${creator}`}>
-            by @{creator}
+            {t('byCreator', { creator })}
           </Link>
         )}
         <div className="sc-row">
           <span className="sc-genre">{song.year ? `${primary} · ${song.year}` : primary}</span>
           <span className="sc-stats">
-            <span className="sc-views" aria-label={`${song.plays || 0} plays`}>
+            <span className="sc-views" aria-label={t('playsAria', { count: song.plays || 0 })}>
               <Play size={12} weight="regular" />
               {fmtCount(song.plays || 0)}
             </span>
-            <span className="sc-views" aria-label={`${song.downloads || 0} downloads`}>
+            <span className="sc-views" aria-label={t('downloadsAria', { count: song.downloads || 0 })}>
               <DownloadSimple size={12} weight="regular" />
               {fmtCount(song.downloads || 0)}
             </span>
@@ -108,7 +113,7 @@ function SongCard({ song, variant, href }: SongCardProps) {
             {formats
               .filter((f) => FORMAT_LABELS[f])
               .map((f) => (
-                <span key={f}>{FORMAT_LABELS[f]}</span>
+                <span key={f}>{t.has(`formats.${f}`) ? t(`formats.${f}`) : FORMAT_LABELS[f]}</span>
               ))}
           </div>
         )}

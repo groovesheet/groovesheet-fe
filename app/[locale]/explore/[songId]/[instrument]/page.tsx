@@ -26,7 +26,7 @@
  * the song as a whole. These are siblings of it, not replacements.
  */
 import { notFound } from 'next/navigation';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getLibraryTrack, getLibraryTracks } from '@/lib/api-server';
 import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo/metadata';
 import { breadcrumbJsonLd } from '@/lib/seo/jsonld';
@@ -39,13 +39,15 @@ import SongDetail from '../_components/SongDetail';
 import TrackFacts from '../_components/TrackFacts';
 import {
   hasScoreFor,
-  instrumentAdjective,
+  instrumentVars,
+  instrumentWord,
   isoDuration,
   songInstrumentDescription,
   songInstrumentHeading,
   songInstrumentPath,
   songInstrumentTitle,
   trackDurationSec,
+  type SongCopy,
 } from '../_components/songData';
 
 export const revalidate = 300;
@@ -65,13 +67,14 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const { locale, songId, instrument } = await params;
   const part = instrument.toLowerCase();
+  const t = await getTranslations({ locale, namespace: 'song' });
   const track = await getLibraryTrack(songId);
   if (!track || !hasScoreFor(track, part)) {
-    return { title: 'Not found', robots: { index: false, follow: false } };
+    return { title: t('meta.notFound'), robots: { index: false, follow: false } };
   }
   return pageMetadata({
-    title: songInstrumentTitle(track, part),
-    description: songInstrumentDescription(track, part),
+    title: songInstrumentTitle(t, track, part),
+    description: songInstrumentDescription({ t, locale }, track, part),
     path: songInstrumentPath(track, part),
     locale,
     image: track.cover_url || null,
@@ -83,16 +86,17 @@ export async function generateMetadata({ params }: PageProps) {
  * MusicComposition for this part specifically, so the markup describes the
  * same thing the page does.
  */
-function instrumentJsonLd(track: LibraryTrack, instrument: string, locale: string): Record<string, unknown> {
+function instrumentJsonLd(copy: SongCopy, track: LibraryTrack, instrument: string): Record<string, unknown> {
+  const { t, locale } = copy;
   const url = `${SITE_URL}${buildLocalePath(locale, songInstrumentPath(track, instrument))}`;
   const duration = isoDuration(trackDurationSec(track));
   return {
     '@context': 'https://schema.org',
     '@type': 'MusicComposition',
-    name: `${track.title} (${instrumentAdjective(instrument)} transcription)`,
+    name: t('meta.compositionName', { ...instrumentVars(t, instrument), title: track.title }),
     url,
-    description: songInstrumentDescription(track, instrument),
-    musicalKey: undefined,
+    description: songInstrumentDescription(copy, track, instrument),
+    inLanguage: locale,
     ...(track.cover_url ? { image: track.cover_url } : {}),
     ...(track.published_at ? { datePublished: track.published_at } : {}),
     encodingFormat: ['application/vnd.recordare.musicxml+xml', 'audio/midi'],
@@ -111,6 +115,7 @@ export default async function SongInstrumentPage({ params }: PageProps) {
   const { locale, songId, instrument } = await params;
   const part = instrument.toLowerCase();
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'song' });
 
   const track = await getLibraryTrack(songId);
   // No track, or no score for this part: this page does not exist. Deliberately
@@ -129,22 +134,22 @@ export default async function SongInstrumentPage({ params }: PageProps) {
   const hub = hubsOfKind('notation').find((h) => h.slug === part);
   const crumbs = [
     { name: SITE_NAME, path: '/' },
-    { name: 'Explore', path: '/explore' },
-    ...(hub ? [{ name: hub.noun, path: hubPath(hub) }] : []),
-    { name: track.artist ? `${track.title} by ${track.artist}` : track.title, path: songInstrumentPath(track, part) },
+    { name: t('meta.explore'), path: '/explore' },
+    ...(hub ? [{ name: instrumentWord(t, hub.slug, 'name'), path: hubPath(hub) }] : []),
+    { name: songInstrumentTitle(t, track, part), path: songInstrumentPath(track, part) },
   ];
 
   return (
     <>
-      <JsonLd data={instrumentJsonLd(track, part, locale)} />
+      <JsonLd data={instrumentJsonLd({ t, locale }, track, part)} />
       <JsonLd data={breadcrumbJsonLd(locale, crumbs)} />
       <SongDetail
         key={`${track.id}-${part}`}
         track={track}
         related={related}
         initialInstrument={part}
-        instrumentHeading={songInstrumentHeading(part)}
-        facts={<TrackFacts track={track} instrument={part} />}
+        instrumentHeading={songInstrumentHeading(t, part)}
+        facts={<TrackFacts track={track} instrument={part} locale={locale} />}
       />
     </>
   );

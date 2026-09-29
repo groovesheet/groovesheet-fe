@@ -11,6 +11,7 @@
 // browser after hydration, so the server HTML is the same for everyone.
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
@@ -69,23 +70,23 @@ import trackToCard, { type SongCardModel } from '../../_components/trackToCard';
 import type { CardVariant } from '../../_components/thumbs/resolveThumb';
 import SongSidebar from './SongSidebar';
 import UrlIntent, { type SongUrlIntent } from './UrlIntent';
-import { assetKey, trackAssets, trackDurationSec, type SongAsset } from './songData';
+import { assetKey, instrumentWord, trackAssets, trackDurationSec, type SongAsset, type SongT } from './songData';
 
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
-// Backend stem_name to display label / signature color (Explore palette).
-const STEM_META: Record<string, { label: string; color: string; sub: string }> = {
-  vocals: { label: 'Vocals', color: '#7CC4FF', sub: 'lead · voice' },
-  drums: { label: 'Drums', color: '#FF7BA9', sub: 'kit · percussion' },
-  bass: { label: 'Bass', color: '#FFC857', sub: 'sub · low end' },
-  guitar: { label: 'Guitar', color: '#84F2A6', sub: 'strings · plucked' },
-  piano: { label: 'Piano', color: '#7AA2FF', sub: 'keys · harmonic' },
-  other: { label: 'Other', color: '#C9A0FF', sub: 'texture · residual' },
+// Backend stem_name to signature color (Explore palette). Labels and the
+// small descriptor under each stem come from messages (song.instruments).
+const STEM_COLOR: Record<string, string> = {
+  vocals: '#7CC4FF',
+  drums: '#FF7BA9',
+  bass: '#FFC857',
+  guitar: '#84F2A6',
+  piano: '#7AA2FF',
+  other: '#C9A0FF',
 };
 const STEM_ORDER = ['vocals', 'drums', 'bass', 'guitar', 'piano', 'other'];
 
-const stemLabel = (name: string) => STEM_META[name]?.label || name.charAt(0).toUpperCase() + name.slice(1);
-const stemColor = (name: string) => STEM_META[name]?.color || '#8d8c8d';
+const stemColor = (name: string) => STEM_COLOR[name] || '#8d8c8d';
 
 /**
  * GET an asset off its presigned stream_url. Presigned URLs expire (~900s), so
@@ -206,6 +207,7 @@ interface ViewerToolbarProps {
 }
 
 function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, instrumentUi }: ViewerToolbarProps) {
+  const t = useTranslations('song.player.tabs');
   // Digit label per key: 1-based position among the AVAILABLE tabs.
   const kbdFor: Partial<Record<ViewKey, string>> = {};
   VIEW_ORDER.filter((k) => available[k]).forEach((k, i) => {
@@ -219,7 +221,7 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
         className={viewMode === key ? 'on' : ''}
         onClick={() => enabled && onView(key)}
         disabled={!enabled}
-        title={enabled ? undefined : 'Not yet transcribed'}
+        title={enabled ? undefined : t('notYet')}
         style={enabled ? undefined : { opacity: 0.4, cursor: 'not-allowed' }}
       >
         <IconCmp />
@@ -232,18 +234,18 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
     <div className="gs-viewer-toolbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div className="gs-seg" role="tablist">
-          {tab('sheet', Icon.Sheet, 'Sheet music')}
+          {tab('sheet', Icon.Sheet, t('sheet'))}
           {/* The raw piano roll of whatever MIDI the selected instrument has.
               It is the MIDI tab proper and never renames itself; the
               instrument-specific picture of the same notes is its own tab. */}
-          {tab('midi', Icon.Midi, 'MIDI')}
+          {tab('midi', Icon.Midi, t('midi'))}
           {available.notes ? tab('notes', Icon.Midi, noteLabel) : null}
           {/* Falling keys is a keyboard picture, so it is offered only for the
               pitched roll; a drum kit or a fretboard has its own visualiser. */}
-          {available.keys ? tab('keys', Icon.Midi, 'Falling keys') : null}
-          {tab('stems', Icon.Stems, 'Stems')}
+          {available.keys ? tab('keys', Icon.Midi, t('keys')) : null}
+          {tab('stems', Icon.Stems, t('stems'))}
           {/* Spectrum rides on the same stems, so it only appears with them. */}
-          {available.spectrum ? tab('spectrum', Icon.Spectrum, 'Spectrum') : null}
+          {available.spectrum ? tab('spectrum', Icon.Spectrum, t('spectrum')) : null}
         </div>
         {instrumentUi}
       </div>
@@ -301,6 +303,21 @@ export default function SongDetail({
   // must not hand over a new object for the same track: every engine below is
   // keyed on it and would be torn down mid-playback.
   const [track] = useState(initialTrack);
+  const tSong = useTranslations('song');
+  const t = useTranslations('song.player');
+  // The engine effects below build audio and score engines once per asset;
+  // they read messages through this ref so a new translator never tears one
+  // down mid-playback.
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+  // Stem labels in the page's language ("Drums", "鼓"); unknown stems keep their name.
+  const stemLabel = useCallback((name: string) => instrumentWord(tSong as unknown as SongT, name, 'name'), [tSong]);
+  const stemSub = useCallback(
+    (name: string) => (tSong.has(`instruments.${name}.sub`) ? tSong(`instruments.${name}.sub`) : ''),
+    [tSong]
+  );
   const { songId } = useParams<{ songId: string }>();
   const { isDarkMode, toggleTheme } = useTheme();
   const { getToken } = useAuth();
@@ -358,10 +375,10 @@ export default function SongDetail({
       name,
       label: stemLabel(name),
       color: stemColor(name),
-      sub: STEM_META[name]?.sub || '',
+      sub: stemSub(name),
       wave: track.thumb_data?.stems?.[name] || localWaves[name] || null,
     }));
-  }, [stemAssetsByName, track, localWaves]);
+  }, [stemAssetsByName, track, localWaves, stemLabel, stemSub]);
 
   // All note assets, per instrument. A track may carry several MIDI/MusicXML
   // parts (adtof_drums_midi, transkun_v2_piano_midi, ...); the selected
@@ -390,7 +407,7 @@ export default function SongDetail({
       hasNotes: midiAssets.some((a) => a.stem_name === name),
       hasScore: xmlAssets.some((a) => a.stem_name === name),
     }));
-  }, [stems, midiAssets, xmlAssets]);
+  }, [stems, midiAssets, xmlAssets, stemLabel]);
 
   // ?instrument= still wins, so an in-page link can switch part without a
   // navigation; the route's own instrument is the default beneath it.
@@ -401,7 +418,11 @@ export default function SongDetail({
   // Label for the instrument-specific note tab. The pitched roll has no such
   // tab (the MIDI tab already IS its picture), so 'roll' never reaches the UI.
   const noteLabel =
-    noteView === 'drums' ? 'Drum Visualizer' : noteView === 'fretboard' ? 'Fretboard Notes' : 'Piano roll';
+    noteView === 'drums'
+      ? t('noteView.drums')
+      : noteView === 'fretboard'
+        ? t('noteView.fretboard')
+        : t('noteView.pianoRoll');
 
   const midiAsset = useMemo(() => pickPart(midiAssets, instrument), [midiAssets, instrument]);
   const xmlAsset = useMemo(() => pickPart(xmlAssets, instrument), [xmlAssets, instrument]);
@@ -490,7 +511,9 @@ export default function SongDetail({
     const engine = createStemEngine({
       assets,
       onProgress: (p) => setStemProgress(p),
-      onError: (err) => setStemError(err.message || 'Failed to load stems'),
+      // Only the presence of an error is shown (as song.player.stems.failed), so
+      // this string is a flag and never reaches the page.
+      onError: (err) => setStemError(err.message || 'stems failed'),
       onPeaks: needsWaves
         ? (name, peaks) => {
             if (thumbStems[name]) return;
@@ -599,7 +622,7 @@ export default function SongDetail({
           midiBuffer: buf,
           onError: (err) =>
             setMidiLoad((cur) =>
-              cur && cur.key === key ? { ...cur, error: err.message || 'Failed to parse MIDI' } : cur
+              cur && cur.key === key ? { ...cur, error: err.message || tRef.current('errors.midiParse') } : cur
             ),
         });
         engine.setMasterVolume(masterVolRef.current);
@@ -613,7 +636,7 @@ export default function SongDetail({
           else engine.seek(st.positionSec);
         }
       } catch (err) {
-        if (!cancelled) setMidiLoad({ key, value: null, error: errorMessage(err, 'Failed to load MIDI') });
+        if (!cancelled) setMidiLoad({ key, value: null, error: errorMessage(err, tRef.current('errors.midi')) });
       }
     })();
     return () => {
@@ -735,12 +758,12 @@ export default function SongDetail({
           error: null,
           value: applyMusicXmlMetadata(xmlText, {
             title: track.title,
-            artist: 'Transcribed by GrooveSheet',
-            sourceCredit: track.artist ? `Song by ${track.artist}` : undefined,
+            artist: tRef.current('transcribedBy'),
+            sourceCredit: track.artist ? tRef.current('songBy', { artist: track.artist }) : undefined,
           }),
         });
       } catch (err) {
-        if (!cancelled) setXmlLoad({ key, value: null, error: errorMessage(err, 'Failed to load score') });
+        if (!cancelled) setXmlLoad({ key, value: null, error: errorMessage(err, tRef.current('errors.score')) });
       }
     })();
     return () => {
@@ -999,20 +1022,20 @@ export default function SongDetail({
     const out: { key: string; title: string; subtitle: string; songs: SongCardModel[]; variant?: CardVariant }[] = [
       {
         key: 'recommended',
-        title: 'Recommended scores',
-        subtitle: 'Picked from the GrooveSheet library, close in energy and instrumentation.',
+        title: tSong('rails.recommendedTitle'),
+        subtitle: tSong('rails.recommendedSubtitle'),
         songs: cards(recommended),
       },
       {
         key: 'trending',
-        title: 'Trending now',
-        subtitle: 'What musicians are practicing this week.',
+        title: tSong('rails.trendingTitle'),
+        subtitle: tSong('rails.trendingSubtitle'),
         songs: cards(trending),
       },
       {
         key: 'new',
-        title: 'New this week',
-        subtitle: 'The latest transcriptions and stem packs in the catalog.',
+        title: tSong('rails.newestTitle'),
+        subtitle: tSong('rails.newestSubtitle'),
         songs: cards(newest).filter((t) => t.formats.includes('musicxml')),
         variant: 'sheet',
       },
@@ -1021,46 +1044,48 @@ export default function SongDetail({
     if (byArtist.length) {
       out.push({
         key: 'artist',
-        title: `More from ${track.artist}`,
-        subtitle: `Every ${track.artist} track in the GrooveSheet library.`,
+        title: tSong('rails.artistTitle', { artist: track.artist || '' }),
+        subtitle: tSong('rails.artistSubtitle', { artist: track.artist || '' }),
         songs: cards(byArtist),
       });
     }
     return out;
-  }, [related, track]);
+  }, [related, track, tSong]);
 
   // --- drawer ----------------------------------------------------------------------
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // --- derived UI bits -------------------------------------------------------------
   const stemStatusText = stemError
-    ? 'Stems failed to load'
+    ? t('stems.failed')
     : stemProgress && stemProgress.loaded < stemProgress.total
-      ? `${stemProgress.phase === 'decode' ? 'Decoding' : 'Loading'} stems… ${stemProgress.loaded}/${stemProgress.total}`
+      ? t(stemProgress.phase === 'decode' ? 'stems.decoding' : 'stems.loading', {
+          loaded: stemProgress.loaded,
+          total: stemProgress.total,
+        })
       : null;
 
   const viewerInfo =
     view === 'sheet' ? (
       <span style={infoStyle}>
-        Engraved with <strong style={{ color: 'var(--color-text)' }}>GrooveSheet OSMD</strong>
+        {t('info.engravedWith')}
+        <strong style={{ color: 'var(--color-text)' }}>GrooveSheet OSMD</strong>
       </span>
     ) : view === 'midi' ? (
-      <span style={infoStyle}>MIDI piano roll · {(instrument && STEM_META[instrument]?.label) || instrument} part</span>
+      <span style={infoStyle}>{t('info.pianoRoll', { name: instrument ? stemLabel(instrument) : '' })}</span>
     ) : view === 'notes' ? (
       <span style={infoStyle}>
-        {noteView === 'drums'
-          ? 'Drum visualizer · pieces flash on their hits'
-          : 'Fretboard notes · falling onto their string and fret'}
+        {noteView === 'drums' ? t('info.drums') : t('info.fretboard')}
       </span>
     ) : view === 'keys' ? (
-      <span style={infoStyle}>Falling keys · notes land on the key they are played on</span>
+      <span style={infoStyle}>{t('info.keys')}</span>
     ) : view === 'stems' ? (
       <span style={infoStyle}>
-        {stems.length} isolated stems · {stemStatusText || 'drag the timeline to scrub'}
+        {t('info.stems', { count: stems.length, status: stemStatusText || t('info.scrub') })}
       </span>
     ) : view === 'spectrum' ? (
       <span style={infoStyle}>
-        {stemStatusText || 'Mel spectrograms of every stem, overlaid · toggle a layer to mute it'}
+        {stemStatusText || t('info.spectrum')}
       </span>
     ) : null;
 
@@ -1222,7 +1247,7 @@ export default function SongDetail({
                   statusText={stemStatusText}
                 />
               )}
-              {!view && <CenteredNotice title="No playable assets yet" body="This track has not been processed." />}
+              {!view && <CenteredNotice title={t('emptyTitle')} body={t('emptyBody')} />}
             </div>
 
             {/* What this track is, server-rendered (see TrackFacts). */}
@@ -1251,13 +1276,13 @@ export default function SongDetail({
           href="/"
           onClick={() => trackExploreUploadCta(track, { placement: 'mobile_inline' })}
         >
-          <strong>Not the song you needed?</strong>
-          <span>Transcribe your own audio &rarr;</span>
+          <strong>{tSong('sidebar.ctaTitle')}</strong>
+          <span>{tSong('sidebar.ctaBody')}</span>
         </Link>
 
         {/* Mobile sidebar drawer */}
         <button className="gs-rs-toggle" onClick={() => setDrawerOpen(true)}>
-          Open info panel
+          {t('openInfo')}
         </button>
         {drawerOpen && (
           <>

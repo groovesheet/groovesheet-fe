@@ -4,12 +4,14 @@
 // (VideoFretboardRoll), driven by the page's shared transport — the same
 // adapter pattern as DrumGridView.
 import React, { useEffect, useMemo, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { Midi } from '@tonejs/midi';
 import VideoFretboardRoll from '../video/VideoFretboardRoll';
 import SkeletonPanel from '@/components/ui/SkeletonPanel';
 import StatusMessage from '@/components/ui/StatusMessage';
 
 function FretboardView({ midiBuffer, transport, loading, error, kind = 'guitar' }) {
+  const tv = useTranslations('song.viewers');
   const transportRef = useRef(transport);
 
   useEffect(() => { transportRef.current = transport; }, [transport]);
@@ -32,7 +34,7 @@ function FretboardView({ midiBuffer, transport, loading, error, kind = 'guitar' 
     try {
       midi = new Midi(midiBuffer);
     } catch (e) {
-      return { notes: [], parseError: 'Could not parse the MIDI file.' };
+      return { notes: [], parseError: 'midiParseError' };
     }
     const out = [];
     midi.tracks.forEach((t) => {
@@ -51,7 +53,7 @@ function FretboardView({ midiBuffer, transport, loading, error, kind = 'guitar' 
       )}
       {(error || parseError) && !loading && (
         <div style={{ padding: 24 }}>
-          <StatusMessage variant="error">{error || parseError}</StatusMessage>
+          <StatusMessage variant="error">{error || tv(parseError)}</StatusMessage>
         </div>
       )}
       {!loading && !error && !parseError && midiBuffer && (

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import VideoPianoRoll from '../video/VideoPianoRoll';
 
 /**
@@ -29,6 +30,7 @@ function Notice({ title, body }) {
 }
 
 export default function FallingKeysView({ midiBuffer, transport, loading, error }) {
+  const tv = useTranslations('song.viewers');
   const timeRef = useMemo(
     () => ({
       get current() {
@@ -38,13 +40,13 @@ export default function FallingKeysView({ midiBuffer, transport, loading, error 
     [transport]
   );
 
-  if (loading) return <Notice title="Loading notes…" />;
-  if (error) return <Notice title="Could not load the MIDI" body={String(error)} />;
+  if (loading) return <Notice title={tv('loadingNotes')} />;
+  if (error) return <Notice title={tv('midiLoadError')} body={String(error)} />;
   if (!midiBuffer) {
     return (
       <Notice
-        title="No MIDI for this instrument yet"
-        body="Falling keys are drawn from the transcription MIDI. Pick another instrument from the dropdown above."
+        title={tv('noMidiTitle')}
+        body={tv('noMidiBody')}
       />
     );
   }

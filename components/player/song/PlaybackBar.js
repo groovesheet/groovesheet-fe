@@ -4,10 +4,10 @@
 // passes transport-derived props). Controls without engine support (tempo,
 // transpose, metronome, loop) can be rendered disabled via `disabledControls`.
 import React, { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from './icons';
 import { fmtTime } from '../mocks/songDetailData';
 
-const DISABLED_TITLE = 'Not supported for this track yet';
 const disabledStyle = { opacity: 0.4, pointerEvents: 'none' };
 
 function PlaybackBar({
@@ -37,6 +37,9 @@ function PlaybackBar({
   // visible so the layout reads the same; no engine support yet).
   disabledControls = {},
 }) {
+  // Copy lives in messages (song.playback): the bar is on every song page, in every locale.
+  const t = useTranslations('song.playback');
+  const DISABLED_TITLE = t('unsupported');
   const scrubRef = useRef(null);
   const [hoverPct, setHoverPct] = useState(null);
 
@@ -106,13 +109,13 @@ function PlaybackBar({
       <div className="gs-playbar-inner">
         {/* Transport cluster */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <button className="gs-ctrl" title="Previous" onClick={() => onSeekFraction && onSeekFraction(0)}>
+          <button className="gs-ctrl" title={t('previous')} onClick={() => onSeekFraction && onSeekFraction(0)}>
             <Icon.Prev />
           </button>
-          <button className="gs-ctrl gs-ctrl-play" onClick={onPlayPause} title={isPlaying ? 'Pause' : 'Play'}>
+          <button className="gs-ctrl gs-ctrl-play" onClick={onPlayPause} title={isPlaying ? t('pause') : t('play')}>
             {isPlaying ? <Icon.Pause /> : <Icon.Play />}
           </button>
-          <button className="gs-ctrl" title="Next" onClick={() => onSeekFraction && onSeekFraction(0.999)}>
+          <button className="gs-ctrl" title={t('next')} onClick={() => onSeekFraction && onSeekFraction(0.999)}>
             <Icon.Next />
           </button>
           <button
@@ -120,7 +123,7 @@ function PlaybackBar({
             onClick={onLoopMode}
             disabled={Boolean(disabledControls.loop)}
             style={disabledControls.loop ? disabledStyle : undefined}
-            title={disabledControls.loop ? DISABLED_TITLE : `Loop: ${loopMode}`}
+            title={disabledControls.loop ? DISABLED_TITLE : t('loop', { mode: loopMode })}
           >
             <Icon.Loop />
             {loopMode === 'ab' && (
@@ -158,7 +161,7 @@ function PlaybackBar({
           style={{ display: 'inline-flex', alignItems: 'center', gap: 10, ...(disabledControls.tempo ? disabledStyle : null) }}
           title={disabledControls.tempo ? DISABLED_TITLE : undefined}
         >
-          <span className="gs-pb-knob-label">Tempo</span>
+          <span className="gs-pb-knob-label">{t('tempo')}</span>
           <input
             type="range"
             min={tempoMin}
@@ -169,13 +172,13 @@ function PlaybackBar({
             onDoubleClick={() => onTempo(100)}
             className="gs-slider"
             style={{ width: 110, '--fill': tempoFill + '%' }}
-            title="Tempo · double-click to reset"
+            title={t('tempoHint')}
           />
           <button
             className="gs-pb-knob"
             onClick={() => onTempo(100)}
             style={{ height: 26, padding: '0 8px', borderStyle: 'none' }}
-            title="Reset tempo"
+            title={t('resetTempo')}
           >
             <span className="gs-pb-knob-val" style={{ minWidth: 'auto' }}>
               {tempo}%
@@ -190,7 +193,7 @@ function PlaybackBar({
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...(disabledControls.transpose ? disabledStyle : null) }}
           title={disabledControls.transpose ? DISABLED_TITLE : undefined}
         >
-          <span className="gs-pb-knob-label">Transpose</span>
+          <span className="gs-pb-knob-label">{t('transpose')}</span>
           <div
             style={{
               display: 'inline-flex',
@@ -203,7 +206,7 @@ function PlaybackBar({
               padding: '0 2px',
             }}
           >
-            <button className="gs-ctrl" style={{ width: 24, height: 22 }} onClick={() => onTranspose(transpose - 1)} title="Down semitone">
+            <button className="gs-ctrl" style={{ width: 24, height: 22 }} onClick={() => onTranspose(transpose - 1)} title={t('semitoneDown')}>
               <Icon.Minus />
             </button>
             <span
@@ -218,12 +221,12 @@ function PlaybackBar({
                 cursor: 'pointer',
               }}
               onDoubleClick={() => onTranspose(0)}
-              title="Double-click to reset"
+              title={t('resetHint')}
             >
               {transpose > 0 ? '+' : ''}
-              {transpose} st
+              {transpose} {t('semitones')}
             </span>
-            <button className="gs-ctrl" style={{ width: 24, height: 22 }} onClick={() => onTranspose(transpose + 1)} title="Up semitone">
+            <button className="gs-ctrl" style={{ width: 24, height: 22 }} onClick={() => onTranspose(transpose + 1)} title={t('semitoneUp')}>
               <Icon.Plus />
             </button>
           </div>
@@ -237,7 +240,7 @@ function PlaybackBar({
           onClick={onMetronome}
           disabled={Boolean(disabledControls.metronome)}
           style={disabledControls.metronome ? disabledStyle : undefined}
-          title={disabledControls.metronome ? DISABLED_TITLE : 'Metronome'}
+          title={disabledControls.metronome ? DISABLED_TITLE : t('metronome')}
         >
           <Icon.Metronome />
         </button>
@@ -247,7 +250,7 @@ function PlaybackBar({
 
         {/* Volume */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <button className="gs-ctrl" onClick={onMute} title={muted ? 'Unmute' : 'Mute'}>
+          <button className="gs-ctrl" onClick={onMute} title={muted ? t('unmute') : t('mute')}>
             {muted ? <Icon.VolMute /> : <Icon.Vol />}
           </button>
           <input
@@ -259,16 +262,16 @@ function PlaybackBar({
             onChange={(e) => onVolume(parseInt(e.target.value, 10))}
             className="gs-slider"
             style={{ width: 90, '--fill': (muted ? 0 : volFill) + '%' }}
-            title="Master volume"
+            title={t('volume')}
           />
         </div>
 
         <div className="gs-pb-divider" />
 
-        <button className="gs-ctrl" onClick={onToggleTheme} title={dark ? 'Light theme' : 'Dark theme'}>
+        <button className="gs-ctrl" onClick={onToggleTheme} title={dark ? t('lightTheme') : t('darkTheme')}>
           {dark ? <Icon.Sun /> : <Icon.Moon />}
         </button>
-        <button className="gs-ctrl" onClick={onFullscreen} title="Fullscreen">
+        <button className="gs-ctrl" onClick={onFullscreen} title={t('fullscreen')}>
           <Icon.Fullscreen />
         </button>
       </div>

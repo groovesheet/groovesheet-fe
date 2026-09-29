@@ -441,5 +441,282 @@
       "drop": "拖入一個 MP3",
       "sheet": "樂譜"
     }
+  },
+  "song": {
+    "viewers": {
+      "loadingScore": "正在載入樂譜…",
+      "noNotesTitle": "沒有偵測到音符",
+      "noNotesBody": "在這段音訊中沒有找到鋼琴。請換一段鋼琴清晰可聞的錄音。",
+      "midiParseError": "無法解析 MIDI 檔案。",
+      "drumParseError": "無法解析鼓的 MIDI 檔案。",
+      "solo": "獨奏",
+      "volume": "音量 {value}%",
+      "audioOnly": "僅音訊",
+      "loadingNotes": "正在載入音符…",
+      "midiLoadError": "MIDI 載入失敗",
+      "noMidiTitle": "這個樂器還沒有 MIDI",
+      "noMidiBody": "下落琴鍵依據轉譜得到的 MIDI 繪製。請從上方的下拉選單選擇其他樂器。",
+      "layers": "圖層",
+      "showAll": "顯示所有圖層",
+      "allOn": "全部開啟",
+      "brightness": "亮度",
+      "analysing": "正在分析分軌… {percent}%",
+      "adding": "正在加入圖層… {percent}%",
+      "spectrumUnavailable": "頻譜無法使用",
+      "noStemAudio": "沒有可分析的分軌音訊",
+      "analyseError": "無法分析分軌"
+    },
+    "instruments": {
+      "drums": {
+        "name": "鼓",
+        "noun": "鼓",
+        "adjective": "鼓",
+        "sheet": "爵士鼓譜",
+        "sheetHeading": "爵士鼓譜",
+        "sheetTitle": "爵士鼓譜",
+        "sub": "鼓組 · 打擊樂"
+      },
+      "piano": {
+        "name": "鋼琴",
+        "noun": "鋼琴",
+        "adjective": "鋼琴",
+        "sheet": "鋼琴譜",
+        "sheetHeading": "鋼琴譜",
+        "sheetTitle": "鋼琴譜",
+        "sub": "琴鍵 · 和聲"
+      },
+      "bass": {
+        "name": "貝斯",
+        "noun": "貝斯",
+        "adjective": "貝斯",
+        "sheet": "貝斯譜",
+        "sheetHeading": "貝斯譜",
+        "sheetTitle": "貝斯譜",
+        "sub": "低頻 · 低音"
+      },
+      "vocals": {
+        "name": "人聲",
+        "noun": "人聲",
+        "adjective": "人聲",
+        "sub": "主唱 · 歌聲"
+      },
+      "guitar": {
+        "name": "吉他",
+        "noun": "吉他",
+        "adjective": "吉他",
+        "sub": "弦樂 · 撥弦"
+      },
+      "other": {
+        "name": "其他",
+        "noun": "其他",
+        "adjective": "其他",
+        "sub": "音色 · 其餘"
+      }
+    },
+    "fullMix": "完整混音",
+    "meta": {
+      "subject": "{artist}《{title}》",
+      "subjectNoArtist": "《{title}》",
+      "title": "{subject}樂譜與 MIDI",
+      "description": "{subject}的免費樂譜、MIDI 與獨立分軌。AI 轉譜，可以跟著播放、下載或編輯。",
+      "partTitle": "{subject}{sheetTitle}",
+      "partDescription": "{subject}的免費{sheet}：線上看譜，對照原曲同步播放{exports}。{stem}",
+      "partExports": "，並可匯出 {formats}",
+      "partStem": "附獨立{name}分軌。",
+      "compositionName": "《{title}》{sheet}",
+      "explore": "探索",
+      "notFound": "找不到這首歌"
+    },
+    "facts": {
+      "heading": "關於這份轉譜",
+      "headingPart": "關於這份{sheet}",
+      "stemCount": "{count, plural, =0 {多個獨立聲部} other {#個獨立聲部}}",
+      "ledePart": "GrooveSheet 分離了{subject}的各個聲部，並把{name}聲部轉成可以閱讀、對照原曲播放和匯出的樂譜。",
+      "ledeSiblings": "{names}聲部也已轉譜，可在單獨的頁面查看。",
+      "ledeOnly": "這是本曲目前唯一有樂譜的聲部。",
+      "ledeScored": "GrooveSheet 把{subject}分離成{stems}，並將{scored}轉成可以閱讀、對照原曲播放和匯出的樂譜。",
+      "ledeMidiTail": "{names}聲部目前只有 MIDI，還沒有排版好的樂譜。",
+      "ledeMidi": "GrooveSheet 把{subject}分離成{stems}，並將{notated}轉成可播放、可編輯的 MIDI。本曲目前還沒有排版好的樂譜。",
+      "ledeStems": "GrooveSheet 把{subject}分離成{stems}，可以單獨播放、靜音和下載。本曲目前還沒有樂譜。",
+      "rows": {
+        "part": "聲部",
+        "album": "專輯",
+        "released": "發行年份",
+        "length": "時長",
+        "separated": "分離的聲部",
+        "scored": "樂譜",
+        "midiOnly": "僅有 MIDI"
+      },
+      "downloads": {
+        "heading": "可下載的內容",
+        "musicxml": "可在 MuseScore、Sibelius、Dorico 或 Finale 中開啟",
+        "pdf": "排版好的樂譜，可直接列印",
+        "midi": "可在任何 DAW 中編輯的音符",
+        "stemsLabel": "分軌",
+        "stems": "每個分離出的聲部各為一個音訊檔",
+        "partMusicxml": "{name}聲部，可在 MuseScore、Sibelius、Dorico 或 Finale 中開啟",
+        "partPdf": "排版好的{sheet}，可直接列印",
+        "partMidi": "{name}聲部的音符，可在任何 DAW 中編輯",
+        "partStemLabel": "分軌",
+        "partStem": "單獨的{name}音軌"
+      },
+      "siblings": {
+        "headingPart": "這首歌的其他聲部",
+        "headingSong": "單獨查看某個聲部",
+        "link": "《{title}》{sheet}",
+        "everyPart": "在同一頁查看《{title}》的所有聲部"
+      },
+      "more": {
+        "heading": "更多同類曲目",
+        "notationHub": "{sheet}、MIDI 與分軌",
+        "stemsHub": "獨立{name}分軌",
+        "byArtist": "{artist}的所有轉譜"
+      },
+      "note": {
+        "before": "本譜由錄音自動轉錄，請把它當作可靠的初稿，而非官方版本。所有匯出檔案都可以編輯，你也可以",
+        "link": "用同樣的模型轉錄你自己的音訊",
+        "after": "，前十秒可免費預覽。"
+      }
+    },
+    "sidebar": {
+      "byArtist": "· {artist}",
+      "stemCount": "{count} 條分軌",
+      "plays": "次播放",
+      "downloads": "次下載",
+      "playsAria": "{count} 次播放",
+      "downloadsAria": "{count} 次下載",
+      "instrument": "樂器",
+      "preparing": "正在打包 ZIP…",
+      "signIn": "登入後下載",
+      "downloadAll": "全部下載（ZIP）",
+      "stemsFallback": "分軌",
+      "ctaTitle": "沒有找到你要的歌？",
+      "ctaBody": "轉錄你自己的音訊 →",
+      "pdfTitle": "排版好的 PDF 樂譜",
+      "pdfNone": "這首歌沒有可排版的樂譜",
+      "save": "收藏",
+      "share": "分享",
+      "report": "檢舉",
+      "scoreInfo": "樂譜資訊",
+      "artist": "藝人",
+      "album": "專輯",
+      "year": "年份",
+      "duration": "時長",
+      "stems": "分軌數",
+      "published": "發布日期",
+      "source": "來源",
+      "tags": "標籤",
+      "tagStems": "分軌",
+      "moreBy": "{artist}的更多作品",
+      "coverAlt": "《{title}》封面",
+      "profileAlt": "@{handle} 的個人頁面"
+    },
+    "player": {
+      "songBy": "原曲：{artist}",
+      "tabs": {
+        "sheet": "樂譜",
+        "midi": "MIDI",
+        "keys": "下落琴鍵",
+        "stems": "分軌",
+        "spectrum": "頻譜",
+        "notYet": "尚未轉譜"
+      },
+      "noteView": {
+        "drums": "鼓組視覺化",
+        "fretboard": "指板音符",
+        "pianoRoll": "鋼琴捲簾"
+      },
+      "info": {
+        "stems": "{count} 條獨立分軌 · {status}",
+        "scrub": "拖曳時間軸即可定位",
+        "engravedWith": "排版引擎：",
+        "drums": "鼓組視覺化 · 鼓件在擊打時亮起",
+        "fretboard": "指板音符 · 落在對應的弦和品上",
+        "keys": "下落琴鍵 · 音符落在彈奏的琴鍵上",
+        "spectrum": "所有分軌的梅爾頻譜疊加顯示 · 切換圖層即可靜音",
+        "pianoRoll": "MIDI 鋼琴捲簾 · {name}聲部"
+      },
+      "stems": {
+        "failed": "分軌載入失敗",
+        "decoding": "正在解碼分軌… {loaded}/{total}",
+        "loading": "正在載入分軌… {loaded}/{total}"
+      },
+      "errors": {
+        "midiParse": "MIDI 解析失敗",
+        "midi": "MIDI 載入失敗",
+        "score": "樂譜載入失敗"
+      },
+      "transcribedBy": "GrooveSheet 轉譜",
+      "emptyTitle": "暫無可播放的內容",
+      "emptyBody": "這首歌還沒有處理完成。",
+      "openInfo": "打開資訊面板"
+    },
+    "rails": {
+      "artistTitle": "{artist}的更多作品",
+      "artistSubtitle": "GrooveSheet 曲庫中{artist}的全部曲目。",
+      "recommendedTitle": "推薦樂譜",
+      "recommendedSubtitle": "從 GrooveSheet 曲庫中挑選，風格與編制相近。",
+      "trendingTitle": "正在流行",
+      "trendingSubtitle": "音樂人本週都在練什麼。",
+      "newestTitle": "本週新增",
+      "newestSubtitle": "曲庫中最新的轉譜和分軌。"
+    },
+    "playback": {
+      "tempo": "速度",
+      "transpose": "移調",
+      "semitones": "半音",
+      "previous": "回到開頭",
+      "next": "跳到結尾",
+      "play": "播放",
+      "pause": "暫停",
+      "loop": "循環：{mode}",
+      "tempoHint": "速度 · 雙擊重置",
+      "resetTempo": "重置速度",
+      "semitoneDown": "降半音",
+      "semitoneUp": "升半音",
+      "resetHint": "雙擊重置",
+      "metronome": "節拍器",
+      "mute": "靜音",
+      "unmute": "取消靜音",
+      "volume": "主音量",
+      "lightTheme": "淺色主題",
+      "darkTheme": "深色主題",
+      "fullscreen": "全螢幕",
+      "unsupported": "這首歌暫不支援此功能"
+    },
+    "card": {
+      "open": "打開",
+      "preview": "試聽",
+      "scorePending": "樂譜預覽產生中",
+      "coverAlt": "《{title}》封面",
+      "previewAlt": "《{title}》預覽",
+      "byCreator": "@{creator} 發布",
+      "playsAria": "{count} 次播放",
+      "downloadsAria": "{count} 次下載",
+      "formats": {
+        "musicxml": "樂譜",
+        "midi": "MIDI",
+        "stem": "分軌"
+      }
+    },
+    "report": {
+      "title": "檢舉這首歌",
+      "thanksBefore": "謝謝，我們已收到你的檢舉，這首歌已被標記待審核。正式的 DMCA 通知請寄信至 ",
+      "thanksAfter": "。",
+      "done": "完成",
+      "reason": "原因",
+      "reasons": {
+        "copyright": "侵犯著作權",
+        "inappropriate": "不當內容",
+        "other": "其他問題"
+      },
+      "details": "詳細說明（選填）",
+      "detailsPlaceholder": "遇到了什麼問題？如涉及著作權，請告訴我們作品的權利人是誰。",
+      "contact": "聯絡信箱（選填，用於後續聯繫）",
+      "cancel": "取消",
+      "sending": "正在送出…",
+      "send": "送出檢舉",
+      "error": "檢舉送出失敗"
+    }
   }
 }

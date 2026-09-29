@@ -2,6 +2,8 @@
 
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
+import { COMPANY } from '@/lib/company';
 import { reportTrack } from '@/lib/libraryApi';
 
 const field: CSSProperties = {
@@ -19,6 +21,7 @@ const label: CSSProperties = { fontSize: 13, color: 'var(--color-muted-foregroun
 
 /** Report dialog, portalled to <body> (LoginModal pattern). The launch DMCA path. */
 export default function ReportModal({ trackId, onClose }: { trackId: string; onClose: () => void }) {
+  const t = useTranslations('song.report');
   const [reason, setReason] = useState('copyright');
   const [details, setDetails] = useState('');
   const [contact, setContact] = useState('');
@@ -38,7 +41,7 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
       });
       setDone(true);
     } catch (err) {
-      setError((err instanceof Error && err.message) || 'Could not send the report');
+      setError((err instanceof Error && err.message) || t('error'));
     } finally {
       setBusy(false);
     }
@@ -61,7 +64,7 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
       <form
         role="dialog"
         aria-modal="true"
-        aria-label="Report this track"
+        aria-label={t('title')}
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
         style={{
@@ -76,19 +79,18 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
           boxShadow: '0 20px 60px rgba(0,0,0,.5)',
         }}
       >
-        <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>Report This Track</div>
+        <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>{t('title')}</div>
         {done ? (
           <>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--color-muted-foreground)' }}>
-              Thanks, your report was received and this track has been flagged for review. For formal DMCA notices,
-              email{' '}
-              <a href="mailto:support@groovesheet.net" style={{ color: 'var(--color-primary)' }}>
-                support@groovesheet.net
+              {t('thanksBefore')}
+              <a href={`mailto:${COMPANY.supportEmail}`} style={{ color: 'var(--color-primary)' }}>
+                {COMPANY.supportEmail}
               </a>
-              .
+              {t('thanksAfter')}
             </p>
             <button type="button" className="gs-btn gs-btn-primary" onClick={onClose}>
-              Done
+              {t('done')}
             </button>
           </>
         ) : (
@@ -96,7 +98,7 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
             {error && <p style={{ margin: 0, fontSize: 13, color: '#FF6B7A' }}>{error}</p>}
             <div>
               <label htmlFor="report-reason" style={label}>
-                Reason
+                {t('reason')}
               </label>
               <select
                 id="report-reason"
@@ -104,14 +106,14 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               >
-                <option value="copyright">Copyright infringement</option>
-                <option value="inappropriate">Inappropriate content</option>
-                <option value="other">Something else</option>
+                <option value="copyright">{t('reasons.copyright')}</option>
+                <option value="inappropriate">{t('reasons.inappropriate')}</option>
+                <option value="other">{t('reasons.other')}</option>
               </select>
             </div>
             <div>
               <label htmlFor="report-details" style={label}>
-                Details (optional)
+                {t('details')}
               </label>
               <textarea
                 id="report-details"
@@ -119,12 +121,12 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 maxLength={2000}
-                placeholder="What's the issue? For copyright claims, tell us who owns the work."
+                placeholder={t('detailsPlaceholder')}
               />
             </div>
             <div>
               <label htmlFor="report-contact" style={label}>
-                Contact email (optional, for follow-up)
+                {t('contact')}
               </label>
               <input
                 id="report-contact"
@@ -143,10 +145,10 @@ export default function ReportModal({ trackId, onClose }: { trackId: string; onC
                 onClick={onClose}
                 disabled={busy}
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button type="submit" className="gs-btn gs-btn-primary" style={{ flex: 1 }} disabled={busy}>
-                {busy ? 'Sending…' : 'Send Report'}
+                {busy ? t('sending') : t('send')}
               </button>
             </div>
           </>

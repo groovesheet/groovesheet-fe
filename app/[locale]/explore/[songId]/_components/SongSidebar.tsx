@@ -4,6 +4,7 @@
 // (song-sidebar.jsx) but fed entirely with real library-track data, including
 // the real plays/downloads counters.
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { DownloadSimple, Printer, BookmarkSimple, Share, Flag, Play } from '@phosphor-icons/react';
 import { creatorHandleForTrack } from '@/lib/creatorApi';
 import { trackExploreUploadCta } from '@/lib/analytics';
@@ -42,14 +43,14 @@ function fmtDate(iso: string | null | undefined, lang: string): string {
 }
 
 /** Small row thumbnail: real cover art when available, gradient tile otherwise. */
-function RowThumb({ track }: { track: LibraryTrack }) {
+function RowThumb({ track, alt }: { track: LibraryTrack; alt: string }) {
   if (track.cover_url) {
     return (
       // Remote cover art from arbitrary hosts; see SongCard.
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={track.cover_url}
-        alt={`${track.title} cover`}
+        alt={alt}
         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
       />
     );
@@ -115,6 +116,7 @@ export default function SongSidebar({
   scoreAsset,
 }: SongSidebarProps) {
   const locale = useLocale();
+  const t = useTranslations('song.sidebar');
   const durationSec = trackDurationSec(track);
   const assets = trackAssets(track);
 
@@ -133,11 +135,11 @@ export default function SongSidebar({
   if (hasMidi) formatList.push('MIDI');
   if (formats.has('flac')) formatList.push('FLAC');
   if (formats.has('opus')) formatList.push('Opus');
-  const formatLabel = formatList.length ? formatList.join(' · ') : 'Stems';
+  const formatLabel = formatList.length ? formatList.join(' · ') : t('stemsFallback');
 
   const [reportOpen, setReportOpen] = useState(false);
 
-  const subtitle = [track.album, stems.length ? `${stems.length} stems` : null, durationSec ? fmtTime(durationSec) : null]
+  const subtitle = [track.album, stems.length ? t('stemCount', { count: stems.length }) : null, durationSec ? fmtTime(durationSec) : null]
     .filter(Boolean)
     .join(' · ');
 
@@ -145,7 +147,7 @@ export default function SongSidebar({
     ...stems.map((s) => s.label),
     track.year ? String(track.year) : null,
     track.artist,
-    'Stems',
+    t('tagStems'),
     hasXml ? 'MusicXML' : null,
     hasMidi ? 'MIDI' : null,
   ].filter((t): t is string => Boolean(t));
@@ -181,7 +183,7 @@ export default function SongSidebar({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
-                alt={`@${handle} profile`}
+                alt={t('profileAlt', { handle })}
                 style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }}
               />
             ) : (
@@ -221,7 +223,9 @@ export default function SongSidebar({
           {track.artist && (
             <>
               {' '}
-              <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 400 }}>by {track.artist}</span>
+              <span style={{ color: 'var(--color-muted-foreground)', fontWeight: 400 }}>
+                {t('byArtist', { artist: track.artist })}
+              </span>
             </>
           )}
           {instrumentHeading && (
@@ -237,15 +241,15 @@ export default function SongSidebar({
 
         {/* Stats: real engagement counters */}
         <div className="gs-statrow">
-          <span className="gs-stat" aria-label={`${track.plays || 0} plays`}>
+          <span className="gs-stat" aria-label={t('playsAria', { count: track.plays || 0 })}>
             <Play size={13} />
             <strong>{fmtNum(track.plays || 0)}</strong>
-            <span style={{ opacity: 0.7 }}>plays</span>
+            <span style={{ opacity: 0.7 }}>{t('plays')}</span>
           </span>
-          <span className="gs-stat" aria-label={`${track.downloads || 0} downloads`}>
+          <span className="gs-stat" aria-label={t('downloadsAria', { count: track.downloads || 0 })}>
             <DownloadSimple size={13} />
             <strong>{fmtNum(track.downloads || 0)}</strong>
-            <span style={{ opacity: 0.7 }}>downloads</span>
+            <span style={{ opacity: 0.7 }}>{t('downloads')}</span>
           </span>
         </div>
 
@@ -256,7 +260,7 @@ export default function SongSidebar({
           {instrumentOptions.length > 0 && onInstrument && (
             <select
               className="gs-select"
-              aria-label="Instrument"
+              aria-label={t('instrument')}
               value={instrument || instrumentOptions[0].name}
               onChange={(e) => onInstrument(e.target.value)}
             >
@@ -278,7 +282,7 @@ export default function SongSidebar({
           style={{ marginTop: 14, cursor: downloading ? 'wait' : 'pointer' }}
         >
           <DownloadSimple size={18} weight="bold" />
-          {downloading ? 'Preparing ZIP…' : signedOut ? 'Sign in to Download' : 'Download All (ZIP)'}
+          {downloading ? t('preparing') : signedOut ? t('signIn') : t('downloadAll')}
         </button>
         <div
           style={{
@@ -311,8 +315,8 @@ export default function SongSidebar({
             lineHeight: 1.45,
           }}
         >
-          <span style={{ display: 'block', fontWeight: 600 }}>Not the song you needed?</span>
-          <span style={{ color: 'var(--color-muted-foreground)' }}>Transcribe your own audio &rarr;</span>
+          <span style={{ display: 'block', fontWeight: 600 }}>{t('ctaTitle')}</span>
+          <span style={{ color: 'var(--color-muted-foreground)' }}>{t('ctaBody')}</span>
         </Link>
 
         {/* Quad of secondary actions */}
@@ -322,7 +326,7 @@ export default function SongSidebar({
           <button
             type="button"
             disabled={!pdfUrl}
-            title={pdfUrl ? 'Engraved PDF score' : 'No score to engrave for this track'}
+            title={pdfUrl ? t('pdfTitle') : t('pdfNone')}
             onClick={() => pdfUrl && window.open(pdfUrl, '_blank', 'noopener')}
           >
             <Printer size={14} />
@@ -330,15 +334,15 @@ export default function SongSidebar({
           </button>
           <button type="button">
             <BookmarkSimple size={14} />
-            Save
+            {t('save')}
           </button>
           <button type="button">
             <Share size={14} />
-            Share
+            {t('share')}
           </button>
           <button type="button" onClick={() => setReportOpen(true)}>
             <Flag size={14} />
-            Report
+            {t('report')}
           </button>
         </div>
         {reportOpen && <ReportModal trackId={track.id} onClose={() => setReportOpen(false)} />}
@@ -346,29 +350,29 @@ export default function SongSidebar({
 
       {/* Score info */}
       <div className="gs-rs-section">
-        <h3>Score info</h3>
+        <h3>{t('scoreInfo')}</h3>
         <dl className="gs-kv">
-          <dt>Artist</dt>
+          <dt>{t('artist')}</dt>
           <dd>{track.artist}</dd>
           {track.album && (
             <>
-              <dt>Album</dt>
+              <dt>{t('album')}</dt>
               <dd>{track.album}</dd>
             </>
           )}
           {track.year && (
             <>
-              <dt>Year</dt>
+              <dt>{t('year')}</dt>
               <dd>{track.year}</dd>
             </>
           )}
-          <dt>Duration</dt>
+          <dt>{t('duration')}</dt>
           <dd>{fmtTime(durationSec)}</dd>
-          <dt>Stems</dt>
+          <dt>{t('stems')}</dt>
           <dd>{stems.length}</dd>
-          <dt>Published</dt>
+          <dt>{t('published')}</dt>
           <dd>{fmtDate(track.published_at, LOCALE_HTML_LANG[locale])}</dd>
-          <dt>Source</dt>
+          <dt>{t('source')}</dt>
           <dd>{track.source}</dd>
         </dl>
       </div>
@@ -376,7 +380,7 @@ export default function SongSidebar({
       {/* Tags */}
       {tags.length > 0 && (
         <div className="gs-rs-section">
-          <h3>Tags</h3>
+          <h3>{t('tags')}</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {tags.map((t) => (
               <span key={t} className="gs-tag">
@@ -390,22 +394,22 @@ export default function SongSidebar({
       {/* More by this artist: real related tracks only */}
       {moreByArtist.length > 0 && (
         <div className="gs-rs-section">
-          <h3>More by {track.artist}</h3>
+          <h3>{t('moreBy', { artist: track.artist || '' })}</h3>
           <div>
-            {moreByArtist.map((t) => (
-              <Link className="gs-rs-row" key={t.id} href={songPath(t.id)} style={{ textDecoration: 'none' }}>
+            {moreByArtist.map((rt) => (
+              <Link className="gs-rs-row" key={rt.id} href={songPath(rt.id)} style={{ textDecoration: 'none' }}>
                 <div className="gs-rs-row-thumb">
-                  <RowThumb track={t} />
+                  <RowThumb track={rt} alt={t('coverAlt', { title: rt.title })} />
                 </div>
                 <div className="gs-rs-row-body">
-                  <div className="gs-rs-row-title">{t.title}</div>
+                  <div className="gs-rs-row-title">{rt.title}</div>
                   <div className="gs-rs-row-meta">
-                    <span style={{ fontFamily: 'var(--font-family-mono)' }}>{fmtTime(trackDurationSec(t))}</span>
+                    <span style={{ fontFamily: 'var(--font-family-mono)' }}>{fmtTime(trackDurationSec(rt))}</span>
                   </div>
                 </div>
                 <span className="gs-rs-row-rating">
                   <Play size={11} weight="fill" />
-                  {fmtNum(t.plays || 0)}
+                  {fmtNum(rt.plays || 0)}
                 </span>
               </Link>
             ))}

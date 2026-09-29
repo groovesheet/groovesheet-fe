@@ -18,20 +18,30 @@
  * pages share a player with the parent, so this block is most of what makes
  * them different from it and from each other.
  *
- * A Server Component, passed into SongDetail (a client component) as a prop,
- * so it is in the server HTML regardless of hydration.
+ * The sentences come from messages/{locale}.json (`song.facts`), with the
+ * lists joined in the page's language. On /zh-CN and /zh-TW this is the
+ * largest block of Chinese on the page, which is what makes those URLs
+ * translations rather than the English page declared three times.
+ *
+ * An async Server Component, passed into SongDetail (a client component) as a
+ * prop, so it is in the server HTML regardless of hydration.
  */
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/lib/navigation';
-import { capitalize, fmtDur } from '@/lib/exploreConstants';
-import { hubBySlug, hubLinkLabel, hubPath, hubsForTrack } from '@/lib/seo/instrumentHubs';
+import { fmtDur } from '@/lib/exploreConstants';
+import { hubPath, hubsForTrack } from '@/lib/seo/instrumentHubs';
 import type { LibraryTrack } from '@/lib/types';
 import {
-  instrumentAdjective,
+  instrumentVars,
+  instrumentWord,
+  joinList,
   scoredInstruments,
   songInstrumentPath,
-  trackPath,
+  songSubject,
   trackAssets,
   trackDurationSec,
+  trackPath,
+  type SongT,
 } from './songData';
 import './TrackFacts.css';
 
@@ -43,39 +53,23 @@ interface DownloadRow {
   note: string;
 }
 
-const DOWNLOAD_LABELS: DownloadRow[] = [
-  { test: (t) => t.has('musicxml'), label: 'MusicXML', note: 'opens in MuseScore, Sibelius, Dorico or Finale' },
-  { test: (t) => t.has('musicxml'), label: 'PDF', note: 'engraved score, ready to print' },
-  { test: (t) => t.has('midi'), label: 'MIDI', note: 'editable notes for any DAW' },
-  { test: (t) => t.has('stem'), label: 'Stems', note: 'each separated part as its own audio file' },
-];
-
-/** The same list, but every note says which part the file holds. */
-function partDownloadLabels(adjective: string): DownloadRow[] {
+function songDownloads(t: SongT): DownloadRow[] {
   return [
-    { test: (t) => t.has('musicxml'), label: 'MusicXML', note: `the ${adjective} part, for MuseScore, Sibelius, Dorico or Finale` },
-    { test: (t) => t.has('musicxml'), label: 'PDF', note: `the ${adjective} score, engraved and ready to print` },
-    { test: (t) => t.has('midi'), label: 'MIDI', note: `the ${adjective} notes, editable in any DAW` },
-    { test: (t) => t.has('stem'), label: 'Stem', note: `the isolated ${adjective} audio on its own` },
+    { test: (x) => x.has('musicxml'), label: 'MusicXML', note: t('facts.downloads.musicxml') },
+    { test: (x) => x.has('musicxml'), label: 'PDF', note: t('facts.downloads.pdf') },
+    { test: (x) => x.has('midi'), label: 'MIDI', note: t('facts.downloads.midi') },
+    { test: (x) => x.has('stem'), label: t('facts.downloads.stemsLabel'), note: t('facts.downloads.stems') },
   ];
 }
 
-function titleCaseList(values: string[]): string {
-  const parts = values.map(capitalize);
-  if (parts.length <= 1) return parts.join('');
-  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
-}
-
-/**
- * Instruments as the adjectives that go before "part": "drum", "piano and
- * bass". Naming the parts this way also sidesteps the agreement problem in
- * "drums was transcribed": the verb agrees with "part"/"parts", which follows
- * the count, while "Drums" is plural at a count of one.
- */
-function adjectiveList(instruments: string[]): string {
-  const words = instruments.map((i) => instrumentAdjective(i).toLowerCase());
-  if (words.length <= 1) return words.join('');
-  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`;
+/** The same list, but every note says which part the file holds. */
+function partDownloads(t: SongT, vars: Record<string, string>): DownloadRow[] {
+  return [
+    { test: (x) => x.has('musicxml'), label: 'MusicXML', note: t('facts.downloads.partMusicxml', vars) },
+    { test: (x) => x.has('musicxml'), label: 'PDF', note: t('facts.downloads.partPdf', vars) },
+    { test: (x) => x.has('midi'), label: 'MIDI', note: t('facts.downloads.partMidi', vars) },
+    { test: (x) => x.has('stem'), label: t('facts.downloads.partStemLabel'), note: t('facts.downloads.partStem', vars) },
+  ];
 }
 
 interface TrackFactsProps {
@@ -85,32 +79,40 @@ interface TrackFactsProps {
    * song page, which covers every part at once.
    */
   instrument?: string | null;
+  locale: string;
 }
 
-export default function TrackFacts({ track, instrument = null }: TrackFactsProps) {
+export default async function TrackFacts({ track, instrument = null, locale }: TrackFactsProps) {
+  const t = (await getTranslations({ locale, namespace: 'song' })) as unknown as SongT;
   const assets = trackAssets(track);
   const assetTypes = new Set(assets.map((a) => a.asset_type).filter(Boolean) as string[]);
 
+  const partsWith = (types: (type: string) => boolean) =>
+    [...new Set(assets.filter((a) => types(a.asset_type || '')).map((a) => (a.stem_name || '').toLowerCase()))].filter(
+      Boolean
+    );
   // Parts that were separated, and the subset that also carries notation.
-  const stemParts = [...new Set(assets.filter((a) => a.asset_type === 'stem').map((a) => a.stem_name))].filter(
-    (n): n is string => Boolean(n)
-  );
-  const notatedParts = [...new Set(assets.filter((a) => NOTATION_TYPES.has(a.asset_type || '')).map((a) => a.stem_name))].filter(
-    (n): n is string => Boolean(n)
-  );
+  const stemParts = partsWith((type) => type === 'stem');
+  const notatedParts = partsWith((type) => NOTATION_TYPES.has(type));
   // Of those, the ones with an engraved score. The rest came out as MIDI, and
   // the page has to say so: the player's sheet-music tab is disabled for them,
   // so "transcribed to notation you can read" would not be true of that part.
-  const scoredParts = [...new Set(assets.filter((a) => a.asset_type === 'musicxml').map((a) => a.stem_name))].filter(
-    (n): n is string => Boolean(n)
-  );
+  const scoredParts = partsWith((type) => type === 'musicxml');
   const midiOnlyParts = notatedParts.filter((n) => !scoredParts.includes(n));
 
+  // Lists in the page's language, in the form each sentence needs.
+  const list = (parts: string[], form: 'name' | 'noun' | 'adjective') =>
+    joinList(
+      locale,
+      parts.map((p) => instrumentWord(t, p, form))
+    );
+
   const duration = trackDurationSec(track);
-  const subject = track.artist ? `${track.title} by ${track.artist}` : track.title;
+  const subject = songSubject(t, track);
+  const stems = t('facts.stemCount', { count: stemParts.length });
 
   const part = instrument ? instrument.toLowerCase() : null;
-  const adjective = part ? instrumentAdjective(part).toLowerCase() : null;
+  const vars = part ? instrumentVars(t, part) : null;
 
   // On a part page, the download list is filtered to the files that part has,
   // rather than everything on the record. A track can be transcribed for one
@@ -124,16 +126,16 @@ export default function TrackFacts({ track, instrument = null }: TrackFactsProps
       )
     : assetTypes;
 
-  const downloads =
-    part && adjective
-      ? partDownloadLabels(adjective).filter((d) => d.test(partAssetTypes))
-      : DOWNLOAD_LABELS.filter((d) => d.test(assetTypes));
+  const downloads = vars
+    ? partDownloads(t, vars).filter((d) => d.test(partAssetTypes))
+    : songDownloads(t).filter((d) => d.test(assetTypes));
 
   // Hubs this track belongs to, so every track page links up to its parents.
   // A part page links to its own hub only: the others are reachable through
   // the sibling links below, which are about this song.
-  const ownHub = part ? hubBySlug('notation', part) : undefined;
-  const parentHubs = part ? (ownHub ? [ownHub] : []) : hubsForTrack({ notated: notatedParts, stems: stemParts });
+  const parentHubs = part
+    ? hubsForTrack({ notated: [part], stems: [] })
+    : hubsForTrack({ notated: notatedParts, stems: stemParts });
 
   // Parts of this song with a page of their own. On a part page these are the
   // siblings; on the song page they are the children, and this block is how a
@@ -143,59 +145,46 @@ export default function TrackFacts({ track, instrument = null }: TrackFactsProps
   const siblings = part ? partPages.filter((i) => i !== part) : partPages;
 
   const rows: { label: string; value: string }[] = [
-    ...(part ? [{ label: 'Part', value: instrumentAdjective(part) }] : []),
-    ...(track.album ? [{ label: 'Album', value: track.album }] : []),
-    ...(track.year ? [{ label: 'Released', value: String(track.year) }] : []),
-    ...(duration ? [{ label: 'Length', value: fmtDur(duration) }] : []),
-    ...(stemParts.length ? [{ label: 'Separated parts', value: titleCaseList(stemParts) }] : []),
-    ...(scoredParts.length ? [{ label: 'Sheet music', value: titleCaseList(scoredParts) }] : []),
-    ...(midiOnlyParts.length ? [{ label: 'MIDI only', value: titleCaseList(midiOnlyParts) }] : []),
+    ...(part ? [{ label: t('facts.rows.part'), value: instrumentWord(t, part, 'name') }] : []),
+    ...(track.album ? [{ label: t('facts.rows.album'), value: track.album }] : []),
+    ...(track.year ? [{ label: t('facts.rows.released'), value: String(track.year) }] : []),
+    ...(duration ? [{ label: t('facts.rows.length'), value: fmtDur(duration) }] : []),
+    ...(stemParts.length ? [{ label: t('facts.rows.separated'), value: list(stemParts, 'name') }] : []),
+    ...(scoredParts.length ? [{ label: t('facts.rows.scored'), value: list(scoredParts, 'name') }] : []),
+    ...(midiOnlyParts.length ? [{ label: t('facts.rows.midiOnly'), value: list(midiOnlyParts, 'name') }] : []),
   ];
 
   if (!rows.length && !downloads.length) return null;
 
+  // Lists of other parts, passed in every form a locale's sentence may use.
+  const partList = (parts: string[]) => ({
+    count: parts.length,
+    names: list(parts, 'name'),
+    adjectives: list(parts, 'adjective'),
+  });
+
+  let lede: string;
+  if (vars) {
+    lede =
+      t('facts.ledePart', { ...vars, subject }) +
+      (siblings.length ? t('facts.ledeSiblings', partList(siblings)) : t('facts.ledeOnly'));
+  } else if (scoredParts.length) {
+    lede =
+      t('facts.ledeScored', { subject, stems, scored: list(scoredParts, 'noun') }) +
+      (midiOnlyParts.length ? t('facts.ledeMidiTail', partList(midiOnlyParts)) : '');
+  } else if (notatedParts.length) {
+    lede = t('facts.ledeMidi', { subject, stems, notated: list(notatedParts, 'noun') });
+  } else {
+    lede = t('facts.ledeStems', { subject, stems });
+  }
+
   return (
     <section className="tf" aria-labelledby="tf-heading">
       <h2 id="tf-heading" className="tf-heading">
-        {adjective ? `About this ${adjective} transcription` : 'About this transcription'}
+        {vars ? t('facts.headingPart', vars) : t('facts.heading')}
       </h2>
 
-      <p className="tf-lede">
-        {adjective ? (
-          <>
-            GrooveSheet separated {subject} and transcribed the {adjective} part to notation you can read, hear played
-            back against the recording, and export.{' '}
-            {siblings.length > 0 ? (
-              <>
-                It transcribed the {adjectiveList(siblings)} {siblings.length === 1 ? 'part' : 'parts'} too, on{' '}
-                {siblings.length === 1 ? 'a page of its own' : 'pages of their own'}.
-              </>
-            ) : (
-              <>It is the only part of this track with notation so far.</>
-            )}
-          </>
-        ) : scoredParts.length > 0 ? (
-          <>
-            GrooveSheet separated {subject} into {stemParts.length || 'its'} isolated{' '}
-            {stemParts.length === 1 ? 'part' : 'parts'} and transcribed {titleCaseList(scoredParts).toLowerCase()} to
-            notation you can read, hear played back against the recording, and export.
-            {midiOnlyParts.length > 0 && (
-              <> The {adjectiveList(midiOnlyParts)} {midiOnlyParts.length === 1 ? 'part' : 'parts'} came out as MIDI, without an engraved score.</>
-            )}
-          </>
-        ) : notatedParts.length > 0 ? (
-          <>
-            GrooveSheet separated {subject} into {stemParts.length || 'its'} isolated{' '}
-            {stemParts.length === 1 ? 'part' : 'parts'} and transcribed {titleCaseList(notatedParts).toLowerCase()} to
-            MIDI you can play back and edit. No part of this track has an engraved score yet.
-          </>
-        ) : (
-          <>
-            GrooveSheet separated {subject} into {stemParts.length || 'its'} isolated{' '}
-            {stemParts.length === 1 ? 'part' : 'parts'} you can solo, mute and download. This track has no notation yet.
-          </>
-        )}
-      </p>
+      <p className="tf-lede">{lede}</p>
 
       {rows.length > 0 && (
         <dl className="tf-grid">
@@ -210,7 +199,7 @@ export default function TrackFacts({ track, instrument = null }: TrackFactsProps
 
       {downloads.length > 0 && (
         <div className="tf-block">
-          <h3>What you can download</h3>
+          <h3>{t('facts.downloads.heading')}</h3>
           <ul className="tf-list">
             {downloads.map((d) => (
               <li key={d.label}>
@@ -224,18 +213,18 @@ export default function TrackFacts({ track, instrument = null }: TrackFactsProps
 
       {siblings.length > 0 && (
         <div className="tf-block">
-          <h3>{part ? 'Other parts of this song' : 'Read one part on its own'}</h3>
+          <h3>{part ? t('facts.siblings.headingPart') : t('facts.siblings.headingSong')}</h3>
           <ul className="tf-links">
             {siblings.map((sibling) => (
               <li key={sibling}>
                 <Link href={songInstrumentPath(track, sibling)}>
-                  {instrumentAdjective(sibling)} sheet music for {track.title}
+                  {t('facts.siblings.link', { ...instrumentVars(t, sibling), title: track.title })}
                 </Link>
               </li>
             ))}
             {part && (
               <li>
-                <Link href={trackPath(track)}>Every part of {track.title} on one page</Link>
+                <Link href={trackPath(track)}>{t('facts.siblings.everyPart', { title: track.title })}</Link>
               </li>
             )}
           </ul>
@@ -244,17 +233,21 @@ export default function TrackFacts({ track, instrument = null }: TrackFactsProps
 
       {parentHubs.length > 0 && (
         <div className="tf-block">
-          <h3>More like this</h3>
+          <h3>{t('facts.more.heading')}</h3>
           <ul className="tf-links">
             {parentHubs.map((h) => (
               <li key={h.slug}>
-                <Link href={hubPath(h)}>{hubLinkLabel(h)}</Link>
+                <Link href={hubPath(h)}>
+                  {h.kind === 'notation'
+                    ? t('facts.more.notationHub', instrumentVars(t, h.slug))
+                    : t('facts.more.stemsHub', instrumentVars(t, h.slug))}
+                </Link>
               </li>
             ))}
             {track.artist && (
               <li>
                 <Link href={`/explore/search?q=${encodeURIComponent(track.artist)}`}>
-                  Every transcription by {track.artist}
+                  {t('facts.more.byArtist', { artist: track.artist })}
                 </Link>
               </li>
             )}
@@ -263,9 +256,9 @@ export default function TrackFacts({ track, instrument = null }: TrackFactsProps
       )}
 
       <p className="tf-note">
-        Transcribed automatically from the recording, so treat it as a strong first draft rather than an official
-        edition. Every export is editable, and you can{' '}
-        <Link href="/">run your own audio through the same models</Link> with a free ten-second preview.
+        {t('facts.note.before')}
+        <Link href="/">{t('facts.note.link')}</Link>
+        {t('facts.note.after')}
       </p>
     </section>
   );

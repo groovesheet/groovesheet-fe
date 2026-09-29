@@ -8,7 +8,7 @@
  * ?instrument= are read in the browser (see _components/UrlIntent).
  */
 import { notFound } from 'next/navigation';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getLibraryTrack, getLibraryTracks } from '@/lib/api-server';
 import { pageMetadata, SITE_NAME, SITE_URL } from '@/lib/seo/metadata';
 import { buildLocalePath } from '@/lib/locales';
@@ -20,12 +20,15 @@ import { slimTrack } from '../_components/trackToCard';
 import SongDetail from './_components/SongDetail';
 import TrackFacts from './_components/TrackFacts';
 import {
+  instrumentWord,
   isoDuration,
   songDescription,
+  songSubject,
   songTitle,
   trackAssets,
   trackDurationSec,
   trackPath,
+  type SongT,
 } from './_components/songData';
 
 export const revalidate = 300;
@@ -45,9 +48,10 @@ interface SongPageProps {
 
 export async function generateMetadata({ params }: SongPageProps) {
   const { locale, songId } = await params;
+  const t = await getTranslations({ locale, namespace: 'song' });
   const track = await getLibraryTrack(songId);
   if (!track) {
-    return { title: 'Track not found', robots: { index: false, follow: false } };
+    return { title: t('meta.notFound'), robots: { index: false, follow: false } };
   }
   // A track whose processing produced nothing has no score, no stems and no
   // downloads: an empty page Google's guidance says to keep out of the index
@@ -55,8 +59,8 @@ export async function generateMetadata({ params }: SongPageProps) {
   // run makes it indexable again on the next revalidation.
   const noindex = trackAssets(track).length === 0;
   return pageMetadata({
-    title: songTitle(track),
-    description: songDescription(track),
+    title: songTitle(t, track),
+    description: songDescription(t, track),
     path: trackPath(track),
     locale,
     image: track.cover_url || null,
@@ -65,7 +69,7 @@ export async function generateMetadata({ params }: SongPageProps) {
   });
 }
 
-function songJsonLd(track: LibraryTrack, locale: string): Record<string, unknown> {
+function songJsonLd(t: SongT, track: LibraryTrack, locale: string): Record<string, unknown> {
   const url = `${SITE_URL}${buildLocalePath(locale, trackPath(track))}`;
   const assets = trackAssets(track);
   const encodings = [
@@ -78,7 +82,8 @@ function songJsonLd(track: LibraryTrack, locale: string): Record<string, unknown
     '@type': 'MusicComposition',
     name: track.title,
     url,
-    description: songDescription(track),
+    description: songDescription(t, track),
+    inLanguage: locale,
     ...(track.cover_url ? { image: track.cover_url } : {}),
     ...(track.published_at ? { datePublished: track.published_at } : {}),
     ...(encodings.length ? { encodingFormat: encodings } : {}),
@@ -98,7 +103,7 @@ function songJsonLd(track: LibraryTrack, locale: string): Record<string, unknown
  * Naming the section is what turns the crumb trail Google shows from a URL
  * into something a reader can place.
  */
-function trackCrumbs(track: LibraryTrack) {
+function trackCrumbs(t: SongT, track: LibraryTrack) {
   const assets = trackAssets(track);
   const partsOf = (types: string[]) =>
     [...new Set(assets.filter((a) => types.includes(a.asset_type || '')).map((a) => a.stem_name))].filter(
@@ -107,15 +112,16 @@ function trackCrumbs(track: LibraryTrack) {
   const [hub] = hubsForTrack({ notated: partsOf(['musicxml', 'midi']), stems: partsOf(['stem']) });
   return [
     { name: SITE_NAME, path: '/' },
-    { name: 'Explore', path: '/explore' },
-    ...(hub ? [{ name: hub.noun, path: hubPath(hub) }] : []),
-    { name: track.artist ? `${track.title} by ${track.artist}` : track.title, path: trackPath(track) },
+    { name: t('meta.explore'), path: '/explore' },
+    ...(hub ? [{ name: instrumentWord(t, hub.slug, 'name'), path: hubPath(hub) }] : []),
+    { name: songSubject(t, track), path: trackPath(track) },
   ];
 }
 
 export default async function SongPage({ params }: SongPageProps) {
   const { locale, songId } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'song' });
 
   // A 404 is "no such track"; any other API failure throws to error.tsx, so an
   // outage is never cached as a missing page.
@@ -133,9 +139,14 @@ export default async function SongPage({ params }: SongPageProps) {
 
   return (
     <>
-      <JsonLd data={songJsonLd(track, locale)} />
-      <JsonLd data={breadcrumbJsonLd(locale, trackCrumbs(track))} />
-      <SongDetail key={track.id} track={track} related={related} facts={<TrackFacts track={track} />} />
+      <JsonLd data={songJsonLd(t, track, locale)} />
+      <JsonLd data={breadcrumbJsonLd(locale, trackCrumbs(t, track))} />
+      <SongDetail
+        key={track.id}
+        track={track}
+        related={related}
+        facts={<TrackFacts track={track} locale={locale} />}
+      />
     </>
   );
 }

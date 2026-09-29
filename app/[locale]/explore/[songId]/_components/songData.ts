@@ -51,18 +51,80 @@ export function trackPath(track: Pick<LibraryTrack, 'id' | 'slug'>): string {
 }
 
 /**
+ * The translator every copy helper here takes, with the page's locale for the
+ * one thing ICU messages cannot do, which is join a list ("a, b and c",
+ * "鼓、钢琴和贝斯"). Any next-intl translator scoped to the `song` namespace
+ * fits: getTranslations on the server, useTranslations in the browser,
+ * createTranslator in tests.
+ *
+ * The copy itself lives in messages/{locale}.json under `song`. Before, it was
+ * English written into these functions, so /zh-CN/explore/... served English
+ * titles, descriptions and facts under lang="zh-CN": three URLs per page that
+ * Google saw as one English page declared three times.
+ */
+export interface SongT {
+  (key: string, values?: Record<string, string | number>): string;
+  has(key: string): boolean;
+}
+
+export interface SongCopy {
+  t: SongT;
+  locale: string;
+}
+
+/**
+ * The forms an instrument takes in copy. In English they differ ("Drums",
+ * "drums", "drum", "Drum Sheet Music"); in Chinese most of them collapse to
+ * one word, and the sheet forms to one term (架子鼓谱, 爵士鼓譜).
+ */
+export type InstrumentForm = 'name' | 'noun' | 'adjective' | 'sheet' | 'sheetHeading' | 'sheetTitle' | 'sub';
+
+/** One form of an instrument's name. A stem the messages do not know keeps its own. */
+export function instrumentWord(t: SongT, instrument: string, form: InstrumentForm): string {
+  const part = instrument.toLowerCase();
+  const key = `instruments.${part}.${form}`;
+  if (t.has(key)) return t(key);
+  // Sheet forms exist only for the scored instruments; fall back to the name.
+  if (form.startsWith('sheet') && t.has(`instruments.${part}.name`)) return t(`instruments.${part}.name`);
+  return form === 'name' ? part.charAt(0).toUpperCase() + part.slice(1) : part;
+}
+
+/**
+ * Every form at once, for passing into a message. Locales pick different
+ * variables for the same sentence (English "the drum part" wants `adjective`,
+ * Chinese "鼓声部" wants `name`), and a message that references a variable it
+ * was not given fails to format, so every caller passes all of them.
+ */
+export function instrumentVars(t: SongT, instrument: string): Record<InstrumentForm, string> {
+  const forms: InstrumentForm[] = ['name', 'noun', 'adjective', 'sheet', 'sheetHeading', 'sheetTitle', 'sub'];
+  return Object.fromEntries(forms.map((f) => [f, instrumentWord(t, instrument, f)])) as Record<InstrumentForm, string>;
+}
+
+/** A list in the page's language. en-GB for English: the house style has no serial comma. */
+export function joinList(locale: string, items: string[], type: 'conjunction' | 'disjunction' = 'conjunction'): string {
+  const tag = locale === 'en' ? 'en-GB' : locale;
+  return new Intl.ListFormat(tag, { style: 'long', type }).format(items);
+}
+
+/** "Shape of You by Ed Sheeran", "Ed Sheeran《Shape of You》". */
+export function songSubject(t: SongT, track: Pick<LibraryTrack, 'title' | 'artist'>): string {
+  return track.artist
+    ? t('meta.subject', { title: track.title, artist: track.artist })
+    : t('meta.subjectNoArtist', { title: track.title });
+}
+
+/**
  * Titled for the notation cluster, not the brand. "drum sheet music" and its
  * phrasings are ~8,100 searches/mo and the intent is "find the notation for
  * this song", which is exactly what this page answers. Song and artist lead
  * so the phrase match is front-loaded.
  */
-export function songTitle(track: Pick<LibraryTrack, 'title' | 'artist'>): string {
-  return track.artist ? `${track.title} by ${track.artist}: Sheet Music & MIDI` : `${track.title}: Sheet Music & MIDI`;
+export function songTitle(t: SongT, track: Pick<LibraryTrack, 'title' | 'artist'>): string {
+  return t('meta.title', { subject: songSubject(t, track) });
 }
 
-export function songDescription(track: Pick<LibraryTrack, 'title' | 'artist'>): string {
-  const subject = track.artist ? `${track.title} by ${track.artist}` : track.title;
-  return `Free sheet music, MIDI and isolated stems for ${subject}. AI-transcribed notation you can play along to, download or edit.`;
+export function songDescription(t: SongT, track: Pick<LibraryTrack, 'title' | 'artist'>): string {
+  return t('meta.description', { subject: songSubject(t, track) });
 }
 
 /** Seconds to an ISO 8601 duration (PT3M25S), for schema.org. */
@@ -87,13 +149,6 @@ export function isoDuration(sec: number): string | undefined {
 
 /** URL segments, in the order the hubs use. Never guitar or vocals: no model. */
 export const SONG_INSTRUMENTS: readonly string[] = hubsOfKind('notation').map((h) => h.slug);
-
-/** Instrument as it reads before "sheet music": drums -> "Drum". */
-export function instrumentAdjective(instrument: string): string {
-  const hub = hubsOfKind('notation').find((h) => h.slug === instrument);
-  const word = hub ? hub.adjective : instrument;
-  return word.charAt(0).toUpperCase() + word.slice(1);
-}
 
 /**
  * The parts of this track that have an actual score, as URL segments.
@@ -130,11 +185,10 @@ export function songInstrumentPath(track: Pick<LibraryTrack, 'id' | 'slug'>, ins
 /**
  * Bare <title>; the layout appends " | GrooveSheet". The instrument leads the
  * qualifier so the searched phrase survives Google's truncation on a long
- * song name.
+ * song name: "…: Drum Sheet Music", "…架子鼓谱", "…爵士鼓譜".
  */
-export function songInstrumentTitle(track: Pick<LibraryTrack, 'title' | 'artist'>, instrument: string): string {
-  const subject = track.artist ? `${track.title} by ${track.artist}` : track.title;
-  return `${subject}: ${instrumentAdjective(instrument)} Sheet Music`;
+export function songInstrumentTitle(t: SongT, track: Pick<LibraryTrack, 'title' | 'artist'>, instrument: string): string {
+  return t('meta.partTitle', { subject: songSubject(t, track), sheetTitle: instrumentWord(t, instrument, 'sheetTitle') });
 }
 
 /**
@@ -156,24 +210,17 @@ export function instrumentExportFormats(track: LibraryTrack | null | undefined, 
   return formats;
 }
 
-function joinList(values: string[]): string {
-  if (values.length <= 1) return values.join('');
-  return `${values.slice(0, -1).join(', ')} or ${values[values.length - 1]}`;
-}
-
-export function songInstrumentDescription(track: LibraryTrack, instrument: string): string {
-  const subject = track.artist ? `${track.title} by ${track.artist}` : track.title;
-  const adjective = instrumentAdjective(instrument).toLowerCase();
+export function songInstrumentDescription({ t, locale }: SongCopy, track: LibraryTrack, instrument: string): string {
+  const vars = instrumentVars(t, instrument);
   const formats = instrumentExportFormats(track, instrument);
-  const exports = formats.length ? ` and export ${joinList(formats)}` : '';
-  const stem = trackAssets(track).some(
+  const exports = formats.length ? t('meta.partExports', { formats: joinList(locale, formats, 'disjunction') }) : '';
+  const hasStem = trackAssets(track).some(
     (a) => a.asset_type === 'stem' && (a.stem_name || '').toLowerCase() === instrument.toLowerCase()
-  )
-    ? ` Isolated ${adjective} stem included.`
-    : '';
-  return `Free ${adjective} sheet music for ${subject}: read the score, hear it play against the recording${exports}.${stem}`;
+  );
+  const stem = hasStem ? t('meta.partStem', vars) : '';
+  return t('meta.partDescription', { ...vars, subject: songSubject(t, track), exports, stem });
 }
 
-/** The instrument half of the page's h1. */
-export const songInstrumentHeading = (instrument: string): string =>
-  `${instrumentAdjective(instrument)} sheet music`;
+/** The instrument half of the page's h1: "Drum sheet music", "架子鼓谱". */
+export const songInstrumentHeading = (t: SongT, instrument: string): string =>
+  instrumentWord(t, instrument, 'sheetHeading');
