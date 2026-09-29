@@ -39,6 +39,12 @@
   gap: 12px;
 }
 
+/* Google "Add to Preferred Sources" button (PreferredSourceButton). The height
+   is reserved so the footer does not jump when publisher.js inflates it. */
+.footer-preferred-source {
+  min-height: 40px;
+}
+
 .social-label {
   color: var(--color-muted-foreground);
   font-size: 12px;
