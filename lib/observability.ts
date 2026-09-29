@@ -7,9 +7,9 @@
  * storage failure must never break playback, signup or checkout.
  *
  * Both tools are opt-in by configuration:
- *   NEXT_PUBLIC_POSTHOG_KEY   PostHog project API key (phc_...). Unset => no PostHog.
- *   NEXT_PUBLIC_POSTHOG_HOST  optional, defaults to PostHog US cloud.
- *   NEXT_PUBLIC_CLARITY_ID    Clarity project id. Unset => no Clarity.
+ *   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN  PostHog project token. Unset => no PostHog.
+ *   NEXT_PUBLIC_POSTHOG_HOST           PostHog ingestion host. Unset => no PostHog.
+ *   NEXT_PUBLIC_CLARITY_ID             Clarity project id. Unset => no Clarity.
  *
  * Why both: PostHog gives funnels + retention + session replay keyed to a
  * user id; Clarity gives unlimited free replay and heatmaps with no event
@@ -18,43 +18,21 @@
  * Privacy: PostHog runs with `person_profiles: 'identified_only'`, so anonymous
  * visitors never get a person profile, and all text input is masked in replays.
  */
-import type { PostHog } from 'posthog-js';
-
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
+const posthogReady = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
 
-let posthog: PostHog | null = null;
-let posthogReady = false;
 let clarityReady = false;
 
-async function initPosthog(): Promise<void> {
-  if (posthogReady || !POSTHOG_KEY || typeof window === 'undefined') return;
-  try {
-    // Loaded on demand so a missing or blocked bundle cannot break boot, and
-    // so pages without a key never download it.
-    const ph = (await import('posthog-js')).default;
-    ph.init(POSTHOG_KEY, {
-      api_host: POSTHOG_HOST,
-      person_profiles: 'identified_only',
-      // Client-side navigations change the URL through the history API.
-      capture_pageview: 'history_change',
-      capture_pageleave: true,
-      capture_exceptions: true,
-      persistence: 'localStorage+cookie',
-      // Session replay is the point of this integration: it is what answers
-      // "what did the users who never came back actually see".
-      disable_session_recording: false,
-      session_recording: {
-        maskAllInputs: true,
-        maskTextSelector: '[data-ph-mask]',
-      },
-    });
-    posthog = ph;
-    posthogReady = true;
-  } catch {
-    posthog = null;
-  }
+/**
+ * `instrumentation-client.ts` initializes this module once before the app
+ * hydrates. Dynamic imports keep this bridge safe when it is evaluated by a
+ * server component while still returning that same initialized SDK instance.
+ */
+function withPosthog(callback: (posthog: typeof import('posthog-js').default) => void): void {
+  if (!posthogReady || typeof window === 'undefined') return;
+  void import('posthog-js').then(({ default: posthog }) => callback(posthog)).catch(() => {});
 }
 
 function initClarity(): void {
@@ -76,13 +54,10 @@ function initClarity(): void {
 }
 
 /**
- * Boot both tools. Idempotent; safe to call on every load. No-ops entirely
- * when neither key is configured, which is the state in any environment that
- * has not had the keys set yet.
+ * Boot Clarity. PostHog initializes separately in instrumentation-client.ts.
  */
 export function initObservability(): void {
   try {
-    void initPosthog();
     initClarity();
   } catch {
     /* never break app startup */
@@ -92,7 +67,19 @@ export function initObservability(): void {
 /** Mirror one taxonomy event into PostHog. Called by lib/analytics.ts. */
 export function phCapture(eventName: string, props?: Record<string, unknown>): void {
   try {
-    if (posthogReady && posthog) posthog.capture(eventName, props);
+    withPosthog((posthog) => posthog.capture(eventName, props));
+  } catch {
+    /* swallow */
+  }
+}
+
+/**
+ * Dedicated PostHog Logs bridge. Only explicit calls to this function leave
+ * the browser: existing console and application loggers remain local.
+ */
+export function phLog(message: string, attributes: Record<string, string | number | boolean> = {}): void {
+  try {
+    withPosthog((posthog) => posthog.logger.info(message, attributes));
   } catch {
     /* swallow */
   }
@@ -105,11 +92,11 @@ export function phCapture(eventName: string, props?: Record<string, unknown>): v
 export function identifyUser(user: { id?: string | null; email?: string | null } | null | undefined): void {
   if (!user || !user.id) return;
   try {
-    if (posthogReady && posthog) {
+    withPosthog((posthog) => {
       posthog.identify(String(user.id), {
         email: user.email || undefined,
       });
-    }
+    });
   } catch {
     /* swallow */
   }
@@ -126,7 +113,7 @@ export function identifyUser(user: { id?: string | null; email?: string | null }
 /** Clear identity on sign-out so the next user starts a clean session. */
 export function resetObservability(): void {
   try {
-    if (posthogReady && posthog) posthog.reset();
+    withPosthog((posthog) => posthog.reset());
   } catch {
     /* swallow */
   }

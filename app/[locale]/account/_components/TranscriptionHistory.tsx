@@ -31,6 +31,7 @@ import type { Workflow } from '@/lib/types';
 import config from '@/lib/config';
 import { Link } from '@/lib/navigation';
 import { useLocalizedNavigate } from '@/lib/navigation-client';
+import { track } from '@/lib/analytics';
 import { BillingButtonStyles, errorMessage, isAuthError, saveBlob } from './accountShared';
 
 /** A Library card: the enriched /workflow/list item, plus the fields this page reads. */
@@ -433,6 +434,11 @@ export default function TranscriptionHistory() {
           ? { ...w, visibility: res?.visibility || visibility, library_track_id: res?.library_track_id || w.library_track_id, published_at: res?.published_at ?? w.published_at }
           : w
       )));
+      track('transcription_visibility_changed', {
+        workflow_id: workflowId,
+        previous_visibility: previous,
+        visibility: res?.visibility || visibility,
+      });
       if (visibility === 'private') notify('Unpublished');
       else if (res?.processing) notify('Published. Preparing streamable audio, this takes a minute');
       else notify(`Published as ${visibility}`);
@@ -456,6 +462,7 @@ export default function TranscriptionHistory() {
     try {
       await deleteWorkflow(config.apiBaseUrl, workflowId, getToken, signOut, { deleteTrack });
       setWorkflows((ws) => ws.filter((w) => w.workflow_id !== workflowId));
+      track('transcription_deleted', { workflow_id: workflowId, removed_from_explore: deleteTrack });
       notify('Transcription deleted');
     } catch (err) {
       notify(errorMessage(err) || 'Could not delete transcription');

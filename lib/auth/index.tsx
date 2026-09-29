@@ -12,7 +12,7 @@
  */
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { setFunnelUser, trackSignUp } from '@/lib/analytics';
@@ -256,6 +256,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  // PostHog persists identity between page loads. Keep the in-page identity
+  // too, so switching accounts or losing a session cannot attribute errors
+  // and events to the user who was previously active.
+  const identifiedUserId = useRef<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -275,7 +279,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const restored = mapUser(data.session?.user || null);
           setUser(restored);
           // Bind replays and funnels to the account, not just the anonymous device.
-          identifyUser(restored);
+          // This also identifies a user after a browser refresh, which is
+          // required because the authenticated session is restored client-side.
+          if (restored && identifiedUserId.current !== restored.id) {
+            if (identifiedUserId.current) resetObservability();
+            identifyUser(restored);
+            identifiedUserId.current = restored.id;
+          }
           setFunnelUser(restored?.id);
           setIsLoaded(true);
         })
@@ -290,7 +300,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(nextSession || null);
         const nextUser = mapUser(nextSession?.user || null);
         setUser(nextUser);
-        if (nextUser) identifyUser(nextUser);
+        if (!nextUser) {
+          // This covers expiry and sign-out changes initiated in another tab,
+          // not just the explicit signOut() action below.
+          if (identifiedUserId.current) resetObservability();
+          identifiedUserId.current = null;
+        } else {
+          // An account switch must start with a fresh anonymous state; merging
+          // it with the prior user's identity would misattribute all later
+          // events and automatically captured exceptions.
+          if (identifiedUserId.current !== nextUser.id) {
+            if (identifiedUserId.current) resetObservability();
+            identifyUser(nextUser);
+            identifiedUserId.current = nextUser.id;
+          }
+        }
         setFunnelUser(nextUser?.id);
         setIsLoaded(true);
         // GA4 sign_up, emitted once per account. Supabase reports SIGNED_IN for

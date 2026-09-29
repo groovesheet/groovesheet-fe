@@ -11,6 +11,7 @@ import { useUser, useAuth } from '@/lib/auth';
 import { queueSummary } from '@/lib/queue';
 import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
 import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
+import { phLog } from '@/lib/observability';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
 import { usePaywall } from '@/components/billing/OutOfMinutesModal';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
@@ -351,6 +352,11 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               setDownloadFilename(filename);
               setStatus('completed');
               setProgress(100);
+              phLog('transcription_preview_completed', {
+                workflow_id: id,
+                instrument: selectedInstrument,
+                surface: UPLOAD_SOURCE,
+              });
               downloadScorePdfFile(id);
               persist({ jobId: id, status: 'completed', progress: 100, instrument: selectedInstrument, fileName: fileNameRef.current ?? undefined });
               // Pre-fetch secondary files (stem, MIDI) in background for instant downloads
@@ -362,6 +368,12 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
             return;
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
+            phLog('transcription_preview_failed', {
+              workflow_id: id,
+              instrument: selectedInstrument,
+              surface: UPLOAD_SOURCE,
+              is_preview: isPreview,
+            });
             if (isPreview) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
             setError(data.message || 'Processing failed.');
             stopped = true;
@@ -449,6 +461,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       trackWorkflowStarted(workflowName, {
         workflow_id: workflowId,
         instrument: selectedInstrument,
+        is_preview: workflowId.startsWith('PRV'),
+      });
+      phLog('transcription_preview_accepted', {
+        workflow_id: workflowId,
+        workflow_name: workflowName,
+        instrument: selectedInstrument,
+        surface: UPLOAD_SOURCE,
         is_preview: workflowId.startsWith('PRV'),
       });
 
