@@ -75,6 +75,32 @@
   color: var(--color-text);
 }
 
+/* Thumbs up/down on a fresh preview: the direct answer to "did they like it". */
+.tr-rate {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+.tr-rate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-input-border);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+.tr-rate-btn:hover {
+  border-color: var(--color-primary);
+}
+
 /* Header actions -------------------------------------------------------------- */
 .tr-header-actions {
   display: flex;

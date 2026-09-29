@@ -123,9 +123,13 @@ export default function PreviewLockTeaser({
         </div>
         <div className="tr-lock-copy">
           <h3>The rest of this song is locked</h3>
+          {/* Honest about the price: signing up is free, the full song is not.
+              Until 2026-09-29 this promised "Sign up to unlock the full song",
+              which stopped being true when free minutes went to zero. */}
           <p>
-            You&apos;re looking at a 10-second preview. Unlock the full transcription to get every
-            bar — plus the complete MIDI, MusicXML and printable PDF.
+            {isSignedIn
+              ? 'You\u2019re looking at a free 10-second preview. Transcribing the whole song uses minutes from a minute pack or plan, and gets you every bar plus the complete MIDI, MusicXML and printable PDF.'
+              : 'You\u2019re looking at a free 10-second preview. Create a free account, then use a minute pack or plan to transcribe every bar, with the complete MIDI, MusicXML and printable PDF.'}
           </p>
         </div>
         {canUpgrade && (
@@ -136,7 +140,7 @@ export default function PreviewLockTeaser({
               onClick={onUpgradeToFull}
               disabled={upgrading}
             >
-              {upgrading ? 'Starting…' : 'Transcribe the full song now'}
+              {upgrading ? 'Starting\u2026' : 'Transcribe the full song'}
             </button>
           ) : (
             <button
@@ -144,7 +148,7 @@ export default function PreviewLockTeaser({
               className="tr-btn tr-btn-primary tr-lock-cta"
               onClick={onSignUpToUnlock}
             >
-              Sign up to unlock the full song
+              Create a free account
             </button>
           )
         )}

@@ -15,7 +15,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
-import { trackSignUp } from '@/lib/analytics';
+import { setFunnelUser, trackSignUp } from '@/lib/analytics';
 import { identifyUser, resetObservability } from '@/lib/observability';
 import { AUTH_NEXT_COOKIE, SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/auth/config';
 
@@ -276,6 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(restored);
           // Bind replays and funnels to the account, not just the anonymous device.
           identifyUser(restored);
+          setFunnelUser(restored?.id);
           setIsLoaded(true);
         })
         .catch((error: unknown) => {
@@ -290,6 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextUser = mapUser(nextSession?.user || null);
         setUser(nextUser);
         if (nextUser) identifyUser(nextUser);
+        setFunnelUser(nextUser?.id);
         setIsLoaded(true);
         // GA4 sign_up, emitted once per account. Supabase reports SIGNED_IN for
         // every session restore, so the account's own created_at is what
@@ -382,6 +384,7 @@ const signOut = async (): Promise<void> => {
   if (error) throw error;
   // Stop attributing the next session to the user who just left.
   resetObservability();
+  setFunnelUser(null);
 };
 
 const setActive = async (_params?: Record<string, unknown>): Promise<void> => undefined;

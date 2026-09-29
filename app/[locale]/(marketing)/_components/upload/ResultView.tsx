@@ -30,6 +30,8 @@ export interface ResultViewProps {
   title?: string;
   defaultView?: 'sheet' | 'midi';
   statusLabel?: string;
+  /** Which upload card this is; carried on the preview funnel events. */
+  surface?: string;
 }
 
 // The player module is plain JS ported verbatim, so TypeScript infers every

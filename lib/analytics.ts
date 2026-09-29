@@ -8,6 +8,11 @@
  * an ad blocker, a missing container, a serialisation error or a consent
  * refusal must never break Explore playback, downloads, signup or purchase.
  *
+ * Funnel events (FUNNEL below, plus sign_up and purchase) are also posted to
+ * our own API, POST /funnel/events, so the upload-to-payment funnel survives
+ * ad blockers and can be joined to preview and payment rows server-side
+ * (groovesheet-be scripts/funnel_report.py).
+ *
  * Event names follow the funnel contract. `sign_up` and `purchase` use GA4's
  * recommended names so the standard reports pick them up.
  *
@@ -46,6 +51,147 @@ export const EVENTS = {
   WORKFLOW_STARTED: 'workflow_started',
   PURCHASE: 'purchase',
 } as const;
+
+/**
+ * Upload-to-payment funnel. Built 2026-09-29 to test one hypothesis: visitors
+ * watch the 10-second preview, dislike it, and leave. Nobody had ever reached
+ * Stripe Checkout, and nothing measured the steps in between.
+ *
+ * Keep in step with ALLOWED_EVENTS in groovesheet-be routes/funnel.py; the
+ * server drops names it does not know.
+ */
+export const FUNNEL = {
+  UPLOAD_STARTED: 'upload_started',
+  PREVIEW_READY: 'preview_ready',
+  PREVIEW_FAILED: 'preview_failed',
+  PREVIEW_PLAYED: 'preview_played',
+  PREVIEW_RATING: 'preview_rating',
+  /** Once per preview: how long it was on screen, and whether they played it or asked for more. */
+  PREVIEW_EXIT: 'preview_exit',
+  /** Signed-out "sign up" click on a preview. */
+  UNLOCK_CLICK: 'unlock_click',
+  PREVIEW_CLAIMED: 'preview_claimed',
+  /** Signed-in "transcribe the full song" click. */
+  FULL_SONG_CLICK: 'full_song_click',
+  /** Out of minutes (HTTP 402). */
+  PAYWALL_SHOWN: 'paywall_shown',
+  PAYWALL_DISMISSED: 'paywall_dismissed',
+  BEGIN_CHECKOUT: 'begin_checkout',
+  CHECKOUT_ERROR: 'checkout_error',
+  FULL_SONG_STARTED: 'full_song_started',
+  PRICING_VIEW: 'pricing_view',
+} as const;
+
+const FIRST_PARTY_EVENTS = new Set<string>([...Object.values(FUNNEL), EVENTS.SIGN_UP, EVENTS.PURCHASE]);
+
+// Same origin: next.config rewrites /api to the API, so no CORS is involved,
+// which is what lets the exit event go out through sendBeacon.
+const FUNNEL_ENDPOINT = '/api/funnel/events';
+const FUNNEL_SESSION_KEY = 'gs_funnel_sid';
+const FUNNEL_BATCH_MAX = 25;
+const FUNNEL_FLUSH_MS = 1500;
+
+type FunnelItem = { event: string; props: Record<string, Primitive>; preview_id?: string };
+let funnelQueue: FunnelItem[] = [];
+let funnelTimer: ReturnType<typeof setTimeout> | null = null;
+let funnelUserId: string | null = null;
+let funnelListening = false;
+let memorySessionId: string | null = null;
+
+/**
+ * A random id kept in localStorage. It outlives sign-up, which is the point:
+ * the anonymous upload and the account that later pays land in one session.
+ */
+function funnelSessionId(): string {
+  try {
+    const existing = window.localStorage.getItem(FUNNEL_SESSION_KEY);
+    if (existing) return existing;
+  } catch {
+    /* storage blocked: fall back to a per-page id below */
+  }
+  if (!memorySessionId) {
+    const random =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+    memorySessionId = `s_${random.replace(/-/g, '')}`.slice(0, 40);
+  }
+  try {
+    window.localStorage.setItem(FUNNEL_SESSION_KEY, memorySessionId);
+  } catch {
+    /* ignore */
+  }
+  return memorySessionId;
+}
+
+/** Attach the signed-in account to subsequent funnel events (null on sign-out). */
+export function setFunnelUser(userId: string | null | undefined): void {
+  funnelUserId = userId ? String(userId) : null;
+}
+
+/**
+ * Send whatever is queued. On page exit (`beacon`), sendBeacon is the only
+ * transport the browser reliably lets finish; otherwise a keepalive fetch.
+ * text/plain keeps it a CORS "simple" request. Never throws.
+ */
+export function flushFunnel(beacon = false): void {
+  try {
+    if (funnelTimer) {
+      clearTimeout(funnelTimer);
+      funnelTimer = null;
+    }
+    while (funnelQueue.length) {
+      const events = funnelQueue.splice(0, FUNNEL_BATCH_MAX);
+      const body = JSON.stringify({ session_id: funnelSessionId(), user_id: funnelUserId || undefined, events });
+      if (beacon && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        if (navigator.sendBeacon(FUNNEL_ENDPOINT, new Blob([body], { type: 'text/plain' }))) continue;
+      }
+      if (typeof fetch === 'function') {
+        fetch(FUNNEL_ENDPOINT, {
+          method: 'POST',
+          body,
+          headers: { 'Content-Type': 'text/plain' },
+          keepalive: true,
+          credentials: 'omit',
+        }).catch(() => {});
+      }
+    }
+  } catch {
+    /* measurement is best-effort */
+  }
+}
+
+function sendFirstParty(eventName: string, props: Record<string, Primitive>): void {
+  if (!FIRST_PARTY_EVENTS.has(eventName)) return;
+  if (!funnelListening) {
+    funnelListening = true;
+    window.addEventListener('pagehide', () => flushFunnel(true));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushFunnel(true);
+    });
+  }
+  const previewId = typeof props.preview_id === 'string' ? props.preview_id : undefined;
+  funnelQueue.push({ event: eventName, props, preview_id: previewId });
+  // Tracked while the page is going away (the preview exit event is): the
+  // flush-on-hide listener may already have run, and a timer would never
+  // fire, so send it now by beacon.
+  if (document.visibilityState === 'hidden') {
+    flushFunnel(true);
+  } else if (funnelQueue.length >= FUNNEL_BATCH_MAX) {
+    flushFunnel();
+  } else if (!funnelTimer) {
+    funnelTimer = setTimeout(() => flushFunnel(), FUNNEL_FLUSH_MS);
+  }
+}
+
+/** Test hook: forget queued events and the cached user. */
+export function _resetFunnel(): void {
+  funnelQueue = [];
+  if (funnelTimer) clearTimeout(funnelTimer);
+  funnelTimer = null;
+  funnelUserId = null;
+  memorySessionId = null;
+}
 
 /**
  * Google Ads conversions.
@@ -180,6 +326,7 @@ export function track(eventName: string, props: EventProps = {}): boolean {
     window.dataLayer.push({ event: eventName, ...payload });
     // Same taxonomy, second sink. PostHog no-ops until a key is configured.
     phCapture(eventName, payload);
+    sendFirstParty(eventName, payload);
     metaCapture(eventName, payload);
     return true;
   } catch {
@@ -300,4 +447,9 @@ export function trackPurchase({ value, currency, transaction_id, tier }: Convers
   adsConversion(ADS_LABELS.PURCHASE, { value, currency, transaction_id });
   adsPurchaseEvent({ value, currency, transaction_id });
   return pushed;
+}
+
+/** One step of the upload-to-payment funnel (see FUNNEL). */
+export function trackFunnel(eventName: (typeof FUNNEL)[keyof typeof FUNNEL], props: EventProps = {}): boolean {
+  return track(eventName, props);
 }

@@ -11,6 +11,7 @@ import { useAuth, useUser } from '@/lib/auth';
 import { captureAttribution, captureClickId } from '@/lib/attribution';
 import { initObservability } from '@/lib/observability';
 import { claimPendingPreviewIfAny } from '@/lib/previewApi';
+import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import { claimPendingCampaignIfAny } from '@/lib/api';
 import config from '@/lib/config';
 
@@ -39,6 +40,9 @@ export default function AppBoot() {
         const result = await claimPendingPreviewIfAny(config.apiBaseUrl, getToken);
         if (!cancelled && result) {
           console.info('Pending preview claimed:', result);
+          // The step between "signed up from a preview" and "asked for the full song".
+          const previewId = (result as { preview_id?: unknown }).preview_id;
+          trackFunnel(FUNNEL.PREVIEW_CLAIMED, { preview_id: typeof previewId === 'string' ? previewId : undefined });
         }
       } catch (err) {
         console.warn('Pending preview claim failed:', err);

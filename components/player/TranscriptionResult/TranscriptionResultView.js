@@ -3,10 +3,11 @@
 // Sheet / Piano roll / Stems tabs on one shared transport) but is fed from
 // workflow/preview outputs instead of library assets.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle, DownloadSimple, File, X } from '@phosphor-icons/react';
+import { CheckCircle, DownloadSimple, File, ThumbsDown, ThumbsUp, X } from '@phosphor-icons/react';
 import { Drum } from 'lucide-react';
 import { useAuth, useUser } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
+import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import config from '@/lib/config';
 import { downloadWorkflowFile, fetchMidiArrayBuffer, fetchMusicXmlText } from '@/lib/api';
 import {
@@ -138,6 +139,9 @@ export default function TranscriptionResultView({
   // Overlay heading. "Transcription complete" fits the transcribe surfaces;
   // the MIDI converter names what it just produced instead.
   statusLabel = 'Transcription complete',
+  // Which upload card this is (transcribe / stem_splitter / midi_converter),
+  // carried on the preview funnel events.
+  surface = null,
 }) {
   const { getToken } = useAuth();
   const { user } = useUser();
@@ -195,6 +199,91 @@ export default function TranscriptionResultView({
   if (!transportRef.current) transportRef.current = createTransport();
   const transport = transportRef.current;
   const tState = useTransport(transport);
+
+  // --- Preview engagement ----------------------------------------------------
+  // Measures the question behind the 2026-09-29 funnel work: do people watch
+  // the 10-second preview and leave because they don't like it? One exit event
+  // per preview carries how long it was on screen, whether it was played,
+  // rated, or followed by a request for the full song. Only the just-finished
+  // card counts; the history page shows old previews.
+  const trackPreview = isPreview && !isPage;
+  const engagementRef = useRef(null);
+  const [rating, setRating] = useState(null);
+
+  // A remount of the same preview (React dev double-mount, or a dependency
+  // settling) must not count as leaving: the exit is deferred a tick and
+  // cancelled if the same preview mounts again straight away.
+  const pendingExitRef = useRef(null);
+  useEffect(() => {
+    if (!trackPreview) return undefined;
+    const pending = pendingExitRef.current;
+    let e;
+    if (pending && pending.e.base.preview_id === workflowId) {
+      clearTimeout(pending.timer);
+      e = pending.e;
+    } else {
+      if (pending) {
+        clearTimeout(pending.timer);
+        pending.exit('closed');
+      }
+      const base = { surface: surface || undefined, preview_id: workflowId, instrument: selectedInstrument };
+      e = { base, shownAt: Date.now(), played: false, cta: false, rating: null, exited: false };
+      trackFunnel(FUNNEL.PREVIEW_READY, base);
+    }
+    pendingExitRef.current = null;
+    engagementRef.current = e;
+    const exit = (reason) => {
+      if (e.exited) return;
+      e.exited = true;
+      trackFunnel(FUNNEL.PREVIEW_EXIT, {
+        ...e.base,
+        reason,
+        dwell_sec: Math.round((Date.now() - e.shownAt) / 100) / 10,
+        played: e.played,
+        cta_clicked: e.cta,
+        rating: e.rating || undefined,
+      });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') exit('tab_hidden');
+    };
+    const onPageHide = () => exit('page_leave');
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onPageHide);
+      const timer = setTimeout(() => {
+        if (pendingExitRef.current && pendingExitRef.current.e === e) pendingExitRef.current = null;
+        exit('closed');
+      }, 0);
+      pendingExitRef.current = { e, exit, timer };
+    };
+  }, [trackPreview, workflowId, surface, selectedInstrument]);
+
+  // Any play source counts: the bar, the space key, or the score's own button.
+  useEffect(() => {
+    const e = engagementRef.current;
+    if (!trackPreview || !e || e.played || !tState.isPlaying) return;
+    e.played = true;
+    trackFunnel(FUNNEL.PREVIEW_PLAYED, e.base);
+  }, [trackPreview, tState.isPlaying]);
+
+  const markCta = useCallback(() => {
+    if (engagementRef.current) engagementRef.current.cta = true;
+  }, []);
+
+  const ratePreview = useCallback((value) => {
+    setRating(value);
+    const e = engagementRef.current;
+    if (e) e.rating = value;
+    trackFunnel(FUNNEL.PREVIEW_RATING, { ...(e ? e.base : { preview_id: workflowId }), rating: value });
+  }, [workflowId]);
+
+  const handleSignUpClick = useCallback(() => {
+    markCta();
+    if (onSignUpToUnlock) onSignUpToUnlock();
+  }, [markCta, onSignUpToUnlock]);
   useEffect(() => () => transportRef.current.pause(), []);
 
   // --- volume (master gain across engines) ------------------------------------
@@ -691,13 +780,14 @@ export default function TranscriptionResultView({
 
   const handleUpgradeClick = useCallback(async () => {
     if (!onUpgradeToFull || upgrading) return;
+    markCta();
     setUpgrading(true);
     try {
       await onUpgradeToFull();
     } finally {
       setUpgrading(false);
     }
-  }, [onUpgradeToFull, upgrading]);
+  }, [onUpgradeToFull, upgrading, markCta]);
 
   return (
     <div ref={containerRef} className={`gs-song-page tr-result${isPage ? ' tr-result-page' : ''}`}>
@@ -712,6 +802,23 @@ export default function TranscriptionResultView({
               <span>{(isPage ? subtitle : null) || fileName || 'Unknown file'}</span>
               {isPreview && <span className="tr-preview-badge">10-second preview</span>}
             </div>
+            {trackPreview && (
+              <div className="tr-rate" role="group" aria-label="Rate this preview">
+                {rating ? (
+                  <span>Thanks, that helps us improve.</span>
+                ) : (
+                  <>
+                    <span>Is this preview accurate?</span>
+                    <button type="button" className="tr-rate-btn" onClick={() => ratePreview('up')} aria-label="Yes, accurate">
+                      <ThumbsUp size={16} weight="bold" /> Yes
+                    </button>
+                    <button type="button" className="tr-rate-btn" onClick={() => ratePreview('down')} aria-label="No, not accurate">
+                      <ThumbsDown size={16} weight="bold" /> No
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="tr-header-actions">
@@ -721,8 +828,8 @@ export default function TranscriptionResultView({
                 {upgrading ? 'Starting…' : (showSheet ? 'Transcribe the full song' : 'Separate the full song')}
               </button>
             ) : (
-              <button className="tr-btn tr-btn-primary" onClick={onSignUpToUnlock}>
-                Sign up to unlock the full song
+              <button className="tr-btn tr-btn-primary" onClick={handleSignUpClick}>
+                Get the full song
               </button>
             )
           )}
@@ -816,7 +923,7 @@ export default function TranscriptionResultView({
               <PreviewLockTeaser
                 isSignedIn={isSignedIn}
                 onUpgradeToFull={onUpgradeToFull ? handleUpgradeClick : null}
-                onSignUpToUnlock={onSignUpToUnlock}
+                onSignUpToUnlock={onSignUpToUnlock ? handleSignUpClick : null}
                 upgrading={upgrading}
               />
             ) : null}

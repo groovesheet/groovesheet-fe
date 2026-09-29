@@ -11,9 +11,9 @@ import { useUser, useAuth } from '@/lib/auth';
 import { authenticatedFetch, apiPrefixForId, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
 import { queueSummary } from '@/lib/queue';
 import { saveActiveJob, loadActiveJob, clearActiveJob } from '@/lib/activeJob';
-import { trackWorkflowStarted } from '@/lib/analytics';
+import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
-import { scrollToPricing } from '@/lib/scrollToPricing';
+import { usePaywall } from '@/components/billing/OutOfMinutesModal';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/constants';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
 import { useTheme } from '@/lib/theme';
@@ -139,6 +139,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
   const { openLoginModal } = useLoginModal();
+  const { showPaywall, paywall } = usePaywall(UPLOAD_SOURCE);
   const router = useRouter();
   const isTouch = useIsTouch();
 
@@ -310,6 +311,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
             return;
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
+            if (id.startsWith('PRV')) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
             setError(data.message || 'Processing failed.');
             stopped = true;
             clearActiveJob(SURFACE);
@@ -373,6 +375,13 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
 
     setError(null);
     setStatus('uploading');
+    trackFunnel(FUNNEL.UPLOAD_STARTED, {
+      surface: UPLOAD_SOURCE,
+      instrument: selectedInstrument,
+      signed_in: Boolean(isSignedIn),
+      file_mb: Math.round((fileToUpload.size / 1048576) * 10) / 10,
+      file_type: fileToUpload.type || undefined,
+    });
     simulateProgress();
 
     try {
@@ -521,10 +530,13 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
 
   const handleUpgradeToFull = async () => {
     if (!jobId || !jobId.startsWith('PRV')) return;
+    const previewId = jobId;
+    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument });
     try {
       const result = await upgradeToFull<{ workflow_id?: string }>(API_BASE_URL, jobId, getToken);
       const workflowId = result?.workflow_id;
       if (workflowId) {
+        trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId });
         setJobId(workflowId);
         setStatus('processing');
         setProgress(0);
@@ -536,9 +548,9 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
       }
     } catch (err) {
       const info = errorInfo(err);
-      // Out of minutes: the plans are what they need, not an error banner.
+      // Out of minutes: say so, and offer the fix, instead of an error banner.
       if (info.status === 402) {
-        scrollToPricing({ tab: 'topups' });
+        showPaywall(info.message || null, previewId);
         return;
       }
       setError(info.message || 'Failed to start full song processing.');
@@ -546,6 +558,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
   };
 
   const handleSignUpToUnlock = () => {
+    trackFunnel(FUNNEL.UNLOCK_CLICK, { surface: UPLOAD_SOURCE, preview_id: jobId || undefined, instrument: selectedInstrument });
     openLoginModal();
   };
 
@@ -768,12 +781,14 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
               isSignedIn={isSignedIn}
               onUpgradeToFull={handleUpgradeToFull}
               onSignUpToUnlock={handleSignUpToUnlock}
+              surface={UPLOAD_SOURCE}
               // This page sells MIDI: open on the note view (piano roll /
               // fretboard / drum kit), with the engraving one tab over.
               defaultView="midi"
               statusLabel="MIDI conversion complete"
             />
           )}
+          {paywall}
           {error && uiState !== 'success' && (
             <div className="error-overlay">
               <StatusMessage variant="error">{error}</StatusMessage>
