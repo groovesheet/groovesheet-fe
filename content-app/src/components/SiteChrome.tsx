@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { FOOTER_SOCIALS } from "@/components/footerSocials";
+import { PreferredSourceButton } from "@/components/PreferredSourceButton";
 import { applyTheme, resolveIsDarkMode, storeTheme } from "@/lib/themeBoot";
 import "./SiteChrome.css";
 
@@ -335,6 +336,7 @@ export function SiteFooter() {
                 ))}
               </div>
             </div>
+            <PreferredSourceButton />
           </div>
 
           <div className="footer-links">
