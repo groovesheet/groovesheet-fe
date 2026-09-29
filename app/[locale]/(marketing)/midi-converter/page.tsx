@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import Header from '@/components/chrome/Header';
 import { Link } from '@/lib/navigation';
 import { staticRouteMetadata } from '@/lib/seo/metadata';
@@ -11,15 +12,17 @@ export async function generateMetadata({ params }: LocaleParams) {
   return staticRouteMetadata('/midi-converter', locale);
 }
 
-const disclaimer = (
-  <>
-    <span>By uploading a file, you agree to our </span>
-    <Link href="/terms">Terms of Service</Link>
-  </>
-);
 
 export default async function MidiConverterPage(props: LocaleParams) {
   const locale = await routeLocale(props);
+  const t = await getTranslations({ locale, namespace: 'tools.midiConverter' });
+  const tHero = await getTranslations({ locale, namespace: 'hero' });
+  const disclaimer = (
+    <>
+      <span>{tHero('disclaimerPrefix')}</span>
+      <Link href="/terms">{tHero('termsOfService')}</Link>
+    </>
+  );
 
   return (
     <div
@@ -33,10 +36,8 @@ export default async function MidiConverterPage(props: LocaleParams) {
         intro={
           <div className="hero-content">
             <div className="hero-text">
-              <h1 className="hero-title">Convert Any Audio to MIDI in Seconds.</h1>
-              <p className="hero-subtitle">
-                Upload your track. Get editable, DAW-ready MIDI files and precise sheet music in minutes.
-              </p>
+              <h1 className="hero-title">{t('title')}</h1>
+              <p className="hero-subtitle">{t('subtitle')}</p>
             </div>
             <div className="hero-disclaimer hero-disclaimer-desktop">{disclaimer}</div>
           </div>
@@ -47,9 +48,9 @@ export default async function MidiConverterPage(props: LocaleParams) {
         locale={locale}
         variant="midi"
         element={{
-          titleTop: 'DAW-Ready MIDI,',
-          titleBottom: 'On Demand.',
-          lede: 'Upload a track, review the transcription, download MIDI and score files.',
+          titleTop: t('elementTop'),
+          titleBottom: t('elementBottom'),
+          lede: t('lede'),
         }}
       />
     </div>

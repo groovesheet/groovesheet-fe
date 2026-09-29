@@ -6,7 +6,7 @@
  * Nothing here reads cookies, headers or the session: the page is ISR-cached
  * and served to everyone (brief 5.9).
  */
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getLibraryTracks } from '@/lib/api-server';
 import { pageMetadata, SITE_URL } from '@/lib/seo/metadata';
 import { buildLocalePath } from '@/lib/locales';
@@ -24,10 +24,10 @@ interface ExplorePageProps {
 
 export async function generateMetadata({ params }: ExplorePageProps) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'explore.meta' });
   return pageMetadata({
-    title: 'Explore Free Sheet Music, MIDI and Stems',
-    description:
-      'Browse AI transcriptions from the GrooveSheet library: sheet music, MIDI files, and isolated stems for drums, piano, bass and more.',
+    title: t('title'),
+    description: t('description'),
     path: '/explore',
     locale,
   });
@@ -36,6 +36,8 @@ export async function generateMetadata({ params }: ExplorePageProps) {
 export default async function ExplorePage({ params }: ExplorePageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'explore' });
+  const tSong = await getTranslations({ locale, namespace: 'song' });
 
   let tracks: SongCardModel[] = [];
   let nextCursor: string | null = null;
@@ -48,7 +50,7 @@ export default async function ExplorePage({ params }: ExplorePageProps) {
     // Render the shell and let the browser retry, rather than failing the
     // page. The next revalidation replaces this render once the API is back.
     console.error('Explore: library fetch failed', err);
-    error = 'Failed to load the library.';
+    error = t('loadError');
   }
 
   const pageUrl = `${SITE_URL}${buildLocalePath(locale, '/explore')}`;
@@ -59,15 +61,17 @@ export default async function ExplorePage({ params }: ExplorePageProps) {
         data={{
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: 'Explore the GrooveSheet library',
+          name: t('meta.collectionName'),
           url: pageUrl,
           mainEntity: {
             '@type': 'ItemList',
-            itemListElement: tracks.slice(0, 30).map((t, i) => ({
+            itemListElement: tracks.slice(0, 30).map((track, i) => ({
               '@type': 'ListItem',
               position: i + 1,
-              url: `${SITE_URL}${buildLocalePath(locale, `/explore/${encodeURIComponent(t.id)}`)}`,
-              name: t.artist ? `${t.title} by ${t.artist}` : t.title,
+              url: `${SITE_URL}${buildLocalePath(locale, `/explore/${encodeURIComponent(track.id)}`)}`,
+              name: track.artist
+                ? tSong('meta.subject', { title: track.title, artist: track.artist })
+                : tSong('meta.subjectNoArtist', { title: track.title }),
             })),
           },
         }}

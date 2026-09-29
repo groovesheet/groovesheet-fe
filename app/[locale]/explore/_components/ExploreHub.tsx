@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Funnel } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { useRouter } from '@/lib/navigation';
@@ -52,6 +53,12 @@ function searchHref(params: Record<string, string>): string {
 export default function ExploreHub({ initialTracks, initialNextCursor, initialError }: ExploreHubProps) {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('explore');
+  // Read by loadTracks, which is memoized once; a ref keeps it current.
+  const loadErrorTextRef = useRef(t('loadError'));
+  useEffect(() => {
+    loadErrorTextRef.current = t('loadError');
+  }, [t]);
 
   // Submitting a search leaves the hub for the paginated results page. The hub
   // only ever holds the first page of the catalog, so filtering in place here
@@ -95,7 +102,7 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
         q,
         tracks: [],
         nextCursor: null,
-        error: (err instanceof Error && err.message) || 'Failed to load the library.',
+        error: (err instanceof Error && err.message) || loadErrorTextRef.current,
       });
     } finally {
       if (seq === requestSeq.current) setLoadingQ(null);
@@ -180,27 +187,27 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
     }[] = [
       {
         key: 'sheet',
-        eyebrow: '01 · Sheet music',
-        title: 'Popular sheet music',
-        subtitle: 'Engraved, downloadable as PDF and MusicXML.',
+        eyebrow: t('rails.sheetEyebrow'),
+        title: t('rails.sheetTitle'),
+        subtitle: t('rails.sheetSubtitle'),
         variant: 'sheet',
         filterLabel: 'Sheet Music',
         songs: byPopularity.filter((t) => t.formats.includes('musicxml')),
       },
       {
         key: 'midi',
-        eyebrow: '02 · MIDI',
-        title: 'Popular MIDI',
-        subtitle: 'Multi-track .mid files. Drop into your DAW.',
+        eyebrow: t('rails.midiEyebrow'),
+        title: t('rails.midiTitle'),
+        subtitle: t('rails.midiSubtitle'),
         variant: 'midi',
         filterLabel: 'MIDI',
         songs: byPopularity.filter((t) => t.formats.includes('midi')),
       },
       {
         key: 'stems',
-        eyebrow: '03 · Stems',
-        title: 'Popular stems',
-        subtitle: 'Isolated vocals, drums, bass, keys.',
+        eyebrow: t('rails.stemsEyebrow'),
+        title: t('rails.stemsTitle'),
+        subtitle: t('rails.stemsSubtitle'),
         variant: 'stems',
         filterLabel: 'Stems',
         songs: byPopularity.filter((t) => t.formats.includes('stem')),
@@ -211,21 +218,23 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
       discoverySections: [
         {
           key: 'trending',
-          title: 'Trending now',
-          subtitle: 'What working musicians are downloading this week.',
+          // All-time counters, so no "this week": that was a claim the data never backed.
+          title: t('rails.trendingTitle'),
+          subtitle: t('rails.trendingSubtitle'),
           sort: 'downloads',
           songs: byTrending,
         },
         {
           key: 'new',
-          title: 'New this week',
-          subtitle: 'Fresh transcriptions, hot off the press.',
+          // Newest first, not "this week": the rail shows the latest tracks whenever they landed.
+          title: t('rails.newTitle'),
+          subtitle: t('rails.newSubtitle'),
           sort: 'newest',
           songs: byNewest,
         },
       ],
     };
-  }, [visibleTracks]);
+  }, [visibleTracks, t]);
 
   const isEmpty = !loading && !error && visibleTracks.length === 0;
 
@@ -264,10 +273,10 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
             type="button"
             className="explore-mobile-filters"
             onClick={() => setDrawerOpen(true)}
-            aria-label="Open filters"
+            aria-label={t('openFilters')}
           >
             <Funnel size={18} weight="regular" />
-            <span>Filters</span>
+            <span>{t('filters')}</span>
           </button>
 
           <ExploreHeader
@@ -312,7 +321,7 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
               ))}
 
               <div className="explore-divider">
-                <span className="explore-divider-label">Keep digging</span>
+                <span className="explore-divider-label">{t('rails.keepDigging')}</span>
                 <div className="explore-divider-lines">
                   {[0, 1, 2, 3, 4].map((i) => (
                     <div key={i} className="explore-divider-line" style={{ top: i * 3 }} />
@@ -341,7 +350,7 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
                     onClick={loadMore}
                     disabled={loadingMore}
                   >
-                    {loadingMore ? 'Loading…' : 'Load More'}
+                    {loadingMore ? t('loading') : t('loadMore')}
                   </button>
                 </div>
               )}

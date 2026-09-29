@@ -9,7 +9,7 @@
  * rate-limited search endpoint.
  */
 import { Suspense } from 'react';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { searchLibraryTracksServer } from '@/lib/api-server';
 import { pageMetadata } from '@/lib/seo/metadata';
 import SearchResults, { type InitialResults } from '../_components/SearchResults';
@@ -34,6 +34,7 @@ interface SearchPageProps {
 
 export async function generateMetadata({ params, searchParams }: SearchPageProps) {
   const [{ locale }, raw] = await Promise.all([params, searchParams]);
+  const t = await getTranslations({ locale, namespace: 'explore.results.meta' });
   const state = resultsStateFromParams(readerFromRecord(raw));
   const singleFormat = singleFormatOf(state);
   const filtered = state.instruments.length > 0 || state.lengths.length > 0 || state.formats.length > 1;
@@ -41,8 +42,8 @@ export async function generateMetadata({ params, searchParams }: SearchPageProps
   if (state.q) {
     return {
       ...pageMetadata({
-        title: resultsTitle(state),
-        description: `Transcriptions matching \u201c${state.q}\u201d: sheet music, MIDI, and isolated stems.`,
+        title: resultsTitle(state, t),
+        description: t('searchDescription', { q: state.q }),
         path: '/explore/search',
         locale,
       }),
@@ -53,8 +54,8 @@ export async function generateMetadata({ params, searchParams }: SearchPageProps
   }
 
   const metadata = pageMetadata({
-    title: resultsTitle(state),
-    description: 'Browse every AI transcription in the GrooveSheet library: sheet music, MIDI, and stems.',
+    title: resultsTitle(state, t),
+    description: t('browseDescription'),
     // A single-format browse is its own listing; everything else collapses
     // onto the unfiltered page.
     path: singleFormat ? `/explore/search?format=${singleFormat}` : '/explore/search',
@@ -81,7 +82,7 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
     // A rate-limited or failing API must not fail the page: render the shell
     // with the error, and the Try again button refetches from the browser.
     console.error('Explore search: library fetch failed', err);
-    initial.error = 'Failed to load results.';
+    initial.error = (await getTranslations({ locale, namespace: 'explore.results' }))('loadError');
   }
 
   return (

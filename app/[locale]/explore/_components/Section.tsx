@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/navigation';
 import SongCard from './SongCard';
 import type { CardVariant } from './thumbs/resolveThumb';
@@ -21,6 +22,7 @@ interface SectionProps {
 
 /** A horizontally scrolling rail of SongCards. Renders nothing when empty. */
 function Section({ eyebrow, title, subtitle, songs, variant, accent, viewAllHref }: SectionProps) {
+  const t = useTranslations('explore');
   const ref = useRef<HTMLDivElement>(null);
   const [canL, setCanL] = useState(false);
   const [canR, setCanR] = useState(true);
@@ -65,13 +67,13 @@ function Section({ eyebrow, title, subtitle, songs, variant, accent, viewAllHref
         <div className="es-controls">
           {viewAllHref && (
             <Link href={viewAllHref} className="es-view-all">
-              View all
+              {t('viewAll')}
             </Link>
           )}
-          <button className="es-arrow-btn" disabled={!canL} onClick={() => scrollBy(-1)} aria-label="Scroll left">
+          <button className="es-arrow-btn" disabled={!canL} onClick={() => scrollBy(-1)} aria-label={t('scrollLeft')}>
             <CaretLeft size={16} weight="bold" />
           </button>
-          <button className="es-arrow-btn" disabled={!canR} onClick={() => scrollBy(1)} aria-label="Scroll right">
+          <button className="es-arrow-btn" disabled={!canR} onClick={() => scrollBy(1)} aria-label={t('scrollRight')}>
             <CaretRight size={16} weight="bold" />
           </button>
         </div>

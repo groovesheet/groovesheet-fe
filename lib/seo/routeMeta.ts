@@ -22,6 +22,8 @@
 
 import { INSTRUMENT_HUBS, hubPath } from '@/lib/seo/instrumentHubs';
 import { COMPETITORS, comparePath } from '@/lib/seo/competitors';
+import { isLocale } from '@/lib/locales';
+import { LOCALIZED_ROUTE_META } from '@/lib/seo/routeMetaI18n';
 
 export interface RouteMeta {
   title: string;
@@ -123,19 +125,33 @@ export const ROUTE_META: Record<string, RouteMeta> = {
  *
  * The marketing pages are translated: next-intl swaps their copy, so
  * /zh-TW/pricing is a real Traditional Chinese page and deserves to be
- * advertised as the zh-TW version of /pricing. The hubs and the comparison
- * pages are not. Their copy lives in lib/seo/instrumentHubs.ts and
- * lib/seo/competitors.ts as English strings, so /zh-TW/sheet-music/drums is
- * the English page with a translated header and footer around it.
+ * advertised as the zh-TW version of /pricing. The pages below are not.
  *
- * Claiming otherwise is the duplicate-content case canonical exists for:
- * three URLs, one document. These paths therefore get a canonical pointing
- * at the English URL, no hreflang cluster, and one sitemap entry instead of
- * three. Move a path out of here once its copy is actually translated.
+ *  - The hubs and the comparison pages keep their copy in
+ *    lib/seo/instrumentHubs.ts and lib/seo/competitors.ts as English strings.
+ *  - /developers (API documentation), /about and /changelog are written in
+ *    English only.
+ *  - The legal pages are English on purpose. A translated contract or policy
+ *    is a second legal text, and one produced without a lawyer's review is a
+ *    liability, not a courtesy.
+ *
+ * Under a Chinese prefix each of these is the English page with a translated
+ * header and footer around it. Claiming otherwise is the duplicate-content
+ * case canonical exists for: three URLs, one document. These paths therefore
+ * get a canonical pointing at the English URL, no hreflang cluster, and one
+ * sitemap entry instead of three. Move a path out of here once its copy is
+ * actually translated, and give it a Chinese title in routeMetaI18n.ts.
  */
 export const ENGLISH_ONLY_PATHS: ReadonlySet<string> = new Set([
   ...Object.keys(HUB_ROUTE_META),
   ...Object.keys(COMPARE_ROUTE_META),
+  '/developers',
+  '/about',
+  '/changelog',
+  '/terms',
+  '/privacy-policy',
+  '/refund-policy',
+  '/business-information',
 ]);
 
 export const isEnglishOnly = (path: string): boolean => ENGLISH_ONLY_PATHS.has(normalizePath(path));
@@ -150,8 +166,17 @@ export function normalizePath(pathname: string): string {
   return trimmed === '' ? '/' : trimmed;
 }
 
-export function metaForPath(pathname: string): RouteMeta | null {
-  return ROUTE_META[normalizePath(pathname)] || null;
+/**
+ * A route's title and description in `locale`, falling back to English. The
+ * fallback is only reached by English-only routes (and English itself); a
+ * translated route without a Chinese entry fails routeMetaI18n.test.ts.
+ */
+export function metaForPath(pathname: string, locale?: string): RouteMeta | null {
+  const path = normalizePath(pathname);
+  const english = ROUTE_META[path];
+  if (!english) return null;
+  const localized = locale && isLocale(locale) ? LOCALIZED_ROUTE_META[locale]?.[path] : undefined;
+  return localized || english;
 }
 
 export default ROUTE_META;

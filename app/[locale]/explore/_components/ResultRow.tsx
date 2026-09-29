@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Play, DownloadSimple } from '@phosphor-icons/react';
 import { Link } from '@/lib/navigation';
 import { FORMAT_LABELS, fmtCount, fmtDur, songPath } from '@/lib/exploreConstants';
 import resolveThumb, { CardThumb } from './thumbs/resolveThumb';
 import type { SongCardModel } from './trackToCard';
+import { useFacetLabel } from './facetLabels';
 import './ResultRow.css';
 
 /**
@@ -15,12 +17,16 @@ import './ResultRow.css';
  * which artwork a track shows. The title link covers the row, as in SongCard.
  */
 function ResultRow({ song }: { song: SongCardModel }) {
+  const t = useTranslations('song.card');
+  const tSong = useTranslations('song');
+  const tResults = useTranslations('explore.results');
+  const facetLabel = useFacetLabel();
   const [coverFailed, setCoverFailed] = useState(false);
   const thumbKind = resolveThumb(song);
   const showCover = song.coverUrl && !coverFailed;
   const parts = song.parts || [];
   const formats = (song.formats || []).filter((f) => FORMAT_LABELS[f]);
-  const primary = parts.length > 0 ? parts.join(' · ') : 'Full mix';
+  const primary = parts.length > 0 ? parts.map((p) => facetLabel('instrument', p)).join(' · ') : tSong('fullMix');
   const creator = song.owner && song.owner.username ? song.owner.username : null;
 
   return (
@@ -32,7 +38,7 @@ function ResultRow({ song }: { song: SongCardModel }) {
           <img
             className="rr-cover"
             src={song.coverUrl}
-            alt={`${song.title} cover art`}
+            alt={t('coverAlt', { title: song.title })}
             loading="lazy"
             onError={() => setCoverFailed(true)}
           />
@@ -50,7 +56,7 @@ function ResultRow({ song }: { song: SongCardModel }) {
         <div className="rr-artist">{song.artist}</div>
         {creator && (
           <Link className="rr-creator" href={`/u/${creator}`}>
-            by @{creator}
+            {t('byCreator', { creator })}
           </Link>
         )}
       </div>
@@ -60,7 +66,7 @@ function ResultRow({ song }: { song: SongCardModel }) {
         {formats.length > 0 && (
           <span className="rr-formats">
             {formats.map((f) => (
-              <span key={f}>{FORMAT_LABELS[f]}</span>
+              <span key={f}>{t.has(`formats.${f}`) ? t(`formats.${f}`) : FORMAT_LABELS[f]}</span>
             ))}
           </span>
         )}
@@ -68,17 +74,17 @@ function ResultRow({ song }: { song: SongCardModel }) {
 
       <div className="rr-stats">
         <span className="rr-dur">{fmtDur(song.length)}</span>
-        <span className="rr-stat" aria-label={`${song.plays || 0} plays`}>
+        <span className="rr-stat" aria-label={t('playsAria', { count: song.plays || 0 })}>
           <Play size={13} weight="regular" />
           {fmtCount(song.plays || 0)}
         </span>
-        <span className="rr-stat" aria-label={`${song.downloads || 0} downloads`}>
+        <span className="rr-stat" aria-label={t('downloadsAria', { count: song.downloads || 0 })}>
           <DownloadSimple size={13} weight="regular" />
           {fmtCount(song.downloads || 0)}
         </span>
       </div>
 
-      <span className="rr-open">Open</span>
+      <span className="rr-open">{tResults('open')}</span>
     </article>
   );
 }

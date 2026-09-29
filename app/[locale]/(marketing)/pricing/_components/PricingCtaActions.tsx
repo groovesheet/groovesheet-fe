@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useUser } from '@/lib/auth';
 import { LocalizedLink } from '@/lib/navigation';
 
@@ -11,14 +12,15 @@ import { LocalizedLink } from '@/lib/navigation';
  */
 export default function PricingCtaActions() {
   const { isSignedIn } = useUser();
+  const t = useTranslations('pricingPage.cta');
 
   return (
     <div className="pp-cta-actions">
       <LocalizedLink to="/" className="gs-btn gs-btn-primary">
-        {isSignedIn ? 'Go to upload' : 'Try a free preview'}
+        {isSignedIn ? t('upload') : t('preview')}
       </LocalizedLink>
       <LocalizedLink to="/about" className="gs-btn gs-btn-outline">
-        Talk to us
+        {t('talk')}
       </LocalizedLink>
     </div>
   );

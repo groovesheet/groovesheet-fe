@@ -1,4 +1,5 @@
 import { ShieldCheck, FileArrowDown, MusicNotes } from '@phosphor-icons/react/dist/ssr';
+import { getTranslations } from 'next-intl/server';
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { getBillingPlans } from '@/lib/api-server';
@@ -19,51 +20,15 @@ export async function generateMetadata({ params }: LocaleParams) {
   return staticRouteMetadata('/pricing', locale);
 }
 
-// Billing-specific FAQ content (from the Pricing Page design).
-const BILLING_FAQ: FaqItem[] = [
-  {
-    id: 'minute',
-    question: 'What does a minute of credit mean?',
-    answer:
-      '1 minute of audio = 1 minute of credit. A 3-minute song uses 3 minutes \u2014 the same whether you transcribe drums, bass, piano or vocals, and whatever format you export.',
-  },
-  {
-    id: 'deduct',
-    question: 'How are minutes deducted from my account?',
-    answer:
-      'Minutes are deducted from the length of audio you process, rounded up to the nearest second. You can see your remaining balance any time under Billing & Usage in your account.',
-  },
-  {
-    id: 'expire',
-    question: 'Do my minutes expire?',
-    answer:
-      'Plan minutes refresh at the start of each billing cycle and don’t roll over. Top-up minutes never expire \u2014 they stay on your account until you use them.',
-  },
-  {
-    id: 'fail',
-    question: 'What happens if a job fails?',
-    answer:
-      'We retry automatically. If it still fails we don’t deduct any minutes, and you’ll see a failure notice with options to retry or contact support.',
-  },
-  {
-    id: 'add',
-    question: 'How do I add more minutes?',
-    answer:
-      'Buy a one-time top-up from the Top-Ups tab above, or upgrade your plan for a higher monthly allowance. Top-ups apply instantly.',
-  },
-  {
-    id: 'refund',
-    question: 'Can I get a refund?',
-    answer:
-      'Unused top-up minutes may be eligible for a refund. See our Refund Policy for the full details and how to request one.',
-  },
-  {
-    id: 'change',
-    question: 'How do I change or cancel my plan?',
-    answer:
-      'Manage, upgrade, downgrade or cancel anytime from the Stripe billing portal in your account settings. Changes take effect on your next billing date.',
-  },
-];
+// Billing-specific FAQ content (from the Pricing Page design), in page order.
+// The words live in messages/{locale}.json under `pricingPage.faq`.
+const BILLING_FAQ_IDS = ['minute', 'deduct', 'expire', 'fail', 'add', 'refund', 'change'] as const;
+
+type PageT = (key: string, values?: Record<string, string | number>) => string;
+
+function billingFaq(t: PageT): FaqItem[] {
+  return BILLING_FAQ_IDS.map((id) => ({ id, question: t(`faq.${id}.q`), answer: t(`faq.${id}.a`) }));
+}
 
 /**
  * Product + Offer markup from the server-side USD catalog. Visible prices come
@@ -71,7 +36,7 @@ const BILLING_FAQ: FaqItem[] = [
  * the list prices in USD, which is what a rich result may show. A catalog
  * failure simply omits the offers: the page must not depend on the API.
  */
-function pricingJsonLd(catalog: BillingCatalog | null): Record<string, unknown> {
+function pricingJsonLd(t: PageT, catalog: BillingCatalog | null): Record<string, unknown> {
   const offers = (catalog?.plans || [])
     .map((plan) => {
       const price = plan.price_monthly_usd ?? plan.price_monthly;
@@ -83,16 +48,15 @@ function pricingJsonLd(catalog: BillingCatalog | null): Record<string, unknown> 
         priceCurrency: 'USD',
         url: `${SITE_URL}/pricing`,
         availability: 'https://schema.org/InStock',
-        ...(plan.minutes_per_month ? { description: `${plan.minutes_per_month} minutes of audio per month` } : {}),
+        ...(plan.minutes_per_month ? { description: t('offerMinutes', { minutes: plan.minutes_per_month }) } : {}),
       };
     })
     .filter(Boolean);
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${SITE_NAME} minutes`,
-    description:
-      'Minute-based credit for AI music transcription, stem separation and audio-to-MIDI. Preview free, pay only for the audio you process.',
+    name: t('productName'),
+    description: t('productDescription'),
     brand: { '@type': 'Brand', name: SITE_NAME },
     url: `${SITE_URL}/pricing`,
     ...(offers.length ? { offers } : {}),
@@ -101,6 +65,8 @@ function pricingJsonLd(catalog: BillingCatalog | null): Record<string, unknown> 
 
 export default async function PricingPage(props: LocaleParams) {
   const locale = await routeLocale(props);
+  const t = (await getTranslations({ locale, namespace: 'pricingPage' })) as unknown as PageT;
+  const faq = billingFaq(t);
   let catalog: BillingCatalog | null = null;
   try {
     catalog = await getBillingPlans();
@@ -110,19 +76,16 @@ export default async function PricingPage(props: LocaleParams) {
 
   return (
     <div className="pp-canvas">
-      <JsonLd data={pricingJsonLd(catalog)} />
-      <JsonLd data={faqJsonLd(BILLING_FAQ.map((f) => ({ question: f.question, answer: f.answer })))} />
+      <JsonLd data={pricingJsonLd(t, catalog)} />
+      <JsonLd data={faqJsonLd(faq.map((f) => ({ question: f.question, answer: f.answer })))} />
       <div className="pp-main">
         <Header />
 
         {/* 1. Page header */}
         <section className="pp-header">
-          <p className="pp-kicker">Pricing</p>
-          <h1 className="pp-title">Simple, minute-based pricing for working musicians.</h1>
-          <p className="pp-subhead">
-            1 minute of audio = 1 minute of credit. Start free, upgrade for higher limits and advanced features
-            {' \u2014 '}no surprises.
-          </p>
+          <p className="pp-kicker">{t('kicker')}</p>
+          <h1 className="pp-title">{t('title')}</h1>
+          <p className="pp-subhead">{t('subhead')}</p>
         </section>
 
         {/* 2. Pricing cards (shared, API-driven component) */}
@@ -136,32 +99,31 @@ export default async function PricingPage(props: LocaleParams) {
         <div className="pp-trust">
           <span className="pp-trust-item">
             <ShieldCheck size={20} weight="fill" />
-            Stripe-secure checkout
+            {t('trust.checkout')}
           </span>
           <span className="pp-trust-item">
             <FileArrowDown size={20} weight="fill" />
-            All formats included {'\u2014'} PDF {'·'} MusicXML {'·'} MIDI
+            {t('trust.formats')}
           </span>
           <span className="pp-trust-item">
             <MusicNotes size={20} weight="fill" />
-            Drums {'·'} Piano {'·'} Bass {'·'} Vocals
+            {/* Notation instruments only: vocals are separated, never transcribed. */}
+            {t('trust.instruments')}
           </span>
         </div>
 
         {/* 5. Billing FAQ */}
         <FaqAccordion
-          title="Billing FAQ"
-          sections={[{ title: 'Packs & Minutes', items: BILLING_FAQ }]}
+          title={t('faqTitle')}
+          sections={[{ title: t('faqSection'), items: faq }]}
           defaultOpenId="minute"
         />
 
         {/* 6. Final CTA */}
         <section className="pp-cta">
           <div className="pp-cta-inner">
-            <h2>Start transcribing free.</h2>
-            <p>
-              Drag in a track and get clean drum, bass, piano and vocal notation in seconds. No card required to try.
-            </p>
+            <h2>{t('cta.title')}</h2>
+            <p>{t('cta.body')}</p>
             <PricingCtaActions />
           </div>
         </section>

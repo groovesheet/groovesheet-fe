@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { CaretDown, CaretLeft, CaretRight, Funnel, MagnifyingGlass, X } from '@phosphor-icons/react';
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
@@ -26,17 +27,18 @@ import {
 } from './resultsParams';
 import trackToCard, { type SongCardModel } from './trackToCard';
 import type { CardVariant } from './thumbs/resolveThumb';
+import { useFacetLabel } from './facetLabels';
 import './Explore.css';
 import './SearchResults.css';
 
 const SEARCH_DEBOUNCE_MS = 350;
 
-/** Format segmented control. `null` value = "All". */
-const FORMAT_TABS: { value: string | null; label: string }[] = [
-  { value: null, label: 'All' },
-  { value: 'sheet', label: 'Sheet' },
-  { value: 'midi', label: 'MIDI' },
-  { value: 'stems', label: 'Stems' },
+/** Format segmented control. `null` value = "All"; labels are explore.results.tabs.<key>. */
+const FORMAT_TABS: { value: string | null; key: string }[] = [
+  { value: null, key: 'all' },
+  { value: 'sheet', key: 'sheet' },
+  { value: 'midi', key: 'midi' },
+  { value: 'stems', key: 'stems' },
 ];
 
 const CARD_VARIANTS: Record<string, CardVariant> = { sheet: 'sheet', midi: 'midi', stems: 'stems' };
@@ -65,6 +67,16 @@ type ParamPatch = Record<string, string | number | null | undefined>;
 
 /** The /explore/search page body. The URL is the state; see resultsParams. */
 export default function SearchResults({ initial }: { initial: InitialResults }) {
+  const t = useTranslations('explore.results');
+  const tMeta = useTranslations('explore.results.meta');
+  const tExplore = useTranslations('explore');
+  const tSong = useTranslations('song');
+  const facetLabel = useFacetLabel();
+  // The fetch below is memoized; it reads the fallback message through a ref.
+  const loadErrorRef = useRef(t('loadError'));
+  useEffect(() => {
+    loadErrorRef.current = t('loadError');
+  }, [t]);
   const searchParams = useSearchParams();
   const urlState = resultsStateFromParams(searchParams);
   const { q: urlQuery, sort, view, page } = urlState;
@@ -124,7 +136,7 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
           key,
           attempt,
           data: null,
-          error: (err instanceof Error && err.message) || 'Failed to load results.',
+          error: (err instanceof Error && err.message) || loadErrorRef.current,
         });
       });
     return () => {
@@ -165,7 +177,7 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
 
   // The server set the title for the URL it rendered; later changes happen
   // through history.pushState, so the tab title is kept in step here.
-  const documentTitle = `${resultsTitle(urlState)} | GrooveSheet`;
+  const documentTitle = `${resultsTitle(urlState, tMeta)} | GrooveSheet`;
   useEffect(() => {
     document.title = documentTitle;
   }, [documentTitle]);
@@ -194,7 +206,11 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
   const instrumentKey = urlState.instruments.join(',');
   const lengthKey = urlState.lengths.join(',');
   const singleFormat = urlState.formats.length === 1 ? urlState.formats[0] : null;
-  const heading = urlQuery ? null : (singleFormat && CATEGORY_TITLES[singleFormat]) || 'All transcriptions';
+  const heading = urlQuery
+    ? null
+    : singleFormat && CATEGORY_TITLES[singleFormat]
+      ? tExplore(`rails.${singleFormat}Title`)
+      : t('all');
 
   // The sidebar works in display labels; the URL works in param keys.
   const filters = useMemo(
@@ -265,6 +281,9 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
   }, [tracks, urlQuery]);
 
   const sortOptions = SORT_OPTIONS.filter((o) => !o.searchOnly || urlQuery);
+  const countText = total.toLocaleString('en-US');
+  const pageInfo = pages > 1 ? t('pageInfo', { page, pages }) : '';
+  const bold = (chunks: ReactNode) => <b>{chunks}</b>;
 
   const sidebarNode = (close: (() => void) | null) => (
     <Sidebar
@@ -300,33 +319,26 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
 
         <main className="explore-main">
           <nav className="rs-crumbs" aria-label="Breadcrumb">
-            <Link href="/explore">Explore</Link>
+            <Link href="/explore">{tSong('meta.explore')}</Link>
             <span aria-hidden="true">/</span>
-            <span className="rs-crumb-current">{urlQuery ? 'Search' : 'Browse'}</span>
+            <span className="rs-crumb-current">{urlQuery ? t('crumbSearch') : t('crumbBrowse')}</span>
           </nav>
 
           <div className="rs-titleblock">
             <div className="rs-titles">
               <h1 className="rs-title">
-                {urlQuery ? (
-                  <>
-                    Results for <em>&ldquo;{urlQuery}&rdquo;</em>
-                  </>
-                ) : (
-                  heading
-                )}
+                {urlQuery ? t.rich('resultsFor', { query: urlQuery, em: (chunks) => <em>{chunks}</em> }) : heading}
               </h1>
               <p className="rs-sub">
-                {loading && !data ? (
-                  'Searching the library…'
-                ) : (
-                  <>
-                    {/* Fixed locale: the server and the browser must agree on the digits. */}
-                    <b>{total.toLocaleString('en-US')}</b> {total === 1 ? 'transcription' : 'transcriptions'}
-                    {urlQuery ? ' matched' : pills.length > 0 ? ' match these filters' : ' in the library'}
-                    {pages > 1 ? `, page ${page} of ${pages}` : ''}.
-                  </>
-                )}
+                {loading && !data
+                  ? t('searching')
+                  : // Digits in a fixed locale: the server and the browser must agree on them.
+                    t.rich(urlQuery ? 'summaryMatched' : pills.length > 0 ? 'summaryFiltered' : 'summaryAll', {
+                      count: total,
+                      countText,
+                      pageInfo,
+                      b: bold,
+                    })}
               </p>
             </div>
             <div className="rs-titleblock-actions">
@@ -336,18 +348,18 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
                 onClick={() => setDrawerOpen(true)}
               >
                 <Funnel size={18} weight="regular" />
-                <span>Filters</span>
+                <span>{tExplore('filters')}</span>
               </button>
-              <div className="rs-segmented" role="group" aria-label="Format">
+              <div className="rs-segmented" role="group" aria-label={tExplore('sidebar.format')}>
                 {FORMAT_TABS.map((tab) => (
                   <button
-                    key={tab.label}
+                    key={tab.key}
                     type="button"
                     className={`rs-seg${singleFormat === tab.value ? ' rs-seg-active' : ''}`}
                     aria-pressed={singleFormat === tab.value}
                     onClick={() => setParams({ format: tab.value })}
                   >
-                    {tab.label}
+                    {t(`tabs.${tab.key}`)}
                   </button>
                 ))}
               </div>
@@ -369,30 +381,34 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
               name="q"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Search titles, artists, instruments…"
-              aria-label="Search the library"
+              placeholder={tExplore('hero.searchPlaceholder')}
+              aria-label={tExplore('hero.searchAria')}
             />
             <button type="submit" className="rs-search-btn">
-              Search
+              {tExplore('hero.search')}
             </button>
           </form>
 
           <div className="rs-toolbar">
             <div className="rs-pills">
               {pills.length === 0 ? (
-                <span className="rs-nopills">No filters applied</span>
+                <span className="rs-nopills">{t('noFilters')}</span>
               ) : (
                 <>
                   {pills.map((pill) => (
                     <span key={`${pill.group}:${pill.label}`} className="rs-pill">
-                      {pill.label}
-                      <button type="button" onClick={() => removePill(pill)} aria-label={`Remove ${pill.label} filter`}>
+                      {facetLabel(pill.group, pill.label)}
+                      <button
+                        type="button"
+                        onClick={() => removePill(pill)}
+                        aria-label={t('removeFilter', { label: facetLabel(pill.group, pill.label) })}
+                      >
                         <X size={13} weight="bold" />
                       </button>
                     </span>
                   ))}
                   <button type="button" className="rs-clear" onClick={clearFilters}>
-                    Clear all
+                    {t('clearAll')}
                   </button>
                 </>
               )}
@@ -400,12 +416,12 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
 
             <div className="rs-controls">
               <label className="rs-sort">
-                <span className="rs-sort-label">Sort</span>
+                <span className="rs-sort-label">{t('sort')}</span>
                 <span className="rs-select-shell">
-                  <select value={sort} onChange={(e) => setParams({ sort: e.target.value })} aria-label="Sort results">
+                  <select value={sort} onChange={(e) => setParams({ sort: e.target.value })} aria-label={t('sortAria')}>
                     {sortOptions.map((o) => (
                       <option key={o.value} value={o.value}>
-                        {o.label}
+                        {t.has(`sorts.${o.value}`) ? t(`sorts.${o.value}`) : o.label}
                       </option>
                     ))}
                   </select>
@@ -413,7 +429,7 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
                 </span>
               </label>
 
-              <div className="rs-viewtoggle" role="group" aria-label="Layout">
+              <div className="rs-viewtoggle" role="group" aria-label={t('layoutAria')}>
                 {(['grid', 'list'] as const).map((v) => (
                   <button
                     key={v}
@@ -422,7 +438,7 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
                     aria-pressed={view === v}
                     onClick={() => setParams({ view: v === 'grid' ? null : v, page })}
                   >
-                    {v === 'grid' ? 'Grid' : 'List'}
+                    {v === 'grid' ? t('grid') : t('list')}
                   </button>
                 ))}
               </div>
@@ -434,7 +450,10 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
           {!loading && error && <ExploreError message={error} onRetry={() => setAttempt((n) => n + 1)} />}
 
           {!loading && !error && tracks.length === 0 && (
-            <ExploreEmpty query={urlQuery || pills.map((p) => p.label).join(', ')} onClear={clearAll} />
+            <ExploreEmpty
+              query={urlQuery || pills.map((p) => facetLabel(p.group, p.label)).join(', ')}
+              onClear={clearAll}
+            />
           )}
 
           {!loading && !error && tracks.length > 0 && (
@@ -454,13 +473,13 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
               )}
 
               {pages > 1 && (
-                <nav className="rs-pagination" aria-label="Pagination">
+                <nav className="rs-pagination" aria-label={t('paginationAria')}>
                   <button
                     type="button"
                     className="rs-page-arrow"
                     disabled={page === 1}
                     onClick={() => setParams({ page: page - 1 })}
-                    aria-label="Previous page"
+                    aria-label={t('previous')}
                   >
                     <CaretLeft size={16} weight="bold" />
                   </button>
@@ -486,7 +505,7 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
                     className="rs-page-arrow"
                     disabled={page === pages}
                     onClick={() => setParams({ page: page + 1 })}
-                    aria-label="Next page"
+                    aria-label={t('next')}
                   >
                     <CaretRight size={16} weight="bold" />
                   </button>
@@ -495,7 +514,7 @@ export default function SearchResults({ initial }: { initial: InitialResults }) 
 
               {relatedArtists.length > 0 && (
                 <div className="rs-related">
-                  <div className="rs-related-label">Related searches</div>
+                  <div className="rs-related-label">{t('related')}</div>
                   <div className="rs-related-chips">
                     {relatedArtists.map((artist) => (
                       <button

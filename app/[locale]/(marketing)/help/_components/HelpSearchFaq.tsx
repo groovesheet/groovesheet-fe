@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
-import { FAQ_DATA } from './helpData';
+import { useTranslations } from 'next-intl';
+import type { FaqCategory } from './helpData';
 
 const ChevronIcon = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,9 +28,11 @@ interface SearchResult {
  * The help page's search box and the FAQ it filters. The CRA page showed a
  * 750ms skeleton before the FAQ, which kept every answer out of the first
  * HTML; here the full list is rendered on the server and search narrows it in
- * the browser. `heading` is the server-rendered title block above the box.
+ * the browser. `heading` is the server-rendered title block above the box,
+ * and `faq` is the FAQ in the page's locale, built on the server.
  */
-export default function HelpSearchFaq({ heading }: { heading: ReactNode }) {
+export default function HelpSearchFaq({ heading, faq }: { heading: ReactNode; faq: FaqCategory[] }) {
+  const t = useTranslations('help.search');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
@@ -42,7 +45,7 @@ export default function HelpSearchFaq({ heading }: { heading: ReactNode }) {
     if (!searching) return [];
     const ql = trimmed.toLowerCase();
     const out: SearchResult[] = [];
-    FAQ_DATA.forEach((cat) => {
+    faq.forEach((cat) => {
       cat.items.forEach((it, i) => {
         if ((it.q + ' ' + it.a).toLowerCase().includes(ql)) {
           out.push({ ...it, id: `r-${cat.id}-${i}`, catLabel: cat.label });
@@ -50,12 +53,12 @@ export default function HelpSearchFaq({ heading }: { heading: ReactNode }) {
       });
     });
     return out;
-  }, [searching, trimmed]);
+  }, [searching, trimmed, faq]);
 
   const showBrowse = !searching;
   const showResults = searching && results.length > 0;
   const showNoResults = searching && results.length === 0;
-  const resultLabel = `${results.length} ${results.length === 1 ? 'result' : 'results'} for “${trimmed}”`;
+  const resultLabel = t('resultCount', { count: results.length, query: trimmed });
 
   const clearSearch = () => setQuery('');
 
@@ -74,12 +77,12 @@ export default function HelpSearchFaq({ heading }: { heading: ReactNode }) {
             className="help-search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={'Search help \u2014 minutes, formats, publishing…'}
-            aria-label="Search help"
+            placeholder={t('placeholder')}
+            aria-label={t('aria')}
           />
           <div className="help-search-trailing">
             {searching && (
-              <button className="help-search-clear" onClick={clearSearch} aria-label="Clear">
+              <button className="help-search-clear" onClick={clearSearch} aria-label={t('clear')}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
@@ -93,12 +96,12 @@ export default function HelpSearchFaq({ heading }: { heading: ReactNode }) {
       {/* FAQ */}
       <section className="help-faq">
         {(showResults || showNoResults) && (
-          <p className="help-result-count">{showResults ? resultLabel : `No results for “${trimmed}”`}</p>
+          <p className="help-result-count">{showResults ? resultLabel : t('noResultsTitle', { query: trimmed })}</p>
         )}
 
         {showBrowse && (
           <div className="help-browse">
-            {FAQ_DATA.map((cat) => (
+            {faq.map((cat) => (
               <section key={cat.id} id={`cat-${cat.id}`} className="help-cat">
                 <div className="help-cat-label">
                   <h3>{cat.label}</h3>
@@ -157,14 +160,14 @@ export default function HelpSearchFaq({ heading }: { heading: ReactNode }) {
             <div className="help-noresults-icon">
               <SearchIcon size={30} strokeWidth={1.7} />
             </div>
-            <h3>No results for {`“${trimmed}”`}</h3>
-            <p>We couldn&apos;t find a matching answer. Reach us directly {'\u2014'} we usually reply within a day.</p>
+            <h3>{t('noResultsTitle', { query: trimmed })}</h3>
+            <p>{t('noResultsBody')}</p>
             <div className="help-noresults-actions">
               <a href="#contact" className="help-btn-primary">
-                Contact support
+                {t('contactSupport')}
               </a>
               <button className="help-btn-ghost" onClick={clearSearch}>
-                Clear search
+                {t('clearSearch')}
               </button>
             </div>
           </div>

@@ -718,5 +718,401 @@
       "send": "提交举报",
       "error": "举报发送失败"
     }
+  },
+  "explore": {
+    "viewAll": "查看全部",
+    "scrollLeft": "向左滚动",
+    "scrollRight": "向右滚动",
+    "meta": {
+      "title": "免费乐谱、MIDI 与分轨曲库",
+      "description": "浏览 GrooveSheet 曲库中的 AI 转谱：鼓、钢琴、贝斯等乐器的乐谱、MIDI 文件与独立分轨。",
+      "collectionName": "探索 GrooveSheet 曲库"
+    },
+    "hero": {
+      "title": "探索曲库",
+      "sub": "浏览 GrooveSheet 曲库中的乐谱、MIDI 与分轨。每首歌都附有分离好的分轨，几乎每首也都有乐谱和 MIDI。挑一首开始吧。",
+      "searchPlaceholder": "搜索歌名、艺人或乐器…",
+      "searchAria": "搜索曲库",
+      "search": "搜索",
+      "try": "试试",
+      "chip1": "MyGO",
+      "chip2": "YOASOBI",
+      "chip3": "告五人",
+      "chip4": "新裤子"
+    },
+    "sidebar": {
+      "close": "关闭筛选",
+      "searchPlaceholder": "搜索转谱…",
+      "searchAria": "搜索转谱",
+      "popular": "热门",
+      "instrument": "乐器",
+      "format": "格式",
+      "length": "时长",
+      "formats": {
+        "sheet": "乐谱",
+        "midi": "MIDI",
+        "stems": "分轨"
+      },
+      "lengths": {
+        "under2": "2 分钟以内",
+        "2to5": "2 至 5 分钟",
+        "over5": "5 分钟以上"
+      }
+    },
+    "rails": {
+      "sheetEyebrow": "01 · 乐谱",
+      "sheetTitle": "热门乐谱",
+      "sheetSubtitle": "排版好的乐谱，可下载 PDF 和 MusicXML。",
+      "midiEyebrow": "02 · MIDI",
+      "midiTitle": "热门 MIDI",
+      "midiSubtitle": "每个转谱声部都有 .mid 文件，可直接拖进你的 DAW。",
+      "stemsEyebrow": "03 · 分轨",
+      "stemsTitle": "热门分轨",
+      "stemsSubtitle": "独立的人声、鼓、贝斯与键盘分轨。",
+      "trendingTitle": "正在流行",
+      "trendingSubtitle": "音乐人下载最多的曲目。",
+      "newTitle": "最新上架",
+      "newSubtitle": "曲库中最新的转谱。",
+      "keepDigging": "继续探索"
+    },
+    "filters": "筛选",
+    "openFilters": "打开筛选",
+    "loadMore": "加载更多",
+    "loading": "加载中…",
+    "loadError": "曲库加载失败。",
+    "states": {
+      "noResults": "没有找到与“{query}”相关的结果",
+      "empty": "曲库暂时是空的",
+      "tryDifferent": "换个歌名、艺人或乐器试试。",
+      "checkBack": "我们会定期上架新曲目，请稍后再来看看。",
+      "clear": "清除搜索",
+      "errorTitle": "曲库加载失败",
+      "errorBody": "出了点问题，请重试。",
+      "retry": "重试"
+    },
+    "results": {
+      "crumbSearch": "搜索",
+      "crumbBrowse": "浏览",
+      "resultsFor": "<em>“{query}”</em>的搜索结果",
+      "all": "全部转谱",
+      "searching": "正在搜索曲库…",
+      "summaryMatched": "找到 <b>{countText}</b> 份转谱{pageInfo}。",
+      "summaryFiltered": "<b>{countText}</b> 份转谱符合筛选条件{pageInfo}。",
+      "summaryAll": "曲库中共有 <b>{countText}</b> 份转谱{pageInfo}。",
+      "pageInfo": "，第 {page} 页，共 {pages} 页",
+      "tabs": {
+        "all": "全部",
+        "sheet": "乐谱",
+        "midi": "MIDI",
+        "stems": "分轨"
+      },
+      "noFilters": "未使用筛选",
+      "removeFilter": "移除筛选条件：{label}",
+      "clearAll": "全部清除",
+      "sort": "排序",
+      "sortAria": "结果排序",
+      "sorts": {
+        "relevance": "最相关",
+        "popular": "最受欢迎",
+        "newest": "最新",
+        "plays": "播放最多",
+        "downloads": "下载最多",
+        "title": "按歌名排序"
+      },
+      "layoutAria": "布局",
+      "grid": "网格",
+      "list": "列表",
+      "paginationAria": "分页",
+      "previous": "上一页",
+      "next": "下一页",
+      "related": "相关搜索",
+      "loadError": "结果加载失败。",
+      "open": "打开",
+      "meta": {
+        "all": "全部转谱",
+        "search": "搜索：{q}",
+        "paged": "{title}（第 {page} 页）",
+        "sheet": "热门乐谱",
+        "midi": "热门 MIDI 文件",
+        "stems": "热门独立分轨",
+        "searchDescription": "与“{q}”相关的转谱：乐谱、MIDI 与独立分轨。",
+        "browseDescription": "浏览 GrooveSheet 曲库中的全部 AI 转谱：乐谱、MIDI 与分轨。"
+      }
+    }
+  },
+  "help": {
+    "title": "帮助与支持",
+    "sub": "搜索常见问题，或直接联系我们，通常一天内回复。",
+    "search": {
+      "contactSupport": "联系客服",
+      "clearSearch": "清除搜索",
+      "placeholder": "搜索帮助：分钟数、格式、发布…",
+      "aria": "搜索帮助",
+      "clear": "清除",
+      "resultCount": "“{query}”共有 {count} 条结果",
+      "noResultsTitle": "没有找到与“{query}”相关的答案",
+      "noResultsBody": "没有找到匹配的答案。欢迎直接联系我们，通常一天内回复。"
+    },
+    "contact": {
+      "heading": "直接联系我们",
+      "sub": "三种方式联系真人，选你最方便的。",
+      "featured": "推荐",
+      "wechat": "微信",
+      "wechatDesc": "中国大陆用户首选：扫码添加我们的微信。",
+      "wechatAlt": "GrooveSheet 微信二维码",
+      "whatsapp": "WhatsApp",
+      "clickToChat": "点击开始聊天",
+      "email": "邮箱"
+    },
+    "faq": {
+      "getting-started": {
+        "label": "入门",
+        "items": {
+          "signin": {
+            "q": "如何注册或登录？",
+            "a": "点击右上角的“登录”，选择邮箱、Google、Apple 或 Facebook。首次登录时会自动创建账户，无需单独注册。"
+          },
+          "stems": {
+            "q": "如何把一首歌分离成分轨？",
+            "a": "上传文件后，在工作区选择“音轨分离”。我们会分离出鼓、贝斯、钢琴和人声，方便你单独处理每一部分。"
+          }
+        }
+      },
+      "account": {
+        "label": "账户",
+        "items": {
+          "profile": {
+            "q": "如何编辑个人资料？",
+            "a": "打开右上角的账户菜单并选择“个人资料”，即可修改显示名称、头像和邮箱。"
+          },
+          "connected": {
+            "q": "如何管理已关联的账户？",
+            "a": "在“账户 → 关联账户”中可以关联或取消关联 Google、Apple 和 Facebook。请至少保留一种登录方式。"
+          },
+          "delete": {
+            "q": "如何删除账户？",
+            "a": "前往“账户 → 删除账户”。这会永久删除你的上传、乐谱和分钟余额，且无法恢复。"
+          }
+        }
+      },
+      "billing": {
+        "label": "计费与分钟数",
+        "items": {
+          "minute": {
+            "q": "“分钟”是什么意思？",
+            "a": "计费的一分钟等于原始音频的一分钟时长（向上取整），与导出多少种乐器无关。"
+          },
+          "deducted": {
+            "q": "分钟数是怎么扣除的？",
+            "a": "只有任务成功完成时才会从余额中扣除分钟数。失败的任务不收费。"
+          },
+          "expire": {
+            "q": "分钟数会过期吗？",
+            "a": "月度方案的分钟数在每个计费周期重置，不会累积到下一周期。一次性加购的分钟数永不过期。"
+          },
+          "failed": {
+            "q": "任务失败了怎么办？",
+            "a": "不会扣除任何分钟数。可以在历史记录中重试；重新编码源文件通常能解决问题。"
+          },
+          "add": {
+            "q": "如何增加分钟数？",
+            "a": "在价格页购买一次性加购包，或升级方案以获得更多月度分钟数。"
+          },
+          "refund": {
+            "q": "可以退款吗？",
+            "a": "退款依照我们的退款政策办理，其中说明了在哪些情况下会退款或返还额度。如果你认为被错误扣费，请联系我们。"
+          },
+          "plan": {
+            "q": "如何更改或取消方案？",
+            "a": "前往“账户 → 账单 → 管理方案”。更改将在下个周期生效；可随时取消，并在当前周期结束前继续使用。"
+          }
+        }
+      },
+      "uploads": {
+        "label": "上传与格式",
+        "items": {
+          "size": {
+            "q": "文件大小上限是多少？",
+            "a": "每个文件最大 {size} MB。"
+          },
+          "formats": {
+            "q": "可以上传哪些音频格式？",
+            "a": "MP3、WAV、FLAC、OGG 和 M4A。"
+          },
+          "outputs": {
+            "q": "会得到哪些输出格式？",
+            "a": "每份完成的转谱都提供 PDF、MusicXML 和 MIDI。"
+          }
+        }
+      },
+      "quality": {
+        "label": "转谱质量",
+        "items": {
+          "clean": {
+            "q": "如何得到最清晰的乐谱？",
+            "a": "使用录音室品质的录音，尽量让乐器单独清晰，并在处理前选择正确的鼓组映射。"
+          },
+          "live": {
+            "q": "现场录音可以用吗？",
+            "a": "可以，但效果因录音而异。录音室品质的录音能得到最好的乐谱。"
+          },
+          "meters": {
+            "q": "能处理奇数拍或速度变化吗？",
+            "a": "可以。我们会检测速度变化和拍号，包括奇数拍，但非常自由的弹性速度较难跟踪。"
+          },
+          "which": {
+            "q": "应该使用哪种输出格式？",
+            "a": "在记谱软件中编辑用 MusicXML，在 DAW 中使用 MIDI，阅读或打印用 PDF。"
+          }
+        }
+      },
+      "publishing": {
+        "label": "发布与探索",
+        "items": {
+          "publish": {
+            "q": "如何发布乐谱？",
+            "a": "打开已完成的乐谱，点击“发布”即可分享到探索页。"
+          },
+          "visibility": {
+            "q": "各种可见性选项是什么意思？",
+            "a": "“公开”会出现在探索页和搜索中；“不公开列出”只能通过链接访问；“私密”仅你自己可见。"
+          },
+          "downloads": {
+            "q": "谁可以下载我发布的乐谱？",
+            "a": "由你决定：允许所有人下载、仅限登录用户下载，或禁止下载。"
+          },
+          "unpublish": {
+            "q": "如何取消发布？",
+            "a": "打开乐谱 → 发布 → 取消发布。乐谱会立即从探索页移除。"
+          },
+          "creator": {
+            "q": "我的创作者主页会显示什么？",
+            "a": "你的公开乐谱（以及通过链接打开的不公开列出乐谱）、显示名称和头像。"
+          }
+        }
+      }
+    }
+  },
+  "pricingPage": {
+    "kicker": "价格",
+    "title": "按分钟计费，简单透明，为音乐人而设。",
+    "subhead": "1 分钟音频 = 1 分钟额度。免费开始，升级可获得更高额度与进阶功能，没有隐藏费用。",
+    "productName": "GrooveSheet 分钟数",
+    "productDescription": "用于 AI 转谱、音轨分离与音频转 MIDI 的分钟额度。免费预览，只为处理的音频付费。",
+    "offerMinutes": "每月 {minutes} 分钟音频",
+    "trust": {
+      "checkout": "Stripe 安全结账",
+      "formats": "包含全部格式：PDF · MusicXML · MIDI",
+      "instruments": "鼓 · 钢琴 · 贝斯"
+    },
+    "faqTitle": "计费常见问题",
+    "faqSection": "套餐与分钟数",
+    "faq": {
+      "minute": {
+        "q": "1 分钟额度是什么意思？",
+        "a": "1 分钟音频 = 1 分钟额度。一首 3 分钟的歌会用掉 3 分钟，无论转谱哪种乐器、导出哪种格式都一样。"
+      },
+      "deduct": {
+        "q": "分钟数是怎么从账户中扣除的？",
+        "a": "按你处理的音频时长扣除，向上取整到秒。你可以随时在账户的“账单与用量”中查看剩余额度。"
+      },
+      "expire": {
+        "q": "我的分钟数会过期吗？",
+        "a": "方案分钟数在每个计费周期开始时刷新，不会累积。加购的分钟数永不过期，会一直保留在你的账户中直到用完。"
+      },
+      "fail": {
+        "q": "任务失败了怎么办？",
+        "a": "我们会自动重试。如果仍然失败，不会扣除任何分钟数，你会看到失败提示，可以选择重试或联系客服。"
+      },
+      "add": {
+        "q": "如何增加分钟数？",
+        "a": "在上方的“加购包”标签页购买一次性加购，或升级方案以获得更多月度分钟数。加购即时生效。"
+      },
+      "refund": {
+        "q": "可以退款吗？",
+        "a": "未使用的加购分钟数可能可以退款。完整细节与申请方式请参阅我们的退款政策。"
+      },
+      "change": {
+        "q": "如何更改或取消方案？",
+        "a": "可随时在账户设置中的 Stripe 账单门户管理、升级、降级或取消方案。更改将在下一个计费日生效。"
+      }
+    },
+    "cta": {
+      "title": "免费开始转谱。",
+      "body": "拖入一首歌，即可得到清晰的鼓、贝斯和钢琴乐谱。试用无需绑卡。",
+      "upload": "去上传",
+      "preview": "免费试用预览",
+      "talk": "联系我们"
+    },
+    "compare": {
+      "title": "方案对比",
+      "sub": "所有方案都可预览 PDF、MusicXML 和 MIDI，升级后解锁下载与优先处理。",
+      "caption": "免费版、Lite 与 Pro 方案功能对比。",
+      "hobbyist": "爱好者",
+      "free": "免费版",
+      "perMonth": "{price} / 月",
+      "mostPopular": "最受欢迎",
+      "lite": "Lite",
+      "fromPerMonth": "{price} / 月起",
+      "enterprise": "企业",
+      "pro": "Pro",
+      "fromPerUser": "每位用户 {price} 起",
+      "minutes": "每月分钟数",
+      "previewOnly": "10 秒预览",
+      "upload": "单个文件上传上限",
+      "uploadValue": "{size} MB",
+      "formats": "下载格式",
+      "previewsOnly": "仅限预览",
+      "batch": "批量处理",
+      "queue": "排队优先级",
+      "standard": "标准",
+      "priority": "优先",
+      "fast": "快速",
+      "support": "客服支持",
+      "community": "社区",
+      "priorityChat": "优先在线客服",
+      "early": "抢先体验新功能"
+    }
+  },
+  "tools": {
+    "stemSplitter": {
+      "title": "AI 音轨分离：从任何歌曲中提取人声与乐器。",
+      "subtitle": "上传音频，几分钟内即可得到干净、高品质的分离音轨。",
+      "elementTop": "干净的分离音轨，",
+      "elementBottom": "随时可得。",
+      "lede": "上传一首歌，逐轨试听，下载录音室品质的分轨。"
+    },
+    "midiConverter": {
+      "title": "把任何音频转换成 MIDI。",
+      "subtitle": "上传音频，几分钟内得到可编辑、可直接导入 DAW 的 MIDI 文件和精准乐谱。",
+      "elementTop": "可直接导入 DAW 的 MIDI，",
+      "elementBottom": "随时可得。",
+      "lede": "上传一首歌，检查转谱结果，下载 MIDI 与乐谱文件。"
+    },
+    "uploader": {
+      "formatsAlt": "支持的音频格式",
+      "separating": "分离中...",
+      "converting": "正在转换为 MIDI...",
+      "errors": {
+        "jobNotFound": "多次尝试后仍找不到该任务，请重新上传。",
+        "processingFailed": "处理失败。",
+        "downloadFailed": "下载失败：{message}",
+        "statusError": "状态查询出错：{message}",
+        "loadingUser": "正在加载用户数据...",
+        "rateLimited": "请求过于频繁，请在 {seconds} 秒后重试。",
+        "cantConnect": "无法连接服务器，请检查网络后重试。",
+        "uploadFailed": "文件上传失败，请重试。",
+        "fileTooLarge": "文件过大，最大 {size}MB。",
+        "fullSongFailed": "无法开始处理完整歌曲。",
+        "fileUnavailable": "该文件暂时无法下载。",
+        "fileDownloadFailed": "文件下载失败。"
+      },
+      "notify": {
+        "stemsReady": "你的音轨分离已完成！",
+        "midiReady": "你的 MIDI 转换已完成！",
+        "stemsTurn": "轮到你了，正在分离你的音频。",
+        "midiTurn": "轮到你了，正在转换你的音频。"
+      }
+    }
   }
 }

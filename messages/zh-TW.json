@@ -718,5 +718,401 @@
       "send": "送出檢舉",
       "error": "檢舉送出失敗"
     }
+  },
+  "explore": {
+    "viewAll": "查看全部",
+    "scrollLeft": "向左捲動",
+    "scrollRight": "向右捲動",
+    "meta": {
+      "title": "免費樂譜、MIDI 與分軌曲庫",
+      "description": "瀏覽 GrooveSheet 曲庫中的 AI 轉譜：鼓、鋼琴、貝斯等樂器的樂譜、MIDI 檔案與獨立分軌。",
+      "collectionName": "探索 GrooveSheet 曲庫"
+    },
+    "hero": {
+      "title": "探索曲庫",
+      "sub": "瀏覽 GrooveSheet 曲庫中的樂譜、MIDI 與分軌。每首歌都附有分離好的分軌，幾乎每首也都有樂譜和 MIDI。挑一首開始吧。",
+      "searchPlaceholder": "搜尋歌名、藝人或樂器…",
+      "searchAria": "搜尋曲庫",
+      "search": "搜尋",
+      "try": "試試",
+      "chip1": "MyGO",
+      "chip2": "YOASOBI",
+      "chip3": "告五人",
+      "chip4": "五條人"
+    },
+    "sidebar": {
+      "close": "關閉篩選",
+      "searchPlaceholder": "搜尋轉譜…",
+      "searchAria": "搜尋轉譜",
+      "popular": "熱門",
+      "instrument": "樂器",
+      "format": "格式",
+      "length": "時長",
+      "formats": {
+        "sheet": "樂譜",
+        "midi": "MIDI",
+        "stems": "分軌"
+      },
+      "lengths": {
+        "under2": "2 分鐘以內",
+        "2to5": "2 至 5 分鐘",
+        "over5": "5 分鐘以上"
+      }
+    },
+    "rails": {
+      "sheetEyebrow": "01 · 樂譜",
+      "sheetTitle": "熱門樂譜",
+      "sheetSubtitle": "排版好的樂譜，可下載 PDF 和 MusicXML。",
+      "midiEyebrow": "02 · MIDI",
+      "midiTitle": "熱門 MIDI",
+      "midiSubtitle": "每個轉譜聲部都有 .mid 檔，可直接拖進你的 DAW。",
+      "stemsEyebrow": "03 · 分軌",
+      "stemsTitle": "熱門分軌",
+      "stemsSubtitle": "獨立的人聲、鼓、貝斯與鍵盤分軌。",
+      "trendingTitle": "正在流行",
+      "trendingSubtitle": "音樂人下載最多的曲目。",
+      "newTitle": "最新上架",
+      "newSubtitle": "曲庫中最新的轉譜。",
+      "keepDigging": "繼續探索"
+    },
+    "filters": "篩選",
+    "openFilters": "打開篩選",
+    "loadMore": "載入更多",
+    "loading": "載入中…",
+    "loadError": "曲庫載入失敗。",
+    "states": {
+      "noResults": "沒有找到與「{query}」相關的結果",
+      "empty": "曲庫暫時是空的",
+      "tryDifferent": "換個歌名、藝人或樂器試試。",
+      "checkBack": "我們會定期上架新曲目，請稍後再來看看。",
+      "clear": "清除搜尋",
+      "errorTitle": "曲庫載入失敗",
+      "errorBody": "出了點問題，請重試。",
+      "retry": "重試"
+    },
+    "results": {
+      "crumbSearch": "搜尋",
+      "crumbBrowse": "瀏覽",
+      "resultsFor": "<em>「{query}」</em>的搜尋結果",
+      "all": "全部轉譜",
+      "searching": "正在搜尋曲庫…",
+      "summaryMatched": "找到 <b>{countText}</b> 份轉譜{pageInfo}。",
+      "summaryFiltered": "<b>{countText}</b> 份轉譜符合篩選條件{pageInfo}。",
+      "summaryAll": "曲庫中共有 <b>{countText}</b> 份轉譜{pageInfo}。",
+      "pageInfo": "，第 {page} 頁，共 {pages} 頁",
+      "tabs": {
+        "all": "全部",
+        "sheet": "樂譜",
+        "midi": "MIDI",
+        "stems": "分軌"
+      },
+      "noFilters": "未使用篩選",
+      "removeFilter": "移除篩選條件：{label}",
+      "clearAll": "全部清除",
+      "sort": "排序",
+      "sortAria": "結果排序",
+      "sorts": {
+        "relevance": "最相關",
+        "popular": "最受歡迎",
+        "newest": "最新",
+        "plays": "播放最多",
+        "downloads": "下載最多",
+        "title": "依歌名排序"
+      },
+      "layoutAria": "版面",
+      "grid": "網格",
+      "list": "清單",
+      "paginationAria": "分頁",
+      "previous": "上一頁",
+      "next": "下一頁",
+      "related": "相關搜尋",
+      "loadError": "結果載入失敗。",
+      "open": "打開",
+      "meta": {
+        "all": "全部轉譜",
+        "search": "搜尋：{q}",
+        "paged": "{title}（第 {page} 頁）",
+        "sheet": "熱門樂譜",
+        "midi": "熱門 MIDI 檔案",
+        "stems": "熱門獨立分軌",
+        "searchDescription": "與「{q}」相關的轉譜：樂譜、MIDI 與獨立分軌。",
+        "browseDescription": "瀏覽 GrooveSheet 曲庫中的全部 AI 轉譜：樂譜、MIDI 與分軌。"
+      }
+    }
+  },
+  "help": {
+    "title": "幫助與支援",
+    "sub": "搜尋常見問題，或直接聯絡我們，通常一天內回覆。",
+    "search": {
+      "contactSupport": "聯絡客服",
+      "clearSearch": "清除搜尋",
+      "placeholder": "搜尋說明：分鐘數、格式、發布…",
+      "aria": "搜尋說明",
+      "clear": "清除",
+      "resultCount": "「{query}」共有 {count} 筆結果",
+      "noResultsTitle": "沒有找到與「{query}」相關的答案",
+      "noResultsBody": "沒有找到符合的答案。歡迎直接聯絡我們，通常一天內回覆。"
+    },
+    "contact": {
+      "heading": "直接聯絡我們",
+      "sub": "三種方式聯絡真人，選你最方便的。",
+      "featured": "推薦",
+      "wechat": "微信",
+      "wechatDesc": "中國大陸使用者首選：掃碼加我們的微信。",
+      "wechatAlt": "GrooveSheet 微信 QR 碼",
+      "whatsapp": "WhatsApp",
+      "clickToChat": "點擊開始聊天",
+      "email": "電子郵件"
+    },
+    "faq": {
+      "getting-started": {
+        "label": "入門",
+        "items": {
+          "signin": {
+            "q": "如何註冊或登入？",
+            "a": "點擊右上角的「登入」，選擇電子郵件、Google、Apple 或 Facebook。首次登入時會自動建立帳戶，無需另外註冊。"
+          },
+          "stems": {
+            "q": "如何把一首歌分離成分軌？",
+            "a": "上傳檔案後，在工作區選擇「音軌分離」。我們會分離出鼓、貝斯、鋼琴和人聲，方便你單獨處理每一部分。"
+          }
+        }
+      },
+      "account": {
+        "label": "帳戶",
+        "items": {
+          "profile": {
+            "q": "如何編輯個人資料？",
+            "a": "打開右上角的帳戶選單並選擇「個人資料」，即可修改顯示名稱、大頭貼和電子郵件。"
+          },
+          "connected": {
+            "q": "如何管理已連結的帳戶？",
+            "a": "在「帳戶 → 已連結帳戶」中可以連結或取消連結 Google、Apple 和 Facebook。請至少保留一種登入方式。"
+          },
+          "delete": {
+            "q": "如何刪除帳戶？",
+            "a": "前往「帳戶 → 刪除帳戶」。這會永久刪除你的上傳、樂譜和分鐘餘額，且無法復原。"
+          }
+        }
+      },
+      "billing": {
+        "label": "計費與分鐘數",
+        "items": {
+          "minute": {
+            "q": "「分鐘」是什麼意思？",
+            "a": "計費的一分鐘等於原始音訊的一分鐘長度（無條件進位），與匯出多少種樂器無關。"
+          },
+          "deducted": {
+            "q": "分鐘數是怎麼扣除的？",
+            "a": "只有任務成功完成時才會從餘額扣除分鐘數。失敗的任務不收費。"
+          },
+          "expire": {
+            "q": "分鐘數會過期嗎？",
+            "a": "月費方案的分鐘數在每個計費週期重置，不會累積到下個週期。一次性加購的分鐘數永不過期。"
+          },
+          "failed": {
+            "q": "任務失敗了怎麼辦？",
+            "a": "不會扣除任何分鐘數。可以在歷史紀錄中重試；重新編碼原始檔案通常能解決問題。"
+          },
+          "add": {
+            "q": "如何增加分鐘數？",
+            "a": "在價格頁購買一次性加購包，或升級方案以取得更多每月分鐘數。"
+          },
+          "refund": {
+            "q": "可以退款嗎？",
+            "a": "退款依照我們的退款政策辦理，其中說明了在哪些情況下會退款或返還額度。如果你認為被錯誤扣款，請聯絡我們。"
+          },
+          "plan": {
+            "q": "如何變更或取消方案？",
+            "a": "前往「帳戶 → 帳單 → 管理方案」。變更將在下個週期生效；可隨時取消，並在當期結束前繼續使用。"
+          }
+        }
+      },
+      "uploads": {
+        "label": "上傳與格式",
+        "items": {
+          "size": {
+            "q": "檔案大小上限是多少？",
+            "a": "每個檔案最大 {size} MB。"
+          },
+          "formats": {
+            "q": "可以上傳哪些音訊格式？",
+            "a": "MP3、WAV、FLAC、OGG 和 M4A。"
+          },
+          "outputs": {
+            "q": "會得到哪些輸出格式？",
+            "a": "每份完成的轉譜都提供 PDF、MusicXML 和 MIDI。"
+          }
+        }
+      },
+      "quality": {
+        "label": "轉譜品質",
+        "items": {
+          "clean": {
+            "q": "如何得到最清晰的樂譜？",
+            "a": "使用錄音室品質的錄音，盡量讓樂器單獨清楚，並在處理前選擇正確的鼓組對應。"
+          },
+          "live": {
+            "q": "現場錄音可以用嗎？",
+            "a": "可以，但效果因錄音而異。錄音室品質的錄音能得到最好的樂譜。"
+          },
+          "meters": {
+            "q": "能處理奇數拍或速度變化嗎？",
+            "a": "可以。我們會偵測速度變化和拍號，包括奇數拍，但非常自由的彈性速度較難追蹤。"
+          },
+          "which": {
+            "q": "應該使用哪種輸出格式？",
+            "a": "在打譜軟體中編輯用 MusicXML，在 DAW 中使用 MIDI，閱讀或列印用 PDF。"
+          }
+        }
+      },
+      "publishing": {
+        "label": "發布與探索",
+        "items": {
+          "publish": {
+            "q": "如何發布樂譜？",
+            "a": "打開已完成的樂譜，點擊「發布」即可分享到探索頁。"
+          },
+          "visibility": {
+            "q": "各種可見度選項是什麼意思？",
+            "a": "「公開」會出現在探索頁和搜尋中；「不公開」只能透過連結存取；「私人」僅你自己可見。"
+          },
+          "downloads": {
+            "q": "誰可以下載我發布的樂譜？",
+            "a": "由你決定：允許所有人下載、僅限登入使用者下載，或禁止下載。"
+          },
+          "unpublish": {
+            "q": "如何取消發布？",
+            "a": "打開樂譜 → 發布 → 取消發布。樂譜會立即從探索頁移除。"
+          },
+          "creator": {
+            "q": "我的創作者頁面會顯示什麼？",
+            "a": "你的公開樂譜（以及透過連結打開的不公開樂譜）、顯示名稱和大頭貼。"
+          }
+        }
+      }
+    }
+  },
+  "pricingPage": {
+    "kicker": "價格",
+    "title": "按分鐘計費，簡單透明，為音樂人而設。",
+    "subhead": "1 分鐘音訊 = 1 分鐘額度。免費開始，升級可獲得更高額度與進階功能，沒有隱藏費用。",
+    "productName": "GrooveSheet 分鐘數",
+    "productDescription": "用於 AI 轉譜、音軌分離與音訊轉 MIDI 的分鐘額度。免費預覽，只為處理的音訊付費。",
+    "offerMinutes": "每月 {minutes} 分鐘音訊",
+    "trust": {
+      "checkout": "Stripe 安全結帳",
+      "formats": "包含全部格式：PDF · MusicXML · MIDI",
+      "instruments": "鼓 · 鋼琴 · 貝斯"
+    },
+    "faqTitle": "計費常見問題",
+    "faqSection": "方案與分鐘數",
+    "faq": {
+      "minute": {
+        "q": "1 分鐘額度是什麼意思？",
+        "a": "1 分鐘音訊 = 1 分鐘額度。一首 3 分鐘的歌會用掉 3 分鐘，無論轉譜哪種樂器、匯出哪種格式都一樣。"
+      },
+      "deduct": {
+        "q": "分鐘數是怎麼從帳戶中扣除的？",
+        "a": "依你處理的音訊長度扣除，以秒為單位無條件進位。你可以隨時在帳戶的「帳單與用量」中查看剩餘額度。"
+      },
+      "expire": {
+        "q": "我的分鐘數會過期嗎？",
+        "a": "方案分鐘數在每個計費週期開始時刷新，不會累積。加購的分鐘數永不過期，會一直保留在你的帳戶中直到用完。"
+      },
+      "fail": {
+        "q": "任務失敗了怎麼辦？",
+        "a": "我們會自動重試。如果仍然失敗，不會扣除任何分鐘數，你會看到失敗提示，可以選擇重試或聯絡客服。"
+      },
+      "add": {
+        "q": "如何增加分鐘數？",
+        "a": "在上方的「加購包」分頁購買一次性加購，或升級方案以取得更多每月分鐘數。加購即時生效。"
+      },
+      "refund": {
+        "q": "可以退款嗎？",
+        "a": "未使用的加購分鐘數可能可以退款。完整細節與申請方式請參閱我們的退款政策。"
+      },
+      "change": {
+        "q": "如何變更或取消方案？",
+        "a": "可隨時在帳戶設定中的 Stripe 帳單入口管理、升級、降級或取消方案。變更將在下一個計費日生效。"
+      }
+    },
+    "cta": {
+      "title": "免費開始轉譜。",
+      "body": "拖入一首歌，即可取得清晰的鼓、貝斯和鋼琴樂譜。試用無需綁卡。",
+      "upload": "前往上傳",
+      "preview": "免費試用預覽",
+      "talk": "聯絡我們"
+    },
+    "compare": {
+      "title": "方案比較",
+      "sub": "所有方案都可預覽 PDF、MusicXML 和 MIDI，升級後解鎖下載與優先處理。",
+      "caption": "免費版、Lite 與 Pro 方案功能比較。",
+      "hobbyist": "愛好者",
+      "free": "免費版",
+      "perMonth": "{price} / 月",
+      "mostPopular": "最受歡迎",
+      "lite": "Lite",
+      "fromPerMonth": "{price} / 月起",
+      "enterprise": "企業",
+      "pro": "Pro",
+      "fromPerUser": "每位使用者 {price} 起",
+      "minutes": "每月分鐘數",
+      "previewOnly": "10 秒預覽",
+      "upload": "單一檔案上傳上限",
+      "uploadValue": "{size} MB",
+      "formats": "下載格式",
+      "previewsOnly": "僅限預覽",
+      "batch": "批次處理",
+      "queue": "排隊優先順序",
+      "standard": "標準",
+      "priority": "優先",
+      "fast": "快速",
+      "support": "客服支援",
+      "community": "社群",
+      "priorityChat": "優先線上客服",
+      "early": "搶先體驗新功能"
+    }
+  },
+  "tools": {
+    "stemSplitter": {
+      "title": "AI 音軌分離：從任何歌曲中提取人聲與樂器。",
+      "subtitle": "上傳音訊，幾分鐘內即可取得乾淨、高品質的分離音軌。",
+      "elementTop": "乾淨的分離音軌，",
+      "elementBottom": "隨時可得。",
+      "lede": "上傳一首歌，逐軌試聽，下載錄音室品質的分軌。"
+    },
+    "midiConverter": {
+      "title": "把任何音訊轉換成 MIDI。",
+      "subtitle": "上傳音訊，幾分鐘內取得可編輯、可直接匯入 DAW 的 MIDI 檔案和精準樂譜。",
+      "elementTop": "可直接匯入 DAW 的 MIDI，",
+      "elementBottom": "隨時可得。",
+      "lede": "上傳一首歌，檢查轉譜結果，下載 MIDI 與樂譜檔案。"
+    },
+    "uploader": {
+      "formatsAlt": "支援的音訊格式",
+      "separating": "分離中...",
+      "converting": "正在轉換為 MIDI...",
+      "errors": {
+        "jobNotFound": "多次嘗試後仍找不到該任務，請重新上傳。",
+        "processingFailed": "處理失敗。",
+        "downloadFailed": "下載失敗：{message}",
+        "statusError": "狀態查詢出錯：{message}",
+        "loadingUser": "正在載入使用者資料...",
+        "rateLimited": "請求過於頻繁，請在 {seconds} 秒後重試。",
+        "cantConnect": "無法連線到伺服器，請檢查網路後重試。",
+        "uploadFailed": "檔案上傳失敗，請重試。",
+        "fileTooLarge": "檔案過大，最大 {size}MB。",
+        "fullSongFailed": "無法開始處理完整歌曲。",
+        "fileUnavailable": "該檔案暫時無法下載。",
+        "fileDownloadFailed": "檔案下載失敗。"
+      },
+      "notify": {
+        "stemsReady": "你的音軌分離已完成！",
+        "midiReady": "你的 MIDI 轉換已完成！",
+        "stemsTurn": "輪到你了，正在分離你的音訊。",
+        "midiTurn": "輪到你了，正在轉換你的音訊。"
+      }
+    }
   }
 }

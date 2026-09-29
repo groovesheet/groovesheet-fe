@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import Header from '@/components/chrome/Header';
 import ProcessingJobs from '@/components/ProcessingJobs';
 import { Link } from '@/lib/navigation';
@@ -12,15 +13,17 @@ export async function generateMetadata({ params }: LocaleParams) {
   return staticRouteMetadata('/stem-splitter', locale);
 }
 
-const disclaimer = (
-  <>
-    <span>By uploading a file, you agree to our </span>
-    <Link href="/terms">Terms of Service</Link>
-  </>
-);
 
 export default async function StemSplitterPage(props: LocaleParams) {
   const locale = await routeLocale(props);
+  const t = await getTranslations({ locale, namespace: 'tools.stemSplitter' });
+  const tHero = await getTranslations({ locale, namespace: 'hero' });
+  const disclaimer = (
+    <>
+      <span>{tHero('disclaimerPrefix')}</span>
+      <Link href="/terms">{tHero('termsOfService')}</Link>
+    </>
+  );
 
   return (
     <div
@@ -39,10 +42,8 @@ export default async function StemSplitterPage(props: LocaleParams) {
                   page naming itself that way, including a Shopify store and a
                   one-page indie tool that both outrank this site: that SERP is
                   won on page relevance, not domain strength. */}
-              <h1 className="hero-title">AI stem splitter: extract vocals &amp; instruments from any song.</h1>
-              <p className="hero-subtitle">
-                Upload an audio. Receive clean, separated &amp; high quality audio stems in minutes.
-              </p>
+              <h1 className="hero-title">{t('title')}</h1>
+              <p className="hero-subtitle">{t('subtitle')}</p>
             </div>
             <div className="hero-disclaimer hero-disclaimer-desktop">{disclaimer}</div>
           </div>
@@ -55,9 +56,9 @@ export default async function StemSplitterPage(props: LocaleParams) {
         // In-flight jobs, right under the uploader, so leaving this page never loses sight of them.
         beforeFeatures={<ProcessingJobs />}
         element={{
-          titleTop: 'Clean Separated',
-          titleBottom: 'Stems, On Demand.',
-          lede: 'Upload a track, preview each part, download studio-ready stems.',
+          titleTop: t('elementTop'),
+          titleBottom: t('elementBottom'),
+          lede: t('lede'),
         }}
       />
     </div>

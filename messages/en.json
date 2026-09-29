@@ -718,5 +718,401 @@
       "send": "Send Report",
       "error": "Could not send the report"
     }
+  },
+  "explore": {
+    "viewAll": "View all",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "meta": {
+      "title": "Explore Free Sheet Music, MIDI and Stems",
+      "description": "Browse AI transcriptions from the GrooveSheet library: sheet music, MIDI files, and isolated stems for drums, piano, bass and more.",
+      "collectionName": "Explore the GrooveSheet library"
+    },
+    "hero": {
+      "title": "Explore.",
+      "sub": "Browse sheet music, MIDI and stems from the GrooveSheet library. Every track comes with separated stems, and almost every one carries sheet music and MIDI too. Pick your weapon.",
+      "searchPlaceholder": "Search titles, artists, instruments…",
+      "searchAria": "Search the library",
+      "search": "Search",
+      "try": "Try",
+      "chip1": "Clair de Lune",
+      "chip2": "Lo-fi drums",
+      "chip3": "Movie themes",
+      "chip4": "Beginner piano"
+    },
+    "sidebar": {
+      "close": "Close filters",
+      "searchPlaceholder": "Search transcriptions…",
+      "searchAria": "Search transcriptions",
+      "popular": "Popular",
+      "instrument": "Instrument",
+      "format": "Format",
+      "length": "Length",
+      "formats": {
+        "sheet": "Sheet Music",
+        "midi": "MIDI",
+        "stems": "Stems"
+      },
+      "lengths": {
+        "under2": "Under 2 min",
+        "2to5": "2 to 5 min",
+        "over5": "5+ min"
+      }
+    },
+    "rails": {
+      "sheetEyebrow": "01 · Sheet music",
+      "sheetTitle": "Popular sheet music",
+      "sheetSubtitle": "Engraved, downloadable as PDF and MusicXML.",
+      "midiEyebrow": "02 · MIDI",
+      "midiTitle": "Popular MIDI",
+      "midiSubtitle": "A .mid file for every transcribed part. Drop it into your DAW.",
+      "stemsEyebrow": "03 · Stems",
+      "stemsTitle": "Popular stems",
+      "stemsSubtitle": "Isolated vocals, drums, bass, keys.",
+      "trendingTitle": "Trending now",
+      "trendingSubtitle": "The tracks musicians download most.",
+      "newTitle": "Just added",
+      "newSubtitle": "The newest transcriptions in the library.",
+      "keepDigging": "Keep digging"
+    },
+    "filters": "Filters",
+    "openFilters": "Open filters",
+    "loadMore": "Load More",
+    "loading": "Loading…",
+    "loadError": "Failed to load the library.",
+    "states": {
+      "noResults": "No results for “{query}”",
+      "empty": "The library is empty",
+      "tryDifferent": "Try a different title, artist, or instrument.",
+      "checkBack": "New tracks are published regularly. Check back soon.",
+      "clear": "Clear search",
+      "errorTitle": "Couldn’t load the library",
+      "errorBody": "Something went wrong. Please try again.",
+      "retry": "Try again"
+    },
+    "results": {
+      "crumbSearch": "Search",
+      "crumbBrowse": "Browse",
+      "resultsFor": "Results for <em>“{query}”</em>",
+      "all": "All transcriptions",
+      "searching": "Searching the library…",
+      "summaryMatched": "<b>{countText}</b> {count, plural, one {transcription} other {transcriptions}} matched{pageInfo}.",
+      "summaryFiltered": "<b>{countText}</b> {count, plural, one {transcription matches} other {transcriptions match}} these filters{pageInfo}.",
+      "summaryAll": "<b>{countText}</b> {count, plural, one {transcription} other {transcriptions}} in the library{pageInfo}.",
+      "pageInfo": ", page {page} of {pages}",
+      "tabs": {
+        "all": "All",
+        "sheet": "Sheet",
+        "midi": "MIDI",
+        "stems": "Stems"
+      },
+      "noFilters": "No filters applied",
+      "removeFilter": "Remove {label} filter",
+      "clearAll": "Clear all",
+      "sort": "Sort",
+      "sortAria": "Sort results",
+      "sorts": {
+        "relevance": "Best match",
+        "popular": "Most popular",
+        "newest": "Newest",
+        "plays": "Most played",
+        "downloads": "Most downloaded",
+        "title": "A-Z"
+      },
+      "layoutAria": "Layout",
+      "grid": "Grid",
+      "list": "List",
+      "paginationAria": "Pagination",
+      "previous": "Previous page",
+      "next": "Next page",
+      "related": "Related searches",
+      "loadError": "Failed to load results.",
+      "open": "Open",
+      "meta": {
+        "all": "All Transcriptions",
+        "search": "Search: {q}",
+        "paged": "{title}, Page {page}",
+        "sheet": "Popular Sheet Music Transcriptions",
+        "midi": "Popular MIDI Files",
+        "stems": "Popular Isolated Stems",
+        "searchDescription": "Transcriptions matching “{q}”: sheet music, MIDI, and isolated stems.",
+        "browseDescription": "Browse every AI transcription in the GrooveSheet library: sheet music, MIDI, and stems."
+      }
+    }
+  },
+  "help": {
+    "title": "Help & Support",
+    "sub": "Search the FAQ, or reach us directly. We usually reply within a day.",
+    "search": {
+      "contactSupport": "Contact support",
+      "clearSearch": "Clear search",
+      "placeholder": "Search help: minutes, formats, publishing…",
+      "aria": "Search help",
+      "clear": "Clear",
+      "resultCount": "{count, plural, one {# result} other {# results}} for “{query}”",
+      "noResultsTitle": "No results for “{query}”",
+      "noResultsBody": "We couldn't find a matching answer. Reach us directly: we usually reply within a day."
+    },
+    "contact": {
+      "heading": "Reach us directly",
+      "sub": "Three ways to talk to a human. Pick whatever's easiest.",
+      "featured": "Featured",
+      "wechat": "WeChat",
+      "wechatDesc": "Best for users in China: scan the code to add us on WeChat.",
+      "wechatAlt": "GrooveSheet WeChat QR code",
+      "whatsapp": "WhatsApp",
+      "clickToChat": "click to chat",
+      "email": "Email"
+    },
+    "faq": {
+      "getting-started": {
+        "label": "Getting started",
+        "items": {
+          "signin": {
+            "q": "How do I sign up or sign in?",
+            "a": "Hit Sign In on the top right and pick Email, Google, Apple, or Facebook. We create your account on first sign-in, so there is no separate sign-up step."
+          },
+          "stems": {
+            "q": "How do I split a track into stems?",
+            "a": "Upload your file, then choose Stem Splitter in the workspace. We separate drums, bass, piano, and vocals so you can process each segment on its own."
+          }
+        }
+      },
+      "account": {
+        "label": "Account",
+        "items": {
+          "profile": {
+            "q": "How do I edit my profile?",
+            "a": "Open the account menu in the top right and choose Profile. You can change your display name, avatar, and email there."
+          },
+          "connected": {
+            "q": "How do I manage connected accounts?",
+            "a": "Under Account → Connected accounts you can link or unlink Google, Apple, and Facebook. Keep at least one sign-in method connected."
+          },
+          "delete": {
+            "q": "How do I delete my account?",
+            "a": "Account → Delete account. This permanently removes your uploads, scores, and minute balance. It cannot be undone."
+          }
+        }
+      },
+      "billing": {
+        "label": "Billing & minutes",
+        "items": {
+          "minute": {
+            "q": "What does a “minute” mean?",
+            "a": "One billed minute equals one minute of your source track length, rounded up, regardless of how many instruments you export from it."
+          },
+          "deducted": {
+            "q": "How are minutes deducted?",
+            "a": "Minutes come off your balance only when a job completes successfully. Jobs that fail cost nothing."
+          },
+          "expire": {
+            "q": "Do minutes expire?",
+            "a": "Monthly plan minutes reset each billing cycle and do not roll over. One-time top-up minutes never expire."
+          },
+          "failed": {
+            "q": "What happens if a job fails?",
+            "a": "You are not charged any minutes. Retry from your history; re-encoding the source file usually fixes it."
+          },
+          "add": {
+            "q": "How do I add more minutes?",
+            "a": "Buy a one-time top-up from the Pricing page, or upgrade your plan for a higher monthly allowance."
+          },
+          "refund": {
+            "q": "Can I get a refund?",
+            "a": "Refunds follow our Refund Policy, which sets out when a refund or credit is given. Contact us if you think you were charged in error."
+          },
+          "plan": {
+            "q": "How do I change or cancel my plan?",
+            "a": "Account → Billing → Manage plan. Changes apply on your next cycle; cancel anytime and keep access until the period ends."
+          }
+        }
+      },
+      "uploads": {
+        "label": "Uploads & formats",
+        "items": {
+          "size": {
+            "q": "What is the maximum file size?",
+            "a": "Up to {size} MB per file."
+          },
+          "formats": {
+            "q": "Which audio formats can I upload?",
+            "a": "MP3, WAV, FLAC, OGG and M4A."
+          },
+          "outputs": {
+            "q": "What output formats do I get?",
+            "a": "Every completed transcription gives you PDF, MusicXML, and MIDI."
+          }
+        }
+      },
+      "quality": {
+        "label": "Transcription quality",
+        "items": {
+          "clean": {
+            "q": "How do I get the cleanest notation?",
+            "a": "Use studio-quality recordings, isolate the instrument where you can, and pick the right kit mapping before processing."
+          },
+          "live": {
+            "q": "Do live recordings work?",
+            "a": "They can, but results vary. Studio-quality recordings produce the best notation."
+          },
+          "meters": {
+            "q": "Can it handle odd meters or tempo changes?",
+            "a": "Yes. We detect tempo maps and time signatures, including odd meters, though very fluid rubato is harder to track."
+          },
+          "which": {
+            "q": "Which output format should I use?",
+            "a": "MusicXML for editing in notation software, MIDI for DAWs, and PDF for reading or printing."
+          }
+        }
+      },
+      "publishing": {
+        "label": "Publishing & Explore",
+        "items": {
+          "publish": {
+            "q": "How do I publish a score?",
+            "a": "Open a finished score and hit Publish to share it on Explore."
+          },
+          "visibility": {
+            "q": "What do the visibility options mean?",
+            "a": "Public appears on Explore and in search. Unlisted is reachable by link only. Private is visible to just you."
+          },
+          "downloads": {
+            "q": "Who can download my published score?",
+            "a": "You choose: allow downloads for everyone, for signed-in users only, or for no one."
+          },
+          "unpublish": {
+            "q": "How do I unpublish?",
+            "a": "Open the score → Publishing → Unpublish. It is removed from Explore immediately."
+          },
+          "creator": {
+            "q": "What shows on my creator profile?",
+            "a": "Your public scores (and unlisted ones opened via link), your display name, and your avatar."
+          }
+        }
+      }
+    }
+  },
+  "pricingPage": {
+    "kicker": "Pricing",
+    "title": "Simple, minute-based pricing for working musicians.",
+    "subhead": "1 minute of audio = 1 minute of credit. Start free, upgrade for higher limits and advanced features. No surprises.",
+    "productName": "GrooveSheet minutes",
+    "productDescription": "Minute-based credit for AI music transcription, stem separation and audio-to-MIDI. Preview free, pay only for the audio you process.",
+    "offerMinutes": "{minutes} minutes of audio per month",
+    "trust": {
+      "checkout": "Stripe-secure checkout",
+      "formats": "All formats included: PDF · MusicXML · MIDI",
+      "instruments": "Drums · Piano · Bass"
+    },
+    "faqTitle": "Billing FAQ",
+    "faqSection": "Packs & Minutes",
+    "faq": {
+      "minute": {
+        "q": "What does a minute of credit mean?",
+        "a": "1 minute of audio = 1 minute of credit. A 3-minute song uses 3 minutes, the same whichever instrument you transcribe and whatever format you export."
+      },
+      "deduct": {
+        "q": "How are minutes deducted from my account?",
+        "a": "Minutes are deducted from the length of audio you process, rounded up to the nearest second. You can see your remaining balance any time under Billing & Usage in your account."
+      },
+      "expire": {
+        "q": "Do my minutes expire?",
+        "a": "Plan minutes refresh at the start of each billing cycle and don’t roll over. Top-up minutes never expire. They stay on your account until you use them."
+      },
+      "fail": {
+        "q": "What happens if a job fails?",
+        "a": "We retry automatically. If it still fails we don’t deduct any minutes, and you’ll see a failure notice with options to retry or contact support."
+      },
+      "add": {
+        "q": "How do I add more minutes?",
+        "a": "Buy a one-time top-up from the Top-Ups tab above, or upgrade your plan for a higher monthly allowance. Top-ups apply instantly."
+      },
+      "refund": {
+        "q": "Can I get a refund?",
+        "a": "Unused top-up minutes may be eligible for a refund. See our Refund Policy for the full details and how to request one."
+      },
+      "change": {
+        "q": "How do I change or cancel my plan?",
+        "a": "Manage, upgrade, downgrade or cancel anytime from the Stripe billing portal in your account settings. Changes take effect on your next billing date."
+      }
+    },
+    "cta": {
+      "title": "Start transcribing free.",
+      "body": "Drag in a track and get clean drum, bass and piano notation. No card required to try.",
+      "upload": "Go to upload",
+      "preview": "Try a free preview",
+      "talk": "Talk to us"
+    },
+    "compare": {
+      "title": "Compare Plans",
+      "sub": "Every plan includes PDF, MusicXML and MIDI previews. Downloads and priority unlock as you go.",
+      "caption": "Feature comparison across the Free, Lite and Pro plans.",
+      "hobbyist": "Hobbyist",
+      "free": "Free",
+      "perMonth": "{price} / month",
+      "mostPopular": "Most popular",
+      "lite": "Lite",
+      "fromPerMonth": "from {price} / month",
+      "enterprise": "Enterprise",
+      "pro": "Pro",
+      "fromPerUser": "from {price} / user",
+      "minutes": "Minutes / month",
+      "previewOnly": "10-second preview",
+      "upload": "Upload size per file",
+      "uploadValue": "{size} MB",
+      "formats": "Download formats",
+      "previewsOnly": "Previews only",
+      "batch": "Batch processing",
+      "queue": "Queue priority",
+      "standard": "Standard",
+      "priority": "Priority",
+      "fast": "Fast",
+      "support": "Support",
+      "community": "Community",
+      "priorityChat": "Priority chat",
+      "early": "Early access to new features"
+    }
+  },
+  "tools": {
+    "stemSplitter": {
+      "title": "AI stem splitter: extract vocals & instruments from any song.",
+      "subtitle": "Upload an audio. Receive clean, separated & high quality audio stems in minutes.",
+      "elementTop": "Clean Separated",
+      "elementBottom": "Stems, On Demand.",
+      "lede": "Upload a track, preview each part, download studio-ready stems."
+    },
+    "midiConverter": {
+      "title": "Convert any audio to MIDI.",
+      "subtitle": "Upload your track. Get editable, DAW-ready MIDI files and precise sheet music in minutes.",
+      "elementTop": "DAW-Ready MIDI,",
+      "elementBottom": "On Demand.",
+      "lede": "Upload a track, review the transcription, download MIDI and score files."
+    },
+    "uploader": {
+      "formatsAlt": "Supported audio formats",
+      "separating": "Separating...",
+      "converting": "Converting to MIDI...",
+      "errors": {
+        "jobNotFound": "Job not found after repeated attempts. Please re-upload.",
+        "processingFailed": "Processing failed.",
+        "downloadFailed": "Download failed: {message}",
+        "statusError": "Status error: {message}",
+        "loadingUser": "Loading user data...",
+        "rateLimited": "Rate limit exceeded. Try again in {seconds}s.",
+        "cantConnect": "Unable to connect to the server. Please check your connection and try again.",
+        "uploadFailed": "Failed to upload file. Please try again.",
+        "fileTooLarge": "File size too large. Max {size}MB.",
+        "fullSongFailed": "Failed to start full song processing.",
+        "fileUnavailable": "File not available for download.",
+        "fileDownloadFailed": "Failed to download file."
+      },
+      "notify": {
+        "stemsReady": "Your stem separation is ready!",
+        "midiReady": "Your MIDI conversion is ready!",
+        "stemsTurn": "It's your turn. Separating your audio now.",
+        "midiTurn": "It's your turn. Converting your audio now."
+      }
+    }
   }
 }

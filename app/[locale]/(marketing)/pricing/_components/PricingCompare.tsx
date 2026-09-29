@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import useBillingCatalog, { formatMoney } from '@/lib/useBillingCatalog';
 import { MAX_UPLOAD_MB } from '@/lib/constants';
 
@@ -31,6 +32,7 @@ export default function PricingCompare() {
   // mainland-China visitors are quoted in yuan. Both read the same cached
   // catalog, so this costs no extra request.
   const { catalog, currency } = useBillingCatalog();
+  const t = useTranslations('pricingPage.compare');
   const planById = (id: string) => catalog?.plans?.find((p) => p.id === id);
   // "From" = the cheapest way to get the plan, i.e. the annual price per month.
   const monthlyEquivalent = (id: string, fallback: string) => {
@@ -56,13 +58,11 @@ export default function PricingCompare() {
   return (
     <section className="pp-compare">
       <div className="pp-compare-wrap">
-        <h2 className="pp-compare-h">Compare Plans</h2>
-        <p className="pp-compare-sub">
-          Every plan includes PDF, MusicXML and MIDI previews. Downloads and priority unlock as you go.
-        </p>
+        <h2 className="pp-compare-h">{t('title')}</h2>
+        <p className="pp-compare-sub">{t('sub')}</p>
         <div className="pp-compare-scroll">
           <table className="pp-table">
-            <caption>Feature comparison across the Free, Lite and Pro plans.</caption>
+            <caption>{t('caption')}</caption>
             <colgroup>
               <col className="col-feat" />
               <col className="col-plan" />
@@ -74,46 +74,46 @@ export default function PricingCompare() {
                 <th scope="col" className="th-corner"></th>
                 <th scope="col">
                   <div className="pp-plan-h">
-                    <span className="pp-plan-tag">Hobbyist</span>
-                    <span className="pp-plan-name">Free</span>
-                    <span className="pp-plan-price">{formatMoney(0, currency)} / month</span>
+                    <span className="pp-plan-tag">{t('hobbyist')}</span>
+                    <span className="pp-plan-name">{t('free')}</span>
+                    <span className="pp-plan-price">{t('perMonth', { price: formatMoney(0, currency) ?? '' })}</span>
                   </div>
                 </th>
                 <th scope="col" className="is-pop">
                   <div className="pp-plan-h">
-                    <span className="pp-plan-tag">Most popular</span>
-                    <span className="pp-plan-name">Lite</span>
-                    <span className="pp-plan-price">from {liteFrom} / month</span>
+                    <span className="pp-plan-tag">{t('mostPopular')}</span>
+                    <span className="pp-plan-name">{t('lite')}</span>
+                    <span className="pp-plan-price">{t('fromPerMonth', { price: liteFrom ?? '' })}</span>
                   </div>
                 </th>
                 <th scope="col">
                   <div className="pp-plan-h">
-                    <span className="pp-plan-tag">Enterprise</span>
-                    <span className="pp-plan-name">Pro</span>
-                    <span className="pp-plan-price">from {proFrom} / user</span>
+                    <span className="pp-plan-tag">{t('enterprise')}</span>
+                    <span className="pp-plan-name">{t('pro')}</span>
+                    <span className="pp-plan-price">{t('fromPerUser', { price: proFrom ?? '' })}</span>
                   </div>
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th scope="row">Minutes / month</th>
-                <td>{freeMinutes > 0 ? freeMinutes : '10-second preview'}</td>
+                <th scope="row">{t('minutes')}</th>
+                <td>{freeMinutes > 0 ? freeMinutes : t('previewOnly')}</td>
                 <td className="is-pop">{liteMinutes}</td>
                 <td>{proMinutes}</td>
               </tr>
               <tr>
-                <th scope="row">Upload size per file</th>
-                <td>{`${MAX_UPLOAD_MB} MB`}</td>
-                <td className="is-pop">{`${MAX_UPLOAD_MB} MB`}</td>
-                <td>{`${MAX_UPLOAD_MB} MB`}</td>
+                <th scope="row">{t('upload')}</th>
+                <td>{t('uploadValue', { size: MAX_UPLOAD_MB })}</td>
+                <td className="is-pop">{t('uploadValue', { size: MAX_UPLOAD_MB })}</td>
+                <td>{t('uploadValue', { size: MAX_UPLOAD_MB })}</td>
               </tr>
               <tr>
                 <th scope="row">
-                  Download formats
+                  {t('formats')}
                   <span className="pp-cell-note">PDF {'·'} MusicXML {'·'} MIDI</span>
                 </th>
-                <td>Previews only</td>
+                <td>{t('previewsOnly')}</td>
                 <td className="is-pop">
                   <CheckIcon />
                 </td>
@@ -122,7 +122,7 @@ export default function PricingCompare() {
                 </td>
               </tr>
               <tr>
-                <th scope="row">Batch processing</th>
+                <th scope="row">{t('batch')}</th>
                 <td>
                   <Dash />
                 </td>
@@ -134,19 +134,19 @@ export default function PricingCompare() {
                 </td>
               </tr>
               <tr>
-                <th scope="row">Queue priority</th>
-                <td>Standard</td>
-                <td className="is-pop">Priority</td>
-                <td>Fast</td>
+                <th scope="row">{t('queue')}</th>
+                <td>{t('standard')}</td>
+                <td className="is-pop">{t('priority')}</td>
+                <td>{t('fast')}</td>
               </tr>
               <tr>
-                <th scope="row">Support</th>
-                <td>Community</td>
-                <td className="is-pop">Priority chat</td>
-                <td>Priority chat</td>
+                <th scope="row">{t('support')}</th>
+                <td>{t('community')}</td>
+                <td className="is-pop">{t('priorityChat')}</td>
+                <td>{t('priorityChat')}</td>
               </tr>
               <tr>
-                <th scope="row">Early access to new features</th>
+                <th scope="row">{t('early')}</th>
                 <td>
                   <Dash />
                 </td>

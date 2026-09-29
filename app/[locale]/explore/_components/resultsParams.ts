@@ -44,11 +44,16 @@ export function singleFormatOf(state: Pick<ResultsState, 'formats'>): string | n
  * Shared by generateMetadata and the client, which keeps it current as the
  * URL changes without a server round trip.
  */
-export function resultsTitle(state: Pick<ResultsState, 'q' | 'formats' | 'page'>): string {
-  if (state.q) return `Search: ${state.q}`;
+export function resultsTitle(
+  state: Pick<ResultsState, 'q' | 'formats' | 'page'>,
+  /** Scoped to `explore.results.meta`; without one the title is English. */
+  t?: (key: string, values?: Record<string, string | number>) => string
+): string {
+  if (state.q) return t ? t('search', { q: state.q }) : `Search: ${state.q}`;
   const format = singleFormatOf(state);
-  const title = format ? METADATA_TITLES[format] : 'All Transcriptions';
-  return state.page > 1 ? `${title}, Page ${state.page}` : title;
+  const title = format ? (t ? t(format) : METADATA_TITLES[format]) : t ? t('all') : 'All Transcriptions';
+  if (state.page <= 1) return title;
+  return t ? t('paged', { title, page: state.page }) : `${title}, Page ${state.page}`;
 }
 
 /** The part of URLSearchParams these helpers read, so a plain adapter works too. */

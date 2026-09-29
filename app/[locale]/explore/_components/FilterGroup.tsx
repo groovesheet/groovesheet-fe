@@ -5,7 +5,10 @@ import { CaretDown } from '@phosphor-icons/react';
 import './FilterGroup.css';
 
 export interface FacetItem {
+  /** The value itself; also what `value` holds and `onToggle` receives. */
   label: string;
+  /** What the visitor reads, when it differs from the value (a translation). */
+  display?: string;
   count: number;
 }
 
@@ -36,7 +39,7 @@ function FilterGroup({ title, items, value, onToggle, defaultOpen = true }: Filt
               <label key={it.label} className="fg-row">
                 <span className="fg-label">
                   <input type="checkbox" className="fg-check" checked={checked} onChange={() => onToggle(it.label)} />
-                  {it.label}
+                  {it.display ?? it.label}
                 </span>
                 {/* Fixed locale: the server and the browser must print the same digits. */}
                 <span className="fg-count">{it.count.toLocaleString('en-US')}</span>

@@ -2,9 +2,13 @@
 
 import type { FormEvent } from 'react';
 import { MagnifyingGlass } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import './ExploreHeader.css';
 
-const TRY_CHIPS = ['Clair de Lune', 'Lo-fi drums', 'Movie themes', 'Beginner piano'];
+// Suggested searches, per locale in messages (explore.hero.chip1..4). The
+// Chinese ones are artists in the library, checked to return results, since a
+// translated "Movie themes" would search English metadata and find nothing.
+const TRY_CHIP_KEYS = ['chip1', 'chip2', 'chip3', 'chip4'] as const;
 
 interface ExploreHeaderProps {
   query: string;
@@ -20,6 +24,8 @@ interface ExploreHeaderProps {
  * what leaves for the paginated, sortable view.
  */
 function ExploreHeader({ query, onQueryChange, onSubmit, action = '/explore/search' }: ExploreHeaderProps) {
+  const t = useTranslations('explore.hero');
+  const tryChips = TRY_CHIP_KEYS.map((k) => t(k));
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (onSubmit) onSubmit(query);
@@ -28,11 +34,10 @@ function ExploreHeader({ query, onQueryChange, onSubmit, action = '/explore/sear
   return (
     <div className="explore-hero">
       <div className="eh-copy">
-        <h1 className="eh-title">Explore.</h1>
-        <p className="eh-sub">
-          Browse transcriptions, MIDI, and stems from our library. Every track ships in all three formats. Pick your
-          weapon.
-        </p>
+        <h1 className="eh-title">{t('title')}</h1>
+        {/* Measured 2026-09-29: all 304 tracks have stems, 297 also have MusicXML
+            and MIDI. The old line said every track ships in all three formats. */}
+        <p className="eh-sub">{t('sub')}</p>
       </div>
       <div className="eh-search">
         {/* action/method make the search work before hydration and without JS. */}
@@ -43,18 +48,18 @@ function ExploreHeader({ query, onQueryChange, onSubmit, action = '/explore/sear
           <input
             className="eh-search-input"
             name="q"
-            placeholder="Search titles, artists, instruments…"
+            placeholder={t('searchPlaceholder')}
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            aria-label="Search the library"
+            aria-label={t('searchAria')}
           />
           <button type="submit" className="eh-search-btn">
-            Search
+            {t('search')}
           </button>
         </form>
         <div className="eh-try">
-          <span className="eh-try-label">Try</span>
-          {TRY_CHIPS.map((s) => (
+          <span className="eh-try-label">{t('try')}</span>
+          {tryChips.map((s) => (
             <button
               key={s}
               type="button"

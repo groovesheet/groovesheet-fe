@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-img-element -- static QR image from public/, same markup as the CRA page */
+import { getTranslations } from 'next-intl/server';
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { staticRouteMetadata } from '@/lib/seo/metadata';
 import { routeLocale, type LocaleParams } from '../_components/routeLocale';
 import HelpSearchFaq from './_components/HelpSearchFaq';
-import { CONTACT, FAQ_DATA } from './_components/helpData';
+import { CONTACT, faqData, type FaqCategory } from './_components/helpData';
 import './_components/HelpSupport.css';
 
 export async function generateMetadata({ params }: LocaleParams) {
@@ -18,39 +19,42 @@ const ArrowUpRight = () => (
   </svg>
 );
 
-// FAQPage structured data built from the same list the page renders, so the
-// markup never claims an answer the visitor cannot see.
-const FAQ_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQ_DATA.flatMap((cat) =>
-    cat.items.map((it) => ({
-      '@type': 'Question',
-      name: it.q,
-      acceptedAnswer: { '@type': 'Answer', text: it.a },
-    }))
-  ),
-};
+// FAQPage structured data built from the same list the page renders, in the
+// same language, so the markup never claims an answer the visitor cannot see.
+function faqJsonLd(faq: FaqCategory[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.flatMap((cat) =>
+      cat.items.map((it) => ({
+        '@type': 'Question',
+        name: it.q,
+        acceptedAnswer: { '@type': 'Answer', text: it.a },
+      }))
+    ),
+  };
+}
 
 export default async function HelpPage(props: LocaleParams) {
-  await routeLocale(props);
+  const locale = await routeLocale(props);
+  const t = await getTranslations({ locale, namespace: 'help' });
+  const faq = faqData(await getTranslations({ locale, namespace: 'help.faq' }));
 
   return (
     <div className="help-page">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faq)).replace(/</g, '\\u003c') }}
       />
       <Header />
 
       <main className="help-main">
         <HelpSearchFaq
+          faq={faq}
           heading={
             <>
-              <h1 className="help-hero-title">Help &amp; Support</h1>
-              <p className="help-hero-sub">
-                Search the FAQ, or reach us directly {'\u2014'} we usually reply within a day.
-              </p>
+              <h1 className="help-hero-title">{t('title')}</h1>
+              <p className="help-hero-sub">{t('sub')}</p>
             </>
           }
         />
@@ -58,8 +62,8 @@ export default async function HelpPage(props: LocaleParams) {
         {/* Contact channels */}
         <section id="contact" className="help-contact">
           <div className="help-contact-head">
-            <h2>Reach us directly</h2>
-            <p>Three ways to talk to a human. Pick whatever&apos;s easiest.</p>
+            <h2>{t('contact.heading')}</h2>
+            <p>{t('contact.sub')}</p>
           </div>
 
           <div className="help-contact-grid">
@@ -74,16 +78,14 @@ export default async function HelpPage(props: LocaleParams) {
                     </svg>
                   </span>
                   <div>
-                    <div className="help-wechat-eyebrow">Featured</div>
-                    <h3>WeChat</h3>
+                    <div className="help-wechat-eyebrow">{t('contact.featured')}</div>
+                    <h3>{t('contact.wechat')}</h3>
                   </div>
                 </div>
-                <p className="help-wechat-desc">
-                  Best for users in China {'\u2014'} scan the code to add us on WeChat.
-                </p>
+                <p className="help-wechat-desc">{t('contact.wechatDesc')}</p>
               </div>
               <div className="help-wechat-qr">
-                <img src="/images/wechat-qr.png" alt="GrooveSheet WeChat QR code" />
+                <img src="/images/wechat-qr.png" alt={t('contact.wechatAlt')} />
               </div>
             </div>
 
@@ -96,9 +98,9 @@ export default async function HelpPage(props: LocaleParams) {
                   </svg>
                 </span>
                 <div className="help-channel-body">
-                  <h3>WhatsApp</h3>
+                  <h3>{t('contact.whatsapp')}</h3>
                   <div className="help-channel-line">
-                    {CONTACT.whatsappNumber} {'·'} click to chat
+                    {CONTACT.whatsappNumber} {'·'} {t('contact.clickToChat')}
                   </div>
                 </div>
                 <span className="help-channel-arrow">
@@ -114,7 +116,7 @@ export default async function HelpPage(props: LocaleParams) {
                   </svg>
                 </span>
                 <div className="help-channel-body">
-                  <h3>Email</h3>
+                  <h3>{t('contact.email')}</h3>
                   <div className="help-channel-line">{CONTACT.email}</div>
                 </div>
                 <span className="help-channel-arrow">

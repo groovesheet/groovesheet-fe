@@ -2,7 +2,9 @@
 
 import { useMemo, type Dispatch, type SetStateAction } from 'react';
 import { MagnifyingGlass, X } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import FilterGroup, { type FacetItem } from './FilterGroup';
+import { useFacetLabel, type FacetGroup } from './facetLabels';
 import {
   STEM_INSTRUMENTS,
   FORMAT_FILTER_MAP,
@@ -64,6 +66,8 @@ function Sidebar({
   toggleChip,
   onClose,
 }: SidebarProps) {
+  const t = useTranslations('explore.sidebar');
+  const facetLabel = useFacetLabel();
   const toggleFor = (key: FacetKey) => (label: string) =>
     setFilters((prev) => {
       const next = { ...prev, [key]: new Set(prev[key]) };
@@ -137,11 +141,15 @@ function Sidebar({
     };
   }, [tracks, facetCounts]);
 
+  // Every row keeps its English label as its value and gets a display label.
+  const withDisplay = (group: FacetGroup, items: FacetItem[]): FacetItem[] =>
+    items.map((it) => ({ ...it, display: facetLabel(group, it.label) }));
+
   return (
     <aside className="explore-sidebar">
       {onClose && (
         <div className="sb-head">
-          <button className="sb-close" onClick={onClose} aria-label="Close filters">
+          <button className="sb-close" onClick={onClose} aria-label={t('close')}>
             <X size={20} weight="regular" />
           </button>
         </div>
@@ -153,15 +161,15 @@ function Sidebar({
         </span>
         <input
           className="sb-search"
-          placeholder="Search transcriptions…"
+          placeholder={t('searchPlaceholder')}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          aria-label="Search transcriptions"
+          aria-label={t('searchAria')}
         />
       </div>
 
       <div className="sb-popular">
-        <div className="sb-popular-label">Popular</div>
+        <div className="sb-popular-label">{t('popular')}</div>
         <div className="sb-chips">
           {popularChips.map((c) => (
             <button
@@ -170,22 +178,27 @@ function Sidebar({
               className={`sb-chip${activeChips.has(c) ? ' sb-chip-active' : ''}`}
               onClick={() => toggleChip(c)}
             >
-              {c}
+              {facetLabel('instrument', c)}
             </button>
           ))}
         </div>
       </div>
 
       <FilterGroup
-        title="Instrument"
-        items={facets.instrument}
+        title={t('instrument')}
+        items={withDisplay('instrument', facets.instrument)}
         value={filters.instrument}
         onToggle={toggleFor('instrument')}
       />
-      <FilterGroup title="Format" items={facets.format} value={filters.format} onToggle={toggleFor('format')} />
       <FilterGroup
-        title="Length"
-        items={facets.length}
+        title={t('format')}
+        items={withDisplay('format', facets.format)}
+        value={filters.format}
+        onToggle={toggleFor('format')}
+      />
+      <FilterGroup
+        title={t('length')}
+        items={withDisplay('length', facets.length)}
         value={filters.length}
         onToggle={toggleFor('length')}
         defaultOpen={false}

@@ -197,7 +197,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
         if (response.status === 404) {
           consecutive404s++;
           if (consecutive404s >= max404s) {
-            setError('Job not found after repeated attempts. Please re-upload.');
+            setError(t('tools.uploader.errors.jobNotFound'));
             stopped = true;
             clearActiveJob(SURFACE);
             return;
@@ -216,7 +216,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
 
           if (isCompletedStatus(newStatus)) {
             stopProgressSimulation();
-            sendNotification('GrooveSheet', { body: 'Your stem separation is ready!' });
+            sendNotification('GrooveSheet', { body: t('tools.uploader.notify.stemsReady') });
             stopped = true;
             clearActiveJob(SURFACE);
             setResultFiles(data.outputs?.files || null);
@@ -227,13 +227,13 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
               setStatus('completed');
               setProgress(100);
             } catch (err) {
-              setError(`Download failed: ${errorInfo(err).message}`);
+              setError(t('tools.uploader.errors.downloadFailed', { message: errorInfo(err).message }));
             }
             return;
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
             if (id.startsWith('PRV')) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
-            setError(data.message || 'Processing failed.');
+            setError(data.message || t('tools.uploader.errors.processingFailed'));
             stopped = true;
             clearActiveJob(SURFACE);
             return;
@@ -242,7 +242,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           const previous = statusRef.current;
           if (newStatus === 'worker_processing' && (previous === 'started' || previous === 'pending')) {
             simulateProgress();
-            sendNotification('GrooveSheet', { body: "It's your turn \u2014 separating your audio now." });
+            sendNotification('GrooveSheet', { body: t('tools.uploader.notify.stemsTurn') });
           }
           if (newStatus === 'started') {
             stopProgressSimulation();
@@ -254,7 +254,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
       } catch (err) {
         const info = errorInfo(err);
         if (info.name !== 'TypeError') {
-          setError(`Status error: ${info.message}`);
+          setError(t('tools.uploader.errors.statusError', { message: info.message }));
         } else {
           // Network/API blip. The job is server-side and survives this: keep
           // polling, but say so instead of sitting on a stale screen forever.
@@ -286,7 +286,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
 
   const handleUpload = async (fileToUpload: File) => {
     if (!isLoaded) {
-      setError('Loading user data...');
+      setError(t('tools.uploader.errors.loadingUser'));
       return;
     }
 
@@ -327,7 +327,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           setDownloadUrl(objectUrl);
           setDownloadFilename(filename);
         } catch (dlErr) {
-          setError(`Download failed: ${errorInfo(dlErr).message}`);
+          setError(t('tools.uploader.errors.downloadFailed', { message: errorInfo(dlErr).message }));
         }
         return;
       }
@@ -348,11 +348,11 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
     } catch (err) {
       const info = errorInfo(err);
       if (info.status === 429) {
-        setError(info.message || `Rate limit exceeded. Try again in ${info.retryAfterSeconds || 60}s.`);
+        setError(info.message || t('tools.uploader.errors.rateLimited', { seconds: info.retryAfterSeconds || 60 }));
       } else if (info.message && (info.message.includes('fetch') || info.name === 'TypeError')) {
-        setError('Unable to connect to server. Please check the console for details.');
+        setError(t('tools.uploader.errors.cantConnect'));
       } else {
-        setError(info.message || 'Failed to upload file. Please try again.');
+        setError(info.message || t('tools.uploader.errors.uploadFailed'));
       }
       setStatus(null);
       stopProgressSimulation();
@@ -366,7 +366,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
       return;
     }
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-      setError(`File size too large. Max ${MAX_UPLOAD_MB}MB.`);
+      setError(t('tools.uploader.errors.fileTooLarge', { size: MAX_UPLOAD_MB }));
       return;
     }
     setFile(selectedFile.name);
@@ -434,7 +434,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
         showPaywall(info.message || null, previewId);
         return;
       }
-      setError(info.message || 'Failed to start full song processing.');
+      setError(info.message || t('tools.uploader.errors.fullSongFailed'));
     }
   };
 
@@ -473,7 +473,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
               onClick={() => setSelectedInstrument(instrument.value)}
             >
               <IconComp size={22.74} />
-              <span>{instrument.label}</span>
+              <span>{t(`hero.instruments.${instrument.value === 'vocals' ? 'vocal' : instrument.value}`)}</span>
             </button>
           );
         })}
@@ -493,16 +493,16 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
             <div className="file-formats-visual">
               <img
                 src={isDarkMode ? '/images/hero_upload_img_dark.png' : '/images/hero_upload_img_light.png'}
-                alt="Supported audio formats"
+                alt={t('tools.uploader.formatsAlt')}
               />
             </div>
             <div className="upload-text-group">
-              <p className="upload-main-text">{isTouch ? 'Tap to upload an audio file' : 'Drag and drop an audio file'}</p>
-              <p className="upload-sub-text">{`MP3, WAV, FLAC, M4A up to ${MAX_UPLOAD_MB}MB`}</p>
+              <p className="upload-main-text">{isTouch ? t('hero.tapToUpload') : t('hero.dragDrop')}</p>
+              <p className="upload-sub-text">{t('hero.fileTypes', { size: MAX_UPLOAD_MB })}</p>
             </div>
           </div>
           <button className="browse-files-btn" onClick={handleBrowseClick}>
-            {isTouch ? 'Choose File' : 'Browse Files'}
+            {isTouch ? t('hero.chooseFile') : t('hero.browseFiles')}
           </button>
         </div>
       </div>
@@ -516,7 +516,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           <TrayArrowUpIcon clipId="clip0_tray_ss" />
         </div>
         <div className="upload-text">
-          <h3>Uploading...</h3>
+          <h3>{t('hero.uploading')}</h3>
         </div>
       </div>
       <div className="upload-controls compact">
@@ -527,7 +527,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           <div className="progress-bar-remaining compact" />
         </div>
         <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+          {t('hero.cancel')}
         </button>
       </div>
     </>
@@ -542,18 +542,15 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
         </div>
         <div className="upload-text">
           <h3 className="cold-start-message">{t('hero.inQueue')}</h3>
-          <p className="cold-start-sub">
-            GrooveSheet is busy right now and your song is waiting its turn. You can safely close this page
-            {' \u2014 '}it keeps going, and you can check back any time on your Transcription History.
-          </p>
+          <p className="cold-start-sub">{t('hero.inQueueBody')}</p>
         </div>
       </div>
       <div className="upload-controls compact">
         <button className="browse-files-btn" onClick={() => router.push('/account/history')}>
-          View Transcription History
+          {t('hero.viewHistory')}
         </button>
         <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+          {t('hero.cancel')}
         </button>
       </div>
     </>
@@ -569,7 +566,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
             <ServerIcon />
           </div>
           <div className="upload-text">
-            <h3 className="cold-start-message">You&apos;re in the queue</h3>
+            <h3 className="cold-start-message">{t('hero.inQueue')}</h3>
             <p className="cold-start-sub">
               {summary ? `${summary}. ` : ''}
               {t('hero.inQueueBody')}
@@ -578,10 +575,10 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
         </div>
         <div className="upload-controls compact">
           <button className="browse-files-btn" onClick={() => router.push('/account/history')}>
-            View Transcription History
+            {t('hero.viewHistory')}
           </button>
           <button className="cancel-btn compact" onClick={resetUpload}>
-            Cancel
+            {t('hero.cancel')}
           </button>
         </div>
       </>
@@ -595,7 +592,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           <MagicWandIcon />
         </div>
         <div className="upload-text">
-          <h3>Separating...</h3>
+          <h3>{t('tools.uploader.separating')}</h3>
         </div>
       </div>
       <div className="upload-controls compact">
@@ -606,7 +603,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           <div className="progress-bar-remaining compact" />
         </div>
         <button className="cancel-btn compact" onClick={resetUpload}>
-          Cancel
+          {t('hero.cancel')}
         </button>
       </div>
     </>
@@ -634,8 +631,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
           {uiState === 'uploading' && renderUploadingState()}
           {pollFailures >= 3 && uiState !== 'idle' && uiState !== 'success' && (
             <p className="cold-start-sub" style={{ margin: '0 0 10px', opacity: 0.85 }}>
-              Reconnecting to the server{'…'} your job is still running and will appear in your Transcription
-              History.
+              {t('hero.reconnecting')}
             </p>
           )}
           {uiState === 'queued' && renderQueuedState()}

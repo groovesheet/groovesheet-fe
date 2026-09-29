@@ -1,6 +1,7 @@
 'use client';
 
 import { MagnifyingGlass } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import StatusMessage from '@/components/ui/StatusMessage';
 import './ExploreStates.css';
 
@@ -50,22 +51,21 @@ export function SkeletonGrid({ cards = 8 }: { cards?: number }) {
 
 /** Shown when a search returns no tracks. */
 export function ExploreEmpty({ query, onClear }: { query?: string; onClear?: () => void }) {
+  const t = useTranslations('explore.states');
   return (
     <div className="explore-state">
       <span className="explore-state-icon">
         <MagnifyingGlass size={28} weight="regular" />
       </span>
       <h2 className="explore-state-title">
-        {query ? <>No results for &ldquo;{query}&rdquo;</> : 'The library is empty'}
+        {query ? t('noResults', { query }) : t('empty')}
       </h2>
       <p className="explore-state-sub">
-        {query
-          ? 'Try a different title, artist, or instrument.'
-          : 'New tracks are published regularly. Check back soon.'}
+        {query ? t('tryDifferent') : t('checkBack')}
       </p>
       {query && onClear && (
         <button type="button" className="explore-state-btn" onClick={onClear}>
-          Clear search
+          {t('clear')}
         </button>
       )}
     </div>
@@ -74,14 +74,15 @@ export function ExploreEmpty({ query, onClear }: { query?: string; onClear?: () 
 
 /** Shown when the library request fails. */
 export function ExploreError({ message, onRetry }: { message?: string | null; onRetry?: () => void }) {
+  const t = useTranslations('explore.states');
   return (
     <div className="explore-state">
-      <StatusMessage variant="error" title="Couldn’t load the library">
-        {message || 'Something went wrong. Please try again.'}
+      <StatusMessage variant="error" title={t('errorTitle')}>
+        {message || t('errorBody')}
       </StatusMessage>
       {onRetry && (
         <button type="button" className="explore-state-btn" onClick={onRetry}>
-          Try again
+          {t('retry')}
         </button>
       )}
     </div>

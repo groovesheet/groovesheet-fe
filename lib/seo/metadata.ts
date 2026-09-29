@@ -138,15 +138,17 @@ export function pageMetadata({
  * for an unknown path, so a typo cannot silently ship the default title.
  */
 export function staticRouteMetadata(path: string, locale: string, extra: Partial<PageMetadataInput> = {}): Metadata {
-  const meta = metaForPath(path);
+  const meta = metaForPath(path, locale);
   if (!meta) throw new Error(`staticRouteMetadata: no entry for ${path} in lib/seo/routeMeta.ts`);
   // The home page's own title is the site title; the template would double the brand.
   const absoluteTitle = path === '/';
+  // In English that is DEFAULT_TITLE; a translated home page brings its own.
+  const homeTitle = locale === DEFAULT_LOCALE ? DEFAULT_TITLE : `${meta.title} | ${SITE_NAME}`;
   // The home page keeps the designed preview; every other static route gets a
   // card with its own title, so tool and pricing links stop unfurling alike.
   const og = absoluteTitle ? null : generatedOgImage(meta.title, meta.description);
   const metadata = pageMetadata({
-    title: absoluteTitle ? DEFAULT_TITLE : meta.title,
+    title: absoluteTitle ? homeTitle : meta.title,
     description: meta.description,
     path,
     locale,
