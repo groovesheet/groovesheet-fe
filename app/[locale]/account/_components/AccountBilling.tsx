@@ -21,6 +21,7 @@ import { startProviderCheckout } from '@/lib/airwallex';
 import config from '@/lib/config';
 import { MAX_UPLOAD_MB } from '@/lib/constants';
 import { getClickIds } from '@/lib/attribution';
+import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import { useLocalizedNavigate } from '@/lib/navigation-client';
 import { BillingButtonStyles, errorMessage, isAuthError } from './accountShared';
 
@@ -251,10 +252,12 @@ export default function AccountBilling() {
 
   const startCheckout = async (planCode: string, label: string) => {
     notify(`Opening checkout: ${label}`);
+    trackFunnel(FUNNEL.BEGIN_CHECKOUT, { plan: planCode, source: 'account' });
     try {
       const data = await createCheckoutSession(config.apiBaseUrl, planCode, getToken, signOut, currency, getClickIds());
       await startProviderCheckout(data);
     } catch (err) {
+      trackFunnel(FUNNEL.CHECKOUT_ERROR, { plan: planCode, source: 'account', message: errorMessage(err) || 'checkout failed' });
       if (!handleAuthError(err)) notify("Couldn't start checkout. Please try again.");
     }
   };

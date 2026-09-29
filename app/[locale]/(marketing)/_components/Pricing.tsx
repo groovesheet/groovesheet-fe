@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useUser, useAuth } from '@/lib/auth';
 import { createCheckoutSession } from '@/lib/api';
@@ -9,6 +9,7 @@ import { startProviderCheckout } from '@/lib/airwallex';
 import { PRICING_SECTION_ID, PRICING_TAB_EVENT } from '@/lib/scrollToPricing';
 import { MAX_UPLOAD_MB } from '@/lib/constants';
 import { getClickIds } from '@/lib/attribution';
+import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import type { BillingPlan, BillingTopup } from '@/lib/types';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import StatusMessage from '@/components/ui/StatusMessage';
@@ -145,6 +146,12 @@ export default function Pricing({ onLoginClick }: PricingProps) {
   const handlePlanClick = async (plan: PlanSlug) => {
     setError(null);
 
+    // Recorded before the sign-in wall, so intent to buy is measured even from
+    // visitors who then abandon the login.
+    if (plan !== 'free') {
+      trackFunnel(FUNNEL.BEGIN_CHECKOUT, { plan: resolvePlanKey(plan), source: 'pricing', signed_in: Boolean(isSignedIn) });
+    }
+
     if (!isSignedIn) {
       (onLoginClick ?? openLoginModal)();
       return;
@@ -164,11 +171,32 @@ export default function Pricing({ onLoginClick }: PricingProps) {
       await startProviderCheckout(data);
     } catch (err) {
       console.error('Error creating checkout session:', err);
-      setError(errorMessage(err, 'Unexpected error starting checkout'));
+      const message = errorMessage(err, 'Unexpected error starting checkout');
+      trackFunnel(FUNNEL.CHECKOUT_ERROR, { plan: resolvePlanKey(plan), source: 'pricing', message });
+      setError(message);
     } finally {
       setLoading(null);
     }
   };
+
+  // Seeing the prices is a funnel step of its own: once per page, when at
+  // least a third of the section is on screen.
+  const sectionRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          trackFunnel(FUNNEL.PRICING_VIEW, { path: window.location.pathname });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.33 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // --- Derived display values (API-driven, with graceful static fallbacks) ---
   // The free plan grants no processing minutes, so its card is static copy:
@@ -210,7 +238,7 @@ export default function Pricing({ onLoginClick }: PricingProps) {
     t('pricing.minutesAdded', { minutes, defaultValue: `${minutes} minutes added` });
 
   return (
-    <section id={PRICING_SECTION_ID} className="pricing" aria-busy={catalogLoading}>
+    <section ref={sectionRef} id={PRICING_SECTION_ID} className="pricing" aria-busy={catalogLoading}>
       <div className="pricing-container">
         <div className="pricing-header-section">
           <div className="pricing-header">

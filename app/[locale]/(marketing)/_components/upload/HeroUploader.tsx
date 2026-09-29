@@ -10,9 +10,9 @@ import { useRouter } from '@/lib/navigation';
 import { useUser, useAuth } from '@/lib/auth';
 import { queueSummary } from '@/lib/queue';
 import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
-import { trackWorkflowStarted } from '@/lib/analytics';
+import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
-import { scrollToPricing } from '@/lib/scrollToPricing';
+import { usePaywall } from '@/components/billing/OutOfMinutesModal';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
 import { useTheme } from '@/lib/theme';
 import { useIsTouch } from '@/lib/hooks/useMediaQuery';
@@ -31,8 +31,6 @@ import {
   isCompletedStatus,
   isFailedStatus,
   makeFileTypeCheck,
-  readDetail,
-  statusError,
   trackPointer,
   triggerDownload,
   uiStateFor,
@@ -130,8 +128,9 @@ interface HeroUploaderProps {
 
 /**
  * The landing page's upload card: pick an instrument, drop a file, watch it
- * queue and transcribe, then open the result in place. Anonymous visitors get
- * the 10-second preview; signed-in visitors run the full song. Everything
+ * queue and transcribe, then open the result in place. Every upload starts as
+ * the free 10-second preview, signed in or not; the full song is a second,
+ * deliberate step from the result. Everything
  * here depends on the visitor, so it is the page's client island; the heading
  * around it stays server-rendered.
  */
@@ -143,6 +142,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   const { t } = useTranslation();
   const router = useRouter();
   const isTouch = useIsTouch();
+  const { showPaywall, paywall } = usePaywall(UPLOAD_SOURCE);
 
   const [fileName, setFileName] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -362,6 +362,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
             return;
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
+            if (isPreview) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
             setError(data.message || 'Processing failed.');
             stopped = true;
             return;
@@ -403,18 +404,25 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     poll();
   };
 
-  // Handle upload: start the workflow (signed in) or a preview (anonymous/free)
+  // Handle upload. Every upload is the free 10-second preview first, whoever
+  // the visitor is and however many minutes they have: people decide on the
+  // full song after hearing a result, not before (2026-09-29). Signed-in users
+  // used to skip straight to a full run that failed with 402 at zero minutes.
   const handleUpload = async (fileToUpload: File) => {
     if (!isLoaded) {
       setError('Loading user data...');
       return;
     }
 
-    // Determine whether to use preview (anonymous/free) or full workflow
-    const usePreview = !isSignedIn;
-
     setError(null);
     setStatus('uploading');
+    trackFunnel(FUNNEL.UPLOAD_STARTED, {
+      surface: UPLOAD_SOURCE,
+      instrument: selectedInstrument,
+      signed_in: Boolean(isSignedIn),
+      file_mb: Math.round((fileToUpload.size / 1048576) * 10) / 10,
+      file_type: fileToUpload.type || undefined,
+    });
 
     // Start simulated progress for upload
     simulateProgress();
@@ -422,39 +430,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     try {
       const workflowName = workflowNameFor(selectedInstrument);
 
-      let data: StartPayload;
-      if (usePreview) {
-        // Anonymous/free user: use preview API (no auth required)
-        data = await startPreview<StartPayload>(
-          API_BASE_URL,
-          workflowName,
-          fileToUpload,
-          { instrument: selectedInstrument, source: UPLOAD_SOURCE },
-          getToken
-        );
-      } else {
-        // Authenticated user: use full workflow API
-        const formData = new FormData();
-        const safeName = fileToUpload.name.normalize('NFC').replace(/[^\x20-\x7E]/g, '_');
-        const safeFile =
-          safeName !== fileToUpload.name ? new File([fileToUpload], safeName, { type: fileToUpload.type }) : fileToUpload;
-        formData.append('file', safeFile);
-        formData.append('metadata', JSON.stringify({ instrument: selectedInstrument, source: UPLOAD_SOURCE }));
-
-        const response = await authenticatedFetch(
-          `${API_BASE_URL}/workflow/${workflowName}`,
-          { method: 'POST', body: formData },
-          getToken
-        );
-
-        if (!response.ok) {
-          const detail = await readDetail(response);
-          console.error('Upload failed:', response.status, detail);
-          throw statusError(detail || `Upload failed: ${response.statusText}`, response.status);
-        }
-
-        data = (await response.json()) as StartPayload;
-      }
+      const data = await startPreview<StartPayload>(
+        API_BASE_URL,
+        workflowName,
+        fileToUpload,
+        { instrument: selectedInstrument, source: UPLOAD_SOURCE },
+        getToken
+      );
 
       const workflowId = data.workflow_id || data.preview_id || data.job_id;
       if (!workflowId) {
@@ -467,11 +449,11 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       trackWorkflowStarted(workflowName, {
         workflow_id: workflowId,
         instrument: selectedInstrument,
-        is_preview: Boolean(usePreview),
+        is_preview: workflowId.startsWith('PRV'),
       });
 
       // Stash preview ID for post-signup claim if anonymous
-      if (usePreview && workflowId.startsWith('PRV')) {
+      if (!isSignedIn && workflowId.startsWith('PRV')) {
         setPendingPreviewId(workflowId);
       }
 
@@ -495,11 +477,11 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       console.error('Upload error:', err);
       const info = errorInfo(err);
 
-      // Out of minutes: the plans are what they need, not an error banner.
+      // Out of minutes: say so, and offer the fix, instead of an error banner.
       if (info.status === 402) {
         setStatus(null);
         stopProgressSimulation();
-        scrollToPricing({ tab: 'topups' });
+        showPaywall(info.message || null);
         return;
       }
 
@@ -635,10 +617,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   // Promote a signed-in user's preview to a full run (no re-upload).
   const handleUpgradeToFull = async () => {
     if (!jobId || !jobId.startsWith('PRV')) return;
+    const previewId = jobId;
+    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument });
     try {
       const result = await upgradeToFull<{ workflow_id?: string }>(API_BASE_URL, jobId, getToken);
       const workflowId = result?.workflow_id;
       if (workflowId) {
+        trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId });
         // Replace the preview result with the new full workflow's polling.
         prefetchedFilesRef.current = {};
         if (downloadUrl) URL.revokeObjectURL(downloadUrl);
@@ -653,9 +638,9 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       }
     } catch (err) {
       const info = errorInfo(err);
-      // Out of minutes: the plans are what they need, not an error banner.
+      // Out of minutes: say so, and offer the fix, instead of an error banner.
       if (info.status === 402) {
-        scrollToPricing({ tab: 'topups' });
+        showPaywall(info.message || null, previewId);
         return;
       }
       setError(info.message || 'Failed to start full song processing.');
@@ -665,6 +650,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   // preview_id is already stashed in localStorage at upload time; after
   // signup the app-level hook claims it via /preview/{id}/claim.
   const handleSignUpToUnlock = () => {
+    trackFunnel(FUNNEL.UNLOCK_CLICK, { surface: UPLOAD_SOURCE, preview_id: jobId || undefined, instrument: selectedInstrument });
     openLoginModal();
   };
 
@@ -898,8 +884,10 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               onUpgradeToFull={handleUpgradeToFull}
               onSignUpToUnlock={handleSignUpToUnlock}
               title={typeof resultMetadata.title === 'string' ? resultMetadata.title : undefined}
+              surface={UPLOAD_SOURCE}
             />
           )}
+          {paywall}
 
           {/* Error message overlay */}
           {error && (

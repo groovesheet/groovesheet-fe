@@ -11,9 +11,9 @@ import { useUser, useAuth } from '@/lib/auth';
 import { authenticatedFetch, apiPrefixForId } from '@/lib/api';
 import { queueSummary } from '@/lib/queue';
 import { saveActiveJob, loadActiveJob, clearActiveJob } from '@/lib/activeJob';
-import { trackWorkflowStarted } from '@/lib/analytics';
+import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
-import { scrollToPricing } from '@/lib/scrollToPricing';
+import { usePaywall } from '@/components/billing/OutOfMinutesModal';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/constants';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
 import { useTheme } from '@/lib/theme';
@@ -106,6 +106,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
   const { openLoginModal } = useLoginModal();
+  const { showPaywall, paywall } = usePaywall(UPLOAD_SOURCE);
   const router = useRouter();
   const isTouch = useIsTouch();
 
@@ -231,6 +232,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
             return;
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
+            if (id.startsWith('PRV')) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
             setError(data.message || 'Processing failed.');
             stopped = true;
             clearActiveJob(SURFACE);
@@ -290,6 +292,13 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
 
     setError(null);
     setStatus('uploading');
+    trackFunnel(FUNNEL.UPLOAD_STARTED, {
+      surface: UPLOAD_SOURCE,
+      instrument: selectedInstrument,
+      signed_in: Boolean(isSignedIn),
+      file_mb: Math.round((fileToUpload.size / 1048576) * 10) / 10,
+      file_type: fileToUpload.type || undefined,
+    });
     simulateProgress();
 
     try {
@@ -402,10 +411,13 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
   // promote their preview to a full run (no re-upload).
   const handleUpgradeToFull = async () => {
     if (!jobId || !jobId.startsWith('PRV')) return;
+    const previewId = jobId;
+    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument });
     try {
       const result = await upgradeToFull<{ workflow_id?: string }>(API_BASE_URL, jobId, getToken);
       const workflowId = result?.workflow_id;
       if (workflowId) {
+        trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId });
         // Replace the preview view with the new full workflow polling.
         setJobId(workflowId);
         setStatus('processing');
@@ -417,9 +429,9 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
       }
     } catch (err) {
       const info = errorInfo(err);
-      // Out of minutes: the plans are what they need, not an error banner.
+      // Out of minutes: say so, and offer the fix, instead of an error banner.
       if (info.status === 402) {
-        scrollToPricing({ tab: 'topups' });
+        showPaywall(info.message || null, previewId);
         return;
       }
       setError(info.message || 'Failed to start full song processing.');
@@ -429,6 +441,7 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
   // preview_id was already stashed in localStorage at upload time; the
   // post-signup hook will call /preview/{id}/claim.
   const handleSignUpToUnlock = () => {
+    trackFunnel(FUNNEL.UNLOCK_CLICK, { surface: UPLOAD_SOURCE, preview_id: jobId || undefined, instrument: selectedInstrument });
     openLoginModal();
   };
 
@@ -644,8 +657,10 @@ export default function StemSplitterUploader({ intro, mobileDisclaimer }: StemSp
               isSignedIn={isSignedIn}
               onUpgradeToFull={handleUpgradeToFull}
               onSignUpToUnlock={handleSignUpToUnlock}
+              surface={UPLOAD_SOURCE}
             />
           )}
+          {paywall}
           {error && uiState !== 'success' && (
             <div className="error-overlay">
               <StatusMessage variant="error">{error}</StatusMessage>

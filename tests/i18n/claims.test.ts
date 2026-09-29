@@ -274,3 +274,46 @@ describe('the legal entity is named once, and correctly', () => {
     expect(COMPANY.legalName).toMatch(/Limited$/);
   });
 });
+
+describe('the preview is honest about what unlocking costs', () => {
+  // Free minutes went to zero on 2026-08-31, but the preview kept promising
+  // that signing up unlocks the song. People signed up, pressed the button,
+  // and hit a paywall the copy had told them did not exist.
+  const PROMISES = [/sign up to unlock the full song/i, /try it free today/i, /get started free/i];
+  const withoutComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  it('no component promises a free full song', () => {
+    const offenders = allSourceFiles().filter((file) =>
+      PROMISES.some((re) => re.test(withoutComments(fs.readFileSync(file, 'utf8'))))
+    );
+    expect(offenders.map((f) => path.relative(ROOT, f))).toEqual([]);
+  });
+
+  it('no locale promises it either', () => {
+    for (const locale of LOCALES) {
+      const raw = JSON.stringify(loadLocale(locale));
+      for (const re of PROMISES) expect(raw).not.toMatch(re);
+    }
+  });
+});
+
+describe('every upload starts as the free preview', () => {
+  // Signed-in users used to skip the preview and go straight to a full run,
+  // which at zero minutes failed with 402 after the whole file had uploaded.
+  it('the home uploader never posts a full workflow directly', () => {
+    const file = allSourceFiles().find((f) => f.endsWith(path.join('upload', 'HeroUploader.tsx')));
+    expect(file).toBeTruthy();
+    const src = fs.readFileSync(file as string, 'utf8');
+    expect(src).toMatch(/startPreview</);
+    expect(src).not.toMatch(/\/workflow\/\$\{workflowName\}/);
+  });
+
+  it('no upload card answers 402 with a silent scroll', () => {
+    const cards = allSourceFiles().filter((f) => /Uploader\.tsx$/.test(f));
+    expect(cards.length).toBeGreaterThanOrEqual(3);
+    for (const card of cards) {
+      const src = fs.readFileSync(card, 'utf8');
+      if (/status === 402/.test(src)) expect(src).toMatch(/showPaywall\(/);
+    }
+  });
+});
