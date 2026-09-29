@@ -2,8 +2,8 @@ import { ShieldCheck, FileArrowDown, MusicNotes } from '@phosphor-icons/react/di
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { getBillingPlans } from '@/lib/api-server';
-import { faqJsonLd } from '@/lib/seo/jsonld';
-import { SITE_NAME, SITE_URL, staticRouteMetadata } from '@/lib/seo/metadata';
+import { faqJsonLd, pricingJsonLd } from '@/lib/seo/jsonld';
+import { staticRouteMetadata } from '@/lib/seo/metadata';
 import type { BillingCatalog } from '@/lib/types';
 import JsonLd from '@/app/[locale]/explore/_components/JsonLd';
 import Pricing from '../_components/Pricing';
@@ -64,40 +64,6 @@ const BILLING_FAQ: FaqItem[] = [
       'Manage, upgrade, downgrade or cancel anytime from the Stripe billing portal in your account settings. Changes take effect on your next billing date.',
   },
 ];
-
-/**
- * Product + Offer markup from the server-side USD catalog. Visible prices come
- * from the browser (they follow the visitor's currency); the markup declares
- * the list prices in USD, which is what a rich result may show. A catalog
- * failure simply omits the offers: the page must not depend on the API.
- */
-function pricingJsonLd(catalog: BillingCatalog | null): Record<string, unknown> {
-  const offers = (catalog?.plans || [])
-    .map((plan) => {
-      const price = plan.price_monthly_usd ?? plan.price_monthly;
-      if (typeof price !== 'number') return null;
-      return {
-        '@type': 'Offer',
-        name: plan.display_name || plan.id,
-        price: price.toFixed(2),
-        priceCurrency: 'USD',
-        url: `${SITE_URL}/pricing`,
-        availability: 'https://schema.org/InStock',
-        ...(plan.minutes_per_month ? { description: `${plan.minutes_per_month} minutes of audio per month` } : {}),
-      };
-    })
-    .filter(Boolean);
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: `${SITE_NAME} minutes`,
-    description:
-      'Minute-based credit for AI music transcription, stem separation and audio-to-MIDI. Preview free, pay only for the audio you process.',
-    brand: { '@type': 'Brand', name: SITE_NAME },
-    url: `${SITE_URL}/pricing`,
-    ...(offers.length ? { offers } : {}),
-  };
-}
 
 export default async function PricingPage(props: LocaleParams) {
   const locale = await routeLocale(props);
