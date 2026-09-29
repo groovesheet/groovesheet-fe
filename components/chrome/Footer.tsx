@@ -28,6 +28,7 @@ import { useTranslation } from '@/lib/i18n';
 import { LocalizedLink } from '@/lib/navigation';
 import { LanguageSelector } from './LanguageSelector';
 import TrustBox from './TrustBox';
+import PreferredSourceButton from './PreferredSourceButton';
 import './Footer.css';
 
 interface SocialIcon {
@@ -92,6 +93,7 @@ function Footer() {
                 })}
               </div>
             </div>
+            <PreferredSourceButton dark={isDarkMode} />
           </div>
 
           <div className="footer-links">
