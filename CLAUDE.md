@@ -8,6 +8,46 @@
 - Icons: `@phosphor-icons/react`, `lucide-react`, `react-icons`
 - Deploy: Vercel (rewrites `/api/*` to Cloud Run)
 
+## Deploy batching: read before any push, PR merge or deploy
+
+Standing instruction from Edward, 2026-09-30. It overrides any older "ship
+without asking" or "merge when done" instruction in this repo or in memory.
+
+Every push to `main` is a paid Vercel production build, and pushing every small
+change was most of the Vercel bill. Changes accumulate locally and ship in
+batches, at most twice a day.
+
+- **Default: commit, do not push.** Verify the work locally (typecheck, build,
+  browser check where it shows), commit it on a local branch named
+  `queue/<topic>`, and stop there. Do not push, open or merge a PR, or run
+  `vercel`. Report it as "committed on `queue/<topic>`, queued for the next
+  batch".
+- **At most 2 production deploys per day** (Singapore time) for this repo. A
+  batch ships the whole queue as one deploy:
+  1. `git fetch origin && git switch -c batch/YYYY-MM-DD origin/main`
+  2. merge every queued branch:
+     `git branch --list 'queue/*' --no-merged origin/main`
+  3. build once, push, open one PR, merge it once
+  4. check the Vercel deploy, smoke-test production, delete the merged
+     `queue/*` branches
+- **When a batch runs:** when Edward asks ("ship it", "push today's changes",
+  "deploy now"), and the evening batch: from 18:00 SGT, a session that finishes
+  work here ships the queue if a slot is left today. Do not spend a slot on one
+  small change earlier in the day unless Edward asked for it.
+- **Bypass only on Edward's explicit word** ("bypass the gate", "push this to
+  prod now", "hotfix it"). Do not self-authorize for a bug that looks urgent:
+  say so in one line and let him say "bypass".
+- **Enforcement.** Claude Code on Edward's Mac runs a hook that blocks
+  `git push`, `gh pr merge` and `vercel` deploys here unless the command starts
+  with `KELIN_DEPLOY=batch` (counts toward the 2) or `KELIN_DEPLOY=bypass`.
+  Agents without the hook follow the same rule by hand.
+- **Previews:** Vercel builds only `main` and `preview/*` branches of this
+  repo, and skips commits that change only `*.md`. Push to `preview/<topic>`
+  only when Edward asks for a preview URL.
+- **`feat/content-pipeline` is a production branch too.** It deploys
+  `content-app/` to production (Vercel project `groovesheet-content`, the
+  /blog). A push to it counts toward the 2 a day, same as `main`.
+
 ## Key Entry Points
 - `src/App.js` — App shell and all routes (`/`, `/account/history`, `/account/billing`, `/blog`, `/about`, `/sso-callback`)
 - `src/auth.js` — Supabase client + auth hooks (`useAuth`, `useUser`, `useAuthActions`, `useSignIn`, `SignedIn`/`SignedOut`); requires `REACT_APP_SUPABASE_URL` + `REACT_APP_SUPABASE_ANON_KEY`
