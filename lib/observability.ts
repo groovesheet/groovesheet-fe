@@ -1,5 +1,5 @@
 /**
- * PostHog + Microsoft Clarity bootstrap.
+ * PostHog + Microsoft Clarity + Cloudflare Web Analytics bootstrap.
  *
  * This sits *underneath* lib/analytics.ts: that module owns the event taxonomy
  * and the GTM/GA4 sink, and calls into here so the same events also reach
@@ -10,6 +10,12 @@
  *   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN  PostHog project token. Unset => no PostHog.
  *   NEXT_PUBLIC_POSTHOG_HOST           PostHog ingestion host. Unset => no PostHog.
  *   NEXT_PUBLIC_CLARITY_ID             Clarity project id. Unset => no Clarity.
+ *
+ * Cloudflare Web Analytics has no key to configure: its site token is public
+ * and lives below. The DNS record is DNS-only (not proxied), so Cloudflare
+ * cannot inject the beacon itself; it has to ship in the page. It is
+ * cookieless, so it needs no consent gate, but it only runs on the production
+ * hosts so preview deploys and localhost do not report.
  *
  * Why both: PostHog gives funnels + retention + session replay keyed to a
  * user id; Clarity gives unlimited free replay and heatmaps with no event
@@ -22,8 +28,11 @@ const posthogReady = Boolean(
   process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
 );
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
+const CF_BEACON_TOKEN = '1f9cecc5a44d42f2b7d6e4ee1cec1249';
+const PRODUCTION_HOSTS = ['www.groovesheet.net', 'groovesheet.net'];
 
 let clarityReady = false;
+let cfBeaconReady = false;
 
 /**
  * `instrumentation-client.ts` initializes this module once before the app
@@ -53,12 +62,36 @@ function initClarity(): void {
   }
 }
 
+function initCloudflareBeacon(): void {
+  if (cfBeaconReady || typeof window === 'undefined') return;
+  if (!PRODUCTION_HOSTS.includes(window.location.hostname)) return;
+  try {
+    // The beacon tracks client-side route changes itself; it must load once.
+    if (!document.querySelector('script[data-cf-beacon]')) {
+      const tag = document.createElement('script');
+      tag.defer = true;
+      tag.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      tag.setAttribute('data-cf-beacon', JSON.stringify({ token: CF_BEACON_TOKEN }));
+      document.head.appendChild(tag);
+    }
+    cfBeaconReady = true;
+  } catch {
+    cfBeaconReady = false;
+  }
+}
+
 /**
- * Boot Clarity. PostHog initializes separately in instrumentation-client.ts.
+ * Boot Clarity and the Cloudflare beacon. PostHog initializes separately in
+ * instrumentation-client.ts.
  */
 export function initObservability(): void {
   try {
     initClarity();
+  } catch {
+    /* never break app startup */
+  }
+  try {
+    initCloudflareBeacon();
   } catch {
     /* never break app startup */
   }
