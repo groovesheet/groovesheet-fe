@@ -26,7 +26,8 @@ export default function AppBoot() {
   useEffect(() => {
     captureAttribution(window.location.search, document.referrer);
     captureClickId(window.location.search);
-    // No-ops entirely until the PostHog / Clarity keys are configured.
+    // Clarity no-ops until its key is configured; the Cloudflare beacon runs on
+    // the production hosts only.
     initObservability();
   }, []);
 
