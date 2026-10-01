@@ -790,7 +790,7 @@ export default function TranscriptionResultView({
   }, [onUpgradeToFull, upgrading, markCta]);
 
   return (
-    <div ref={containerRef} className={`gs-song-page tr-result${isPage ? ' tr-result-page' : ''}`}>
+    <div ref={containerRef} className={`gs-song-page tr-result${isPage ? ' tr-result-page' : ''}${isPreview ? ' tr-result--preview' : ''}`}>
       {/* Header: status + downloads + preview CTA */}
       <div className="tr-header">
         <div className="tr-header-info">
@@ -857,7 +857,14 @@ export default function TranscriptionResultView({
           {stemKey && onDownloadStem && (
             <button className="tr-btn" onClick={onDownloadStem}>
               <DownloadSimple size={18} weight="bold" />
-              <span>{isPreview ? 'Download preview' : 'Stem'}</span>
+              {isPreview ? (
+                <>
+                  <span className="tr-btn-long">Download preview</span>
+                  <span className="tr-btn-short">Audio</span>
+                </>
+              ) : (
+                <span>Stem</span>
+              )}
             </button>
           )}
           {headerExtra}

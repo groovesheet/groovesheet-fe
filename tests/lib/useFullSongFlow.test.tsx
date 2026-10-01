@@ -1,4 +1,4 @@
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { saveFullSongIntent, loadFullSongIntent } from '@/lib/fullSongIntent';
 import { useFullSongFlow, type UpgradeOutcome } from '@/lib/hooks/useFullSongFlow';
@@ -28,10 +28,11 @@ type Upgrade = (trigger: string) => Promise<UpgradeOutcome>;
 
 let root: Root;
 let container: HTMLDivElement;
-let flow: ReturnType<typeof useFullSongFlow>;
+type Flow = ReturnType<typeof useFullSongFlow>;
+const handle: { flow: Flow | null } = { flow: null };
 
 function Harness({ upgrade, ready = true, jobId = 'PRVabc' }: { upgrade: Upgrade; ready?: boolean; jobId?: string }) {
-  flow = useFullSongFlow({
+  const flow = useFullSongFlow({
     surface: 'transcribe',
     jobId,
     ready,
@@ -39,6 +40,9 @@ function Harness({ upgrade, ready = true, jobId = 'PRVabc' }: { upgrade: Upgrade
     fileName: 'song.mp3',
     persistPreview: () => {},
     upgrade,
+  });
+  useEffect(() => {
+    handle.flow = flow;
   });
   return null;
 }
@@ -125,7 +129,7 @@ describe('useFullSongFlow', () => {
   it('signed out: shows prices first instead of a bare sign-up', async () => {
     auth.isSignedIn = false;
     await render(<Harness upgrade={vi.fn<Upgrade>()} />);
-    act(() => flow.getFullSongSignedOut());
+    act(() => handle.flow!.getFullSongSignedOut());
     expect(showPaywall).toHaveBeenCalledWith(null, 'PRVabc', 'signed_out');
     expect(openLoginModal).not.toHaveBeenCalled();
   });
@@ -134,7 +138,7 @@ describe('useFullSongFlow', () => {
     const upgrade = vi.fn<Upgrade>().mockResolvedValue({ kind: 'out_of_minutes', message: null });
     await render(<Harness upgrade={upgrade} />);
     await act(async () => {
-      await flow.requestFullSong();
+      await handle.flow!.requestFullSong();
     });
     expect(upgrade).toHaveBeenCalledWith('click');
     expect(showPaywall).toHaveBeenCalledWith(null, 'PRVabc');
