@@ -10,6 +10,7 @@ import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import useBillingCatalog, { formatMoney } from '@/lib/useBillingCatalog';
 import { scrollToPricing } from '@/lib/scrollToPricing';
 import { Button } from '@/components/ui/Button';
+import type { GetToken } from '@/lib/types';
 
 /**
  * What the upload cards show when the server answers 402 (out of minutes).
@@ -21,9 +22,32 @@ import { Button } from '@/components/ui/Button';
  * the song one click away.
  */
 
+/**
+ * 'out_of_minutes': a signed-in account asked for the full song (402).
+ * 'signed_out': "Get the full song" pressed before signing in. Free accounts
+ * have no minutes, so signing up never finishes the song on its own; the price
+ * is shown first, and the pack picked here goes straight to Checkout once the
+ * visitor has signed in (lib/fullSongIntent).
+ */
+export type PaywallMode = 'out_of_minutes' | 'signed_out';
+
 interface PaywallState {
   message: string | null;
   previewId?: string | null;
+  mode: PaywallMode;
+}
+
+export interface PaywallOptions {
+  /** Signed-out mode: remember the pack (or null for "just sign in") and open sign-in. */
+  onSignInToBuy?: (plan: string | null) => void;
+  /** Called just before leaving for Checkout, so the preview can be found again on return. */
+  onBeforeCheckout?: (plan: string) => void;
+}
+
+/** Create a Checkout session for a pack or plan and leave for the provider's page. */
+export async function openCheckout(plan: string, getToken: GetToken, currency: string | null = null): Promise<void> {
+  const data = await createCheckoutSession('/api', plan, getToken, null, currency, getClickIds());
+  await startProviderCheckout(data);
 }
 
 const panel: CSSProperties = {
@@ -51,10 +75,12 @@ const row: CSSProperties = {
 function OutOfMinutesModal({
   state,
   surface,
+  options,
   onClose,
 }: {
   state: PaywallState;
   surface: string;
+  options: PaywallOptions;
   onClose: (reason: string) => void;
 }) {
   const { getToken } = useAuth();
@@ -62,13 +88,21 @@ function OutOfMinutesModal({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const signedOut = state.mode === 'signed_out';
+
   const buy = async (checkoutKey: string) => {
     setError(null);
+    if (signedOut) {
+      trackFunnel(FUNNEL.PAYWALL_SIGN_IN, { plan: checkoutKey, surface, preview_id: state.previewId || undefined });
+      onClose('sign_in_to_buy');
+      options.onSignInToBuy?.(checkoutKey);
+      return;
+    }
     setBusy(checkoutKey);
     trackFunnel(FUNNEL.BEGIN_CHECKOUT, { plan: checkoutKey, source: 'paywall', surface, preview_id: state.previewId || undefined });
     try {
-      const data = await createCheckoutSession('/api', checkoutKey, getToken, null, currency, getClickIds());
-      await startProviderCheckout(data);
+      options.onBeforeCheckout?.(checkoutKey);
+      await openCheckout(checkoutKey, getToken, currency);
     } catch (err) {
       const message = (err instanceof Error && err.message) || 'Could not start checkout. Please try again.';
       trackFunnel(FUNNEL.CHECKOUT_ERROR, { plan: checkoutKey, source: 'paywall', message });
@@ -85,12 +119,27 @@ function OutOfMinutesModal({
       onClick={() => onClose('backdrop')}
       style={{ position: 'fixed', inset: 0, zIndex: 2147483646, background: 'rgba(0,0,0,.6)', display: 'grid', placeItems: 'center', padding: 20 }}
     >
-      <div role="dialog" aria-modal="true" aria-label="Out of minutes" onClick={(e) => e.stopPropagation()} style={panel}>
-        <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>You&apos;re out of minutes</div>
-        <p style={muted}>
-          {state.message || 'Transcribing the full song uses minutes from a plan or a minute pack.'} Your preview stays
-          here while you top up.
-        </p>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={signedOut ? 'Get the full song' : 'Out of minutes'}
+        onClick={(e) => e.stopPropagation()}
+        style={panel}
+      >
+        <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>
+          {signedOut ? 'Get the full song' : <>You&apos;re out of minutes</>}
+        </div>
+        {signedOut ? (
+          <p style={muted}>
+            The 10-second preview is free. The full song uses minutes from a minute pack or a monthly plan. Pick one and
+            sign in to pay; you come straight back to this song.
+          </p>
+        ) : (
+          <p style={muted}>
+            {state.message || 'Transcribing the full song uses minutes from a plan or a minute pack.'} Your preview stays
+            here while you top up.
+          </p>
+        )}
         {error && <p style={{ margin: 0, fontSize: 13, color: '#FF6B7A' }}>{error}</p>}
         {topups.map((topup) => {
           const key = topup.checkout_id as string;
@@ -105,7 +154,7 @@ function OutOfMinutesModal({
                 </span>
               </div>
               <Button size="small" disabled={busy !== null} onClick={() => buy(key)}>
-                {busy === key ? 'Opening…' : 'Buy'}
+                {busy === key ? 'Opening…' : signedOut ? 'Choose' : 'Buy'}
               </Button>
             </div>
           );
@@ -121,6 +170,19 @@ function OutOfMinutesModal({
           >
             See monthly plans
           </Button>
+          {signedOut && (
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => {
+                trackFunnel(FUNNEL.PAYWALL_SIGN_IN, { surface, preview_id: state.previewId || undefined });
+                onClose('sign_in');
+                options.onSignInToBuy?.(null);
+              }}
+            >
+              I have a plan: sign in
+            </Button>
+          )}
           <Button variant="secondary" size="small" onClick={() => onClose('not_now')}>
             Not now
           </Button>
@@ -132,29 +194,37 @@ function OutOfMinutesModal({
 }
 
 /**
- * `showPaywall(message, previewId)` opens the dialog and records it; the
+ * `showPaywall(message, previewId, mode)` opens the dialog and records it; the
  * returned `paywall` element must be rendered by the caller.
  */
-export function usePaywall(surface: string): {
-  showPaywall: (message: string | null, previewId?: string | null) => void;
+export function usePaywall(
+  surface: string,
+  options: PaywallOptions = {}
+): {
+  showPaywall: (message: string | null, previewId?: string | null, mode?: PaywallMode) => void;
   paywall: ReactNode;
 } {
   const [state, setState] = useState<PaywallState | null>(null);
   const stateRef = useRef<PaywallState | null>(null);
 
   const showPaywall = useCallback(
-    (message: string | null, previewId?: string | null) => {
-      const next = { message, previewId };
+    (message: string | null, previewId?: string | null, mode: PaywallMode = 'out_of_minutes') => {
+      const next = { message, previewId, mode };
       stateRef.current = next;
       setState(next);
-      trackFunnel(FUNNEL.PAYWALL_SHOWN, { surface, message: message || undefined, preview_id: previewId || undefined });
+      trackFunnel(FUNNEL.PAYWALL_SHOWN, { surface, mode, message: message || undefined, preview_id: previewId || undefined });
     },
     [surface]
   );
 
   const close = useCallback(
     (reason: string) => {
-      trackFunnel(FUNNEL.PAYWALL_DISMISSED, { surface, reason, preview_id: stateRef.current?.previewId || undefined });
+      trackFunnel(FUNNEL.PAYWALL_DISMISSED, {
+        surface,
+        reason,
+        mode: stateRef.current?.mode,
+        preview_id: stateRef.current?.previewId || undefined,
+      });
       stateRef.current = null;
       setState(null);
     },
@@ -172,7 +242,7 @@ export function usePaywall(surface: string): {
 
   return {
     showPaywall,
-    paywall: state ? <OutOfMinutesModal state={state} surface={surface} onClose={close} /> : null,
+    paywall: state ? <OutOfMinutesModal state={state} surface={surface} options={options} onClose={close} /> : null,
   };
 }
 

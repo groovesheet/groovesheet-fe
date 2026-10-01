@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { trackPurchase } from '@/lib/analytics';
 import { useAuth, useAuthActions } from '@/lib/auth';
 import { fetchCheckoutSession } from '@/lib/api';
 import config from '@/lib/config';
 import { useLocalizedNavigate } from '@/lib/navigation-client';
+import { loadFullSongIntent } from '@/lib/fullSongIntent';
 
 /**
  * Landing page Stripe redirects to after a successful Checkout Session.
@@ -23,6 +24,14 @@ export default function BillingSuccess() {
   const { getToken } = useAuth();
   const { signOut } = useAuthActions();
   const [secondsLeft, setSecondsLeft] = useState(6);
+  // Paid from a preview's "Get the full song": go back to that song, where the
+  // upload card restores the preview and starts the full run by itself.
+  // Otherwise, the history page as before.
+  const [songPath] = useState<string | null>(() => loadFullSongIntent()?.path ?? null);
+  const goNext = useCallback(() => {
+    if (songPath) window.location.assign(songPath);
+    else navigate('/account/history');
+  }, [songPath, navigate]);
 
   // The purchase, reported to GA4 and to Google Ads. The webhook remains the
   // authority for the credit grant; this is what tells the ad platform a sale
@@ -63,12 +72,12 @@ export default function BillingSuccess() {
 
   useEffect(() => {
     if (secondsLeft <= 0) {
-      navigate('/account/history');
+      goNext();
       return;
     }
     const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [secondsLeft, navigate]);
+  }, [secondsLeft, goNext]);
 
   return (
     <section style={{ padding: '80px 24px', textAlign: 'center', maxWidth: 640, margin: '0 auto' }}>
@@ -82,10 +91,10 @@ export default function BillingSuccess() {
         </p>
       )}
       <p style={{ marginBottom: 24 }}>
-        Redirecting you to your history in {secondsLeft}s…
+        {songPath ? 'Taking you back to your song' : 'Redirecting you to your history'} in {secondsLeft}s…
       </p>
       <button
-        onClick={() => navigate('/account/history')}
+        onClick={goNext}
         style={{
           padding: '10px 20px',
           borderRadius: 8,
