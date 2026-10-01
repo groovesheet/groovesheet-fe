@@ -9,7 +9,16 @@
 // Everything that differs per visitor (sign-in state, the download button's
 // behaviour, URL intent such as ?view= and ?instrument=) is resolved in the
 // browser after hydration, so the server HTML is the same for everyone.
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Header from '@/components/chrome/Header';
@@ -254,6 +263,32 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
   );
 }
 
+type Transport = ReturnType<typeof createTransport>;
+type LivePlaybackBarProps = Omit<ComponentProps<typeof PlaybackBar>, 'isPlaying' | 'currentSec' | 'totalSec'> & {
+  transport: Transport;
+};
+
+/**
+ * The playback bar, subscribed to the transport on its own. While playing the
+ * transport notifies every animation frame; when SongDetail held that
+ * subscription the whole page (header, viewers, sidebar, rails, footer)
+ * re-rendered 60 times a second, which on a low-end phone kept the main thread
+ * busy enough that taps on tabs, solo and the instrument picker took 3 to 11
+ * seconds to land (PostHog logged them as dead clicks). Only the bar shows the
+ * running clock, so only the bar re-renders per frame.
+ */
+function LivePlaybackBar({ transport, ...rest }: LivePlaybackBarProps) {
+  const tState = useTransport(transport);
+  return (
+    <PlaybackBar
+      {...rest}
+      isPlaying={tState.isPlaying}
+      currentSec={tState.positionSec}
+      totalSec={tState.durationSec}
+    />
+  );
+}
+
 function CenteredNotice({ title, body }: { title: string; body?: string }) {
   return (
     <div style={{ padding: '120px 24px', textAlign: 'center' }}>
@@ -469,8 +504,10 @@ export default function SongDetail({
   }, [track, view, noteView]);
 
   // --- shared transport ------------------------------------------------------
+  // Nothing at this level subscribes to the transport's per-frame ticks: read
+  // transport.getState() in handlers, and let LivePlaybackBar and the viewers'
+  // own rAF loops draw the moving clock.
   const [transport] = useState(createTransport);
-  const tState = useTransport(transport);
   // Pause (not dispose) so React StrictMode's dev double-invoke of effects
   // doesn't leave the transport permanently disposed.
   useEffect(() => () => transport.pause(), [transport]);
@@ -1136,11 +1173,9 @@ export default function SongDetail({
                 padding: 0,
               }}
             >
-              <PlaybackBar
-                isPlaying={tState.isPlaying}
+              <LivePlaybackBar
+                transport={transport}
                 onPlayPause={handlePlayPause}
-                currentSec={tState.positionSec}
-                totalSec={tState.durationSec}
                 tempo={100}
                 onTempo={() => {}}
                 transpose={0}

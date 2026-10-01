@@ -12,6 +12,7 @@ import { getClickIds } from '@/lib/attribution';
 import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import type { BillingPlan, BillingTopup } from '@/lib/types';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
+import { useRouter } from '@/lib/navigation';
 import StatusMessage from '@/components/ui/StatusMessage';
 import './Pricing.css';
 
@@ -90,6 +91,7 @@ export default function Pricing({ onLoginClick }: PricingProps) {
   const { isSignedIn } = useUser();
   const { getToken } = useAuth();
   const { openLoginModal } = useLoginModal();
+  const router = useRouter();
   const { t } = useTranslation();
   const [loading, setLoading] = useState<PlanSlug | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -157,8 +159,16 @@ export default function Pricing({ onLoginClick }: PricingProps) {
       return;
     }
 
-    // Free tier has no payment; nothing to do here (handled elsewhere on signup).
-    if (plan === 'free') return;
+    // Free tier has no payment, and a signed-in visitor already has it. The
+    // button used to return here and do nothing at all (PostHog logged it as
+    // a dead click), so send them to the uploader: the one on this page when
+    // there is one (home and tool pages), otherwise the home page's.
+    if (plan === 'free') {
+      const uploader = document.querySelector('.hero-container');
+      if (uploader) uploader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else router.push('/');
+      return;
+    }
 
     setLoading(plan);
     try {
