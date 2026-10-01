@@ -105,6 +105,26 @@ function ViewerToolbar({ view, onView, available, midiLabel, midiIcon, showSheet
   );
 }
 
+/**
+ * The playback bar, subscribed to the transport on its own. While playing the
+ * transport notifies every animation frame; when the result view held that
+ * subscription the whole card (score, viewers, header) re-rendered 60 times a
+ * second, and on low-end phones taps landed 4 to 9 seconds late (PostHog dead
+ * clicks on the stem splitter, 2026-10-01). Only the bar shows the clock, so
+ * only the bar re-renders per frame. Same fix as SongDetail's LivePlaybackBar.
+ */
+function LivePlaybackBar({ transport, ...rest }) {
+  const tState = useTransport(transport);
+  return (
+    <PlaybackBar
+      {...rest}
+      isPlaying={tState.isPlaying}
+      currentSec={tState.positionSec}
+      totalSec={tState.durationSec}
+    />
+  );
+}
+
 export default function TranscriptionResultView({
   workflowId,
   fileName,
@@ -198,7 +218,6 @@ export default function TranscriptionResultView({
   const transportRef = useRef(null);
   if (!transportRef.current) transportRef.current = createTransport();
   const transport = transportRef.current;
-  const tState = useTransport(transport);
 
   // --- Preview engagement ----------------------------------------------------
   // Measures the question behind the 2026-09-29 funnel work: do people watch
@@ -262,12 +281,17 @@ export default function TranscriptionResultView({
   }, [trackPreview, workflowId, surface, selectedInstrument]);
 
   // Any play source counts: the bar, the space key, or the score's own button.
+  // Read from the transport directly: subscribing this component to it would
+  // re-render the whole card every animation frame while playing.
   useEffect(() => {
-    const e = engagementRef.current;
-    if (!trackPreview || !e || e.played || !tState.isPlaying) return;
-    e.played = true;
-    trackFunnel(FUNNEL.PREVIEW_PLAYED, e.base);
-  }, [trackPreview, tState.isPlaying]);
+    if (!trackPreview) return undefined;
+    return transport.subscribe((st) => {
+      const e = engagementRef.current;
+      if (!e || e.played || !st.isPlaying) return;
+      e.played = true;
+      trackFunnel(FUNNEL.PREVIEW_PLAYED, e.base);
+    });
+  }, [trackPreview, transport]);
 
   const markCta = useCallback(() => {
     if (engagementRef.current) engagementRef.current.cta = true;
@@ -880,11 +904,9 @@ export default function TranscriptionResultView({
 
       {/* Sticky transport + tab switcher, same stack as /explore/:songId */}
       <div className="tr-sticky">
-        <PlaybackBar
-          isPlaying={tState.isPlaying}
+        <LivePlaybackBar
+          transport={transport}
           onPlayPause={handlePlayPause}
-          currentSec={tState.positionSec}
-          totalSec={tState.durationSec}
           tempo={100}
           onTempo={() => {}}
           transpose={0}
