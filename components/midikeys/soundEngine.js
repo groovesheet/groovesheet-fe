@@ -1,7 +1,7 @@
 import Soundfont from 'soundfont-player';
 import { createDrumSynth } from './drumKit';
 import { createFxChain } from './fxChain';
-import { GM_INSTRUMENTS, sampleUrl } from './instruments';
+import { GM_FAMILIES, sampleUrl } from './instruments';
 
 /**
  * Audio for /midi-keyboard: a sampled piano (soundfont-player, MusyngKite, the
@@ -24,30 +24,52 @@ import { GM_INSTRUMENTS, sampleUrl } from './instruments';
  * shared vibrato LFO wired into each live voice's `detune` as it starts.
  */
 
-// The favourites at the top of the Sound menu; every General MIDI instrument
-// (instruments.js) is selectable below them. `sample` is the soundfont
-// instrument; `filter` runs the keys through a resonant band-pass whose
-// centre the Tone slider moves.
-export const PIANO_SOUNDS = [
-  { id: 'acoustic_grand_piano', label: 'Grand piano' },
-  { id: 'bright_acoustic_piano', label: 'Bright piano' },
-  { id: 'electric_piano_1', label: 'Electric piano' },
-  { id: 'electric_piano_2', label: 'FM electric piano' },
-  { id: 'honkytonk_piano', label: 'Honky-tonk' },
-  { id: 'vibraphone', label: 'Vibraphone' },
+// Sounds of our own, beyond General MIDI. Each one is listed in the Sound menu
+// right after the GM instrument it is built on (`after`), so every sound
+// appears once, under its family. `sample` is the soundfont instrument;
+// `filter` runs the keys through the electric chain, whose band-pass centre
+// the Tone slider moves.
+const CUSTOM_SOUNDS = [
   // Vibraphone bars are aluminium: the struck-metal tone, lightly driven,
   // narrowed to a ringing band and widened with a chorus, so it plays as an
   // electric instrument. On this sound the mod wheel is an auto-wah (see
   // setModulation), not just vibrato.
-  { id: 'aluminium_bandpass', label: 'Aluminium band-pass', sample: 'vibraphone', filter: { q: 2.4, makeup: 2.2, drive: 2.5 } },
+  {
+    id: 'aluminium_bandpass',
+    label: 'Aluminium band-pass',
+    after: 'vibraphone',
+    sample: 'vibraphone',
+    filter: { q: 2.4, makeup: 2.2, drive: 2.5 },
+  },
 ];
 
-const findSound = (id) => PIANO_SOUNDS.find((p) => p.id === id)
-  || GM_INSTRUMENTS.find((g) => g.id === id)
-  || null;
+/** The Sound menu: the GM families, with the custom sounds slotted in. */
+export const SOUND_FAMILIES = GM_FAMILIES.map((f) => ({
+  family: f.family,
+  sounds: f.instruments.flatMap((inst) => [
+    { ...inst, number: String(inst.program + 1) },
+    ...CUSTOM_SOUNDS.filter((c) => c.after === inst.id).map((c) => ({ ...c, number: null })),
+  ]),
+}));
 
+/** Every sound in menu order: what Track left / right step through. */
+export const ALL_SOUNDS = SOUND_FAMILIES.flatMap((f) => f.sounds);
+
+const findSound = (id) => ALL_SOUNDS.find((x) => x.id === id) || null;
+
+export const DEFAULT_SOUND = 'acoustic_grand_piano';
 export const isKnownSound = (id) => findSound(id) != null;
-export const soundById = (id) => findSound(id) || PIANO_SOUNDS[0];
+export const soundById = (id) => findSound(id) || findSound(DEFAULT_SOUND);
+
+/** The sound `step` places along the menu from `id`, wrapping round. */
+export function stepSound(id, step) {
+  const i = Math.max(0, ALL_SOUNDS.findIndex((x) => x.id === id));
+  const n = ALL_SOUNDS.length;
+  return ALL_SOUNDS[(((i + step) % n) + n) % n].id;
+}
+
+/** "57. Trumpet", or the plain name for a sound of our own. */
+export const soundTitle = (sound) => (sound.number ? `${sound.number}. ${sound.label}` : sound.label);
 
 export const DEFAULT_TONE_HZ = 1400;
 const VIBRATO_HZ = 5.5;

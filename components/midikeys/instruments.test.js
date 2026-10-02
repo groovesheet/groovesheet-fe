@@ -1,5 +1,5 @@
 import { GM_FAMILIES, GM_INSTRUMENTS, instrumentForProgram, sampleUrl } from './instruments';
-import { isKnownSound, soundById } from './soundEngine';
+import { ALL_SOUNDS, isKnownSound, soundById, soundTitle, stepSound } from './soundEngine';
 
 test('all 128 General MIDI instruments, sixteen families of eight, in program order', () => {
   expect(GM_FAMILIES).toHaveLength(16);
@@ -29,4 +29,19 @@ test('favourites and GM ids are both selectable sounds', () => {
   expect(isKnownSound('cello')).toBe(true);
   expect(isKnownSound('kazoo')).toBe(false);
   expect(soundById('cello').label).toBe('Cello');
+});
+
+test('each sound is listed once; ours sit right after the instrument they are built on', () => {
+  expect(new Set(ALL_SOUNDS.map((x) => x.id)).size).toBe(ALL_SOUNDS.length);
+  const i = ALL_SOUNDS.findIndex((x) => x.id === 'vibraphone');
+  expect(ALL_SOUNDS[i + 1].id).toBe('aluminium_bandpass');
+  expect(soundTitle(soundById('vibraphone'))).toBe('12. Vibraphone');
+  expect(soundTitle(soundById('aluminium_bandpass'))).toBe('Aluminium band-pass');
+});
+
+test('Track left / right step through the menu and wrap round', () => {
+  expect(stepSound('acoustic_grand_piano', 1)).toBe('bright_acoustic_piano');
+  expect(stepSound('vibraphone', 1)).toBe('aluminium_bandpass');
+  expect(stepSound('acoustic_grand_piano', -1)).toBe('gunshot');
+  expect(stepSound('gunshot', 1)).toBe('acoustic_grand_piano');
 });

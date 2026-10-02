@@ -48,3 +48,12 @@ test('a reassigned pad plays its new voice; other drum notes fall back to GM', (
   expect(voiceForNote(map, 100)).toBeNull();
   expect(DRUM_VOICES.every((v) => typeof v.gm === 'number')).toBe(true);
 });
+
+test('the Track buttons step the sound, and the knob page starts unassigned', () => {
+  expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0xbf, 103, 127]))).toBe('prevSound');
+  expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0xbf, 102, 127]))).toBe('nextSound');
+  expect(describeBinding(DEFAULT_BINDINGS.nextSound[0])).toBe('Track ►');
+  expect(DEFAULT_BINDINGS.knobPage).toEqual([]);
+  expect(sanitizeBindings({ knobPage: [] }).knobPage).toEqual([]);
+  expect(sanitizeBindings({ loop: [] }).loop).toEqual(DEFAULT_BINDINGS.loop); // the loop button can't be lost
+});

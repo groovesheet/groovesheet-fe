@@ -2,12 +2,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { buildKeyLayout, keyAtPoint, noteName } from '../bistable/keyLayout';
 import { createLooper } from './looper';
-import { createSoundEngine, PIANO_SOUNDS, DEFAULT_TONE_HZ, soundById, isKnownSound } from './soundEngine';
-import { GM_FAMILIES, SAMPLE_SETS, instrumentForProgram } from './instruments';
+import {
+  createSoundEngine, DEFAULT_TONE_HZ, DEFAULT_SOUND, SOUND_FAMILIES, soundById, soundTitle, stepSound, isKnownSound,
+} from './soundEngine';
+import { SAMPLE_SETS, instrumentForProgram } from './instruments';
+import { findLaunchkeyOutput, showLines, TARGET_GLOBAL, TARGET_KNOB_1 } from './launchkeyDisplay';
 import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_ROWS, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
 import { bendAmount } from './wheels';
-import { FX, DEFAULT_FX, DEFAULT_KNOBS, knobForMessage, sanitizeFx } from './fx';
+import { FX, DEFAULT_FX, DEFAULT_KNOBS, PAGE_COUNT, PAGE_NAMES, PAGE_SCREEN_NAMES, fxOnPage, knobForMessage, sanitizeFx } from './fx';
 import Knob from './Knob';
 import './MidiKeys.css';
 
@@ -59,13 +62,14 @@ const DEFAULT_SETTINGS = {
   padMap: DEFAULT_PAD_MAP,
   drumChannel: DRUM_CHANNEL,
   bindings: DEFAULT_BINDINGS,
-  piano: PIANO_SOUNDS[0].id, // the keys' sound: a favourite or any GM instrument id
+  piano: DEFAULT_SOUND, // the keys' sound: a GM instrument id, or one of ours
   sampleSet: SAMPLE_SETS[0].id,
   volumes: { master: 0.9, piano: 1, drums: 0.5, loop: 0.9 },
   trimEnd: true, // cut the silence after the last note when the first take is closed
   onePass: true, // an overdub ends by itself one loop after its first note
   fx: DEFAULT_FX, // 0..1 per effect
-  knobs: DEFAULT_KNOBS, // which CC turns which effect
+  knobs: DEFAULT_KNOBS, // controls learnt to one effect each
+  fxPage: 0, // the page of effects the eight knobs turn
   bendRange: 2, // semitones each way
   tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
 };
@@ -103,6 +107,7 @@ function loadSettings() {
       trimEnd: saved.trimEnd !== false,
       fx: fx.values,
       knobs: fx.knobs,
+      fxPage: Number.isInteger(saved.fxPage) && saved.fxPage >= 0 && saved.fxPage < PAGE_COUNT ? saved.fxPage : 0,
       onePass: saved.onePass !== false,
       bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
       tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
@@ -134,6 +139,15 @@ const LOOP_COPY = {
   stopped: { label: 'Stopped', hint: 'Press to play from the top. Stop again clears.' },
 };
 
+// The controller buttons each row of bindings shows, and the computer key for it.
+const BINDING_ROWS = {
+  loop: { label: 'Loop button', key: 'Space' },
+  stop: { label: 'Stop / clear', key: 'Esc' },
+  prevSound: { label: 'Previous sound', key: '[' },
+  nextSound: { label: 'Next sound', key: ']' },
+  knobPage: { label: 'Knob page', key: null },
+};
+
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
 export default function MidiKeys() {
@@ -148,6 +162,10 @@ export default function MidiKeys() {
   const learningRef = useRef(null);
   learningRef.current = learning;
   const [editPads, setEditPads] = useState(false);
+  const [toast, setToast] = useState(null); // { id, title, detail }: sound / page changes
+  const lkOutRef = useRef(null); // { output, sku }: the Launchkey screen, if SysEx is allowed
+  const showSoundRef = useRef(() => {}); // names the sound on screen once the Launchkey appears
+  const knobScreenRef = useRef(new Map()); // slot -> { timer, last } throttle for knob screens
   const [learningKnob, setLearningKnob] = useState(null); // effect id
   const learningKnobRef = useRef(null);
   learningKnobRef.current = learningKnob;
@@ -185,6 +203,42 @@ export default function MidiKeys() {
     lastInfoKeyRef.current = key;
     setLoopInfo(info);
   }, []);
+
+  // ---- the Launchkey screen and the on-page toast -------------------------
+
+  const sendToScreen = useCallback((target, lines) => {
+    const lk = lkOutRef.current;
+    if (!lk) return;
+    try { showLines(lk.sku, target, lines).forEach((msg) => lk.output.send(msg)); } catch (e) { /* port gone */ }
+  }, []);
+
+  const announce = useCallback((title, detail, screenLines) => {
+    setToast({ id: Date.now(), title, detail });
+    sendToScreen(TARGET_GLOBAL, screenLines);
+  }, [sendToScreen]);
+
+  // A knob's name and value on its own screen, at most every 40 ms per knob
+  // (the last value always lands).
+  const showKnob = useCallback((knob) => {
+    const f = FX.find((x) => x.id === knob.id);
+    if (!f || !lkOutRef.current) return;
+    const name = ['Amount', 'Time', 'Feedback'].includes(f.label) ? `${f.group} ${f.label.toLowerCase()}` : f.label;
+    const send = () => {
+      const lines = [name, f.fmt(settingsRef.current.fx[f.id])];
+      // CC 21-28 are the knobs themselves; a learnt control uses the general display
+      sendToScreen(knob.viaKnob ? TARGET_KNOB_1 + knob.slot : TARGET_GLOBAL, lines);
+    };
+    const st = knobScreenRef.current.get(knob.slot) || {};
+    const now = performance.now();
+    clearTimeout(st.timer);
+    if (!st.last || now - st.last > 40) {
+      st.last = now;
+      send();
+    } else {
+      st.timer = setTimeout(() => { st.last = performance.now(); send(); }, 40);
+    }
+    knobScreenRef.current.set(knob.slot, st);
+  }, [sendToScreen]);
 
   // ---- note handling -----------------------------------------------------
 
@@ -267,6 +321,14 @@ export default function MidiKeys() {
   }, []);
 
   const loopAction = useCallback((action) => {
+    if (action === 'prevSound' || action === 'nextSound') {
+      setSettings((s) => ({ ...s, piano: stepSound(s.piano, action === 'nextSound' ? 1 : -1) }));
+      return;
+    }
+    if (action === 'knobPage') {
+      setSettings((s) => ({ ...s, fxPage: (s.fxPage + 1) % PAGE_COUNT }));
+      return;
+    }
     const now = nowSec();
     const looper = looperRef.current;
     const opts = { trimEnd: settingsRef.current.trimEnd, onePass: settingsRef.current.onePass };
@@ -309,9 +371,13 @@ export default function MidiKeys() {
       }
     }
 
-    const knob = knobForMessage(settingsRef.current.knobs, data);
+    const knob = knobForMessage(settingsRef.current.knobs, data, settingsRef.current.fxPage);
     if (knob) {
+      // settingsRef first, so the screen shows this value, not the last render's
+      settingsRef.current = { ...settingsRef.current, fx: { ...settingsRef.current.fx, [knob.id]: knob.value } };
       setSettings((s) => ({ ...s, fx: { ...s.fx, [knob.id]: knob.value } }));
+      const cc = data[1];
+      showKnob({ ...knob, viaKnob: cc >= 21 && cc <= 28 && knob.slot === cc - 21 });
       return;
     }
 
@@ -362,7 +428,7 @@ export default function MidiKeys() {
       engineRef.current?.setModulation(0);
       setSustain(false);
     } else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
-  }, [allNotesOff, drumHit, keyDown, keyUp, loopAction, setSustain]);
+  }, [allNotesOff, drumHit, keyDown, keyUp, loopAction, setSustain, showKnob]);
 
   const onMidiRef = useRef(onMidiMessage);
   onMidiRef.current = onMidiMessage;
@@ -388,10 +454,16 @@ export default function MidiKeys() {
         }
         if (input.state !== 'disconnected') list.push({ id: input.id, name: input.name });
       });
-      setMidi({ status: 'ready', error: null, inputs: list });
+      const hadScreen = !!lkOutRef.current;
+      lkOutRef.current = access.sysexEnabled && access.outputs ? findLaunchkeyOutput(access.outputs.values()) : null;
+      setMidi({ status: 'ready', error: null, inputs: list, screen: !!lkOutRef.current });
+      if (lkOutRef.current && !hadScreen) showSoundRef.current();
     };
 
-    navigator.requestMIDIAccess({ sysex: false })
+    // SysEx lets the page write to the Launchkey's screen. If that permission
+    // is refused, ask again without it: everything else works the same.
+    navigator.requestMIDIAccess({ sysex: true })
+      .catch(() => navigator.requestMIDIAccess({ sysex: false }))
       .then((a) => {
         if (cancelled) return;
         access = a;
@@ -429,6 +501,26 @@ export default function MidiKeys() {
   }, []);
 
   useEffect(() => { engineRef.current?.loadPiano(settings.piano, settings.sampleSet); }, [settings.piano, settings.sampleSet]);
+
+  // Name the sound on the page and on the Launchkey's screen whenever it changes.
+  const showSound = useCallback(() => {
+    const sound = soundById(settingsRef.current.piano);
+    const set = SAMPLE_SETS.find((x) => x.id === settingsRef.current.sampleSet);
+    announce(soundTitle(sound), set ? `${set.label} samples` : '', ['Sound', soundTitle(sound), set ? set.label : '']);
+  }, [announce]);
+  useEffect(() => { showSoundRef.current = showSound; }, [showSound]);
+  const firstSoundRef = useRef(true);
+  useEffect(() => {
+    if (firstSoundRef.current) { firstSoundRef.current = false; return; }
+    showSound();
+  }, [settings.piano, settings.sampleSet, showSound]);
+
+  const firstPageRef = useRef(true);
+  useEffect(() => {
+    if (firstPageRef.current) { firstPageRef.current = false; return; }
+    const p = settings.fxPage;
+    announce(`Knob page ${p + 1}`, PAGE_NAMES[p], ['Knobs', `Page ${p + 1} of ${PAGE_COUNT}`, PAGE_SCREEN_NAMES[p]]);
+  }, [settings.fxPage, announce]);
 
   useEffect(() => {
     const e = engineRef.current;
@@ -479,6 +571,10 @@ export default function MidiKeys() {
       if (e.repeat || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'Escape' && learningKnobRef.current) {
         setLearningKnob(null);
+        return;
+      }
+      if (e.key === '[' || e.key === ']') {
+        loopAction(e.key === ']' ? 'nextSound' : 'prevSound');
         return;
       }
       if (e.code === 'Space') {
@@ -699,6 +795,30 @@ export default function MidiKeys() {
 
   // ---- render ----------------------------------------------------------------
 
+  const bindingRow = (action) => {
+    const meta = BINDING_ROWS[action];
+    return (
+      <div key={action} className="midikeys__binding">
+        <span className="midikeys__binding-name">{meta.label}</span>
+        <span className="midikeys__chips">
+          {learning === action ? (
+            <span className="midikeys__chip is-learning">Press a button on the keyboard… (Esc cancels)</span>
+          ) : (
+            <>
+              {settings.bindings[action].map((b) => <span key={describeBinding(b)} className="midikeys__chip">{describeBinding(b)}</span>)}
+              {!settings.bindings[action].length && <span className="midikeys__chip is-key">Not set</span>}
+              {meta.key && <span className="midikeys__chip is-key">{meta.key}</span>}
+            </>
+          )}
+        </span>
+        <button type="button" className="midikeys__link" onClick={() => setLearning(learning === action ? null : action)}>
+          {learning === action ? 'Cancel' : 'Learn'}
+        </button>
+      </div>
+    );
+  };
+
+  const pageFx = fxOnPage(settings.fxPage);
   let copy = LOOP_COPY[loopInfo.state] || LOOP_COPY.empty;
   if (loopInfo.overdubWaiting) copy = LOOP_COPY.overdubWaiting;
   else if (loopInfo.overdubLeft > 0) copy = { ...copy, hint: `Layering, ${loopInfo.overdubLeft.toFixed(1)} s of the pass left. Press to stop early.` };
@@ -735,12 +855,9 @@ export default function MidiKeys() {
           <label className="midikeys__select">
             <span>Sound</span>
             <select value={settings.piano} onChange={(e) => setSettings((s) => ({ ...s, piano: e.target.value }))}>
-              <optgroup label="Favourites">
-                {PIANO_SOUNDS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-              </optgroup>
-              {GM_FAMILIES.map((f) => (
+              {SOUND_FAMILIES.map((f) => (
                 <optgroup key={f.family} label={f.family}>
-                  {f.instruments.map((i) => <option key={i.id} value={i.id}>{`${i.program + 1}. ${i.label}`}</option>)}
+                  {f.sounds.map((x) => <option key={x.id} value={x.id}>{soundTitle(x)}</option>)}
                 </optgroup>
               ))}
             </select>
@@ -849,24 +966,7 @@ export default function MidiKeys() {
           <canvas ref={laneRef} className="midikeys__lane" aria-label="The recorded loop" />
 
           <div className="midikeys__bindings">
-            {ACTIONS.map((action) => (
-              <div key={action} className="midikeys__binding">
-                <span className="midikeys__binding-name">{action === 'loop' ? 'Loop button' : 'Stop / clear'}</span>
-                <span className="midikeys__chips">
-                  {learning === action ? (
-                    <span className="midikeys__chip is-learning">Press a button on the keyboard… (Esc cancels)</span>
-                  ) : (
-                    <>
-                      {settings.bindings[action].map((b) => <span key={describeBinding(b)} className="midikeys__chip">{describeBinding(b)}</span>)}
-                      <span className="midikeys__chip is-key">{action === 'loop' ? 'Space' : 'Esc'}</span>
-                    </>
-                  )}
-                </span>
-                <button type="button" className="midikeys__link" onClick={() => setLearning(learning === action ? null : action)}>
-                  {learning === action ? 'Cancel' : 'Learn'}
-                </button>
-              </div>
-            ))}
+            {['loop', 'stop', 'prevSound', 'nextSound'].map(bindingRow)}
             <button type="button" className="midikeys__link midikeys__link--reset" onClick={() => setSettings((s) => ({ ...s, bindings: DEFAULT_BINDINGS }))}>
               Reset to Launchkey defaults
             </button>
@@ -880,20 +980,28 @@ export default function MidiKeys() {
               <div>
                 <h2 className="midikeys__card-title">Effects</h2>
                 <p className="midikeys__card-sub">
-                  The eight Launchkey knobs, left to right, on the keys. Drag a knob here, double-click to reset.
+                  The eight Launchkey knobs, left to right, turn the page shown. Drag a knob here, double-click to reset.
                 </p>
               </div>
-              <button
-                type="button"
-                className="midikeys__link"
-                onClick={() => setSettings((s) => ({ ...s, fx: DEFAULT_FX, knobs: DEFAULT_KNOBS }))}
-              >
-                Reset effects
-              </button>
+              <div className="midikeys__pagetabs" role="tablist" aria-label="Knob page">
+                {PAGE_NAMES.map((name, p) => (
+                  <button
+                    key={name}
+                    type="button"
+                    role="tab"
+                    aria-selected={settings.fxPage === p}
+                    title={name}
+                    className={`midikeys__pagetab ${settings.fxPage === p ? 'is-active' : ''}`}
+                    onClick={() => setSettings((s) => ({ ...s, fxPage: p }))}
+                  >
+                    Page {p + 1}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="midikeys__fxrow">
-              {FX.map((f, i) => {
-                const groupStart = i === 0 || FX[i - 1].group !== f.group;
+              {pageFx.map((f, i) => {
+                const groupStart = i === 0 || pageFx[i - 1].group !== f.group;
                 return (
                   <div key={f.id} className={`midikeys__fxslot ${groupStart ? 'is-group-start' : ''}`}>
                     <span className="midikeys__fxgroup">{groupStart ? f.group : '\u00a0'}</span>
@@ -910,6 +1018,16 @@ export default function MidiKeys() {
                   </div>
                 );
               })}
+            </div>
+            <div className="midikeys__fxfoot">
+              <div className="midikeys__bindings">{bindingRow('knobPage')}</div>
+              <button
+                type="button"
+                className="midikeys__link midikeys__link--reset"
+                onClick={() => setSettings((s) => ({ ...s, fx: DEFAULT_FX, knobs: DEFAULT_KNOBS, fxPage: 0 }))}
+              >
+                Reset effects
+              </button>
             </div>
           </section>
 
@@ -987,6 +1105,12 @@ export default function MidiKeys() {
           onPointerUp={onCanvasUp}
           onPointerCancel={onCanvasUp}
         />
+        {toast && (
+          <div key={toast.id} className="midikeys__toast" role="status">
+            <strong>{toast.title}</strong>
+            {toast.detail && <span>{toast.detail}</span>}
+          </div>
+        )}
         <div className="midikeys__wheels" aria-hidden="true">
           <div className="midikeys__wheel">
             <div className="midikeys__wheel-track midikeys__wheel-track--bend">
