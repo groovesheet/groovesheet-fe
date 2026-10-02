@@ -1,0 +1,418 @@
+/* Bistable — /bistable live MIDI keyboard monitor. */
+
+.bistable {
+  position: relative; /* the floating tuning panel anchors to this */
+  min-height: 100vh;
+  background: #0c100c;
+  color: #f5f5ef;
+  font-family: 'Hubot Sans', Inter, system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px clamp(16px, 4vw, 48px) 28px;
+  box-sizing: border-box;
+}
+
+.bistable__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.bistable__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.bistable__sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #8c8c86;
+}
+
+.bistable__controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.bistable__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #b5b5ae;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bistable__toggle input {
+  accent-color: #012fa7;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Stacked canvases: the WebGL fluid sim behind, embers over it, the 2D
+   keyboard in front (transparent above the keys so the effects show through).
+   All three fill the stage, so the effect area takes every pixel of leftover
+   column height — the keyboard's share of it is KEY_FRACTION x the keyHeight
+   slider, not a fixed canvas aspect. */
+.bistable__keyboard {
+  position: absolute;
+  inset: 0;
+  background: #0c100c;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bistable__fluid,
+.bistable__particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bistable__particles {
+  z-index: 1; /* embers over the fluid, under the keyboard */
+}
+
+.bistable__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1; /* above the fluid, below the embers' own stacking */
+  touch-action: none; /* pointer events drive the keys, not scrolling */
+  cursor: pointer;
+}
+
+/* Floating tuning panel, overlaid top-right of the fluid area. */
+.bistable__panel-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #d5d5cf;
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.bistable__panel-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bistable__panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  width: 240px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto; /* 13 sliders no longer fit a laptop viewport */
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(12, 16, 12, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bistable__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5f5ef;
+  margin-bottom: 2px;
+}
+
+.bistable__panel-reset {
+  border: none;
+  background: none;
+  color: #8c8c86;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bistable__panel-reset:hover {
+  color: #f5f5ef;
+}
+
+.bistable__presets,
+.bistable__modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bistable__preset,
+.bistable__mode {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d5d5cf;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.bistable__preset:hover,
+.bistable__mode:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bistable__mode--on {
+  background: #012fa7;
+  border-color: #012fa7;
+  color: #fff;
+}
+
+.bistable__slider {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bistable__slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #b5b5ae;
+}
+
+.bistable__slider-label em {
+  font-style: normal;
+  color: #f5f5ef;
+  font-variant-numeric: tabular-nums;
+}
+
+.bistable__slider input[type='range'] {
+  width: 100%;
+  accent-color: #012fa7;
+  cursor: pointer;
+}
+
+.bistable__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+
+.bistable__devices {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #b5b5ae;
+}
+
+.bistable__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.bistable__dot--on {
+  background: #2f9e44;
+  box-shadow: 0 0 8px rgba(47, 158, 68, 0.8);
+}
+
+.bistable__dot--off {
+  background: #5c5c57;
+}
+
+.bistable__held {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.bistable__held-empty {
+  font-size: 13px;
+  color: #5c5c57;
+}
+
+.bistable__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #012fa7;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.bistable__chip--black {
+  background: #3f74e8;
+}
+
+.bistable__chip em {
+  font-style: normal;
+  font-weight: 400;
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+/* ---- projection mapping ------------------------------------------------ */
+
+/* The stage is the un-warped reference box: the keyboard inside it carries
+   the corner-pin matrix3d, while calibration handles sit on top, outside the
+   warp, so they stay draggable in screen space. */
+.bistable__stage {
+  position: relative;
+  flex: 1;
+  min-height: 240px; /* keep the keys usable on a short window */
+}
+
+.bistable__keyboard {
+  transform-origin: 0 0; /* required: the warp maps from this corner */
+  width: 100%;
+}
+
+/* Projection mode: nothing but the image, black to the edges. */
+.bistable--projecting {
+  padding: 0;
+  gap: 0;
+  background: #000;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Hide the pointer only on a finished projection — never while calibrating,
+   where you need to see what you are dragging. */
+.bistable--projecting.bistable--clean,
+.bistable--projecting.bistable--clean .bistable__canvas {
+  cursor: none;
+}
+
+.bistable--projecting .bistable__head,
+.bistable--projecting .bistable__foot,
+.bistable--projecting .gs-statusmsg {
+  display: none;
+}
+
+.bistable--projecting .bistable__stage {
+  position: fixed;
+  inset: 0;
+}
+
+.bistable--projecting .bistable__keyboard {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  background: #000;
+}
+
+/* Calibration overlay: outline of the mapped quad + corner grips. */
+.bistable__warp-guide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  cursor: crosshair; /* clicking an edge adds a node */
+  touch-action: none;
+}
+
+.bistable__warp-guide polyline {
+  fill: none;
+  stroke: #38e07b;
+  stroke-width: 1.5;
+  stroke-dasharray: 7 5;
+  opacity: 0.85;
+}
+
+/* Edge clicks add nodes, so the stage advertises it while calibrating. */
+.bistable--projecting .bistable__stage {
+  cursor: crosshair;
+}
+
+/* Control points are SVG circles, not DOM buttons: at a few thousand nodes
+   circles lay out roughly twice as fast, and one delegated handler on the
+   parent <svg> beats a listener per node. */
+.bistable__node {
+  fill: rgba(0, 0, 0, 0.55);
+  stroke: #ffd43b;
+  stroke-width: 2;
+  cursor: grab;
+}
+
+.bistable__node.is-corner {
+  stroke: #38e07b;
+  stroke-width: 2.5;
+}
+
+.bistable__node:hover {
+  fill: rgba(255, 212, 59, 0.35);
+}
+
+.bistable__node.is-corner:hover {
+  fill: rgba(56, 224, 123, 0.35);
+}
+
+/* Mesh output canvas: replaces the CSS-warped stack once nodes are added. */
+.bistable__warp-out {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  z-index: 2;
+}
+
+.bistable__warp-out.is-on {
+  display: block;
+}
+
+/* When the mesh draws, the original canvases become an off-screen source:
+   still rendering (the warp samples them) but never shown directly. */
+.bistable__keyboard.is-source {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bistable__calib-hint {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #d5d5cf;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.bistable__calib-hint b {
+  color: #38e07b;
+}

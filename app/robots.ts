@@ -33,6 +33,7 @@ export default function robots(): MetadataRoute.Robots {
           '/preview1',
           '/video1',
           '/video2',
+          '/bistable',
           '/api/',
           '/og',
         ],
