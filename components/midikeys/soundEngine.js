@@ -31,16 +31,28 @@ export const PIANO_SOUNDS = [
   { id: 'electric_piano_2', label: 'FM electric piano' },
   { id: 'honkytonk_piano', label: 'Honky-tonk' },
   { id: 'vibraphone', label: 'Vibraphone' },
-  // Vibraphone bars are aluminium: the struck-metal tone, narrowed to a
-  // ringing band so it reads as one bright, hollow metallic voice.
-  { id: 'aluminium_bandpass', label: 'Aluminium band-pass', sample: 'vibraphone', filter: { q: 2.4, makeup: 2.6 } },
+  // Vibraphone bars are aluminium: the struck-metal tone, lightly driven,
+  // narrowed to a ringing band and widened with a chorus, so it plays as an
+  // electric instrument. On this sound the mod wheel is an auto-wah (see
+  // setModulation), not just vibrato.
+  { id: 'aluminium_bandpass', label: 'Aluminium band-pass', sample: 'vibraphone', filter: { q: 2.4, makeup: 2.2, drive: 2.5 } },
 ];
 
 export const soundById = (id) => PIANO_SOUNDS.find((p) => p.id === id) || PIANO_SOUNDS[0];
 
 export const DEFAULT_TONE_HZ = 1400;
 const VIBRATO_HZ = 5.5;
-const MAX_VIBRATO_CENTS = 45; // mod wheel fully up
+// Mod wheel fully up. Plain sounds get vibrato only; the electric (filtered)
+// sound gets a lighter vibrato plus a filter sweep, tremolo and a faster LFO.
+const MOD = {
+  plainVibratoCents: 70,
+  electricVibratoCents: 30,
+  wahCents: 2000, // band-pass centre swings this far each way (~1.7 octaves)
+  wahExtraQ: 4, // and gets this much more resonant, so the sweep talks
+  tremolo: 0.7, // volume dips by up to this fraction
+  minRateHz: 1, // LFO rate with the wheel just off zero ...
+  maxRateHz: 6, // ... and fully up
+};
 
 const RELEASE_SEC = 0.25; // damper fall on key-up
 const nowSec = () => performance.now() / 1000;
@@ -61,15 +73,56 @@ export function createSoundEngine({ onStatus } = {}) {
   master.connect(comp);
   const pianoBus = ctx.createGain();
   pianoBus.connect(master);
-  // Keys enter here, then go straight to the piano bus or through the band-pass.
+  // Keys enter here, then go straight to the piano bus, or through the
+  // electric chain: drive -> band-pass -> makeup -> tremolo -> dry + chorus.
   const keysIn = ctx.createGain();
+  keysIn.connect(pianoBus);
+  const drive = ctx.createWaveShaper();
+  drive.oversample = '2x';
   const bandpass = ctx.createBiquadFilter();
   bandpass.type = 'bandpass';
   bandpass.frequency.value = DEFAULT_TONE_HZ;
   const makeup = ctx.createGain();
+  const tremolo = ctx.createGain();
+  drive.connect(bandpass);
   bandpass.connect(makeup);
-  makeup.connect(pianoBus);
-  keysIn.connect(pianoBus);
+  makeup.connect(tremolo);
+  tremolo.connect(pianoBus);
+  // Chorus: two short delays swaying in opposite directions, panned apart.
+  const chorusLfo = ctx.createOscillator();
+  chorusLfo.frequency.value = 0.7;
+  chorusLfo.start();
+  [[0.018, 0.0025, -0.6], [0.025, -0.0025, 0.6]].forEach(([base, sway, pan]) => {
+    const d = ctx.createDelay(0.05);
+    d.delayTime.value = base;
+    const depth = ctx.createGain();
+    depth.gain.value = sway;
+    chorusLfo.connect(depth);
+    depth.connect(d.delayTime);
+    const wet = ctx.createGain();
+    wet.gain.value = 0.45;
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain();
+    if (p.pan) p.pan.value = pan;
+    tremolo.connect(d);
+    d.connect(wet);
+    wet.connect(p);
+    p.connect(pianoBus);
+  });
+  // The mod wheel's LFO for the electric sound: sweeps the band-pass (via its
+  // detune, so the swing is in octaves) and dips the volume.
+  const modLfo = ctx.createOscillator();
+  modLfo.frequency.value = MOD.minRateHz;
+  modLfo.start();
+  const wah = ctx.createGain();
+  wah.gain.value = 0;
+  modLfo.connect(wah);
+  wah.connect(bandpass.detune);
+  const trem = ctx.createGain();
+  trem.gain.value = 0;
+  modLfo.connect(trem);
+  trem.connect(tremolo.gain);
+  let electric = null; // the current sound's filter settings, or null
+  let modValue = 0;
 
   // Wheels: one vibrato LFO for all live voices, its depth set by the mod wheel.
   let bendCents = 0;
@@ -106,15 +159,27 @@ export function createSoundEngine({ onStatus } = {}) {
   };
   const report = () => onStatus?.(status());
 
+  const driveCurve = (k) => {
+    const n = 1024;
+    const curve = new Float32Array(n);
+    for (let i = 0; i < n; i += 1) {
+      const x = (i / (n - 1)) * 2 - 1;
+      curve[i] = Math.tanh(k * x) / Math.tanh(k);
+    }
+    return curve;
+  };
+
   function routeKeys(filter) {
     keysIn.disconnect();
+    electric = filter || null;
     if (filter) {
-      bandpass.Q.value = filter.q;
+      drive.curve = driveCurve(filter.drive || 1);
       makeup.gain.value = filter.makeup;
-      keysIn.connect(bandpass);
+      keysIn.connect(drive);
     } else {
       keysIn.connect(pianoBus);
     }
+    setModulation(modValue);
   }
 
   function loadPiano(soundId) {
@@ -178,9 +243,29 @@ export function createSoundEngine({ onStatus } = {}) {
     });
   }
 
-  /** Mod wheel: 0..127 -> vibrato depth. */
+  /**
+   * Mod wheel, 0..127. Plain sounds: vibrato. The electric sound: a lighter
+   * vibrato plus an auto-wah (band-pass swept and made more resonant) and
+   * tremolo, all on one LFO that speeds up as the wheel goes up.
+   */
   function setModulation(value) {
-    vibrato.gain.setTargetAtTime((Math.min(Math.max(value, 0), 127) / 127) * MAX_VIBRATO_CENTS, ctx.currentTime, 0.03);
+    modValue = Math.min(Math.max(value, 0), 127);
+    const m = modValue / 127;
+    const t = ctx.currentTime;
+    const ramp = (param, v) => param.setTargetAtTime(v, t, 0.04);
+    if (electric) {
+      ramp(vibrato.gain, m * MOD.electricVibratoCents);
+      ramp(wah.gain, m * MOD.wahCents);
+      ramp(bandpass.Q, electric.q + m * MOD.wahExtraQ);
+      ramp(trem.gain, (m * MOD.tremolo) / 2);
+      ramp(tremolo.gain, 1 - (m * MOD.tremolo) / 2);
+      ramp(modLfo.frequency, MOD.minRateHz + (MOD.maxRateHz - MOD.minRateHz) * m);
+    } else {
+      ramp(vibrato.gain, m * MOD.plainVibratoCents);
+      ramp(wah.gain, 0);
+      ramp(trem.gain, 0);
+      ramp(tremolo.gain, 1);
+    }
   }
 
   function setTone(hz) {

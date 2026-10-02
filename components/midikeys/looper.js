@@ -17,8 +17,13 @@
  *                                  letting go of the last note and the press
  *                                  is cut (see loopEnd), so the next pass
  *                                  follows straight on from the last note
- *   playing --press-->  overdub    layer more notes over the running loop
- *   overdub --press-->  playing
+ *   playing --press-->  overdub    layer more notes over the running loop. Like
+ *                                  the first take, the layer starts on the
+ *                                  first note played, and (by default) it ends
+ *                                  by itself one loop later: one pass, with any
+ *                                  note still held cut off there, so nothing
+ *                                  keeps recording or ringing into the next pass
+ *   overdub --press-->  playing    (ends the layer early)
  *   stopped --press-->  playing    from the top
  *
  * Stop: playing / overdub / recording -> stopped (a loop being recorded is
@@ -64,6 +69,8 @@ export function createLooper() {
   let playStart = 0; // clock time the current playback began (offset 0)
   let scheduledUntil = 0; // everything before this has been handed out
   let layer = 0; // 0 = the base take, 1.. = overdub passes
+  let odStart = null; // clock time of the current overdub's first note
+  let odOnePass = true; // end the overdub one loop after its first note
   const open = new Map(); // midi -> { ev, abs }: piano notes still held
 
   const offsetAt = (now) => {
@@ -80,6 +87,17 @@ export function createLooper() {
       ev.dur = Math.max(MIN_NOTE_SEC, Math.min(now - abs, length || Infinity));
     });
     open.clear();
+  };
+
+  // A one-pass overdub that has run a full loop since its first note ends
+  // there; notes still held are cut at that moment, not at `now`.
+  const endOverdubIfDue = (now) => {
+    if (state !== 'overdub' || !odOnePass || odStart == null) return;
+    const end = odStart + length;
+    if (now < end) return;
+    closeOpen(end);
+    state = 'playing';
+    odStart = null;
   };
 
   const startPlaying = (now) => {
@@ -119,7 +137,8 @@ export function createLooper() {
    * The loop button. `trimEnd` (default on) cuts the silence after the last
    * note when the first take is closed.
    */
-  function press(now, { trimEnd = true } = {}) {
+  function press(now, { trimEnd = true, onePass = true } = {}) {
+    endOverdubIfDue(now);
     switch (state) {
       case 'empty':
         state = 'armed';
@@ -133,6 +152,8 @@ export function createLooper() {
       case 'playing':
         state = 'overdub';
         layer += 1;
+        odStart = null;
+        odOnePass = onePass;
         break;
       case 'overdub':
         closeOpen(now);
@@ -149,6 +170,7 @@ export function createLooper() {
 
   /** The stop button: stop, and a second stop clears. */
   function stop(now, { trimEnd = true } = {}) {
+    endOverdubIfDue(now);
     switch (state) {
       case 'armed':
       case 'stopped':
@@ -176,7 +198,11 @@ export function createLooper() {
       return 0;
     }
     if (state === 'recording') return now - recStart;
-    if (state === 'overdub') return offsetAt(now);
+    endOverdubIfDue(now);
+    if (state === 'overdub') {
+      if (odStart == null) odStart = now;
+      return offsetAt(now);
+    }
     return null;
   };
 
@@ -211,6 +237,7 @@ export function createLooper() {
    * land behind scheduledUntil, so they first replay on the next pass.
    */
   function schedule(now, lookahead, emit) {
+    endOverdubIfDue(now);
     if ((state !== 'playing' && state !== 'overdub') || !length) return;
     if (state === 'overdub') events.sort(byTime);
     const from = Math.max(scheduledUntil, playStart);
@@ -230,6 +257,7 @@ export function createLooper() {
 
   /** Drop the newest overdub pass (the base take is never undone this way). */
   function undoLayer(now) {
+    endOverdubIfDue(now);
     const top = events.reduce((m, e) => Math.max(m, e.layer), 0);
     if (top === 0) return false;
     if (state === 'overdub') {
@@ -251,6 +279,9 @@ export function createLooper() {
       elapsed: recording ? now - recStart : 0,
       position: looping ? offsetAt(now) : 0,
       count: events.length,
+      // overdub armed but nothing played into it yet / how much of its pass is left
+      overdubWaiting: state === 'overdub' && odStart == null,
+      overdubLeft: state === 'overdub' && odStart != null && odOnePass ? Math.max(0, odStart + length - now) : 0,
       layers: events.reduce((m, e) => Math.max(m, e.layer), 0),
     };
   }

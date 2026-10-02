@@ -34,6 +34,8 @@ import './MidiKeys.css';
  */
 
 const STORAGE_KEY = 'gs.midiKeyboard.v1';
+// Bumped when a default changes enough that a saved value should be reset to it.
+const SETTINGS_VERSION = 2;
 const LOOKAHEAD_SEC = 0.12; // how far ahead loop events are scheduled
 const HIDDEN_LOOKAHEAD_SEC = 1.2; // background tabs only get ~1 timer per second
 const TICK_MS = 25;
@@ -52,8 +54,9 @@ const DEFAULT_SETTINGS = {
   drumChannel: DRUM_CHANNEL,
   bindings: DEFAULT_BINDINGS,
   piano: PIANO_SOUNDS[0].id,
-  volumes: { master: 0.9, piano: 1, drums: 0.9, loop: 0.9 },
+  volumes: { master: 0.9, piano: 1, drums: 0.5, loop: 0.9 },
   trimEnd: true, // cut the silence after the last note when the first take is closed
+  onePass: true, // an overdub ends by itself one loop after its first note
   bendRange: 2, // semitones each way
   tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
 };
@@ -80,8 +83,14 @@ function loadSettings() {
       drumChannel: Number.isInteger(ch) && ch >= 0 && ch <= 15 ? ch : DRUM_CHANNEL,
       bindings: sanitizeBindings(saved.bindings),
       piano: PIANO_SOUNDS.some((p) => p.id === saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
-      volumes: { ...DEFAULT_SETTINGS.volumes, ...(saved.volumes || {}) },
+      volumes: {
+        ...DEFAULT_SETTINGS.volumes,
+        ...(saved.volumes || {}),
+        // v2 lowered the drums; a level saved before that was the old default
+        ...((saved.version || 1) < 2 ? { drums: DEFAULT_SETTINGS.volumes.drums } : {}),
+      },
       trimEnd: saved.trimEnd !== false,
+      onePass: saved.onePass !== false,
       bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
       tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
     };
@@ -91,7 +100,9 @@ function loadSettings() {
 }
 
 function saveSettings(settings) {
-  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) { /* private window */ }
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...settings, version: SETTINGS_VERSION }));
+  } catch (e) { /* private window */ }
 }
 
 const fmtTime = (sec) => {
@@ -106,6 +117,7 @@ const LOOP_COPY = {
   recording: { label: 'Recording', hint: 'Press again to close the loop.' },
   playing: { label: 'Playing', hint: 'Press to layer an overdub.' },
   overdub: { label: 'Overdub', hint: 'Press to stop layering.' },
+  overdubWaiting: { label: 'Overdub', hint: 'Play to start the layer. It records one pass, then stops.' },
   stopped: { label: 'Stopped', hint: 'Press to play from the top. Stop again clears.' },
 };
 
@@ -152,7 +164,7 @@ export default function MidiKeys() {
   const lastInfoKeyRef = useRef('');
   const refreshLoopInfo = useCallback(() => {
     const info = looperRef.current.info(nowSec());
-    const key = `${info.state}|${info.length.toFixed(2)}|${Math.floor(info.elapsed * 10)}|${info.count}|${info.layers}`;
+    const key = `${info.state}|${info.length.toFixed(2)}|${Math.floor(info.elapsed * 10)}|${info.count}|${info.layers}|${info.overdubWaiting}|${Math.ceil(info.overdubLeft * 10)}`;
     if (key === lastInfoKeyRef.current) return;
     lastInfoKeyRef.current = key;
     setLoopInfo(info);
@@ -241,7 +253,7 @@ export default function MidiKeys() {
   const loopAction = useCallback((action) => {
     const now = nowSec();
     const looper = looperRef.current;
-    const opts = { trimEnd: settingsRef.current.trimEnd };
+    const opts = { trimEnd: settingsRef.current.trimEnd, onePass: settingsRef.current.onePass };
     if (action === 'loop') {
       looper.press(now, opts);
     } else if (action === 'stop') {
@@ -396,9 +408,11 @@ export default function MidiKeys() {
           flashesRef.current.push({ note: ev.note, at, loop: true });
         }
       });
+      // A one-pass overdub can end on its own; show that even when no frame is drawn.
+      refreshLoopInfo();
     }, TICK_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [refreshLoopInfo]);
 
   // ---- computer keyboard -------------------------------------------------
 
@@ -623,7 +637,9 @@ export default function MidiKeys() {
 
   // ---- render ----------------------------------------------------------------
 
-  const copy = LOOP_COPY[loopInfo.state] || LOOP_COPY.empty;
+  let copy = LOOP_COPY[loopInfo.state] || LOOP_COPY.empty;
+  if (loopInfo.overdubWaiting) copy = LOOP_COPY.overdubWaiting;
+  else if (loopInfo.overdubLeft > 0) copy = { ...copy, hint: `Layering, ${loopInfo.overdubLeft.toFixed(1)} s of the pass left. Press to stop early.` };
   const hasLoop = loopInfo.length > 0;
   const readout = loopInfo.state === 'recording'
     ? fmtTime(loopInfo.elapsed)
@@ -739,6 +755,14 @@ export default function MidiKeys() {
                   onChange={(e) => setSettings((s) => ({ ...s, trimEnd: e.target.checked }))}
                 />
                 Trim the silence after the last note
+              </label>
+              <label className="midikeys__check">
+                <input
+                  type="checkbox"
+                  checked={settings.onePass}
+                  onChange={(e) => setSettings((s) => ({ ...s, onePass: e.target.checked }))}
+                />
+                Overdubs stop after one pass
               </label>
               <label className="midikeys__range">
                 <span>Loop volume</span>

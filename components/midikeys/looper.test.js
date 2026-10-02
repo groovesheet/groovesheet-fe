@@ -178,3 +178,47 @@ test('loopEnd treats a chord as one onset when working out the step', () => {
   ];
   expect(loopEnd(ev)).toBeCloseTo(1.5);
 });
+
+test('an overdub starts on its first note and ends by itself one loop later', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.press(4); // held: 4 s loop from 4
+  l.pianoOff(60, 4.1);
+  l.press(5); // overdub armed at 5 ...
+  expect(l.info(6).overdubWaiting).toBe(true);
+  l.pianoOn(67, 100, 7); // ... the layer starts here, offset 3
+  l.pianoOff(67, 7.5);
+  l.pianoOn(72, 100, 10.5); // held past the end of the pass (7 + 4 = 11)
+  l.schedule(11.02, 0.1, () => {});
+  expect(l.state).toBe('playing');
+  const held = l.events.find((e) => e.midi === 72);
+  expect(held.dur).toBeCloseTo(0.5); // cut at 11, not left to ring into the next pass
+  l.pianoOff(72, 12); // the late key-up changes nothing
+  expect(held.dur).toBeCloseTo(0.5);
+  l.pianoOn(74, 100, 12.5); // playing now, so not recorded
+  expect(l.events.some((e) => e.midi === 74)).toBe(false);
+});
+
+test('pressing during the overdub still ends it early', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.press(4);
+  l.press(5);
+  l.pianoOn(67, 100, 5.5);
+  l.press(6);
+  expect(l.state).toBe('playing');
+  expect(l.events.find((e) => e.midi === 67).dur).toBeCloseTo(0.5);
+});
+
+test('with one-pass off, an overdub keeps layering until pressed', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.press(4);
+  l.press(5, { onePass: false });
+  l.pianoOn(67, 100, 5);
+  l.schedule(20, 0.1, () => {});
+  expect(l.state).toBe('overdub');
+});
