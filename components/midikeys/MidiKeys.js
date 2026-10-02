@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { buildKeyLayout, keyAtPoint, noteName } from '../bistable/keyLayout';
 import { createLooper } from './looper';
-import { createSoundEngine, PIANO_SOUNDS, DEFAULT_TONE_HZ, soundById } from './soundEngine';
+import { createSoundEngine, PIANO_SOUNDS, DEFAULT_TONE_HZ, soundById, isKnownSound } from './soundEngine';
+import { GM_FAMILIES, SAMPLE_SETS, instrumentForProgram } from './instruments';
 import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_ROWS, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
 import { bendAmount } from './wheels';
@@ -58,7 +59,8 @@ const DEFAULT_SETTINGS = {
   padMap: DEFAULT_PAD_MAP,
   drumChannel: DRUM_CHANNEL,
   bindings: DEFAULT_BINDINGS,
-  piano: PIANO_SOUNDS[0].id,
+  piano: PIANO_SOUNDS[0].id, // the keys' sound: a favourite or any GM instrument id
+  sampleSet: SAMPLE_SETS[0].id,
   volumes: { master: 0.9, piano: 1, drums: 0.5, loop: 0.9 },
   trimEnd: true, // cut the silence after the last note when the first take is closed
   onePass: true, // an overdub ends by itself one loop after its first note
@@ -90,7 +92,8 @@ function loadSettings() {
       padMap,
       drumChannel: Number.isInteger(ch) && ch >= 0 && ch <= 15 ? ch : DRUM_CHANNEL,
       bindings: sanitizeBindings(saved.bindings),
-      piano: PIANO_SOUNDS.some((p) => p.id === saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
+      piano: isKnownSound(saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
+      sampleSet: SAMPLE_SETS.some((x) => x.id === saved.sampleSet) ? saved.sampleSet : DEFAULT_SETTINGS.sampleSet,
       volumes: {
         ...DEFAULT_SETTINGS.volumes,
         ...(saved.volumes || {}),
@@ -339,6 +342,11 @@ export default function MidiKeys() {
     }
     if (cmd === 0x90 && d2 > 0) keyDown(d1, d2);
     else if (cmd === 0x80 || cmd === 0x90) keyUp(d1);
+    else if (cmd === 0xc0) {
+      // Program Change: the General MIDI instrument with that number
+      const inst = instrumentForProgram(d1);
+      if (inst) setSettings((s) => ({ ...s, piano: inst.id }));
+    }
     else if (cmd === 0xe0) {
       bendRef.current = bendAmount(d1, d2);
       engineRef.current?.setPitchBend(bendRef.current, settingsRef.current.bendRange);
@@ -420,7 +428,7 @@ export default function MidiKeys() {
     };
   }, []);
 
-  useEffect(() => { engineRef.current?.loadPiano(settings.piano); }, [settings.piano]);
+  useEffect(() => { engineRef.current?.loadPiano(settings.piano, settings.sampleSet); }, [settings.piano, settings.sampleSet]);
 
   useEffect(() => {
     const e = engineRef.current;
@@ -707,7 +715,7 @@ export default function MidiKeys() {
         <div>
           <h1 className="midikeys__title">MIDI Keyboard</h1>
           <p className="midikeys__sub">
-            Play, loop and layer. Keys play piano, pads play drums, and the Launchkey&apos;s Play ▶ works the looper.
+            Play, loop and layer. Keys play any of 128 instruments, pads play drums, and the Launchkey&apos;s Play ▶ works the looper.
           </p>
         </div>
         <div className="midikeys__status">
@@ -727,7 +735,20 @@ export default function MidiKeys() {
           <label className="midikeys__select">
             <span>Sound</span>
             <select value={settings.piano} onChange={(e) => setSettings((s) => ({ ...s, piano: e.target.value }))}>
-              {PIANO_SOUNDS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              <optgroup label="Favourites">
+                {PIANO_SOUNDS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </optgroup>
+              {GM_FAMILIES.map((f) => (
+                <optgroup key={f.family} label={f.family}>
+                  {f.instruments.map((i) => <option key={i.id} value={i.id}>{`${i.program + 1}. ${i.label}`}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <label className="midikeys__select">
+            <span>Samples</span>
+            <select value={settings.sampleSet} onChange={(e) => setSettings((s) => ({ ...s, sampleSet: e.target.value }))}>
+              {SAMPLE_SETS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
             </select>
           </label>
           {soundById(settings.piano).filter && (
@@ -985,6 +1006,12 @@ export default function MidiKeys() {
           <span><i style={{ background: LOOP }} /> Loop</span>
         </div>
       </div>
+
+      <p className="midikeys__credits">
+        Instrument samples: the MusyngKite (CC BY-SA 3.0), FluidR3 (CC BY 3.0) and FatBoy (CC BY-SA 3.0) General MIDI
+        soundfonts, rendered by{' '}
+        <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener noreferrer">gleitz/midi-js-soundfonts</a>.
+      </p>
     </div>
   );
 }

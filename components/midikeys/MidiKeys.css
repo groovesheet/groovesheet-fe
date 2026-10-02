@@ -659,3 +659,11 @@
   gap: 16px;
   min-width: 0;
 }
+
+.midikeys__credits {
+  margin: 0;
+  font-size: 12px;
+  color: #5f5e60;
+}
+
+.midikeys__credits a { color: var(--mk-muted); }

@@ -1,6 +1,7 @@
 import Soundfont from 'soundfont-player';
 import { createDrumSynth } from './drumKit';
 import { createFxChain } from './fxChain';
+import { GM_INSTRUMENTS, sampleUrl } from './instruments';
 
 /**
  * Audio for /midi-keyboard: a sampled piano (soundfont-player, MusyngKite, the
@@ -23,8 +24,10 @@ import { createFxChain } from './fxChain';
  * shared vibrato LFO wired into each live voice's `detune` as it starts.
  */
 
-// `sample` is the MusyngKite instrument; `filter` runs the keys through a
-// resonant band-pass whose centre the Tone slider moves.
+// The favourites at the top of the Sound menu; every General MIDI instrument
+// (instruments.js) is selectable below them. `sample` is the soundfont
+// instrument; `filter` runs the keys through a resonant band-pass whose
+// centre the Tone slider moves.
 export const PIANO_SOUNDS = [
   { id: 'acoustic_grand_piano', label: 'Grand piano' },
   { id: 'bright_acoustic_piano', label: 'Bright piano' },
@@ -39,7 +42,12 @@ export const PIANO_SOUNDS = [
   { id: 'aluminium_bandpass', label: 'Aluminium band-pass', sample: 'vibraphone', filter: { q: 2.4, makeup: 2.2, drive: 2.5 } },
 ];
 
-export const soundById = (id) => PIANO_SOUNDS.find((p) => p.id === id) || PIANO_SOUNDS[0];
+const findSound = (id) => PIANO_SOUNDS.find((p) => p.id === id)
+  || GM_INSTRUMENTS.find((g) => g.id === id)
+  || null;
+
+export const isKnownSound = (id) => findSound(id) != null;
+export const soundById = (id) => findSound(id) || PIANO_SOUNDS[0];
 
 export const DEFAULT_TONE_HZ = 1400;
 const VIBRATO_HZ = 5.5;
@@ -186,13 +194,16 @@ export function createSoundEngine({ onStatus } = {}) {
     setModulation(modValue);
   }
 
-  function loadPiano(soundId) {
+  function loadPiano(soundId, sampleSet) {
     const sound = soundById(soundId);
     const token = ++loadToken;
     piano = null;
     routeKeys(sound.filter);
     report();
-    Soundfont.instrument(ctx, sound.sample || sound.id, { soundfont: 'MusyngKite', format: 'mp3', destination: keysIn })
+    Soundfont.instrument(ctx, sound.sample || sound.id, {
+      nameToUrl: (name) => sampleUrl(name, sampleSet),
+      destination: keysIn,
+    })
       .then((inst) => {
         if (closed || token !== loadToken) return;
         piano = inst;
