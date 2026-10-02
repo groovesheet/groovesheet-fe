@@ -15,7 +15,7 @@ import { FX, DEFAULT_FX, DEFAULT_KNOBS, PAGE_COUNT, PAGE_NAMES, PAGE_SCREEN_NAME
 import Knob from './Knob';
 import Fader from './Fader';
 import {
-  FADERS, DEFAULT_FADERS, DEFAULT_FADER_BINDINGS, faderForMessage, faderGain, faderLabel, sanitizeFaders,
+  FADERS, DEFAULT_FADERS, DEFAULT_FADER_BINDINGS, faderForMessage, faderGain, faderLabel, sanitizeFaders, FIRST_FADER_CC,
 } from './faders';
 import './MidiKeys.css';
 
@@ -174,7 +174,7 @@ function controlMap(settings) {
     ['Mod wheel', sound.filter ? 'Auto-wah and tremolo on this sound' : 'Vibrato'],
     ['Pads', `Drums, in Drum mode on channel ${settings.drumChannel + 1}; change a pad's sound in Drum pads`],
     ['Knobs 1-8', `The highlighted effects row (now row ${settings.fxPage + 1})`],
-    ['Faders 1-9', 'Keys, Drums, Take 1, Layers 2-5+, Loop, Master (the Mixer)'],
+    ['Faders 1-9 (CC 71-79)', 'Keys, Drums, Take 1, Layers 2-5+, Loop, Master (the Mixer)'],
     ['Play ▶ / Record ● / Loop', 'Loop button: arm, close the loop, overdub'],
     ['Stop ■', 'Stop the loop; press again to clear'],
     ['Track ◄ ►', 'Previous / next sound'],
@@ -453,7 +453,8 @@ export default function MidiKeys() {
     if (fader) {
       settingsRef.current = { ...settingsRef.current, faders: { ...settingsRef.current.faders, [fader.id]: fader.value } };
       setSettings((s) => ({ ...s, faders: { ...s.faders, [fader.id]: fader.value } }));
-      showFader(fader, data[1] === 5 + fader.slot);
+      // the fader's own display (targets 05h-0Dh) when it is the fader's default CC
+      showFader(fader, data[1] === FIRST_FADER_CC + fader.slot);
       return;
     }
 

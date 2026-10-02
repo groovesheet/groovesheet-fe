@@ -2,16 +2,21 @@ import {
   DEFAULT_FADER_BINDINGS, DEFAULT_FADERS, FADERS, faderForLayer, faderForMessage, faderGain, faderLabel, gainToFader, sanitizeFaders,
 } from './faders';
 
-test('nine faders on CC 5-13, channel 16, left to right', () => {
+test('nine faders on CC 71-79, channel 15, left to right (as the Launchkey sends them)', () => {
   expect(FADERS.map((f) => f.id)).toEqual(['keys', 'drums', 'layer0', 'layer1', 'layer2', 'layer3', 'layer4', 'loop', 'master']);
-  expect(DEFAULT_FADER_BINDINGS.map((b) => b.cc)).toEqual([5, 6, 7, 8, 9, 10, 11, 12, 13]);
-  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbf, 5, 127])).toEqual({ id: 'keys', value: 1, slot: 0 });
-  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbf, 13, 0])).toMatchObject({ id: 'master', slot: 8 });
+  expect(DEFAULT_FADER_BINDINGS.map((b) => b.cc)).toEqual([71, 72, 73, 74, 75, 76, 77, 78, 79]);
+  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbe, 71, 127])).toEqual({ id: 'keys', value: 1, slot: 0 });
+  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbe, 79, 0])).toMatchObject({ id: 'master', slot: 8 });
 });
 
-test("CC 7 and 11 on the keys' channel are not faders", () => {
-  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xb0, 7, 100])).toBeNull();
-  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xb0, 11, 100])).toBeNull();
+test('the same CCs on another channel are not faders', () => {
+  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xb0, 71, 100])).toBeNull();
+  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbf, 5, 100])).toBeNull();
+});
+
+test('bindings saved under the old guessed CC 5-13 become the measured defaults', () => {
+  const old = FADERS.map((f, i) => ({ id: f.id, cc: 5 + i, channel: 15 }));
+  expect(sanitizeFaders({}, old).bindings).toEqual(DEFAULT_FADER_BINDINGS);
 });
 
 test('the taper puts unity near the top and silence at the bottom', () => {
@@ -37,8 +42,8 @@ test('levels saved as gains before the faders carry over', () => {
 });
 
 test('a learnt fader keeps its control; one given away stays unassigned', () => {
-  const { bindings } = sanitizeFaders({}, [{ id: 'keys', cc: 74, channel: 0 }, { id: 'drums', cc: null }]);
-  expect(bindings[0]).toEqual({ id: 'keys', cc: 74, channel: 0 });
+  const { bindings } = sanitizeFaders({}, [{ id: 'keys', cc: 20, channel: 0 }, { id: 'drums', cc: null }]);
+  expect(bindings[0]).toEqual({ id: 'keys', cc: 20, channel: 0 });
   expect(bindings[1].cc).toBeNull();
-  expect(faderForMessage(bindings, [0xb0, 74, 64]).id).toBe('keys');
+  expect(faderForMessage(bindings, [0xb0, 20, 64]).id).toBe('keys');
 });

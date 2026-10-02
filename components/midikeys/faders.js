@@ -1,11 +1,11 @@
 /**
  * The mixer on /midi-keyboard, played from the Launchkey 49/61's nine faders.
  *
- * Programmer's Reference Guide, "Fader mode": the faders send Control Changes
- * 5-13 (05h-0Dh) on channel 16. That table is for the DAW fader mode; if the
- * Launchkey sends something else in Standalone, each fader can be re-learnt.
- * Defaults stay on channel 16 because CC 7 and CC 11 on the keys' channel
- * mean volume and expression to other gear.
+ * Measured on Edward's Launchkey MK4 49 in Standalone mode (2026-10-02, a
+ * MIDI log while sweeping each fader): the nine faders send Control Changes
+ * 71-79 on channel 15, left to right. (The Programmer's Reference Guide's
+ * CC 5-13 on channel 16 is the DAW fader mode, which this page does not use.)
+ * Each fader can still be re-learnt.
  *
  *   1 Keys     what you play live      6 Layer 4
  *   2 Drums    the pads, live          7 Layer 5 and up
@@ -29,8 +29,11 @@ export const FADERS = [
   { id: 'master', label: 'Master', def: 0.85 },
 ];
 
-export const FIRST_FADER_CC = 5;
-const LK_CHANNEL = 15; // channel 16, zero-based
+export const FIRST_FADER_CC = 71;
+const FADER_CHANNEL = 14; // channel 15, zero-based
+// What the defaults were before they were measured: CC 5-13 on channel 16.
+const OLD_FIRST_FADER_CC = 5;
+const OLD_FADER_CHANNEL = 15;
 
 export const faderGain = (pos) => 1.25 * pos * pos;
 export const gainToFader = (gain) => Math.min(1, Math.sqrt(Math.max(gain, 0) / 1.25));
@@ -46,7 +49,7 @@ export function faderLabel(pos) {
 }
 
 export const DEFAULT_FADERS = Object.fromEntries(FADERS.map((f) => [f.id, f.def]));
-export const DEFAULT_FADER_BINDINGS = FADERS.map((f, i) => ({ id: f.id, cc: FIRST_FADER_CC + i, channel: LK_CHANNEL }));
+export const DEFAULT_FADER_BINDINGS = FADERS.map((f, i) => ({ id: f.id, cc: FIRST_FADER_CC + i, channel: FADER_CHANNEL }));
 
 /** Which fader a Control Change moves, or null. */
 export function faderForMessage(bindings, data) {
@@ -79,9 +82,11 @@ export function sanitizeFaders(saved, savedBindings, oldVolumes) {
       if (Number.isFinite(v)) values[f.id] = Math.min(Math.max(v, 0), 1);
     });
   }
-  const bindings = DEFAULT_FADER_BINDINGS.map((d) => {
+  const bindings = DEFAULT_FADER_BINDINGS.map((d, i) => {
     const s = Array.isArray(savedBindings) ? savedBindings.find((b) => b && b.id === d.id) : null;
     if (!s) return d;
+    // a binding saved under the old guessed defaults is just the default
+    if (s.cc === OLD_FIRST_FADER_CC + i && s.channel === OLD_FADER_CHANNEL) return d;
     if (s.cc === null) return { id: d.id, cc: null, channel: null };
     if (!Number.isInteger(s.cc) || s.cc < 0 || s.cc > 127) return d;
     return { id: d.id, cc: s.cc, channel: Number.isInteger(s.channel) ? s.channel : null };
