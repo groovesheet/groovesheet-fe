@@ -651,3 +651,11 @@
   .midikeys__fxrow { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
   .midikeys__fxslot.is-group-start:not(:first-child) { border-left: 0; }
 }
+
+/* Right-hand column of the deck: effects above the drum pads. */
+.midikeys__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}

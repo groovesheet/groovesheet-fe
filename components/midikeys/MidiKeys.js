@@ -852,107 +852,110 @@ export default function MidiKeys() {
           </div>
         </section>
 
-        {/* ---- drum pads ---- */}
-        <section className="midikeys__card midikeys__pads" aria-label="Drum pads">
-          <div className="midikeys__card-head">
-            <div>
-              <h2 className="midikeys__card-title">Drum pads</h2>
-              <p className="midikeys__card-sub">Launchkey pads in Drum mode send on channel {drumCh + 1}. Tap a pad here to try it.</p>
-            </div>
-            <div className="midikeys__pad-tools">
-              <label className="midikeys__select">
-                <span>Channel</span>
-                <select value={drumCh} onChange={(e) => setSettings((s) => ({ ...s, drumChannel: Number(e.target.value) }))}>
-                  {Array.from({ length: 16 }, (_, i) => <option key={i} value={i}>{i + 1}</option>)}
-                </select>
-              </label>
-              <button type="button" className={`midikeys__btn ${editPads ? 'is-active' : ''}`} onClick={() => setEditPads((v) => !v)}>
-                {editPads ? 'Done' : 'Change sounds'}
+        <div className="midikeys__side">
+          {/* ---- effects (the Launchkey knobs) ---- */}
+          <section className="midikeys__card midikeys__fx" aria-label="Effects">
+            <div className="midikeys__card-head">
+              <div>
+                <h2 className="midikeys__card-title">Effects</h2>
+                <p className="midikeys__card-sub">
+                  The eight Launchkey knobs, left to right, on the keys. Drag a knob here, double-click to reset.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="midikeys__link"
+                onClick={() => setSettings((s) => ({ ...s, fx: DEFAULT_FX, knobs: DEFAULT_KNOBS }))}
+              >
+                Reset effects
               </button>
-              {editPads && (
-                <button type="button" className="midikeys__link" onClick={() => setSettings((s) => ({ ...s, padMap: DEFAULT_PAD_MAP }))}>
-                  Reset
-                </button>
-              )}
             </div>
-          </div>
-          <div className="midikeys__padgrid">
-            {[0, 1].map((half) => (
-              <div key={half} className="midikeys__padhalf">
-                {PAD_ROWS.map((row) => row.slice(half * 4, half * 4 + 4).map((note) => {
-                  const voice = voiceById(voiceForNote(settings.padMap, note));
-                  const setEl = (el) => { if (el) padElsRef.current.set(note, el); else padElsRef.current.delete(note); };
-                  return editPads ? (
-                    <label key={note} ref={setEl} className="midikeys__pad is-editing">
-                      <span className="midikeys__pad-note">Pad {note}</span>
-                      <select value={voice ? voice.id : ''} onChange={(e) => setPad(note, e.target.value)}>
-                        {DRUM_VOICES.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
-                      </select>
-                    </label>
-                  ) : (
-                    <button
-                      key={note}
-                      ref={setEl}
-                      type="button"
-                      className="midikeys__pad"
-                      onPointerDown={(e) => { e.preventDefault(); drumHit(note, 100); }}
-                    >
-                      <span className="midikeys__pad-name">{voice ? voice.label : '—'}</span>
-                      <span className="midikeys__pad-note">{note}</span>
-                    </button>
-                  );
-                }))}
-              </div>
-            ))}
-          </div>
-          <div className="midikeys__mixer">
-            {[['master', 'Master'], ['piano', 'Piano'], ['drums', 'Drums']].map(([k, label]) => (
-              <label key={k} className="midikeys__range">
-                <span>{label}</span>
-                <input type="range" min="0" max="1.2" step="0.05" value={settings.volumes[k]} onChange={(e) => setVolume(k, Number(e.target.value))} />
-              </label>
-            ))}
-          </div>
-        </section>
-      </div>
+            <div className="midikeys__fxrow">
+              {FX.map((f, i) => {
+                const groupStart = i === 0 || FX[i - 1].group !== f.group;
+                return (
+                  <div key={f.id} className={`midikeys__fxslot ${groupStart ? 'is-group-start' : ''}`}>
+                    <span className="midikeys__fxgroup">{groupStart ? f.group : '\u00a0'}</span>
+                    <Knob
+                      label={f.label}
+                      value={settings.fx[f.id]}
+                      def={f.def}
+                      centred={f.def === 0.5}
+                      display={f.fmt(settings.fx[f.id])}
+                      learning={learningKnob === f.id}
+                      onLearn={() => setLearningKnob(learningKnob === f.id ? null : f.id)}
+                      onChange={(v) => setSettings((s) => ({ ...s, fx: { ...s.fx, [f.id]: v } }))}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
 
-      <section className="midikeys__card midikeys__fx" aria-label="Effects">
-        <div className="midikeys__card-head">
-          <div>
-            <h2 className="midikeys__card-title">Effects</h2>
-            <p className="midikeys__card-sub">
-              The eight Launchkey knobs, left to right, on the keys. Drag a knob here, double-click to reset.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="midikeys__link"
-            onClick={() => setSettings((s) => ({ ...s, fx: DEFAULT_FX, knobs: DEFAULT_KNOBS }))}
-          >
-            Reset effects
-          </button>
-        </div>
-        <div className="midikeys__fxrow">
-          {FX.map((f, i) => {
-            const groupStart = i === 0 || FX[i - 1].group !== f.group;
-            return (
-              <div key={f.id} className={`midikeys__fxslot ${groupStart ? 'is-group-start' : ''}`}>
-                <span className="midikeys__fxgroup">{groupStart ? f.group : '\u00a0'}</span>
-                <Knob
-                  label={f.label}
-                  value={settings.fx[f.id]}
-                  def={f.def}
-                  centred={f.def === 0.5}
-                  display={f.fmt(settings.fx[f.id])}
-                  learning={learningKnob === f.id}
-                  onLearn={() => setLearningKnob(learningKnob === f.id ? null : f.id)}
-                  onChange={(v) => setSettings((s) => ({ ...s, fx: { ...s.fx, [f.id]: v } }))}
-                />
+          {/* ---- drum pads ---- */}
+          <section className="midikeys__card midikeys__pads" aria-label="Drum pads">
+            <div className="midikeys__card-head">
+              <div>
+                <h2 className="midikeys__card-title">Drum pads</h2>
+                <p className="midikeys__card-sub">Launchkey pads in Drum mode send on channel {drumCh + 1}. Tap a pad here to try it.</p>
               </div>
-            );
-          })}
+              <div className="midikeys__pad-tools">
+                <label className="midikeys__select">
+                  <span>Channel</span>
+                  <select value={drumCh} onChange={(e) => setSettings((s) => ({ ...s, drumChannel: Number(e.target.value) }))}>
+                    {Array.from({ length: 16 }, (_, i) => <option key={i} value={i}>{i + 1}</option>)}
+                  </select>
+                </label>
+                <button type="button" className={`midikeys__btn ${editPads ? 'is-active' : ''}`} onClick={() => setEditPads((v) => !v)}>
+                  {editPads ? 'Done' : 'Change sounds'}
+                </button>
+                {editPads && (
+                  <button type="button" className="midikeys__link" onClick={() => setSettings((s) => ({ ...s, padMap: DEFAULT_PAD_MAP }))}>
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="midikeys__padgrid">
+              {[0, 1].map((half) => (
+                <div key={half} className="midikeys__padhalf">
+                  {PAD_ROWS.map((row) => row.slice(half * 4, half * 4 + 4).map((note) => {
+                    const voice = voiceById(voiceForNote(settings.padMap, note));
+                    const setEl = (el) => { if (el) padElsRef.current.set(note, el); else padElsRef.current.delete(note); };
+                    return editPads ? (
+                      <label key={note} ref={setEl} className="midikeys__pad is-editing">
+                        <span className="midikeys__pad-note">Pad {note}</span>
+                        <select value={voice ? voice.id : ''} onChange={(e) => setPad(note, e.target.value)}>
+                          {DRUM_VOICES.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
+                        </select>
+                      </label>
+                    ) : (
+                      <button
+                        key={note}
+                        ref={setEl}
+                        type="button"
+                        className="midikeys__pad"
+                        onPointerDown={(e) => { e.preventDefault(); drumHit(note, 100); }}
+                      >
+                        <span className="midikeys__pad-name">{voice ? voice.label : '—'}</span>
+                        <span className="midikeys__pad-note">{note}</span>
+                      </button>
+                    );
+                  }))}
+                </div>
+              ))}
+            </div>
+            <div className="midikeys__mixer">
+              {[['master', 'Master'], ['piano', 'Piano'], ['drums', 'Drums']].map(([k, label]) => (
+                <label key={k} className="midikeys__range">
+                  <span>{label}</span>
+                  <input type="range" min="0" max="1.2" step="0.05" value={settings.volumes[k]} onChange={(e) => setVolume(k, Number(e.target.value))} />
+                </label>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
 
       <div className="midikeys__stage">
         <canvas
