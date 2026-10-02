@@ -137,7 +137,12 @@ async function waitForJob(
     if (!res?.ok) continue;
     const json = (await res.json().catch(() => ({}))) as { status?: string; results?: JobResult[] };
     const mine = (json.results ?? []).find((r) => r.platform === platform);
-    if (mine?.success === false) {
+    /* `success: false` with no message, on a job that is not finished, is an
+       attempt Upload-Post is about to retry, not a verdict. On 28 Sep both
+       GrooveSheet image posts were recorded as rejected this way and went
+       live three minutes later. Only a finished job, or a stated reason,
+       counts as a rejection. */
+    if (mine?.success === false && (json.status === "completed" || mine.error_message)) {
       throw new Error(`${platform} rejected the post: ${mine.error_message ?? "no reason given"}`);
     }
     if (mine?.success) {

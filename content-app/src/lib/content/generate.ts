@@ -581,6 +581,26 @@ export async function runPipeline(trigger: "cron" | "manual"): Promise<RunOutcom
       }
     }
 
+    /* A title a character or two over the limit is the commonest thing the
+       revision pass leaves behind, and on its own it holds a clean post for
+       review (1 Oct 2026: 51 characters against 50). Ask for the title alone,
+       a few times, and keep the first that fits. */
+    const titleLimit = cfg.validation.titleMaxChars;
+    for (let attempt = 0; attempt < 3 && draft.title.length > titleLimit; attempt++) {
+      const short = await complete({
+        models: BLOG_MODELS,
+        maxTokens: 200,
+        temperature: 0.3,
+        system: "You shorten blog post titles. Reply with the new title only, no quotes, no site name.",
+        user: `Shorten this title to ${titleLimit} characters or fewer. Keep the product name and version and keep the meaning. It is ${draft.title.length} characters now.\n\n${draft.title}`,
+      }).catch(() => null);
+      const candidate = short?.text.trim().split("\n")[0].replace(/^["'“]|["'”]$/g, "").trim();
+      if (candidate && candidate.length <= titleLimit) {
+        draft = { ...draft, title: candidate };
+        validation = validateDraft(draft);
+      }
+    }
+
     draft.slug = await uniqueSlug(draft.slug);
     const cover = await coverFrom(sourceUrl);
     const saved = await insertDraft({
