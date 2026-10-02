@@ -561,3 +561,93 @@
   accent-color: var(--mk-live);
   cursor: pointer;
 }
+
+/* ---- effects (stage-piano style knobs) ---- */
+
+.midikeys__fx { gap: 10px; }
+
+.midikeys__fxrow {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.midikeys__fxslot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.midikeys__fxslot.is-group-start:not(:first-child) {
+  border-left: 1px solid var(--mk-border);
+}
+
+.midikeys__fxgroup {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+}
+
+.mk-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mk-knob__dial {
+  width: 56px;
+  height: 56px;
+  cursor: ns-resize;
+  touch-action: none;
+  border-radius: 50%;
+}
+
+.mk-knob__dial:focus-visible { outline: 2px solid var(--mk-live); outline-offset: 2px; }
+.mk-knob__dial svg { width: 100%; height: 100%; display: block; }
+
+.mk-knob__track,
+.mk-knob__value {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.mk-knob__track { stroke: #2e2d31; }
+.mk-knob__value { stroke: var(--mk-live); }
+.mk-knob__cap { fill: var(--mk-panel-2); stroke: var(--mk-border); stroke-width: 1; }
+.mk-knob__pointer { stroke: var(--mk-text); stroke-width: 2.5; stroke-linecap: round; }
+
+.mk-knob__label { font-size: 13px; font-weight: 600; }
+
+.mk-knob__value-text {
+  font-size: 11px;
+  color: var(--mk-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mk-knob__learn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 11px;
+  color: #93b4ff;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.mk-knob__learn:hover { opacity: 1; text-decoration: underline; }
+.mk-knob.is-learning .mk-knob__value-text { color: var(--mk-amber); }
+.mk-knob.is-learning .mk-knob__value { stroke: var(--mk-amber); }
+
+@media (max-width: 760px) {
+  .midikeys__fxrow { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
+  .midikeys__fxslot.is-group-start:not(:first-child) { border-left: 0; }
+}

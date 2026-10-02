@@ -6,6 +6,8 @@ import { createSoundEngine, PIANO_SOUNDS, DEFAULT_TONE_HZ, soundById } from './s
 import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_ROWS, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
 import { bendAmount } from './wheels';
+import { FX, DEFAULT_FX, DEFAULT_KNOBS, knobForMessage, sanitizeFx } from './fx';
+import Knob from './Knob';
 import './MidiKeys.css';
 
 /**
@@ -20,6 +22,9 @@ import './MidiKeys.css';
  *     first note, then layers overdubs. On a Launchkey MK4 the Play button
  *     (MIDI Start) is the loop button and Stop stops / clears; both can be
  *     re-learnt from any button. Space and Esc do the same from the computer.
+ *   - The eight knobs play a stage-piano effects section on the keys (Drive,
+ *     Treble, Bass, Tremolo, Phaser, Delay amount and time, Reverb), each
+ *     re-learnable from any knob; see fx.js.
  *   - The pitch wheel bends the notes you are playing (±2 semitones by default,
  *     the GM convention) and the mod wheel adds vibrato. The keys' sound can be
  *     run through a band-pass filter (the "Aluminium band-pass" preset), whose
@@ -57,6 +62,8 @@ const DEFAULT_SETTINGS = {
   volumes: { master: 0.9, piano: 1, drums: 0.5, loop: 0.9 },
   trimEnd: true, // cut the silence after the last note when the first take is closed
   onePass: true, // an overdub ends by itself one loop after its first note
+  fx: DEFAULT_FX, // 0..1 per effect
+  knobs: DEFAULT_KNOBS, // which CC turns which effect
   bendRange: 2, // semitones each way
   tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
 };
@@ -78,6 +85,7 @@ function loadSettings() {
       Object.entries(saved.padMap).forEach(([note, id]) => { if (voiceById(id)) padMap[note] = id; });
     }
     const ch = Number(saved.drumChannel);
+    const fx = sanitizeFx(saved.fx, saved.knobs);
     return {
       padMap,
       drumChannel: Number.isInteger(ch) && ch >= 0 && ch <= 15 ? ch : DRUM_CHANNEL,
@@ -90,6 +98,8 @@ function loadSettings() {
         ...((saved.version || 1) < 2 ? { drums: DEFAULT_SETTINGS.volumes.drums } : {}),
       },
       trimEnd: saved.trimEnd !== false,
+      fx: fx.values,
+      knobs: fx.knobs,
       onePass: saved.onePass !== false,
       bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
       tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
@@ -135,6 +145,9 @@ export default function MidiKeys() {
   const learningRef = useRef(null);
   learningRef.current = learning;
   const [editPads, setEditPads] = useState(false);
+  const [learningKnob, setLearningKnob] = useState(null); // effect id
+  const learningKnobRef = useRef(null);
+  learningKnobRef.current = learningKnob;
 
   const engineRef = useRef(null);
   const looperRef = useRef(null);
@@ -274,6 +287,31 @@ export default function MidiKeys() {
     const status = data[0];
     if (status === 0xf8 || status === 0xfe) return; // clock, active sensing
 
+    if (learningKnobRef.current && (status & 0xf0) === 0xb0) {
+      const cc = data[1];
+      if (cc !== 1 && cc !== 64 && cc < 120) {
+        const id = learningKnobRef.current;
+        const channel = status & 0x0f;
+        setSettings((s) => ({
+          ...s,
+          // the control now belongs to this effect alone
+          knobs: s.knobs.map((k) => {
+            if (k.id === id) return { id, cc, channel };
+            return k.cc === cc && (k.channel == null || k.channel === channel) ? { ...k, cc: null } : k; // unassigned
+          }),
+          fx: { ...s.fx, [id]: data[2] / 127 },
+        }));
+        setLearningKnob(null);
+        return;
+      }
+    }
+
+    const knob = knobForMessage(settingsRef.current.knobs, data);
+    if (knob) {
+      setSettings((s) => ({ ...s, fx: { ...s.fx, [knob.id]: knob.value } }));
+      return;
+    }
+
     if (learningRef.current) {
       const press = pressFromMessage(data, { strict: true });
       if (press) {
@@ -392,6 +430,18 @@ export default function MidiKeys() {
 
   useEffect(() => { engineRef.current?.setTone(settings.tone); }, [settings.tone]);
 
+  // Push only the effects that changed (a drive change rebuilds its curve).
+  const appliedFxRef = useRef({});
+  useEffect(() => {
+    const e = engineRef.current;
+    if (!e) return;
+    Object.entries(settings.fx).forEach(([id, v]) => {
+      if (appliedFxRef.current[id] === v) return;
+      appliedFxRef.current[id] = v;
+      e.setFx(id, v);
+    });
+  }, [settings.fx]);
+
   // A new range re-applies the wheel where it is now.
   useEffect(() => { engineRef.current?.setPitchBend(bendRef.current, settings.bendRange); }, [settings.bendRange]);
 
@@ -419,6 +469,10 @@ export default function MidiKeys() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.repeat || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'Escape' && learningKnobRef.current) {
+        setLearningKnob(null);
+        return;
+      }
       if (e.code === 'Space') {
         e.preventDefault();
         loopAction('loop');
@@ -861,6 +915,44 @@ export default function MidiKeys() {
           </div>
         </section>
       </div>
+
+      <section className="midikeys__card midikeys__fx" aria-label="Effects">
+        <div className="midikeys__card-head">
+          <div>
+            <h2 className="midikeys__card-title">Effects</h2>
+            <p className="midikeys__card-sub">
+              The eight Launchkey knobs, left to right, on the keys. Drag a knob here, double-click to reset.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="midikeys__link"
+            onClick={() => setSettings((s) => ({ ...s, fx: DEFAULT_FX, knobs: DEFAULT_KNOBS }))}
+          >
+            Reset effects
+          </button>
+        </div>
+        <div className="midikeys__fxrow">
+          {FX.map((f, i) => {
+            const groupStart = i === 0 || FX[i - 1].group !== f.group;
+            return (
+              <div key={f.id} className={`midikeys__fxslot ${groupStart ? 'is-group-start' : ''}`}>
+                <span className="midikeys__fxgroup">{groupStart ? f.group : '\u00a0'}</span>
+                <Knob
+                  label={f.label}
+                  value={settings.fx[f.id]}
+                  def={f.def}
+                  centred={f.def === 0.5}
+                  display={f.fmt(settings.fx[f.id])}
+                  learning={learningKnob === f.id}
+                  onLearn={() => setLearningKnob(learningKnob === f.id ? null : f.id)}
+                  onChange={(v) => setSettings((s) => ({ ...s, fx: { ...s.fx, [f.id]: v } }))}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="midikeys__stage">
         <canvas

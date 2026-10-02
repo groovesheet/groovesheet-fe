@@ -1,5 +1,6 @@
 import Soundfont from 'soundfont-player';
 import { createDrumSynth } from './drumKit';
+import { createFxChain } from './fxChain';
 
 /**
  * Audio for /midi-keyboard: a sampled piano (soundfont-player, MusyngKite, the
@@ -71,8 +72,11 @@ export function createSoundEngine({ onStatus } = {}) {
   comp.connect(ctx.destination);
   const master = ctx.createGain();
   master.connect(comp);
+  // The keys (live and replayed) go through the stage-piano effects; the
+  // drums stay dry, as a drum machine beside the keyboard would.
+  const fx = createFxChain(ctx, master);
   const pianoBus = ctx.createGain();
-  pianoBus.connect(master);
+  pianoBus.connect(fx.input);
   // Keys enter here, then go straight to the piano bus, or through the
   // electric chain: drive -> band-pass -> makeup -> tremolo -> dry + chorus.
   const keysIn = ctx.createGain();
@@ -354,6 +358,7 @@ export function createSoundEngine({ onStatus } = {}) {
     setPitchBend,
     setModulation,
     setTone,
+    setFx: (id, value) => { if (!closed) fx.set(id, value); },
     close,
   };
 }
