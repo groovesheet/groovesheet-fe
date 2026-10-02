@@ -63,7 +63,10 @@ const byTime = (a, b) => a.t - b.t;
 
 export function createLooper() {
   let state = 'empty';
-  let events = []; // { type: 'piano', midi, vel, t, dur, layer } | { type: 'drum', note, voice, vel, t, layer }
+  // { type: 'piano', midi, vel, t, dur, layer, ...meta } | { type: 'drum', note, voice, vel, t, layer, ...meta }
+  // meta is whatever the page records with the note: the instrument it was
+  // played on and the level it was played at, so each layer replays as played.
+  let events = [];
   let length = 0; // seconds, set when the loop is closed
   let recStart = 0; // clock time of the first recorded note
   let playStart = 0; // clock time the current playback began (offset 0)
@@ -206,13 +209,13 @@ export function createLooper() {
     return null;
   };
 
-  function pianoOn(midi, vel, now) {
+  function pianoOn(midi, vel, now, meta) {
     const t = recordOffset(now);
     if (t == null) return;
     // A re-press of a key still held closes the earlier note first.
     const prev = open.get(midi);
     if (prev) prev.ev.dur = Math.max(MIN_NOTE_SEC, now - prev.abs);
-    const ev = { type: 'piano', midi, vel, t, dur: MIN_NOTE_SEC, layer };
+    const ev = { ...meta, type: 'piano', midi, vel, t, dur: MIN_NOTE_SEC, layer };
     events.push(ev);
     open.set(midi, { ev, abs: now });
   }
@@ -224,10 +227,10 @@ export function createLooper() {
     held.ev.dur = Math.max(MIN_NOTE_SEC, Math.min(now - held.abs, length || Infinity));
   }
 
-  function drum(note, voice, vel, now) {
+  function drum(note, voice, vel, now, meta) {
     const t = recordOffset(now);
     if (t == null) return;
-    events.push({ type: 'drum', note, voice, vel, t, layer });
+    events.push({ ...meta, type: 'drum', note, voice, vel, t, layer });
   }
 
   /**

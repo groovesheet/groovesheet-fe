@@ -19,6 +19,12 @@ import { GM_FAMILIES, sampleUrl } from './instruments';
  * tracked and stopped one by one, replayed drums go through a bus that is
  * faded out and swapped for a fresh one.
  *
+ * Levels: live keys and drums have their own faders. A loop note carries
+ * the instrument and the level it was played at, and replays through its
+ * layer's gain (layer fader x Loop fader), so a quiet piano take and a loud
+ * trumpet overdub keep their balance whatever is selected or set now. The
+ * engine keeps a few instruments loaded at once for that.
+ *
  * The wheels act on the notes you are playing, not on loop replay: pitch bend
  * sets every live voice's `detune`, and the mod wheel sets the depth of one
  * shared vibrato LFO wired into each live voice's `detune` as it starts.
@@ -107,10 +113,12 @@ export function createSoundEngine({ onStatus } = {}) {
   const fx = createFxChain(ctx, master);
   const pianoBus = ctx.createGain();
   pianoBus.connect(fx.input);
-  // Keys enter here, then go straight to the piano bus, or through the
-  // electric chain: drive -> band-pass -> makeup -> tremolo -> dry + chorus.
-  const keysIn = ctx.createGain();
-  keysIn.connect(pianoBus);
+  // Two ways into the keys' effects: straight (directIn), or through the
+  // electric chain (drive -> band-pass -> makeup -> tremolo -> dry + chorus)
+  // for sounds that have a `filter`. Both are always wired; each note is sent
+  // down the one its sound needs.
+  const directIn = ctx.createGain();
+  directIn.connect(pianoBus);
   const drive = ctx.createWaveShaper();
   drive.oversample = '2x';
   const bandpass = ctx.createBiquadFilter();
@@ -170,17 +178,44 @@ export function createSoundEngine({ onStatus } = {}) {
   drumBus.connect(master);
 
   const playDrum = createDrumSynth(ctx);
-  let loopVolume = 0.9;
-  let loopDrums = null;
-  const freshLoopDrums = () => {
-    const g = ctx.createGain();
-    g.gain.value = loopVolume;
-    g.connect(drumBus);
-    return g;
-  };
-  loopDrums = freshLoopDrums();
 
-  let piano = null;
+  // Live levels: the Keys fader, on both ways in.
+  const liveDirect = ctx.createGain();
+  liveDirect.connect(directIn);
+  const liveElectric = ctx.createGain();
+  liveElectric.connect(drive);
+
+  // Loop levels: one gain per layer and destination, = layer fader x Loop fader.
+  const LAYER_FADERS = 5; // layers 5 and up share the last fader
+  const layerLevel = Array(LAYER_FADERS).fill(1);
+  let loopLevel = 1;
+  let layerGains = new Map(); // `${layer}|${dest}` -> GainNode
+  const destNode = (dest) => (dest === 'drums' ? master : dest === 'electric' ? drive : directIn);
+  const layerSlot = (layer) => Math.min(Math.max(layer || 0, 0), LAYER_FADERS - 1);
+  function layerGain(layer, dest) {
+    const key = `${layerSlot(layer)}|${dest}`;
+    let g = layerGains.get(key);
+    if (!g) {
+      g = ctx.createGain();
+      g.gain.value = layerLevel[layerSlot(layer)] * loopLevel;
+      g.connect(destNode(dest));
+      layerGains.set(key, g);
+    }
+    return g;
+  }
+  const refreshLayerGains = () => {
+    layerGains.forEach((g, key) => {
+      const slot = Number(key.split('|')[0]);
+      g.gain.setTargetAtTime(layerLevel[slot] * loopLevel, ctx.currentTime, 0.02);
+    });
+  };
+
+  // Loaded instruments, `${sample}|${set}` -> { inst, promise, used }. The
+  // current one plays the keys; the others are what loop layers were played on.
+  const MAX_INSTRUMENTS = 6;
+  const instruments = new Map();
+  let piano = null; // the current instrument, once loaded
+  let current = null; // { sound, set }
   let loadToken = 0;
   let closed = false;
   const live = new Map(); // midi -> playing node (keys you are holding or sustaining)
@@ -203,29 +238,51 @@ export function createSoundEngine({ onStatus } = {}) {
     return curve;
   };
 
-  function routeKeys(filter) {
-    keysIn.disconnect();
-    electric = filter || null;
-    if (filter) {
-      drive.curve = driveCurve(filter.drive || 1);
-      makeup.gain.value = filter.makeup;
-      keysIn.connect(drive);
-    } else {
-      keysIn.connect(pianoBus);
+  function configureElectric(filter) {
+    if (!filter) return;
+    drive.curve = driveCurve(filter.drive || 1);
+    makeup.gain.value = filter.makeup;
+  }
+
+  const instKey = (sound, set) => `${sound.sample || sound.id}|${set}`;
+
+  // Load (or reuse) an instrument. Least recently used ones beyond the cap
+  // are dropped; a loop note on a dropped one reloads it and plays next pass.
+  function instrument(sound, set) {
+    const key = instKey(sound, set);
+    let entry = instruments.get(key);
+    if (!entry) {
+      entry = { inst: null, used: 0 };
+      entry.promise = Soundfont.instrument(ctx, sound.sample || sound.id, {
+        nameToUrl: (name) => sampleUrl(name, set),
+        destination: directIn, // every note is re-routed as it starts
+      }).then((inst) => { entry.inst = inst; return inst; });
+      entry.promise.catch(() => instruments.delete(key));
+      instruments.set(key, entry);
+      if (instruments.size > MAX_INSTRUMENTS) {
+        const keep = current ? instKey(current.sound, current.set) : null;
+        const oldest = [...instruments.entries()]
+          .filter(([k]) => k !== key && k !== keep)
+          .sort((a, b) => a[1].used - b[1].used)[0];
+        if (oldest) instruments.delete(oldest[0]);
+      }
     }
-    setModulation(modValue);
+    entry.used = performance.now();
+    return entry;
   }
 
   function loadPiano(soundId, sampleSet) {
     const sound = soundById(soundId);
     const token = ++loadToken;
-    piano = null;
-    routeKeys(sound.filter);
+    current = { sound, set: sampleSet };
+    electric = sound.filter || null;
+    configureElectric(sound.filter);
+    setModulation(modValue);
+    const entry = instrument(sound, sampleSet);
+    piano = entry.inst;
     report();
-    Soundfont.instrument(ctx, sound.sample || sound.id, {
-      nameToUrl: (name) => sampleUrl(name, sampleSet),
-      destination: keysIn,
-    })
+    if (piano) return;
+    entry.promise
       .then((inst) => {
         if (closed || token !== loadToken) return;
         piano = inst;
@@ -233,9 +290,14 @@ export function createSoundEngine({ onStatus } = {}) {
       })
       .catch((err) => {
         if (closed || token !== loadToken) return;
-        onStatus?.('error', err?.message || 'Could not load the piano samples.');
+        onStatus?.('error', err?.message || 'Could not load the instrument samples.');
       });
   }
+
+  // Send a note that just started to `dest` instead of its player's output.
+  const reroute = (node, dest) => {
+    try { node.disconnect(); node.connect(dest); } catch (e) { /* leave it where it is */ }
+  };
 
   // Resume the context. Only succeeds from a user gesture; safe to call often.
   function unlock() {
@@ -254,6 +316,7 @@ export function createSoundEngine({ onStatus } = {}) {
     if (prev) { try { prev.stop(ctx.currentTime); } catch (e) { /* already stopped */ } }
     try {
       const node = piano.play(midi, ctx.currentTime, { gain: pianoGain(vel), release: RELEASE_SEC });
+      reroute(node, current && current.sound.filter ? liveElectric : liveDirect);
       live.set(midi, node);
       wireWheels(node);
     } catch (e) { /* one dropped note must not break the keyboard */ }
@@ -321,23 +384,36 @@ export function createSoundEngine({ onStatus } = {}) {
     playDrum(voiceId, ctx.currentTime, vel, drumBus);
   }
 
-  /** Schedule a loop event that was stamped in page seconds. */
+  /**
+   * Schedule a loop event that was stamped in page seconds, at the level and
+   * on the instrument it was recorded with (takes from before that was
+   * recorded fall back to the current sound at full level).
+   */
   function scheduleLoopEvent(ev, atPage) {
     if (!running()) return;
     const when = Math.max(ctx.currentTime, toCtx(atPage));
+    const level = Number.isFinite(ev.level) ? ev.level : 1;
     if (ev.type === 'drum') {
-      playDrum(ev.voice, when, ev.vel, loopDrums);
+      const g = ctx.createGain();
+      g.gain.value = level;
+      g.connect(layerGain(ev.layer, 'drums'));
+      playDrum(ev.voice, when, ev.vel, g);
+      setTimeout(() => { try { g.disconnect(); } catch (e) { /* gone */ } }, (when - ctx.currentTime + 3) * 1000);
       return;
     }
-    if (!piano) return;
+    const sound = ev.sound ? soundById(ev.sound) : current && current.sound;
+    if (!sound) return;
+    const entry = instrument(sound, ev.set || (current && current.set));
+    if (!entry.inst) return; // still loading: it plays from the next pass
     const t = ctx.currentTime;
     replayed.forEach((r) => { if (r.end < t) replayed.delete(r); });
     try {
-      const node = piano.play(ev.midi, when, {
-        gain: pianoGain(ev.vel) * loopVolume,
+      const node = entry.inst.play(ev.midi, when, {
+        gain: pianoGain(ev.vel) * level,
         duration: ev.dur,
         release: RELEASE_SEC,
       });
+      reroute(node, layerGain(ev.layer, sound.filter ? 'electric' : 'direct'));
       replayed.add({ node, end: when + ev.dur + RELEASE_SEC + 0.1 });
     } catch (e) { /* skip the note */ }
   }
@@ -347,10 +423,10 @@ export function createSoundEngine({ onStatus } = {}) {
     const t = ctx.currentTime;
     replayed.forEach(({ node }) => { try { node.stop(t); } catch (e) { /* not started yet */ } });
     replayed.clear();
-    const old = loopDrums;
-    old.gain.setTargetAtTime(0, t, 0.02);
-    setTimeout(() => { try { old.disconnect(); } catch (e) { /* gone */ } }, 300);
-    loopDrums = freshLoopDrums();
+    const old = layerGains;
+    old.forEach((g) => g.gain.setTargetAtTime(0, t, 0.02));
+    setTimeout(() => old.forEach((g) => { try { g.disconnect(); } catch (e) { /* gone */ } }), 300);
+    layerGains = new Map();
   }
 
   function allNotesOff() {
@@ -359,15 +435,18 @@ export function createSoundEngine({ onStatus } = {}) {
     live.clear();
   }
 
-  function setVolume(which, value) {
-    const v = Math.min(Math.max(value, 0), 1.5);
-    if (which === 'master') master.gain.value = v;
-    else if (which === 'piano') pianoBus.gain.value = v;
-    else if (which === 'drums') drumBus.gain.value = v;
-    else if (which === 'loop') {
-      loopVolume = v;
-      loopDrums.gain.value = v;
-    }
+  /**
+   * A fader's gain: 'keys', 'drums', 'loop', 'master' or 'layer0'..'layer4'.
+   */
+  function setLevel(which, gain) {
+    const v = Math.min(Math.max(gain, 0), 2);
+    const t = ctx.currentTime;
+    const ramp = (param) => param.setTargetAtTime(v, t, 0.02);
+    if (which === 'master') ramp(master.gain);
+    else if (which === 'keys') { ramp(liveDirect.gain); ramp(liveElectric.gain); }
+    else if (which === 'drums') ramp(drumBus.gain);
+    else if (which === 'loop') { loopLevel = v; refreshLayerGains(); }
+    else if (/^layer\d$/.test(which)) { layerLevel[layerSlot(Number(which.slice(5)))] = v; refreshLayerGains(); }
   }
 
   function close() {
@@ -387,7 +466,7 @@ export function createSoundEngine({ onStatus } = {}) {
     scheduleLoopEvent,
     stopLoop,
     allNotesOff,
-    setVolume,
+    setLevel,
     setPitchBend,
     setModulation,
     setTone,

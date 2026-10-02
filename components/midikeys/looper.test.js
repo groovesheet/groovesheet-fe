@@ -222,3 +222,19 @@ test('with one-pass off, an overdub keeps layering until pressed', () => {
   l.schedule(20, 0.1, () => {});
   expect(l.state).toBe('overdub');
 });
+
+test('each note keeps what it was played with, so layers can differ', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0, { sound: 'acoustic_grand_piano', set: 'MusyngKite', level: 0.4 });
+  l.press(2); // held through the press: a 2 s loop
+  l.pianoOff(60, 2.1);
+  l.press(3); // overdub
+  l.pianoOn(67, 90, 3.5, { sound: 'trumpet', set: 'FatBoy', level: 1.2 });
+  l.drum(38, 'snare', 110, 3.6, { level: 0.5 });
+  l.press(4);
+  const [piano, trumpet, snare] = l.events;
+  expect(piano).toMatchObject({ sound: 'acoustic_grand_piano', level: 0.4, layer: 0 });
+  expect(trumpet).toMatchObject({ sound: 'trumpet', set: 'FatBoy', level: 1.2, layer: 1, type: 'piano', midi: 67 });
+  expect(snare).toMatchObject({ type: 'drum', level: 0.5, layer: 1 });
+});
