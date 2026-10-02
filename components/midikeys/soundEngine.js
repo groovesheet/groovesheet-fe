@@ -305,6 +305,11 @@ export function createSoundEngine({ onStatus } = {}) {
     ctx.resume().then(report).catch(() => { /* another gesture will retry */ });
   }
   ctx.onstatechange = report;
+  // Try straight away too: where the browser allows audio without a click
+  // (Chrome started with --autoplay-policy=no-user-gesture-required, as the
+  // MIDI Keyboard launcher does, or a site it already trusts), the page comes
+  // up with sound on. Elsewhere this is refused and the first click does it.
+  ctx.resume().then(report).catch(() => { /* needs a gesture */ });
 
   const running = () => !closed && ctx.state === 'running';
   const toCtx = (pageSec) => ctx.currentTime + (pageSec - nowSec());

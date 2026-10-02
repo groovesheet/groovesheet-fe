@@ -57,3 +57,8 @@ test('the Track buttons step the sound, and the knob page starts unassigned', ()
   expect(sanitizeBindings({ knobPage: [] }).knobPage).toEqual([]);
   expect(sanitizeBindings({ loop: [] }).loop).toEqual(DEFAULT_BINDINGS.loop); // the loop button can't be lost
 });
+
+test('the floor tom sits 2 dB under the rest of the kit', () => {
+  expect(DRUM_VOICES.find((v) => v.id === 'tom1').trimDb).toBe(-2);
+  expect(DRUM_VOICES.filter((v) => v.trimDb).map((v) => v.id)).toEqual(['tom1']);
+});

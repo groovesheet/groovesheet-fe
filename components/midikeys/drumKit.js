@@ -25,6 +25,7 @@ export const PAD_ROWS = [
 ];
 
 // `gm` is the General MIDI drum note the voice is exported as in a .mid file.
+// `trimDb` evens out a voice that sits too loud against the rest of the kit.
 export const DRUM_VOICES = [
   { id: 'kick', label: 'Kick', gm: 36 },
   { id: 'kick808', label: '808 kick', gm: 35 },
@@ -35,7 +36,7 @@ export const DRUM_VOICES = [
   { id: 'hatClosed', label: 'Closed hat', gm: 42 },
   { id: 'hatPedal', label: 'Pedal hat', gm: 44 },
   { id: 'hatOpen', label: 'Open hat', gm: 46 },
-  { id: 'tom1', label: 'Floor tom', gm: 41, freq: 82 },
+  { id: 'tom1', label: 'Floor tom', gm: 41, freq: 82, trimDb: -2 }, // its low thud read louder than the kit
   { id: 'tom2', label: 'Floor tom 2', gm: 43, freq: 98 },
   { id: 'tom3', label: 'Low tom', gm: 45, freq: 117 },
   { id: 'tom4', label: 'Mid tom', gm: 47, freq: 139 },
@@ -221,7 +222,7 @@ export function createDrumSynth(ctx) {
     if (!voice) return;
     const t = Math.max(when, ctx.currentTime);
     // Pads are velocity sensitive; a soft curve keeps light taps audible.
-    const v = Math.pow(Math.min(Math.max(velocity, 1), 127) / 127, 0.7);
+    const v = Math.pow(Math.min(Math.max(velocity, 1), 127) / 127, 0.7) * Math.pow(10, (voice.trimDb || 0) / 20);
     if (voice.freq) {
       pitchDrop(destination, t, voice.freq * 1.7, voice.freq, 0.08, 0.85 * v, 0.45);
       noiseHit(destination, t, 0.12 * v, 0.05, [filter('lowpass', 3000)]);
