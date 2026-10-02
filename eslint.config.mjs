@@ -18,7 +18,8 @@ export default defineConfig([
     // Fixing these React Compiler and unused-var findings would change its
     // internals, so they are silenced for the JS only; the TS entry files
     // (index.ts, engine.ts, types.ts) stay under the full rules.
-    files: ['components/player/**/*.js'],
+    // components/bistable is ported from CRA the same way.
+    files: ['components/player/**/*.js', 'components/bistable/**/*.js'],
     linterOptions: { reportUnusedDisableDirectives: 'off' },
     rules: {
       'react-hooks/refs': 'off',

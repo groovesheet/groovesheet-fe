@@ -1,0 +1,312 @@
+/* SongTransport — play / seek / stem mixer for /bistable.
+   Mirrors the Bistable tuning panel's dark translucent language so the two
+   read as one tool rather than a control bar bolted onto a canvas. */
+
+.bistable-song {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(12, 16, 12, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  color: #d5d5cf;
+}
+
+.bistable-song__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* --- transport buttons --- */
+.bistable-song__play,
+.bistable-song__stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #012fa7;
+  color: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.bistable-song__play {
+  width: 38px;
+  height: 38px;
+}
+
+.bistable-song__stop {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d5d5cf;
+}
+
+.bistable-song__play:hover:not(:disabled),
+.bistable-song__stop:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #0139c7;
+  color: #fff;
+}
+
+.bistable-song__play:disabled,
+.bistable-song__stop:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- song picker --- */
+.bistable-song__picker {
+  position: relative;
+  flex: none;
+}
+
+.bistable-song__picker-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 160px;
+  max-width: 260px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: #f5f5ef;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.bistable-song__picker-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bistable-song__picker-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.bistable-song__picker-artist {
+  font-size: 11px;
+  color: #8c8c86;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.bistable-song__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 6;
+  width: 300px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(12, 16, 12, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.bistable-song__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #8c8c86;
+}
+
+.bistable-song__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #f5f5ef;
+  font: inherit;
+  outline: none;
+}
+
+.bistable-song__menu-note {
+  margin: 6px 4px;
+  font-size: 12px;
+  color: #8c8c86;
+}
+
+.bistable-song__results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bistable-song__result {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #f5f5ef;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bistable-song__result:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.bistable-song__result.is-current {
+  background: rgba(1, 47, 167, 0.45);
+}
+
+.bistable-song__result-title {
+  font-size: 13px;
+}
+
+.bistable-song__result-artist {
+  font-size: 11px;
+  color: #8c8c86;
+}
+
+/* --- seek + volume --- */
+.bistable-song__time {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: #8c8c86;
+  flex: none;
+  min-width: 38px;
+}
+
+.bistable-song__time--total {
+  text-align: right;
+}
+
+.bistable-song__seek {
+  flex: 1 1 200px;
+  min-width: 140px;
+  accent-color: #012fa7;
+}
+
+.bistable-song__volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  color: #8c8c86;
+}
+
+.bistable-song__volume input {
+  width: 84px;
+  accent-color: #012fa7;
+}
+
+/* --- notices --- */
+.bistable-song__note {
+  margin: 0;
+  font-size: 12px;
+  color: #8c8c86;
+}
+
+.bistable-song__note--warn {
+  color: #e8b14c;
+}
+
+/* --- stem mixer --- */
+.bistable-song__mixer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 6px 16px;
+}
+
+.bistable-song__stem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s ease;
+}
+
+.bistable-song__stem.is-dimmed {
+  opacity: 0.4;
+}
+
+.bistable-song__stem-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  width: 84px;
+  font-size: 12px;
+  color: #f5f5ef;
+}
+
+.bistable-song__stem-name i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.bistable-song__stem-name em {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0c100c;
+  background: #7aa2ff;
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+.bistable-song__stem-buttons {
+  display: flex;
+  gap: 3px;
+  flex: none;
+}
+
+.bistable-song__stem-buttons button {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #8c8c86;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bistable-song__stem-buttons button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bistable-song__stem-buttons button.is-on {
+  background: #012fa7;
+  border-color: #012fa7;
+  color: #fff;
+}
+
+.bistable-song__stem input[type='range'] {
+  flex: 1;
+  min-width: 50px;
+  accent-color: #012fa7;
+}
