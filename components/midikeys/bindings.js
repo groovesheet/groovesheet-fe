@@ -49,8 +49,9 @@ export function pressFromMessage(data, { strict = false } = {}) {
   const channel = status & 0x0f;
   if (cmd === 0xb0) {
     const value = data[2];
-    // Sustain and the "all notes off" family are never buttons.
-    if (data[1] === 64 || data[1] >= 120) return null;
+    // The mod wheel, sustain and the "all notes off" family are never buttons
+    // (a mod wheel pushed all the way sends 127, just like a button).
+    if (data[1] === 1 || data[1] === 64 || data[1] >= 120) return null;
     if (strict ? value !== 127 : value === 0) return null;
     return { kind: 'cc', channel, cc: data[1] };
   }

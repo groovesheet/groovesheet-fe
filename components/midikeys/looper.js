@@ -11,9 +11,12 @@
  *   armed  --note--->  recording   the loop starts AT the first note, not at
  *                                  the press, because you cannot hit the loop
  *                                  button and the first key at the same instant
- *   recording --press--> playing   the press closes the loop: its length runs
- *                                  from the first note to this press, and
- *                                  playback starts again from the first note
+ *   recording --press--> playing   the press closes the loop and playback
+ *                                  starts again from the first note. The end
+ *                                  is trimmed like the start: the gap between
+ *                                  letting go of the last note and the press
+ *                                  is cut (see loopEnd), so the next pass
+ *                                  follows straight on from the last note
  *   playing --press-->  overdub    layer more notes over the running loop
  *   overdub --press-->  playing
  *   stopped --press-->  playing    from the top
@@ -27,6 +30,29 @@
 export const MIN_LOOP_SEC = 0.25;
 // Floor for a note's length, so a staccato tap still sounds when replayed.
 const MIN_NOTE_SEC = 0.05;
+// Onsets closer than this are one chord / flam, not a step in the rhythm.
+const SAME_ONSET_SEC = 0.03;
+
+/**
+ * Where a just-recorded take ends, relative to its first note.
+ *
+ * A piano note ends when its sound ends (key up, or pedal up if it was
+ * sustained). A drum hit has no length, so it is given one step of the rhythm
+ * that was played: the median gap between successive onsets. Ending the loop
+ * on the last hit itself would land that hit on top of the first one; one step
+ * after it puts the first note where the next beat would have been.
+ */
+export function loopEnd(events) {
+  const onsets = [...new Set(events.map((e) => e.t))].sort((a, b) => a - b);
+  const gaps = [];
+  for (let i = 1; i < onsets.length; i += 1) {
+    const g = onsets[i] - onsets[i - 1];
+    if (g > SAME_ONSET_SEC) gaps.push(g);
+  }
+  gaps.sort((a, b) => a - b);
+  const step = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
+  return events.reduce((end, e) => Math.max(end, e.type === 'piano' ? e.t + e.dur : e.t + step), 0);
+}
 
 const byTime = (a, b) => a.t - b.t;
 
@@ -62,15 +88,22 @@ export function createLooper() {
     scheduledUntil = now;
   };
 
-  const closeLoop = (now) => {
-    const len = now - recStart;
-    if (len < MIN_LOOP_SEC) {
+  const closeLoop = (now, trimEnd) => {
+    const full = now - recStart;
+    if (full < MIN_LOOP_SEC) {
       reset();
       return false;
     }
-    length = len;
+    // A key still held at the press means the loop really does end now.
+    const held = open.size > 0;
+    length = full;
     closeOpen(now);
     events.sort(byTime);
+    if (trimEnd && !held) {
+      const end = loopEnd(events);
+      // Too short to be a loop (a single tap): keep the press as the end.
+      if (end >= MIN_LOOP_SEC && end < full) length = end;
+    }
     return true;
   };
 
@@ -82,8 +115,11 @@ export function createLooper() {
     open.clear();
   }
 
-  /** The loop button. */
-  function press(now) {
+  /**
+   * The loop button. `trimEnd` (default on) cuts the silence after the last
+   * note when the first take is closed.
+   */
+  function press(now, { trimEnd = true } = {}) {
     switch (state) {
       case 'empty':
         state = 'armed';
@@ -92,7 +128,7 @@ export function createLooper() {
         state = 'empty';
         break;
       case 'recording':
-        if (closeLoop(now)) startPlaying(now);
+        if (closeLoop(now, trimEnd)) startPlaying(now);
         break;
       case 'playing':
         state = 'overdub';
@@ -112,14 +148,14 @@ export function createLooper() {
   }
 
   /** The stop button: stop, and a second stop clears. */
-  function stop(now) {
+  function stop(now, { trimEnd = true } = {}) {
     switch (state) {
       case 'armed':
       case 'stopped':
         reset();
         break;
       case 'recording':
-        if (closeLoop(now)) state = 'stopped';
+        if (closeLoop(now, trimEnd)) state = 'stopped';
         break;
       case 'playing':
       case 'overdub':

@@ -1,4 +1,4 @@
-import { createLooper, MIN_LOOP_SEC } from './looper';
+import { createLooper, loopEnd, MIN_LOOP_SEC } from './looper';
 
 const collect = (looper, now, lookahead) => {
   const out = [];
@@ -18,7 +18,9 @@ test('arming waits for the first note: the loop starts at the note, not the pres
   l.pianoOff(64, 13.5);
   l.press(16); // close the loop
   expect(l.state).toBe('playing');
-  expect(l.length).toBe(4); // 12 -> 16, the wait before the first note is not in it
+  // 12 -> 13.5: the wait before the first note and the gap after the last
+  // release (13.5 -> 16) are both cut
+  expect(l.length).toBe(1.5);
   expect(l.events.map((e) => [e.midi, e.t, e.dur])).toEqual([[60, 0, 0.5], [64, 1, 0.5]]);
 });
 
@@ -80,8 +82,8 @@ test('overdub layers notes at their position in the loop, and undo drops the lay
   const l = createLooper();
   l.press(0);
   l.pianoOn(60, 100, 0);
-  l.pianoOff(60, 0.5);
-  l.press(4); // 4 s loop, playing from 4
+  l.press(4); // note still held, so no trim: 4 s loop, playing from 4
+  l.pianoOff(60, 4.5);
   l.press(5); // overdub
   expect(l.state).toBe('overdub');
   l.pianoOn(67, 100, 11); // 7 s into playback = offset 3
@@ -118,4 +120,61 @@ test('stop while recording closes the loop instead of throwing it away', () => {
   l.stop(3);
   expect(l.state).toBe('stopped');
   expect(l.length).toBe(2);
+});
+
+test('the end is trimmed to the last release, the same as the start is trimmed to the first note', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 1);
+  l.pianoOff(60, 1.6);
+  l.pianoOn(64, 100, 2);
+  l.pianoOff(64, 2.4);
+  l.press(5); // waited 2.6 s after letting go
+  expect(l.length).toBeCloseTo(1.4); // 1 -> 2.4
+  // and playback still starts right away, from the first note
+  expect(collect(l, 5, 0.05).map((x) => x.at)).toEqual([5]);
+});
+
+test('a note held by the sustain pedal ends when the pedal comes up, not at key-up', () => {
+  // the page calls pianoOff when the sound actually stops, so the trim follows the pedal
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(48, 100, 0);
+  l.pianoOff(48, 2.5); // pedal released at 2.5
+  l.press(4);
+  expect(l.length).toBe(2.5);
+});
+
+test('a drum-only take ends one step after the last hit, so the first hit lands on the next beat', () => {
+  const l = createLooper();
+  l.press(0);
+  [1, 1.5, 2, 2.5].forEach((t) => l.drum(36, 'kick', 100, t));
+  l.press(4.2);
+  expect(l.length).toBeCloseTo(2); // four hits half a second apart
+});
+
+test('a trim that would leave less than a loop keeps the press as the end', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.pianoOff(60, 0.1); // one quick tap
+  l.press(1);
+  expect(l.length).toBe(1);
+});
+
+test('the trim can be turned off', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.pianoOff(60, 1);
+  l.press(3, { trimEnd: false });
+  expect(l.length).toBe(3);
+});
+
+test('loopEnd treats a chord as one onset when working out the step', () => {
+  const ev = [
+    { type: 'drum', t: 0 }, { type: 'drum', t: 0.01 }, // flam
+    { type: 'drum', t: 0.5 }, { type: 'drum', t: 1 },
+  ];
+  expect(loopEnd(ev)).toBeCloseTo(1.5);
 });

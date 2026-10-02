@@ -16,8 +16,14 @@ import { createDrumSynth } from './drumKit';
  * mid-note without touching the keys you are holding: replayed piano notes are
  * tracked and stopped one by one, replayed drums go through a bus that is
  * faded out and swapped for a fresh one.
+ *
+ * The wheels act on the notes you are playing, not on loop replay: pitch bend
+ * sets every live voice's `detune`, and the mod wheel sets the depth of one
+ * shared vibrato LFO wired into each live voice's `detune` as it starts.
  */
 
+// `sample` is the MusyngKite instrument; `filter` runs the keys through a
+// resonant band-pass whose centre the Tone slider moves.
 export const PIANO_SOUNDS = [
   { id: 'acoustic_grand_piano', label: 'Grand piano' },
   { id: 'bright_acoustic_piano', label: 'Bright piano' },
@@ -25,7 +31,16 @@ export const PIANO_SOUNDS = [
   { id: 'electric_piano_2', label: 'FM electric piano' },
   { id: 'honkytonk_piano', label: 'Honky-tonk' },
   { id: 'vibraphone', label: 'Vibraphone' },
+  // Vibraphone bars are aluminium: the struck-metal tone, narrowed to a
+  // ringing band so it reads as one bright, hollow metallic voice.
+  { id: 'aluminium_bandpass', label: 'Aluminium band-pass', sample: 'vibraphone', filter: { q: 2.4, makeup: 2.6 } },
 ];
+
+export const soundById = (id) => PIANO_SOUNDS.find((p) => p.id === id) || PIANO_SOUNDS[0];
+
+export const DEFAULT_TONE_HZ = 1400;
+const VIBRATO_HZ = 5.5;
+const MAX_VIBRATO_CENTS = 45; // mod wheel fully up
 
 const RELEASE_SEC = 0.25; // damper fall on key-up
 const nowSec = () => performance.now() / 1000;
@@ -46,6 +61,24 @@ export function createSoundEngine({ onStatus } = {}) {
   master.connect(comp);
   const pianoBus = ctx.createGain();
   pianoBus.connect(master);
+  // Keys enter here, then go straight to the piano bus or through the band-pass.
+  const keysIn = ctx.createGain();
+  const bandpass = ctx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.frequency.value = DEFAULT_TONE_HZ;
+  const makeup = ctx.createGain();
+  bandpass.connect(makeup);
+  makeup.connect(pianoBus);
+  keysIn.connect(pianoBus);
+
+  // Wheels: one vibrato LFO for all live voices, its depth set by the mod wheel.
+  let bendCents = 0;
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = VIBRATO_HZ;
+  const vibrato = ctx.createGain();
+  vibrato.gain.value = 0;
+  lfo.connect(vibrato);
+  lfo.start();
   const drumBus = ctx.createGain();
   drumBus.connect(master);
 
@@ -73,11 +106,24 @@ export function createSoundEngine({ onStatus } = {}) {
   };
   const report = () => onStatus?.(status());
 
-  function loadPiano(name) {
+  function routeKeys(filter) {
+    keysIn.disconnect();
+    if (filter) {
+      bandpass.Q.value = filter.q;
+      makeup.gain.value = filter.makeup;
+      keysIn.connect(bandpass);
+    } else {
+      keysIn.connect(pianoBus);
+    }
+  }
+
+  function loadPiano(soundId) {
+    const sound = soundById(soundId);
     const token = ++loadToken;
     piano = null;
+    routeKeys(sound.filter);
     report();
-    Soundfont.instrument(ctx, name, { soundfont: 'MusyngKite', format: 'mp3', destination: pianoBus })
+    Soundfont.instrument(ctx, sound.sample || sound.id, { soundfont: 'MusyngKite', format: 'mp3', destination: keysIn })
       .then((inst) => {
         if (closed || token !== loadToken) return;
         piano = inst;
@@ -105,8 +151,40 @@ export function createSoundEngine({ onStatus } = {}) {
     const prev = live.get(midi);
     if (prev) { try { prev.stop(ctx.currentTime); } catch (e) { /* already stopped */ } }
     try {
-      live.set(midi, piano.play(midi, ctx.currentTime, { gain: pianoGain(vel), release: RELEASE_SEC }));
+      const node = piano.play(midi, ctx.currentTime, { gain: pianoGain(vel), release: RELEASE_SEC });
+      live.set(midi, node);
+      wireWheels(node);
     } catch (e) { /* one dropped note must not break the keyboard */ }
+  }
+
+  // A new voice starts at the wheel's current bend and joins the vibrato.
+  function wireWheels(node) {
+    const src = node && node.source;
+    if (!src || !src.detune) return;
+    src.detune.value = bendCents;
+    vibrato.connect(src.detune);
+    src.addEventListener('ended', () => {
+      try { vibrato.disconnect(src.detune); } catch (e) { /* already gone */ }
+    });
+  }
+
+  /** Pitch wheel: -1..1 of `rangeSemis`, applied to every voice still sounding. */
+  function setPitchBend(amount, rangeSemis) {
+    bendCents = amount * rangeSemis * 100;
+    const t = ctx.currentTime;
+    live.forEach((node) => {
+      const p = node.source && node.source.detune;
+      if (p) p.setTargetAtTime(bendCents, t, 0.006);
+    });
+  }
+
+  /** Mod wheel: 0..127 -> vibrato depth. */
+  function setModulation(value) {
+    vibrato.gain.setTargetAtTime((Math.min(Math.max(value, 0), 127) / 127) * MAX_VIBRATO_CENTS, ctx.currentTime, 0.03);
+  }
+
+  function setTone(hz) {
+    bandpass.frequency.setTargetAtTime(Math.min(Math.max(hz, 100), 8000), ctx.currentTime, 0.03);
   }
 
   function pianoOff(midi) {
@@ -188,6 +266,9 @@ export function createSoundEngine({ onStatus } = {}) {
     stopLoop,
     allNotesOff,
     setVolume,
+    setPitchBend,
+    setModulation,
+    setTone,
     close,
   };
 }

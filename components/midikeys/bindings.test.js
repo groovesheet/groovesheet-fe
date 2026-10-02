@@ -15,6 +15,8 @@ test('Record and Loop (CC 117 / 118 on channel 16) also work the looper, on pres
 test('keys, sustain and MIDI clock are never mistaken for buttons', () => {
   expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0x90, 60, 100]))).toBeNull();
   expect(pressFromMessage([0xb0, 64, 127])).toBeNull();
+  expect(pressFromMessage([0xb0, 1, 127], { strict: true })).toBeNull(); // mod wheel at the top
+  expect(pressFromMessage([0xe0, 0, 127])).toBeNull(); // pitch wheel
   expect(pressFromMessage([0xf8])).toBeNull();
 });
 

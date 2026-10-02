@@ -478,3 +478,86 @@
   .midikeys__stage { min-height: 260px; }
   .midikeys__binding { flex-wrap: wrap; }
 }
+
+/* ---- wheels and tone ---- */
+
+.midikeys__tone output {
+  min-width: 52px;
+  font-size: 12px;
+  color: var(--mk-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.midikeys__tone span { min-width: 0; }
+.midikeys__tone input { width: 110px; flex: none; }
+
+/* Two small meters over the visualiser, mirroring the hardware wheels. */
+.midikeys__wheels {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.midikeys__wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--mk-muted);
+}
+
+.midikeys__wheel-track {
+  position: relative;
+  width: 10px;
+  height: 56px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+/* centre mark: the pitch wheel's rest position */
+.midikeys__wheel-track--bend::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 0.5px);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.midikeys__wheel-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  background: var(--mk-live);
+}
+
+.midikeys__wheel-fill--mod {
+  top: auto;
+  bottom: 0;
+  background: var(--mk-violet);
+}
+
+.midikeys__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mk-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.midikeys__check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--mk-live);
+  cursor: pointer;
+}

@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { buildKeyLayout, keyAtPoint, noteName } from '../bistable/keyLayout';
 import { createLooper } from './looper';
-import { createSoundEngine, PIANO_SOUNDS } from './soundEngine';
+import { createSoundEngine, PIANO_SOUNDS, DEFAULT_TONE_HZ, soundById } from './soundEngine';
 import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_ROWS, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
+import { bendAmount } from './wheels';
 import './MidiKeys.css';
 
 /**
@@ -19,6 +20,10 @@ import './MidiKeys.css';
  *     first note, then layers overdubs. On a Launchkey MK4 the Play button
  *     (MIDI Start) is the loop button and Stop stops / clears; both can be
  *     re-learnt from any button. Space and Esc do the same from the computer.
+ *   - The pitch wheel bends the notes you are playing (±2 semitones by default,
+ *     the GM convention) and the mod wheel adds vibrato. The keys' sound can be
+ *     run through a band-pass filter (the "Aluminium band-pass" preset), whose
+ *     centre is the Tone slider.
  *
  * Its sibling /bistable is the projection-mapped installation view; this page
  * is the one to keep open while practising.
@@ -48,7 +53,18 @@ const DEFAULT_SETTINGS = {
   bindings: DEFAULT_BINDINGS,
   piano: PIANO_SOUNDS[0].id,
   volumes: { master: 0.9, piano: 1, drums: 0.9, loop: 0.9 },
+  trimEnd: true, // cut the silence after the last note when the first take is closed
+  bendRange: 2, // semitones each way
+  tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
 };
+
+const BEND_RANGES = [1, 2, 7, 12];
+const TONE_MIN = 250;
+const TONE_MAX = 6000;
+// The Tone slider is logarithmic: equal travel = equal musical interval.
+const toneToSlider = (hz) => Math.log(hz / TONE_MIN) / Math.log(TONE_MAX / TONE_MIN);
+const sliderToTone = (x) => Math.round(TONE_MIN * Math.pow(TONE_MAX / TONE_MIN, x));
+
 
 function loadSettings() {
   try {
@@ -65,6 +81,9 @@ function loadSettings() {
       bindings: sanitizeBindings(saved.bindings),
       piano: PIANO_SOUNDS.some((p) => p.id === saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
       volumes: { ...DEFAULT_SETTINGS.volumes, ...(saved.volumes || {}) },
+      trimEnd: saved.trimEnd !== false,
+      bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
+      tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
     };
   } catch (e) {
     return DEFAULT_SETTINGS;
@@ -115,6 +134,10 @@ export default function MidiKeys() {
   const trailsRef = useRef([]); // { midi, start, end|null, loop, vel, layer }
   const liveTrailRef = useRef(new Map()); // midi -> its open live trail
   const flashesRef = useRef([]); // { note, at, loop }
+  const bendRef = useRef(0); // pitch wheel, -1..1
+  const modRef = useRef(0); // mod wheel, 0..127
+  const bendFillRef = useRef(null);
+  const modFillRef = useRef(null);
 
   const canvasRef = useRef(null);
   const laneRef = useRef(null);
@@ -218,10 +241,11 @@ export default function MidiKeys() {
   const loopAction = useCallback((action) => {
     const now = nowSec();
     const looper = looperRef.current;
+    const opts = { trimEnd: settingsRef.current.trimEnd };
     if (action === 'loop') {
-      looper.press(now);
+      looper.press(now, opts);
     } else if (action === 'stop') {
-      looper.stop(now);
+      looper.stop(now, opts);
       if (looper.state !== 'playing' && looper.state !== 'overdub') silenceLoop(now);
     } else if (action === 'undo') {
       looper.undoLayer(now);
@@ -265,8 +289,21 @@ export default function MidiKeys() {
     }
     if (cmd === 0x90 && d2 > 0) keyDown(d1, d2);
     else if (cmd === 0x80 || cmd === 0x90) keyUp(d1);
-    else if (cmd === 0xb0 && d1 === 64) setSustain(d2 >= 64);
-    else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
+    else if (cmd === 0xe0) {
+      bendRef.current = bendAmount(d1, d2);
+      engineRef.current?.setPitchBend(bendRef.current, settingsRef.current.bendRange);
+    } else if (cmd === 0xb0 && d1 === 1) {
+      modRef.current = d2;
+      engineRef.current?.setModulation(d2);
+    } else if (cmd === 0xb0 && d1 === 64) setSustain(d2 >= 64);
+    else if (cmd === 0xb0 && d1 === 121) {
+      // Reset All Controllers: wheels back to rest, pedal up.
+      bendRef.current = 0;
+      modRef.current = 0;
+      engineRef.current?.setPitchBend(0, settingsRef.current.bendRange);
+      engineRef.current?.setModulation(0);
+      setSustain(false);
+    } else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
   }, [allNotesOff, drumHit, keyDown, keyUp, loopAction, setSustain]);
 
   const onMidiRef = useRef(onMidiMessage);
@@ -341,6 +378,11 @@ export default function MidiKeys() {
     Object.entries(settings.volumes).forEach(([k, v]) => e.setVolume(k, v));
   }, [settings.volumes]);
 
+  useEffect(() => { engineRef.current?.setTone(settings.tone); }, [settings.tone]);
+
+  // A new range re-applies the wheel where it is now.
+  useEffect(() => { engineRef.current?.setPitchBend(bendRef.current, settings.bendRange); }, [settings.bendRange]);
+
   // ---- loop scheduler ----------------------------------------------------
 
   useEffect(() => {
@@ -394,7 +436,18 @@ export default function MidiKeys() {
       drawLane(laneRef.current, looperRef.current, now);
       updateRing(ringRef.current, looperRef.current, now);
       updatePads(now);
+      updateWheels();
       refreshLoopInfo();
+    };
+
+    const updateWheels = () => {
+      const b = bendRef.current;
+      if (bendFillRef.current) {
+        // fills from the centre line, up for sharp, down for flat
+        bendFillRef.current.style.top = `${50 - Math.max(b, 0) * 50}%`;
+        bendFillRef.current.style.height = `${Math.abs(b) * 50}%`;
+      }
+      if (modFillRef.current) modFillRef.current.style.height = `${(modRef.current / 127) * 100}%`;
     };
 
     const drawVisualizer = (canvas, now) => {
@@ -602,9 +655,29 @@ export default function MidiKeys() {
             {audio.status === 'error' && 'Sound failed'}
           </span>
           <label className="midikeys__select">
-            <span>Piano</span>
+            <span>Sound</span>
             <select value={settings.piano} onChange={(e) => setSettings((s) => ({ ...s, piano: e.target.value }))}>
               {PIANO_SOUNDS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+            </select>
+          </label>
+          {soundById(settings.piano).filter && (
+            <label className="midikeys__range midikeys__tone">
+              <span>Tone</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.005"
+                value={toneToSlider(settings.tone)}
+                onChange={(e) => setSettings((s) => ({ ...s, tone: sliderToTone(Number(e.target.value)) }))}
+              />
+              <output>{settings.tone >= 1000 ? `${(settings.tone / 1000).toFixed(1)} kHz` : `${settings.tone} Hz`}</output>
+            </label>
+          )}
+          <label className="midikeys__select">
+            <span>Bend</span>
+            <select value={settings.bendRange} onChange={(e) => setSettings((s) => ({ ...s, bendRange: Number(e.target.value) }))}>
+              {BEND_RANGES.map((r) => <option key={r} value={r}>±{r} st</option>)}
             </select>
           </label>
         </div>
@@ -659,6 +732,14 @@ export default function MidiKeys() {
                   Save .mid
                 </button>
               </div>
+              <label className="midikeys__check">
+                <input
+                  type="checkbox"
+                  checked={settings.trimEnd}
+                  onChange={(e) => setSettings((s) => ({ ...s, trimEnd: e.target.checked }))}
+                />
+                Trim the silence after the last note
+              </label>
               <label className="midikeys__range">
                 <span>Loop volume</span>
                 <input type="range" min="0" max="1.2" step="0.05" value={settings.volumes.loop} onChange={(e) => setVolume('loop', Number(e.target.value))} />
@@ -766,6 +847,20 @@ export default function MidiKeys() {
           onPointerUp={onCanvasUp}
           onPointerCancel={onCanvasUp}
         />
+        <div className="midikeys__wheels" aria-hidden="true">
+          <div className="midikeys__wheel">
+            <div className="midikeys__wheel-track midikeys__wheel-track--bend">
+              <div ref={bendFillRef} className="midikeys__wheel-fill" />
+            </div>
+            <span>Pitch</span>
+          </div>
+          <div className="midikeys__wheel">
+            <div className="midikeys__wheel-track">
+              <div ref={modFillRef} className="midikeys__wheel-fill midikeys__wheel-fill--mod" />
+            </div>
+            <span>Mod</span>
+          </div>
+        </div>
         <div className="midikeys__legend" aria-hidden="true">
           <span><i style={{ background: LIVE }} /> You</span>
           <span><i style={{ background: LOOP }} /> Loop</span>
