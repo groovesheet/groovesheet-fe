@@ -1,0 +1,480 @@
+/* MidiKeys: /midi-keyboard practice workstation. Dark, like /bistable. */
+
+.midikeys {
+  --mk-bg: #0f0f11;
+  --mk-panel: #1a1a1c;
+  --mk-panel-2: #232226;
+  --mk-border: #3d3b3e;
+  --mk-text: #f4f4f4;
+  --mk-muted: #8d8c8d;
+  --mk-primary: #012fa7;
+  --mk-live: #3f74e8;
+  --mk-amber: #ffb020;
+  --mk-red: #ff5a5a;
+  --mk-green: #22c55e;
+  --mk-violet: #a78bfa;
+
+  min-height: 100vh;
+  background: var(--mk-bg);
+  color: var(--mk-text);
+  font-family: 'Hubot Sans', Inter, system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px clamp(16px, 3vw, 40px) 24px;
+  box-sizing: border-box;
+}
+
+.midikeys *,
+.midikeys *::before,
+.midikeys *::after { box-sizing: border-box; }
+
+/* ---- head ---- */
+
+.midikeys__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.midikeys__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.midikeys__sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--mk-muted);
+  max-width: 60ch;
+}
+
+.midikeys__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.midikeys__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 320px;
+  padding: 6px 12px;
+  border: 1px solid var(--mk-border);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--mk-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.midikeys__dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #5f5e60;
+}
+
+.midikeys__pill.is-on { color: var(--mk-text); }
+.midikeys__pill.is-on .midikeys__dot { background: var(--mk-green); box-shadow: 0 0 8px var(--mk-green); }
+
+.midikeys__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+
+.midikeys select {
+  background: var(--mk-panel-2);
+  color: var(--mk-text);
+  border: 1px solid var(--mk-border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+/* ---- deck: looper + pads ---- */
+
+.midikeys__deck {
+  display: grid;
+  grid-template-columns: minmax(340px, 5fr) 7fr;
+  gap: 16px;
+}
+
+.midikeys__card {
+  background: var(--mk-panel);
+  border: 1px solid var(--mk-border);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.midikeys__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.midikeys__card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.midikeys__card-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+
+/* ---- looper ---- */
+
+.midikeys__looper-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.midikeys__loopbtn {
+  position: relative;
+  flex-shrink: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--mk-panel-2);
+  color: var(--mk-text);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font: inherit;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.midikeys__loopbtn:active { transform: scale(0.97); }
+.midikeys__loopbtn:focus-visible { outline: 2px solid var(--mk-live); outline-offset: 3px; }
+
+.midikeys__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.midikeys__ring-track,
+.midikeys__ring-fill {
+  fill: none;
+  stroke-width: 6;
+}
+
+.midikeys__ring-track { stroke: var(--mk-border); }
+
+.midikeys__ring-fill {
+  stroke: var(--mk-text);
+  stroke-dasharray: 0 1;
+  stroke-linecap: round;
+}
+
+.midikeys__loopbtn-label {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.midikeys__loopbtn-time {
+  font-size: 12px;
+  color: var(--mk-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.midikeys__loopbtn.is-armed { background: rgba(255, 176, 32, 0.14); animation: mk-pulse 1s ease-in-out infinite; }
+.midikeys__loopbtn.is-armed .midikeys__ring-track { stroke: var(--mk-amber); }
+.midikeys__loopbtn.is-recording { background: rgba(255, 90, 90, 0.18); }
+.midikeys__loopbtn.is-recording .midikeys__ring-fill { stroke: var(--mk-red); }
+.midikeys__loopbtn.is-playing { background: rgba(34, 197, 94, 0.14); }
+.midikeys__loopbtn.is-playing .midikeys__ring-fill { stroke: var(--mk-green); }
+.midikeys__loopbtn.is-overdub { background: rgba(167, 139, 250, 0.18); }
+.midikeys__loopbtn.is-overdub .midikeys__ring-fill { stroke: var(--mk-violet); }
+.midikeys__loopbtn.is-recording .midikeys__loopbtn-time,
+.midikeys__loopbtn.is-playing .midikeys__loopbtn-time,
+.midikeys__loopbtn.is-overdub .midikeys__loopbtn-time { color: var(--mk-text); }
+
+@keyframes mk-pulse {
+  50% { box-shadow: 0 0 0 8px rgba(255, 176, 32, 0.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .midikeys__loopbtn.is-armed { animation: none; }
+}
+
+.midikeys__looper-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.midikeys__hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--mk-text);
+  min-height: 2.8em;
+}
+
+.midikeys__btnrow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.midikeys__btn {
+  background: var(--mk-panel-2);
+  color: var(--mk-text);
+  border: 1px solid var(--mk-border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.midikeys__btn:hover:not(:disabled) { border-color: #5f5e60; }
+.midikeys__btn:disabled { opacity: 0.4; cursor: default; }
+.midikeys__btn.is-active { background: var(--mk-primary); border-color: var(--mk-primary); }
+
+.midikeys__range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+
+.midikeys__range span { min-width: 82px; }
+.midikeys__range input { flex: 1; min-width: 60px; accent-color: var(--mk-live); }
+
+.midikeys__lane {
+  width: 100%;
+  height: 72px;
+  display: block;
+  background: #111113;
+  border: 1px solid var(--mk-border);
+  border-radius: 8px;
+}
+
+.midikeys__bindings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.midikeys__binding {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.midikeys__binding-name {
+  color: var(--mk-muted);
+  min-width: 86px;
+}
+
+.midikeys__chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.midikeys__chip {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--mk-panel-2);
+  border: 1px solid var(--mk-border);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.midikeys__chip.is-key { color: var(--mk-muted); }
+.midikeys__chip.is-learning { border-color: var(--mk-amber); color: var(--mk-amber); white-space: normal; }
+
+.midikeys__link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #93b4ff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.midikeys__link:hover { text-decoration: underline; }
+.midikeys__link--reset { align-self: flex-start; color: var(--mk-muted); font-size: 12px; }
+
+/* ---- pads ---- */
+
+.midikeys__pad-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Two 4x2 halves side by side, as the pads sit on the Launchkey. */
+.midikeys__padgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.midikeys__padhalf {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.midikeys__pad {
+  position: relative;
+  aspect-ratio: 1.15;
+  min-height: 64px;
+  border-radius: 10px;
+  border: 1px solid var(--mk-border);
+  background: var(--mk-panel-2);
+  color: var(--mk-text);
+  font: inherit;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.midikeys__pad-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.midikeys__pad-note {
+  font-size: 11px;
+  color: var(--mk-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.midikeys__pad.is-hit {
+  background: var(--mk-primary);
+  border-color: var(--mk-live);
+  box-shadow: 0 0 18px rgba(63, 116, 232, 0.6);
+  transition: none;
+}
+
+.midikeys__pad.is-loop-hit {
+  background: rgba(255, 176, 32, 0.35);
+  border-color: var(--mk-amber);
+  box-shadow: 0 0 16px rgba(255, 176, 32, 0.45);
+  transition: none;
+}
+
+.midikeys__pad.is-editing {
+  cursor: default;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.midikeys__pad.is-editing select {
+  width: 100%;
+  padding: 4px;
+  font-size: 12px;
+}
+
+.midikeys__mixer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.midikeys__mixer .midikeys__range span { min-width: 0; }
+
+/* ---- visualiser ---- */
+
+.midikeys__stage {
+  position: relative;
+  flex: 1;
+  min-height: 340px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--mk-border);
+}
+
+.midikeys__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.midikeys__legend {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--mk-muted);
+  pointer-events: none;
+}
+
+.midikeys__legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+/* ---- narrow screens ---- */
+
+@media (max-width: 1080px) {
+  .midikeys__deck { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .midikeys__padgrid { grid-template-columns: 1fr; }
+  .midikeys__looper-main { flex-direction: column; align-items: stretch; }
+  .midikeys__loopbtn { align-self: center; }
+  .midikeys__mixer { grid-template-columns: 1fr; }
+  .midikeys__stage { min-height: 260px; }
+  .midikeys__binding { flex-wrap: wrap; }
+}
