@@ -1,0 +1,121 @@
+import { createLooper, MIN_LOOP_SEC } from './looper';
+
+const collect = (looper, now, lookahead) => {
+  const out = [];
+  looper.schedule(now, lookahead, (ev, at) => out.push({ ev, at }));
+  return out;
+};
+
+test('arming waits for the first note: the loop starts at the note, not the press', () => {
+  const l = createLooper();
+  l.press(10); // armed at t=10
+  expect(l.state).toBe('armed');
+  l.pianoOn(60, 100, 12); // first note two seconds later
+  expect(l.state).toBe('recording');
+  expect(l.events[0].t).toBe(0);
+  l.pianoOff(60, 12.5);
+  l.pianoOn(64, 90, 13);
+  l.pianoOff(64, 13.5);
+  l.press(16); // close the loop
+  expect(l.state).toBe('playing');
+  expect(l.length).toBe(4); // 12 -> 16, the wait before the first note is not in it
+  expect(l.events.map((e) => [e.midi, e.t, e.dur])).toEqual([[60, 0, 0.5], [64, 1, 0.5]]);
+});
+
+test('playback restarts from the first note the moment the loop is closed', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 1);
+  l.pianoOff(60, 1.2);
+  l.drum(36, 'kick', 110, 2);
+  l.press(3); // length 2
+  const first = collect(l, 3, 0.1);
+  expect(first).toHaveLength(1);
+  expect(first[0].at).toBe(3);
+  expect(first[0].ev.midi).toBe(60);
+  // the kick at offset 1 sounds at 4, then both repeat every 2 s
+  const rest = collect(l, 6, 0.1).map((x) => [x.ev.type, x.at]);
+  expect(rest).toEqual([['drum', 4], ['piano', 5], ['drum', 6]]);
+});
+
+test('every event is handed out exactly once across window boundaries', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.pianoOff(60, 0.1);
+  l.press(1);
+  const times = [];
+  for (let now = 1; now < 11; now += 0.025) {
+    l.schedule(now, 0.1, (ev, at) => times.push(Math.round(at * 1000) / 1000));
+  }
+  // passes start at 1, 2, ... 11 (the last tick's lookahead reaches 11)
+  expect(times).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+});
+
+test('a note still held when the loop is closed runs to the end of the loop', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(48, 100, 1);
+  l.press(3);
+  expect(l.events[0].dur).toBe(2);
+});
+
+test('a press straight after the first note is treated as a mis-hit and clears', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 1);
+  l.press(1 + MIN_LOOP_SEC / 2);
+  expect(l.state).toBe('empty');
+  expect(l.events).toHaveLength(0);
+});
+
+test('a second press while armed cancels', () => {
+  const l = createLooper();
+  l.press(0);
+  l.press(1);
+  expect(l.state).toBe('empty');
+});
+
+test('overdub layers notes at their position in the loop, and undo drops the layer', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.pianoOff(60, 0.5);
+  l.press(4); // 4 s loop, playing from 4
+  l.press(5); // overdub
+  expect(l.state).toBe('overdub');
+  l.pianoOn(67, 100, 11); // 7 s into playback = offset 3
+  l.pianoOff(67, 11.5);
+  expect(l.events.find((e) => e.midi === 67).t).toBeCloseTo(3);
+  l.press(12);
+  expect(l.state).toBe('playing');
+  expect(l.undoLayer(12)).toBe(true);
+  expect(l.events.map((e) => e.midi)).toEqual([60]);
+  expect(l.undoLayer(12)).toBe(false); // the base take stays
+});
+
+test('stop keeps the loop, a second stop clears it, and play restarts from the top', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 0);
+  l.press(2);
+  l.stop(3);
+  expect(l.state).toBe('stopped');
+  expect(collect(l, 3, 0.1)).toHaveLength(0);
+  l.press(10);
+  expect(l.state).toBe('playing');
+  expect(collect(l, 10, 0.05).map((x) => x.at)).toEqual([10]);
+  l.stop(11);
+  l.stop(11.5);
+  expect(l.state).toBe('empty');
+  expect(l.events).toHaveLength(0);
+});
+
+test('stop while recording closes the loop instead of throwing it away', () => {
+  const l = createLooper();
+  l.press(0);
+  l.pianoOn(60, 100, 1);
+  l.stop(3);
+  expect(l.state).toBe('stopped');
+  expect(l.length).toBe(2);
+});
