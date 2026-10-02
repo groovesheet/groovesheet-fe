@@ -35,6 +35,7 @@ import PreviewDemo from './components/PreviewDemo';
 import Video1 from './components/video/Video1';
 import ServiceStatus from './components/ServiceStatus';
 import Video2Tabs from './components/video/Video2Tabs';
+import Bistable from './components/bistable/Bistable';
 import Video2Drums from './components/video/Video2Drums';
 import { Video2Guitar, Video2Bass } from './components/video/Video2Instrument';
 import BillingSuccess from './components/BillingSuccess';
@@ -202,6 +203,7 @@ function App() {
       <Route path="preview1" element={<PreviewDemo />} />
       <Route path="video1" element={<Video1 />} />
       <Route path="video2forpiano" element={<Video2Tabs />} />
+      <Route path="bistable" element={<Bistable />} />
       <Route path="video2fordrums" element={<Video2Drums />} />
       <Route path="video2forguitar" element={<Video2Guitar />} />
       <Route path="video2forbass" element={<Video2Bass />} />
