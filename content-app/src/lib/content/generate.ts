@@ -488,7 +488,10 @@ export async function runPipeline(trigger: "cron" | "manual"): Promise<RunOutcom
   try {
     const scan = await scanNews();
     const stored = await upsertNews(scan.items);
-    const fresh = stored.filter((n) => n.usedDraftId === null);
+    /* OS, device and chip stories never reach the ranker. Left to it, they
+       scored high on an invented bridge to notation software (macOS 27: 84). */
+    const offTopic = cfg.news.offTopicTitlePatterns.map((p) => new RegExp(p, "i"));
+    const fresh = stored.filter((n) => n.usedDraftId === null && !offTopic.some((re) => re.test(n.title)));
     if (fresh.length === 0) {
       const detail = `No unused stories. ${scan.feedErrors.length} feed errors.`;
       await finishRun(runId, "no-story", detail, null);
@@ -636,6 +639,14 @@ export async function runPipeline(trigger: "cron" | "manual"): Promise<RunOutcom
        falls back to holding it for review rather than failing. Warnings do not
        block, by design. They are style notes, and nothing would ever publish
        if they did. */
+    /* Clearing the drafting floor is not enough to go out unreviewed: a story
+       between news.minScore and autoPublish.minScore is held for a person. */
+    const autoFloor = cfg.content.autoPublish.minScore;
+    if (autoPublishOn() && validation.errors.length === 0 && best.score < autoFloor) {
+      const detail = `${base} Held for review: score ${best.score} is below the auto-publish minimum of ${autoFloor}.`;
+      await finishRun(runId, "drafted", detail, saved.id);
+      return { outcome: "drafted", draftId: saved.id, title: saved.title, detail };
+    }
     if (autoPublishOn() && validation.errors.length === 0) {
       const result = await approveDraft(saved.id, AUTO_PUBLISH_BY, autoPublishSocial());
       if (result.ok) {

@@ -18,7 +18,9 @@
     "urlPrefix": "/blog",
     "autoPublish": {
       "enabled": true,
-      "withSocial": true
+      "withSocial": true,
+      "minScore": 80,
+      "note": "A story scoring between news.minScore and this is drafted and held for review, not published. Added 2 Oct 2026 after a macOS release story went out on GrooveSheet's channels."
     },
     "defaultAuthor": "GrooveSheet Editorial",
     "defaultCategory": "Guide",
@@ -180,11 +182,11 @@
     ],
     "bannedPatterns": [
       {
-        "pattern": "\u2014",
+        "pattern": "—",
         "reason": "No em dashes. Use a colon, a full stop, or rewrite."
       },
       {
-        "pattern": "\u2013",
+        "pattern": "–",
         "reason": "No en dashes in prose. Use 'to' for ranges."
       },
       {
@@ -373,7 +375,7 @@
     "cron": "0 1 */3 * *",
     "maxAgeDays": 10,
     "maxPerFeed": 8,
-    "minScore": 55,
+    "minScore": 70,
     "category": "Industry news",
     "categorySlug": "industry-news",
     "searchQueries": [
@@ -426,10 +428,17 @@
       "musictheory"
     ],
     "relevance": [
+      "The test every story must pass: it is about music, AND the story itself (not an angle we could invent) is about getting notation, stems or MIDI out of audio, about notation or score software, or about the rights around transcriptions and covers. If connecting it to GrooveSheet takes a bridging paragraph, it fails: score it below 40.",
       "Best: something a working musician, music teacher or producer should act on or understand. A new music AI model for transcription, separation or MIDI, a notation software release, a licensing or copyright decision touching transcriptions and covers, a real shift in how people learn parts by ear.",
-      "Good: moves by the tools our readers already use (MuseScore, Dorico, Sibelius, Ableton, Logic, Moises, LALAL, Melodyne, Izotope) where we can explain what it changes at the desk or on the stand.",
-      "Reject: press-release fluff with no substance, market-size reports, stock and funding news with no product behind it, streaming royalty politics with no bearing on playing, AI song generation with no transcription or separation angle, hardware synth reviews, concert and festival news."
-    ]
+      "Good, only when the story itself is about transcription, notation, stems or MIDI: moves by the tools our readers already use (MuseScore, Dorico, Sibelius, Moises, LALAL, Melodyne, AnthemScore, Klangio). A DAW, groovebox or plugin update scores well only if the update itself is stem separation, audio-to-MIDI or notation export.",
+      "Reject (score below 30): operating system and device news even when music apps are mentioned (macOS, iOS, iPadOS, Windows, Android, iPhone, iPad, Mac, chips, laptops, headphones); music apps or trackers arriving on a new platform; synth, drum machine, groovebox, effect and plugin launches with no transcription, notation, stem or MIDI-extraction feature; press-release fluff; market-size reports; stock and funding news with no product behind it; streaming royalty politics; AI song generation with no transcription or separation angle; hardware reviews; concert and festival news."
+    ],
+    "offTopicTitlePatterns": [
+      "\\b(macOS|iOS|iPadOS|watchOS|visionOS|tvOS|Windows 1[0-9]|Android)\\b",
+      "\\b(iPhone|iPad|MacBook|iMac|Mac (mini|Studio|Pro)|Apple (silicon|Watch)|AirPods|Pixel|Galaxy|Chromebook)\\b",
+      "\\b(M[1-9] (Pro|Max|Ultra)?|Snapdragon|Intel|AMD|Nvidia)\\b"
+    ],
+    "offTopicNote": "Stories whose title matches any offTopicTitlePatterns entry (case-insensitive) are dropped before ranking. These are OS, device and chip stories: the ranker kept scoring them high by inventing a bridge to notation software (macOS 27 scored 84 and went out on 2 Oct 2026)."
   },
   "generation": {
     "provider": "unwired",
