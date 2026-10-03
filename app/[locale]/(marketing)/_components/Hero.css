@@ -97,6 +97,8 @@
   color: var(--color-text);
   font-weight: 400;
   text-decoration: underline;
+  /* "Terms of Service" broke across two lines on phones. */
+  white-space: nowrap;
 }
 
 /* Desktop: show disclaimer in hero-content, hide mobile version */
@@ -858,38 +860,21 @@
 
   /* Tab strip: one row that never wraps. With flex-wrap the 5-instrument strip
      on /stem-splitter dropped "Bass" onto its own line at <=360px, where it
-     stretched full width and read as a broken pill. */
+     stretched full width and read as a broken pill. Every tab shares the row
+     equally: a scrolling strip clipped "Guitar" and hid "Bass" at 390px with
+     nothing to say there was more to the right. */
   .instrument-tabs {
     padding: 4px 0 0;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
   }
 
-  .instrument-tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Safe default: size to content and scroll. This is what a five-instrument
-     strip needs, and what browsers without :has() fall back to. */
   .instrument-tab {
-    flex: 0 0 auto;
+    flex: 1 1 0;
     min-width: 0;
     min-height: 48px;
     padding: 12px 10px;
     font-size: 15px;
     line-height: 20px;
-    scroll-snap-align: start;
-  }
-
-  /* Three instruments or fewer, the home page, fit comfortably, so let them
-     share the row equally the way the desktop layout does instead of huddling
-     at content width and leaving ~140px of the card empty. Sizing every strip
-     for the worst case made the common case look starved. */
-  .instrument-tabs:not(:has(.instrument-tab:nth-child(4))) .instrument-tab {
-    flex: 1 1 0;
   }
 
   .instrument-tab svg {
@@ -950,6 +935,30 @@
     width: 100%;
     min-height: 52px;
     font-size: 17px;
+  }
+}
+
+/* Phones: four or more instruments (/stem-splitter, /midi-converter) do not
+   fit side by side as icon + label, so each tab stacks its icon above a
+   smaller label and all five share the row. The three-tab home strip keeps
+   the side-by-side layout. */
+@media (max-width: 640px) {
+  .instrument-tabs:has(.instrument-tab:nth-child(4)) {
+    gap: 2px;
+  }
+
+  .instrument-tabs:has(.instrument-tab:nth-child(4)) .instrument-tab {
+    flex-direction: column;
+    gap: 4px;
+    min-height: 56px;
+    padding: 8px 2px;
+    font-size: 13px;
+    line-height: 16px;
+  }
+
+  .instrument-tabs:has(.instrument-tab:nth-child(4)) .instrument-tab svg {
+    width: 20px;
+    height: 20px;
   }
 }
 

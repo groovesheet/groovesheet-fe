@@ -52,7 +52,7 @@ export default async function AboutPage(props: LocaleParams) {
               <p className="about-label">About us</p>
               <h1 className="about-title">Make music learning accessible to all</h1>
               <p className="about-description">
-                We build tools that helps musicians, educators, and creators learn faster, practice smarter, and unlock
+                We build tools that help musicians, educators, and creators learn faster, practice smarter, and unlock
                 creative ideas.
               </p>
             </div>

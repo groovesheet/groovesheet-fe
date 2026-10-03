@@ -189,8 +189,10 @@ export default async function ComparePage({ competitor, locale }: { competitor: 
                 {competitor.rows.map((row) => (
                   <tr key={row.label}>
                     <th scope="row">{row.label}</th>
-                    <td>{ours[row.label] || NOT_LISTED}</td>
-                    <td className={row.theirs ? undefined : 'cmp-unlisted'}>{row.theirs || NOT_LISTED}</td>
+                    <td data-label="GrooveSheet">{ours[row.label] || NOT_LISTED}</td>
+                    <td data-label={competitor.name} className={row.theirs ? undefined : 'cmp-unlisted'}>
+                      {row.theirs || NOT_LISTED}
+                    </td>
                   </tr>
                 ))}
               </tbody>

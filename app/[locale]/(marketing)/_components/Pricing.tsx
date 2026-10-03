@@ -14,6 +14,7 @@ import type { BillingPlan, BillingTopup } from '@/lib/types';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import { useRouter } from '@/lib/navigation';
 import StatusMessage from '@/components/ui/StatusMessage';
+import type { FeaturesVariant } from './Features';
 import './Pricing.css';
 
 type PricingTab = 'plans' | 'topups';
@@ -85,9 +86,15 @@ function FeatureList({ check, items }: { check: ReactNode; items: ReactNode[] })
 interface PricingProps {
   /** Defaults to the shared login modal. */
   onLoginClick?: () => void;
+  /**
+   * The page this section sits on. Stem separation has no transcription and
+   * downloads WAV stems, so /stem-splitter swaps in copy that says so.
+   */
+  variant?: FeaturesVariant;
 }
 
-export default function Pricing({ onLoginClick }: PricingProps) {
+export default function Pricing({ onLoginClick, variant = 'notation' }: PricingProps) {
+  const isStems = variant === 'stems';
   const { isSignedIn } = useUser();
   const { getToken } = useAuth();
   const { openLoginModal } = useLoginModal();
@@ -275,7 +282,7 @@ export default function Pricing({ onLoginClick }: PricingProps) {
             <div className="pricing-title-wrapper">
               <h2 className="pricing-title">{t('pricing.title')}</h2>
             </div>
-            <p className="pricing-description">{t('pricing.subtitle')}</p>
+            <p className="pricing-description">{t(isStems ? 'pricing.subtitleStems' : 'pricing.subtitle')}</p>
             {showCanceled && (
               <div className="pricing-canceled-notice" role="status">
                 <span>
@@ -327,7 +334,11 @@ export default function Pricing({ onLoginClick }: PricingProps) {
                 {t('pricing.billing.monthly')}
               </button>
               <button className={`toggle-option ${billingMode === 'annual' ? 'active' : ''}`} onClick={() => setBillingMode('annual')}>
-                {t('pricing.billing.annual')} {'•'} <span className="highlight">{t('pricing.billing.threeMonthsFree')}</span>
+                {/* One wrapper: on phones the button is a flex box, which drops the
+                    space between loose text and the highlight span. */}
+                <span>
+                  {t('pricing.billing.annual')} {'\u2022'} <span className="highlight">{t('pricing.billing.threeMonthsFree')}</span>
+                </span>
               </button>
             </div>
           </div>
@@ -392,7 +403,7 @@ export default function Pricing({ onLoginClick }: PricingProps) {
                             defaultValue: `${liteMinutes} minutes / month`,
                           })
                         : t('pricing.plans.lite.feature1'),
-                      t('pricing.plans.lite.feature2'),
+                      t(isStems ? 'pricing.plans.lite.feature2Stems' : 'pricing.plans.lite.feature2'),
                       t('pricing.plans.lite.feature3', { size: MAX_UPLOAD_MB }),
                       t('pricing.plans.lite.feature4'),
                       t('pricing.plans.lite.feature5'),

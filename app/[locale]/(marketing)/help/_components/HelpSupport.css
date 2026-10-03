@@ -616,6 +616,17 @@
   display: flex;
 }
 /* ===================== RESPONSIVE ===================== */
+/* Touch screens have no Cmd+K, and the badge's width came out of the
+   placeholder, which was cut off on phones. Hand that room back. */
+@media (max-width: 767px) {
+  .help-search-kbd {
+    display: none;
+  }
+  .help-search-input {
+    padding-right: 56px;
+  }
+}
+
 @media (max-width: 900px) {
   .help-contact-grid {
     grid-template-columns: 1fr;

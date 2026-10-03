@@ -50,7 +50,7 @@
     "termsOfService": "服务条款",
     "dragDrop": "拖入音频文件",
     "tapToUpload": "点击上传音频文件",
-    "fileTypes": "MP3、WAV、FLAC、M4A,最大 {size}MB",
+    "fileTypes": "MP3、WAV、FLAC、OGG、M4A，最大 {size}MB",
     "browseFiles": "浏览文件",
     "chooseFile": "选择文件",
     "uploading": "上传中...",
@@ -90,10 +90,10 @@
     },
     "card2": {
       "title": "即时自定义",
-      "body": "调整速度图、小节线、鼓组映射、ghost note 灵敏度,实时预览改动。"
+      "body": "调整速度图、小节线、鼓组映射、幽灵音灵敏度，实时预览改动。"
     },
     "card3": {
-      "title": "导出!",
+      "title": "导出",
       "body": "导出干净的 PDF、MusicXML 或 MIDI 乐谱。打印、分享,或导入你的编辑器。"
     },
     "stems": {
@@ -132,6 +132,7 @@
   "pricing": {
     "title": "人人负担得起的方案。",
     "subtitle": "每首歌都可以先免费预览 10 秒,需要完整转谱时再付费。",
+    "subtitleStems": "每首歌都可以先免费预览 10 秒，需要完整歌曲时再付费。",
     "tabs": {
       "plans": "套餐",
       "topups": "充值"
@@ -149,7 +150,7 @@
     "plans": {
       "free": {
         "name": "免费版",
-        "badge": "爱好者",
+        "badge": "适合新手",
         "subtitle": "适合个人",
         "cta": "免费开始",
         "feature1": "每首歌曲可免费预览 10 秒",
@@ -159,18 +160,19 @@
       },
       "lite": {
         "name": "轻享版",
-        "badge": "专业",
+        "badge": "适合音乐人",
         "subtitle": "适合小团队",
         "cta": "订阅",
         "feature1": "每月 120 分钟",
         "feature2": "结果下载(PDF、MusicXML、MIDI)",
+        "feature2Stems": "完整歌曲分轨下载（WAV）",
         "feature3": "单文件 {size} MB",
         "feature4": "批量处理",
         "feature5": "在线聊天优先支持"
       },
       "pro": {
         "name": "专业版",
-        "badge": "企业",
+        "badge": "适合团队",
         "subtitle": "为公司设计",
         "cta": "订阅",
         "feature1": "包含轻享版全部功能",
@@ -222,7 +224,23 @@
       "topupsOnce": "一次性付款,不会自动续费。"
     }
   },
+  "element": {
+    "titleTop": "高精度鼓谱，",
+    "titleBottom": "随时可得。",
+    "lede": "上传一首歌，查看预览，下载可直接打印的分谱。"
+  },
   "testimonials": {
+    "quotes": {
+      "maya": "我把一段乱糟糟的 iPhone 排练录音丢进去，得到了一份真能拿来演奏的谱子。改了两个小节，打印出来，赶上了试音。不然得花一个小时去瞎猜。",
+      "daniel": "备课时间省了一半。我导出 MusicXML，给孩子们标上手顺，再发 PDF。“我该从哪里进？”的情况少了，真正演奏的时间多了。",
+      "leo": "演出前一晚，四首歌。它把曲式结构标得很准，排练时不用再为桥段争论。我们直接过一遍，跟着节拍器就对上了。",
+      "sofia": "把速度放慢，循环副歌，终于搞定了那个三连音过门。看到自己总是抢拍的那些音符，意外地很有帮助。",
+      "chris": "客户带着参考曲来，十分钟后鼓手就拿到了分谱。不用再开“再听一遍”的会，直接开录。",
+      "nora": "排版清晰，鼓件名称也不晦涩。我把 PDF 投到投影上，全班都能跟着反复记号走，不用我扯着嗓子数拍。",
+      "yuki": "一次批量处理三首 MP3，下载 PDF，拖进 Premiere。做教程的流程直接省掉了一步。",
+      "rahman": "录音一场接一场时，快速队列很重要。鼓手花在读谱上的时间少了，跟着节拍器演奏的时间多了。简单有效。",
+      "k": "第一次能从头跟到尾的谱子。这周学会了三首歌，不用每五秒就暂停一次 YouTube。"
+    },
     "title": "音乐人与教育者的信赖之选",
     "subtitle": "看看大家如何使用我们。真实用户,真实曲目,练习更快,谱子更干净。",
     "roles": {
@@ -870,7 +888,7 @@
     "search": {
       "contactSupport": "联系客服",
       "clearSearch": "清除搜索",
-      "placeholder": "搜索帮助：分钟数、格式、发布…",
+      "placeholder": "搜索常见问题…",
       "aria": "搜索帮助",
       "clear": "清除",
       "resultCount": "“{query}”共有 {count} 条结果",
@@ -1072,13 +1090,13 @@
       "title": "方案对比",
       "sub": "所有方案都可预览 PDF、MusicXML 和 MIDI，升级后解锁下载与优先处理。",
       "caption": "免费版、Lite 与 Pro 方案功能对比。",
-      "hobbyist": "爱好者",
+      "forNewcomers": "适合新手",
       "free": "免费版",
       "perMonth": "{price} / 月",
       "mostPopular": "最受欢迎",
       "lite": "Lite",
       "fromPerMonth": "{price} / 月起",
-      "enterprise": "企业",
+      "forTeams": "适合团队",
       "pro": "Pro",
       "fromPerUser": "每位用户 {price} 起",
       "minutes": "每月分钟数",

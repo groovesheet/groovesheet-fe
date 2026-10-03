@@ -381,10 +381,13 @@ export default function CampaignPage({ code, initial }: CampaignPageProps) {
   };
   const account = accountStates[status] ?? null;
 
+  // A code that matched nothing grants nothing, so the minutes it would have
+  // bought (the credit band, the "when they run out" question) do not apply.
+  const grantsCredit = status !== 'invalid';
   const faq = [
     { q: t('campaign.faq.q1'), a: t('campaign.faq.a1') },
     { q: t('campaign.faq.q2'), a: t('campaign.faq.a2') },
-    { q: t('campaign.faq.q3', tv), a: t('campaign.faq.a3') },
+    ...(grantsCredit ? [{ q: t('campaign.faq.q3', tv), a: t('campaign.faq.a3') }] : []),
     { q: t('campaign.faq.q4'), a: t('campaign.faq.a4') },
   ];
 
@@ -656,7 +659,7 @@ export default function CampaignPage({ code, initial }: CampaignPageProps) {
         </>
       )}
 
-      {status !== 'loading' && (
+      {status !== 'loading' && grantsCredit && (
         <section className="cmp-section">
           <div className="cmp-credit">
             <div className="cmp-credit-copy">

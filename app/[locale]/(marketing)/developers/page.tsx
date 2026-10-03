@@ -147,6 +147,7 @@ export default async function DevelopersPage(props: LocaleParams) {
             developer surface. Be explicit so nobody codes against /v1. */}
         <div
           role="status"
+          className="api-preview-banner"
           style={{
             maxWidth: '1190px',
             margin: '18px auto 0',

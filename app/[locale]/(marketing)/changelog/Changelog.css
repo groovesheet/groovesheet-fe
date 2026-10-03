@@ -182,6 +182,11 @@
   background: rgba(1, 47, 167, 0.14);
   color: var(--color-primary);
 }
+/* Brand blue on the dark card was close to invisible. */
+[data-theme='dark'] .changelog-version {
+  background: rgba(147, 180, 255, 0.14);
+  color: var(--color-info);
+}
 
 .changelog-badges {
   display: flex;
@@ -190,6 +195,8 @@
   flex: none;
 }
 
+/* One style for every tag: three treatments (filled, outlined, ghost) read as
+   three levels of importance that the tags do not have. */
 .changelog-badge {
   display: inline-flex;
   align-items: center;
@@ -200,21 +207,9 @@
   font-weight: 500;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-}
-.changelog-badge.badge-new {
-  background: var(--color-primary);
-  color: #fff;
-  border: 1px solid transparent;
-}
-.changelog-badge.badge-improved {
   background: transparent;
   color: var(--color-foreground);
   border: 1px solid var(--color-border);
-}
-.changelog-badge.badge-fixed {
-  background: var(--color-surface-light);
-  color: var(--color-muted-foreground);
-  border: 1px solid transparent;
 }
 
 .changelog-body {
@@ -267,5 +262,11 @@
 
 @media (max-width: 640px) {
   .changelog-title { font-size: 32px; }
-  .changelog-main { padding: 16px 16px 72px; }
+  .changelog-main { padding: 16px 16px 24px; }
+  /* Side by side, the caption got a column about 95px wide. */
+  .changelog-image {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }

@@ -914,3 +914,38 @@
     font-size: 16px;
   }
 }
+
+/* Phones: the desktop collage's flex heights and negative object-position
+   offsets made the wide photo overlap the two small ones and left an empty
+   bordered box under it. Fixed aspect ratios instead: one wide photo, two
+   squares, one wide photo. */
+@media (max-width: 640px) {
+  .about-images,
+  .about-image-group,
+  .about-image-row {
+    gap: 12px;
+  }
+
+  .about-image-large,
+  .about-image-small,
+  .about-image-bottom,
+  .about-image-row {
+    flex: none;
+    min-height: 0;
+  }
+
+  .about-image-large,
+  .about-image-bottom {
+    aspect-ratio: 16 / 10;
+  }
+
+  .about-image-small {
+    flex: 1 1 0;
+    aspect-ratio: 1;
+  }
+
+  .about-image-bottom img,
+  .about-image-row .about-image-small:last-child img {
+    object-position: center;
+  }
+}
