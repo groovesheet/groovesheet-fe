@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createSoundEngine } from '../midikeys/soundEngine';
 import { createLooper } from '../midikeys/looper';
-import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, voiceById, voiceForNote } from '../midikeys/drumKit';
+import { DRUM_VOICES, voiceById } from '../midikeys/drumKit';
 import {
   DEFAULT_GRID, FAMILIES, GRID_NOTES, SESSION_LAYOUT, SIDE, SIDE_NOTES, TOP_CCS,
   LP_DIM_BLUE, LP_DIM_RED, LP_OFF, familyOf, hitColor, isGridNote, loopColor, restColor, sanitizeGrid,
@@ -18,8 +18,9 @@ import './LaunchpadDrums.css';
  *     close, overdub), next = Stop (twice clears), next = Undo the last layer.
  *     Same one-button looper as /midi-keyboard.
  *   - Any pad's drum can be changed on the page; the kit is remembered.
- *   - A drum pad controller on channel 10 (a Launchkey in Drum mode) plays its
- *     General MIDI drums here too.
+ *   - Only the Launchpad is heard here. A keyboard plugged in beside it is
+ *     /midi-keyboard's, and /midi-keyboard ignores the Launchpad in turn, so
+ *     with both pages open nothing plays twice.
  *
  * Audio needs one click or key press on the page before it can start (browser
  * rule); a pad hit does not count, so the page asks for it up front.
@@ -166,26 +167,17 @@ export default function LaunchpadDrums() {
 
   // ---- MIDI -----------------------------------------------------------------
 
-  const onMidi = useCallback((data, fromLaunchpad) => {
-    const status = data[0];
-    if (status >= 0xf0) return;
-    const cmd = status & 0xf0;
-    const [, d1, d2] = data;
-    const press = cmd === 0x90 && d2 > 0;
-    if (fromLaunchpad) {
-      if (!press) return;
-      if (isGridNote(d1)) {
-        hitPad(d1, d2);
-        if (editingRef.current) setSelected(d1); // pick the pad to change from the Launchpad too
-      }
-      else if (d1 === SIDE.loop) loopAction('loop');
-      else if (d1 === SIDE.stop) loopAction('stop');
-      else if (d1 === SIDE.undo) loopAction('undo');
-      return;
+  const onMidi = useCallback((data) => {
+    const [status, d1, d2] = data;
+    if ((status & 0xf0) !== 0x90 || !d2) return; // presses only
+    if (isGridNote(d1)) {
+      hitPad(d1, d2);
+      if (editingRef.current) setSelected(d1); // pick the pad to change from the Launchpad too
     }
-    // Any other controller's drum pads (channel 10) play their GM drum.
-    if (press && (status & 0x0f) === DRUM_CHANNEL) play(voiceForNote(DEFAULT_PAD_MAP, d1), d2, d1);
-  }, [hitPad, loopAction, play]);
+    else if (d1 === SIDE.loop) loopAction('loop');
+    else if (d1 === SIDE.stop) loopAction('stop');
+    else if (d1 === SIDE.undo) loopAction('undo');
+  }, [hitPad, loopAction]);
 
   const onMidiRef = useRef(onMidi);
   onMidiRef.current = onMidi;
@@ -203,9 +195,8 @@ export default function LaunchpadDrums() {
       let launchpad = false;
       const others = [];
       access.inputs.forEach((input) => {
-        if (!bound.has(input)) {
-          const lp = isLaunchpad(input);
-          const listener = (e) => onMidiRef.current(e.data, lp);
+        if (isLaunchpad(input) && !bound.has(input)) {
+          const listener = (e) => onMidiRef.current(e.data);
           input.addEventListener('midimessage', listener);
           bound.set(input, listener);
         }

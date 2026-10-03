@@ -543,10 +543,13 @@ export default function MidiKeys() {
     const listener = (e) => onMidiRef.current(e.data);
 
     // Every input, not just the first: the Launchkey shows up as two ports
-    // (MIDI and DAW) and a second controller should work too.
+    // (MIDI and DAW) and a second controller should work too. A Launchpad is
+    // the exception: it belongs to /launchpad, and its grid sends plain notes
+    // on channel 1 that would otherwise play here as keys.
     const bind = () => {
       const list = [];
       access.inputs.forEach((input) => {
+        if (/launchpad/i.test(input.name || '')) return;
         if (!bound.has(input)) {
           input.addEventListener('midimessage', listener);
           bound.add(input);
