@@ -9,7 +9,16 @@
 // Everything that differs per visitor (sign-in state, the download button's
 // behaviour, URL intent such as ?view= and ?instrument=) is resolved in the
 // browser after hydration, so the server HTML is the same for everyone.
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Header from '@/components/chrome/Header';
@@ -71,6 +80,9 @@ import type { CardVariant } from '../../_components/thumbs/resolveThumb';
 import SongSidebar from './SongSidebar';
 import UrlIntent, { type SongUrlIntent } from './UrlIntent';
 import { assetKey, instrumentWord, trackAssets, trackDurationSec, type SongAsset, type SongT } from './songData';
+
+/** Instruments the home uploader turns into a score (its VISIBLE_INSTRUMENTS). */
+const OWN_TRACK_SCORE_INSTRUMENTS = ['piano', 'drums', 'bass'];
 
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
@@ -251,6 +263,32 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{viewerInfo}</div>
     </div>
+  );
+}
+
+type Transport = ReturnType<typeof createTransport>;
+type LivePlaybackBarProps = Omit<ComponentProps<typeof PlaybackBar>, 'isPlaying' | 'currentSec' | 'totalSec'> & {
+  transport: Transport;
+};
+
+/**
+ * The playback bar, subscribed to the transport on its own. While playing the
+ * transport notifies every animation frame; when SongDetail held that
+ * subscription the whole page (header, viewers, sidebar, rails, footer)
+ * re-rendered 60 times a second, which on a low-end phone kept the main thread
+ * busy enough that taps on tabs, solo and the instrument picker took 3 to 11
+ * seconds to land (PostHog logged them as dead clicks). Only the bar shows the
+ * running clock, so only the bar re-renders per frame.
+ */
+function LivePlaybackBar({ transport, ...rest }: LivePlaybackBarProps) {
+  const tState = useTransport(transport);
+  return (
+    <PlaybackBar
+      {...rest}
+      isPlaying={tState.isPlaying}
+      currentSec={tState.positionSec}
+      totalSec={tState.durationSec}
+    />
   );
 }
 
@@ -454,6 +492,13 @@ export default function SongDetail({
   const intentView = isViewKey(intent.view) ? intent.view : null;
   const view = resolveView(available, preferredView ?? intentView);
 
+  // Where "try your own song" goes: the tool that makes what this tab shows.
+  // Scores exist for piano, drums and bass; everything else is stems.
+  const ownTrackHref =
+    view === 'stems' || view === 'spectrum' || !OWN_TRACK_SCORE_INSTRUMENTS.includes(instrument ?? '')
+      ? '/stem-splitter'
+      : `/?instrument=${instrument}`;
+
   // Explicit tab clicks are the visitor's own choice.
   const chooseView = useCallback((v: ViewKey) => setPreferredView(v), []);
 
@@ -469,8 +514,10 @@ export default function SongDetail({
   }, [track, view, noteView]);
 
   // --- shared transport ------------------------------------------------------
+  // Nothing at this level subscribes to the transport's per-frame ticks: read
+  // transport.getState() in handlers, and let LivePlaybackBar and the viewers'
+  // own rAF loops draw the moving clock.
   const [transport] = useState(createTransport);
-  const tState = useTransport(transport);
   // Pause (not dispose) so React StrictMode's dev double-invoke of effects
   // doesn't leave the transport permanently disposed.
   useEffect(() => () => transport.pause(), [transport]);
@@ -1136,11 +1183,9 @@ export default function SongDetail({
                 padding: 0,
               }}
             >
-              <PlaybackBar
-                isPlaying={tState.isPlaying}
+              <LivePlaybackBar
+                transport={transport}
                 onPlayPause={handlePlayPause}
-                currentSec={tState.positionSec}
-                totalSec={tState.durationSec}
                 tempo={100}
                 onTempo={() => {}}
                 transpose={0}
@@ -1250,6 +1295,23 @@ export default function SongDetail({
               {!view && <CenteredNotice title={t('emptyTitle')} body={t('emptyBody')} />}
             </div>
 
+            {/* Right under the player, where the people who just played a
+                library song are looking: try the same thing on your own track.
+                The sidebar link and a footer link drew 2 clicks in 30 days. */}
+            <div className="gs-song-own-track">
+              <div className="gs-song-own-track-text">
+                <strong>{tSong('ownTrack.title')}</strong>
+                <span>{tSong('ownTrack.body')}</span>
+              </div>
+              <Link
+                className="gs-song-own-track-btn"
+                href={ownTrackHref}
+                onClick={() => trackExploreUploadCta(track, { placement: 'below_player', target: ownTrackHref, view: view ?? undefined })}
+              >
+                {tSong('ownTrack.cta')}
+              </Link>
+            </div>
+
             {/* What this track is, server-rendered (see TrackFacts). */}
             {facts}
 
@@ -1268,17 +1330,6 @@ export default function SongDetail({
           {/* Right sidebar (desktop) */}
           <div className="gs-song-sidebar-desktop">{sidebar}</div>
         </div>
-
-        {/* Same bridge as the sidebar's, for the widths where the sidebar is
-            replaced by a drawer that starts closed. */}
-        <Link
-          className="gs-song-upload-cta-mobile"
-          href="/"
-          onClick={() => trackExploreUploadCta(track, { placement: 'mobile_inline' })}
-        >
-          <strong>{tSong('sidebar.ctaTitle')}</strong>
-          <span>{tSong('sidebar.ctaBody')}</span>
-        </Link>
 
         {/* Mobile sidebar drawer */}
         <button className="gs-rs-toggle" onClick={() => setDrawerOpen(true)}>

@@ -68,6 +68,14 @@
       "guitar": "吉他",
       "bass": "貝斯"
     },
+    "failed": {
+      "title": "這次預覽沒有成功",
+      "noInstrumentTitle": "這首歌裡沒有找到{instrument}",
+      "noInstrumentBody": "分離出來的這一軌幾乎是靜音,所以沒有可以記譜的內容。歌曲本身沒問題:換一種樂器試試,或者先分離音軌,聽聽裡面有什麼。",
+      "tryAnother": "用同一首歌試試:",
+      "splitStems": "改為分離音軌",
+      "newSong": "換一首歌上傳"
+    },
     "errors": {
       "fileFormat": "暫不支援該格式\u2014\u2014目前支援 MP3、WAV、FLAC、OGG 與 M4A。",
       "fileSize": "檔案過大。最大 32MB。"
@@ -206,7 +214,13 @@
     "minutesPerMonth": "每月 {minutes} 分鐘",
     "minutesAdded": "增加 {minutes} 分鐘",
     "canceledNotice": "已取消結帳，未向您收費。",
-    "dismiss": "關閉"
+    "dismiss": "關閉",
+    "payNote": {
+      "plansCardOnly": "方案為自動續訂,只能用銀行卡付款。",
+      "walletsOnTopups": "想用支付寶或微信支付?請選擇一次性「加值」。",
+      "topupsWallets": "一次性付款,支援支付寶、微信支付和銀行卡,不會自動續訂。",
+      "topupsOnce": "一次性付款,不會自動續訂。"
+    }
   },
   "testimonials": {
     "title": "音樂人與教育者的信賴之選",
@@ -307,7 +321,9 @@
     "emailPlaceholder": "groovesheet@gmail.com",
     "confirm": "確認",
     "codePrompt": "請輸入 6 位數驗證碼:",
-    "closeAria": "關閉視窗"
+    "closeAria": "關閉視窗",
+    "mainlandHint": "在中國大陸?Google 和 Facebook 可能無法開啟,請用電子郵件或 Apple 登入。",
+    "codeHint": "驗證碼已寄至 {email},可能需要一分鐘。如果收件匣裡沒有,請查看垃圾郵件。"
   },
   "campaign": {
     "fallbackGroup": "你的社團",
@@ -443,6 +459,11 @@
     }
   },
   "song": {
+    "ownTrack": {
+      "title": "想要的歌不在曲庫裡?",
+      "body": "上傳你自己的音訊,免費生成 10 秒預覽,效果和這裡一樣。",
+      "cta": "試試你自己的歌"
+    },
     "viewers": {
       "loadingScore": "正在載入樂譜…",
       "noNotesTitle": "沒有偵測到音符",
@@ -1114,5 +1135,22 @@
         "midiTurn": "輪到你了，正在轉換你的音訊。"
       }
     }
+  },
+  "paywall": {
+    "titleSignedOut": "取得整首歌",
+    "titleOut": "你的時長已用完",
+    "bodySignedOut": "10 秒預覽是免費的。整首歌會使用加值時長或方案時長。選好後登入付款,完成後會直接回到這首歌。",
+    "bodyOut": "轉錄整首歌會使用方案或加值時長。",
+    "previewStays": "加值期間,你的預覽會保留在這裡。",
+    "payWallets": "加值為一次性付款,支援支付寶、微信支付和銀行卡。月度方案只能用銀行卡。",
+    "payOnce": "加值為一次性付款。月度方案自動續訂,只能用銀行卡。",
+    "minutes": "{minutes} 分鐘",
+    "priceOnce": "{price} 一次性",
+    "opening": "正在開啟…",
+    "choose": "選擇",
+    "buy": "購買",
+    "seePlans": "查看月度方案",
+    "haveAPlan": "我有方案:登入",
+    "notNow": "以後再說"
   }
 }

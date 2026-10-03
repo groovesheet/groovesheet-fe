@@ -478,3 +478,473 @@
   .midikeys__stage { min-height: 260px; }
   .midikeys__binding { flex-wrap: wrap; }
 }
+
+/* ---- wheels and tone ---- */
+
+.midikeys__tone output {
+  min-width: 52px;
+  font-size: 12px;
+  color: var(--mk-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.midikeys__tone span { min-width: 0; }
+.midikeys__tone input { width: 110px; flex: none; }
+
+/* Two small meters over the visualiser, mirroring the hardware wheels. */
+.midikeys__wheels {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.midikeys__wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--mk-muted);
+}
+
+.midikeys__wheel-track {
+  position: relative;
+  width: 10px;
+  height: 56px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+/* centre mark: the pitch wheel's rest position */
+.midikeys__wheel-track--bend::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 0.5px);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.midikeys__wheel-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  background: var(--mk-live);
+}
+
+.midikeys__wheel-fill--mod {
+  top: auto;
+  bottom: 0;
+  background: var(--mk-violet);
+}
+
+.midikeys__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mk-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.midikeys__check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--mk-live);
+  cursor: pointer;
+}
+
+/* ---- effects (stage-piano style knobs) ---- */
+
+.midikeys__fx { gap: 10px; }
+
+.midikeys__fxrow {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.midikeys__fxslot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.midikeys__fxslot.is-group-start:not(:first-child) {
+  border-left: 1px solid var(--mk-border);
+}
+
+.midikeys__fxgroup {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+}
+
+.mk-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mk-knob__dial {
+  width: 56px;
+  height: 56px;
+  cursor: ns-resize;
+  touch-action: none;
+  border-radius: 50%;
+}
+
+.mk-knob__dial:focus-visible { outline: 2px solid var(--mk-live); outline-offset: 2px; }
+.mk-knob__dial svg { width: 100%; height: 100%; display: block; }
+
+.mk-knob__track,
+.mk-knob__value {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.mk-knob__track { stroke: #2e2d31; }
+.mk-knob__value { stroke: var(--mk-live); }
+.mk-knob__cap { fill: var(--mk-panel-2); stroke: var(--mk-border); stroke-width: 1; }
+.mk-knob__pointer { stroke: var(--mk-text); stroke-width: 2.5; stroke-linecap: round; }
+
+.mk-knob__label { font-size: 13px; font-weight: 600; }
+
+.mk-knob__value-text {
+  font-size: 11px;
+  color: var(--mk-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mk-knob__learn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 11px;
+  color: #93b4ff;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.mk-knob__learn:hover { opacity: 1; text-decoration: underline; }
+.mk-knob.is-learning .mk-knob__value-text { color: var(--mk-amber); }
+.mk-knob.is-learning .mk-knob__value { stroke: var(--mk-amber); }
+
+@media (max-width: 760px) {
+  .midikeys__fxrow { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
+  .midikeys__fxslot.is-group-start:not(:first-child) { border-left: 0; }
+}
+
+/* Right-hand column of the deck: effects above the drum pads. */
+.midikeys__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.midikeys__credits {
+  margin: 0;
+  font-size: 12px;
+  color: #5f5e60;
+}
+
+.midikeys__credits a { color: var(--mk-muted); }
+
+/* ---- knob pages, sound toast ---- */
+
+.midikeys__pagetabs {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 9px;
+  background: var(--mk-panel-2);
+  border: 1px solid var(--mk-border);
+}
+
+.midikeys__pagetab {
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--mk-muted);
+  cursor: pointer;
+}
+
+.midikeys__pagetab.is-active { background: var(--mk-primary); color: #fff; }
+
+.midikeys__fxfoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.midikeys__fxfoot .midikeys__bindings { flex: 1; min-width: 260px; }
+.midikeys__fxfoot .midikeys__link--reset { align-self: center; }
+
+/* The sound (or knob page) just chosen, over the visualiser: the page's
+   version of the Launchkey's screen. */
+.midikeys__toast {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgba(15, 15, 17, 0.88);
+  border: 1px solid var(--mk-border);
+  pointer-events: none;
+  animation: mk-toast 2.2s ease forwards;
+  white-space: nowrap;
+}
+
+.midikeys__toast strong { font-size: 20px; font-weight: 700; }
+.midikeys__toast span { font-size: 12px; color: var(--mk-muted); }
+
+@keyframes mk-toast {
+  0% { opacity: 0; transform: translate(-50%, -6px); }
+  10%, 75% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .midikeys__toast { animation: mk-toast-fade 2.2s steps(1, end) forwards; }
+  @keyframes mk-toast-fade { 0% { opacity: 1; } 100% { opacity: 0; } }
+}
+
+/* ---- layout v2: looper + pads on the left, both knob rows on the right ---- */
+
+.midikeys__head { flex-direction: column; align-items: stretch; gap: 14px; }
+
+.midikeys__titlebar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.midikeys__controls-btn { flex-shrink: 0; padding: 8px 16px; font-weight: 600; }
+
+.midikeys__deck { grid-template-columns: minmax(360px, 5fr) 7fr; align-items: start; }
+
+.midikeys__col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* smaller pads */
+.midikeys__pads .midikeys__padgrid { gap: 10px; }
+.midikeys__pads .midikeys__padhalf { gap: 6px; }
+.midikeys__pads .midikeys__pad {
+  aspect-ratio: auto;
+  min-height: 46px;
+  padding: 6px 7px;
+  border-radius: 8px;
+}
+.midikeys__pads .midikeys__pad-name { font-size: 11px; }
+.midikeys__pads .midikeys__pad-note { font-size: 10px; }
+
+/* both effect rows, the one the knobs turn highlighted */
+.midikeys__fxpage {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 8px 8px 10px 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.midikeys__fxpage.is-active {
+  border-color: rgba(63, 116, 232, 0.55);
+  background: rgba(1, 47, 167, 0.12);
+}
+
+.midikeys__fxpage .midikeys__fxrow { flex: 1; min-width: 0; }
+
+.midikeys__fxpage-tag {
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: 0;
+  border-right: 1px solid var(--mk-border);
+  color: var(--mk-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.midikeys__fxpage-num { font-size: 18px; font-weight: 700; }
+.midikeys__fxpage-state { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.midikeys__fxpage.is-active .midikeys__fxpage-tag { color: var(--mk-live); }
+
+.midikeys__fx .mk-knob__dial { width: 46px; height: 46px; }
+.midikeys__fx .mk-knob__label { font-size: 12px; }
+
+.midikeys__fxfoot .midikeys__mixer { flex: 1; min-width: 260px; }
+
+/* ---- the full-screen controls map ---- */
+
+.midikeys-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  min-height: 0;
+  padding: 0;
+  display: block;
+  overflow-y: auto;
+  background: rgba(10, 10, 12, 0.97);
+}
+
+.midikeys-controls__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px clamp(16px, 3vw, 40px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.midikeys-controls__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.midikeys-controls__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.midikeys-controls__map {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.midikeys-controls__map dt { color: var(--mk-text); font-weight: 600; }
+.midikeys-controls__map dd { margin: 0; color: var(--mk-muted); }
+.midikeys-controls__none { grid-column: 1 / -1; }
+
+@media (max-width: 1080px) {
+  .midikeys__deck { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .midikeys-controls__grid { grid-template-columns: 1fr; }
+  .midikeys__fxpage { flex-direction: column; padding: 8px; }
+  .midikeys__fxpage-tag { flex-direction: row; width: auto; border-right: 0; gap: 8px; justify-content: flex-start; }
+}
+
+/* ---- mixer (the faders) ---- */
+
+.midikeys__faders {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.mk-fader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mk-fader__track {
+  position: relative;
+  width: 30px;
+  height: 120px;
+  border-radius: 6px;
+  background: #151517;
+  border: 1px solid var(--mk-border);
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.mk-fader__track:focus-visible { outline: 2px solid var(--mk-live); outline-offset: 2px; }
+
+.mk-fader__fill {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 4px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: var(--mk-live);
+  pointer-events: none;
+}
+
+.mk-fader__cap {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  height: 14px;
+  border-radius: 3px;
+  background: #d9d9d4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  cursor: grab;
+}
+
+.mk-fader__value {
+  font-size: 10px;
+  color: var(--mk-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mk-fader__label { font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+.mk-fader__sub {
+  max-width: 100%;
+  font-size: 10px;
+  color: var(--mk-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mk-fader.is-dim .mk-fader__fill { background: #3d3b3e; }
+.mk-fader.is-dim .mk-fader__label { color: var(--mk-muted); }
+.mk-fader.is-learning .mk-fader__value { color: var(--mk-amber); }
+.mk-fader.is-learning .mk-fader__track { border-color: var(--mk-amber); }
+
+@media (max-width: 760px) {
+  .midikeys__faders { grid-template-columns: repeat(5, minmax(0, 1fr)); row-gap: 16px; }
+  .mk-fader__track { height: 96px; }
+}

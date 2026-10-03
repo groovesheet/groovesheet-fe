@@ -1,0 +1,8 @@
+# The CLI uploads this directory. Without these it also ships the local build
+# output and the throwaway artefacts, which is slow and pointless: Vercel runs
+# its own build from source.
+.next
+node_modules
+.env.local
+.portal-password.txt
+*.bak

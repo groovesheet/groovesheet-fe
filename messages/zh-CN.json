@@ -68,6 +68,14 @@
       "guitar": "吉他",
       "bass": "贝斯"
     },
+    "failed": {
+      "title": "这次预览没有成功",
+      "noInstrumentTitle": "这首歌里没有找到{instrument}",
+      "noInstrumentBody": "分离出来的这一轨几乎是静音,所以没有可以记谱的内容。歌曲本身没问题:换一种乐器试试,或者先分离音轨,听听里面有什么。",
+      "tryAnother": "用同一首歌试试:",
+      "splitStems": "改为分离音轨",
+      "newSong": "换一首歌上传"
+    },
     "errors": {
       "fileFormat": "暂不支持该格式\u2014\u2014目前支持 MP3、WAV、FLAC、OGG 和 M4A。",
       "fileSize": "文件过大。最大 32MB。"
@@ -206,7 +214,13 @@
     "minutesPerMonth": "每月 {minutes} 分钟",
     "minutesAdded": "增加 {minutes} 分钟",
     "canceledNotice": "已取消结账，未向您收费。",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "payNote": {
+      "plansCardOnly": "套餐为自动续费订阅,只能用银行卡付款。",
+      "walletsOnTopups": "想用支付宝或微信支付?请选择一次性「充值」。",
+      "topupsWallets": "一次性付款,支持支付宝、微信支付和银行卡,不会自动续费。",
+      "topupsOnce": "一次性付款,不会自动续费。"
+    }
   },
   "testimonials": {
     "title": "音乐人与教育者的信赖之选",
@@ -307,7 +321,9 @@
     "emailPlaceholder": "groovesheet@gmail.com",
     "confirm": "确认",
     "codePrompt": "请输入 6 位验证码:",
-    "closeAria": "关闭弹窗"
+    "closeAria": "关闭弹窗",
+    "mainlandHint": "在中国大陆?Google 和 Facebook 可能无法打开,请用邮箱或 Apple 登录。",
+    "codeHint": "验证码已发送至 {email},可能需要一分钟。如果收件箱里没有,请查看垃圾邮件。"
   },
   "campaign": {
     "fallbackGroup": "你的社团",
@@ -443,6 +459,11 @@
     }
   },
   "song": {
+    "ownTrack": {
+      "title": "想要的歌不在曲库里?",
+      "body": "上传你自己的音频,免费生成 10 秒预览,效果和这里一样。",
+      "cta": "试试你自己的歌"
+    },
     "viewers": {
       "loadingScore": "正在加载乐谱…",
       "noNotesTitle": "没有检测到音符",
@@ -1114,5 +1135,22 @@
         "midiTurn": "轮到你了，正在转换你的音频。"
       }
     }
+  },
+  "paywall": {
+    "titleSignedOut": "获取整首歌",
+    "titleOut": "你的时长已用完",
+    "bodySignedOut": "10 秒预览是免费的。整首歌会消耗充值时长或套餐时长。选好后登录付款,完成后会直接回到这首歌。",
+    "bodyOut": "转录整首歌会消耗套餐或充值时长。",
+    "previewStays": "充值期间,你的预览会保留在这里。",
+    "payWallets": "充值为一次性付款,支持支付宝、微信支付和银行卡。月度套餐只能用银行卡。",
+    "payOnce": "充值为一次性付款。月度套餐自动续费,只能用银行卡。",
+    "minutes": "{minutes} 分钟",
+    "priceOnce": "{price} 一次性",
+    "opening": "正在打开…",
+    "choose": "选择",
+    "buy": "购买",
+    "seePlans": "查看月度套餐",
+    "haveAPlan": "我有套餐:登录",
+    "notNow": "以后再说"
   }
 }

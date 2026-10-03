@@ -50,7 +50,15 @@ export function formatMoney(value: number | string | null | undefined, currency:
   return `${CURRENCY_SYMBOLS[currency] || CURRENCY_SYMBOLS.usd}${trimmed}`;
 }
 
-export default function useBillingCatalog(): { catalog: BillingCatalog | null; loading: boolean; currency: string } {
+const NO_WALLETS: string[] = [];
+
+export default function useBillingCatalog(): {
+  catalog: BillingCatalog | null;
+  loading: boolean;
+  currency: string;
+  /** Wallets Stripe has activated for one-time payments in this currency. */
+  wallets: string[];
+} {
   const [catalog, setCatalog] = useState<BillingCatalog | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -72,5 +80,5 @@ export default function useBillingCatalog(): { catalog: BillingCatalog | null; l
     };
   }, []);
 
-  return { catalog, loading, currency: catalog?.currency || 'usd' };
+  return { catalog, loading, currency: catalog?.currency || 'usd', wallets: catalog?.wallets ?? NO_WALLETS };
 }

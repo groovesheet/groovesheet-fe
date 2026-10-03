@@ -26,6 +26,18 @@ export function makeFileTypeCheck(mimeTypes: readonly string[]): (file: File) =>
 /** /workflow/status and /preview/status payloads. */
 export type StatusPayload = Workflow & { state?: string; message?: string; last_progress_message?: string };
 
+/**
+ * Why a job failed, in the server's words. The preview status endpoint puts
+ * it in `error`; the workflow one has used `message`. Reading only `message`
+ * showed every failed preview as a bare "Processing failed." (until 2026-10).
+ */
+export function failureMessage(data: { message?: unknown; error?: unknown }): string | null {
+  for (const value of [data.message, data.error]) {
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+  return null;
+}
+
 /** What POST /workflow/:name and POST /preview/:name return. */
 export interface StartPayload {
   workflow_id?: string;
@@ -209,4 +221,13 @@ export function trackPointer(e: MouseEvent<HTMLDivElement>): void {
   const rect = e.currentTarget.getBoundingClientRect();
   e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
   e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+}
+
+/**
+ * True for the worker's "the stem you picked is silent" failure
+ * (midi2score-worker/shared/stem_guard.py no_content_message): the song was
+ * fine, the instrument choice wasn't, so the card offers the other ones.
+ */
+export function isNoInstrumentMessage(message: string | null | undefined): boolean {
+  return /effectively silent|couldn't find (any|the instrument)/i.test(message ?? '');
 }

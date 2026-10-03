@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useRef, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useLinkStatus } from 'next/link';
 import './Header.css';
 import { SignedIn, SignedOut } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
@@ -20,6 +21,28 @@ import { LanguageSelector } from './LanguageSelector';
 import { useLoginModal } from './LoginModalProvider';
 
 const BLOG_PATH = '/blog';
+
+/**
+ * The header logo. It is the way home from every page, and on a heavy page
+ * like a song the soft navigation to / can take a second with nothing on
+ * screen, which reads as a dead click. So it pulses while the navigation is
+ * pending. width/height give the PNG its aspect ratio before it loads (the
+ * link was 0px wide until then), and an undraggable image stops a press that
+ * moves a pixel from starting an image drag that swallows the click.
+ */
+function LogoImage({ isDarkMode }: { isDarkMode: boolean }) {
+  const { pending } = useLinkStatus();
+  return (
+    <img
+      src={isDarkMode ? '/images/Logo_White.png' : '/images/Logo_Dark.png'}
+      alt="GrooveSheet Logo"
+      className={`logo-image${pending ? ' is-pending' : ''}`}
+      width={2865}
+      height={487}
+      draggable={false}
+    />
+  );
+}
 
 export interface HeaderProps {
   onLoginClick?: () => void;
@@ -130,11 +153,7 @@ function Header({ onLoginClick }: HeaderProps) {
         <div className="header-inner">
           <div className="header-left">
             <LocalizedLink to="/" className="logo">
-              <img
-                src={isDarkMode ? '/images/Logo_White.png' : '/images/Logo_Dark.png'}
-                alt="GrooveSheet Logo"
-                className="logo-image"
-              />
+              <LogoImage isDarkMode={isDarkMode} />
             </LocalizedLink>
             <nav className="nav-menu">
               <div

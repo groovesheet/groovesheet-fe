@@ -1,0 +1,437 @@
+/* The handful of shared primitives the ported portal and blog markup call by
+   class name. Volumet shipped these as .volumet-* in public/colors_and_type.css
+   against its own token names; this file is the GrooveSheet equivalent, built
+   on the tokens in theme.css and following design-system/VISUAL_GUIDE.md:
+
+     - Pills for CTAs, layered radii (16 outer / 13 inner / 8 / 6).
+     - Brand blue #012FA7 for primary, hover lifts by 1 to 2px.
+     - Two-axis hierarchy: size and colour carry it, not weight. Most headings
+       sit at 400; 500 is buttons and emphasised labels.
+     - No decorative gradients.
+     - Interaction is 0.2s. The 1.2s theme crossfade is deliberately NOT applied
+       globally here: in a dense admin table a 1.2s hover reads as a dead click.
+       It is on the large surfaces only.
+
+   The second block maps Volumet's token vocabulary onto GrooveSheet's so the
+   1500 lines of ported internal.css keep working unchanged. */
+
+/* ---------- Type ---------- */
+
+.gs-title-md {
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.gs-body-md {
+  font-family: var(--font-family-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-foreground);
+}
+
+.gs-caption-strong {
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.gs-overline {
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-info);
+}
+
+.gs-stat-value {
+  font-family: var(--font-family-mono);
+  font-weight: 500;
+  font-size: 38px;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Buttons ---------- */
+
+.gs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 999px;
+  padding: 12px 20px;
+  height: 42px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gs-btn:hover {
+  transform: translateY(-1px);
+}
+
+.gs-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.gs-btn--tertiary-text:active,
+.gs-btn[disabled]:active,
+.gs-btn.is-disabled:active,
+.gs-btn[disabled]:hover,
+.gs-btn.is-disabled:hover {
+  transform: none;
+}
+
+.gs-btn--primary {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.gs-btn--primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 16px var(--color-primary-shadow);
+}
+
+.gs-btn--primary[disabled],
+.gs-btn--primary.is-disabled {
+  background: var(--color-surface-muted);
+  color: var(--color-muted-foreground);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Volumet had a light and a dark secondary because its pages alternated white
+   and dark bands. GrooveSheet's portal is one surface, so both resolve to the
+   same panel fill and the two names are kept only so ported markup compiles. */
+.gs-btn--secondary-light,
+.gs-btn--secondary-dark {
+  background: var(--color-panel1);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.gs-btn--secondary-light:hover,
+.gs-btn--secondary-dark:hover {
+  border-color: var(--color-border-lighter);
+}
+
+.gs-btn--outline-on-dark {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.gs-btn--outline-on-dark:hover {
+  border-color: var(--color-primary);
+  color: var(--color-info);
+}
+
+.gs-btn--tertiary-text {
+  background: transparent;
+  color: var(--color-info);
+  padding: 0;
+  height: auto;
+  border-radius: 0;
+}
+
+.gs-btn--tertiary-text:hover {
+  text-decoration: underline;
+}
+
+.gs-btn--lg {
+  height: 52px;
+  padding: 16px 30px;
+  font-size: 15px;
+}
+
+.gs-btn[disabled],
+.gs-btn.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Inputs ---------- */
+
+.gs-input {
+  width: 100%;
+  height: 44px;
+  padding: 12px 14px;
+  background: var(--color-panel2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gs-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+
+.gs-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-shadow);
+}
+
+textarea.gs-input {
+  height: auto;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+select.gs-input {
+  cursor: pointer;
+}
+
+/* ---------- Badge, avatar, plate ---------- */
+
+.gs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--color-panel1);
+  color: var(--color-text);
+  border-radius: 999px;
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gs-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-panel1);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.gs-glyph-plate {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-panel1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+}
+
+/* ---------- Table ---------- */
+
+.gs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+}
+
+.gs-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.gs-table td {
+  padding: 14px;
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border-light);
+  vertical-align: top;
+}
+
+.gs-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.gs-table tbody tr:hover {
+  background: var(--color-surface-lightest);
+}
+
+.gs-table td:first-child {
+  color: var(--color-text);
+}
+
+/* ---------- Layout ---------- */
+
+.gs-container {
+  max-width: 1190px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ---------- Accordion (the FAQ block on a post) ---------- */
+
+.gs-accordion {
+  border-top: 1px solid var(--color-border);
+}
+
+.gs-accordion details {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.gs-accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-family-sans);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.gs-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.gs-accordion summary::after {
+  content: "+";
+  font-family: var(--font-family-mono);
+  font-size: 18px;
+  color: var(--color-muted-foreground);
+  transition: transform 0.2s ease;
+}
+
+.gs-accordion details[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.gs-accordion-body {
+  padding: 0 0 18px;
+  color: var(--color-foreground);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ---------- Token bridge ----------
+
+   Volumet's names on the left, GrooveSheet's values on the right. It sits at
+   :root rather than on .int-root because the ported blog stylesheet uses the
+   same vocabulary as the ported portal, and this app has no other stylesheet
+   for it to collide with. */
+
+:root {
+  --primary: var(--color-primary);
+  --primary-active: var(--color-primary-hover);
+  --primary-disabled: var(--color-surface-muted);
+  --on-primary: #ffffff;
+
+  --ink: var(--color-text);
+  --body: var(--color-foreground);
+  --body-strong: var(--color-text);
+  --muted: var(--color-muted-foreground);
+  --muted-soft: var(--color-surface-muted);
+
+  /* The page sits on the app background; cards and the chrome sit a step up. */
+  --surface-soft: var(--color-background);
+  --canvas: var(--color-panel2);
+  --surface-strong: var(--color-panel1);
+  --surface-dark: var(--color-panel3);
+  --surface-dark-elevated: var(--color-panel1);
+  --on-dark: var(--color-text);
+  --on-dark-soft: var(--color-muted-foreground);
+
+  --hairline: var(--color-border);
+  --hairline-soft: var(--color-border-light);
+
+  --semantic-up: var(--color-success);
+  --semantic-down: var(--color-danger);
+
+  --radius-none: 0;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 13px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --radius-full: 50%;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-section: 80px;
+
+  --container-max: 1190px;
+
+  --font-sans: var(--font-family-sans);
+  --font-display: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+
+  --duration-fast: 0.2s;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --shadow-soft: 0 2px 14px var(--color-shadow);
+
+  /* internal.css uses these three for the one display heading on the sign-in
+     screen. */
+  --type-display-sm-size: 32px;
+  --type-display-sm-lh: 1.2;
+  --type-display-sm-tracking: -0.01em;
+}
+
+/* ---------- Card ---------- */
+
+.gs-card {
+  background: var(--color-panel2);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.gs-card--hover {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.gs-card--hover:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.gs-stat-label {
+  margin-top: 4px;
+  font-family: var(--font-family-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-muted-foreground);
+}
