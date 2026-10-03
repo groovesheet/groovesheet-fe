@@ -30,6 +30,23 @@ export interface SongCardModel {
   difficulty?: string;
 }
 
+/** Parts GrooveSheet writes notation for come first, in this order. */
+const PART_RANK = ['drums', 'piano', 'bass', 'vocals', 'guitar', 'other'];
+
+function byPartRank(a: string, b: string): number {
+  const rank = (p: string) => {
+    const i = PART_RANK.indexOf(p.toLowerCase());
+    return i === -1 ? PART_RANK.length : i;
+  };
+  return rank(a) - rank(b);
+}
+
+/** The card model with `part` named first (an instrument hub's own part). */
+export function leadWithPart(card: SongCardModel, part: string): SongCardModel {
+  const wanted = card.parts.find((p) => p.toLowerCase() === part.toLowerCase());
+  return wanted ? { ...card, parts: [wanted, ...card.parts.filter((p) => p !== wanted)] } : card;
+}
+
 /**
  * Map a backend library track (GET /library/tracks) to the card model. Shared
  * by Explore, the results page and the song page's related rails so every
@@ -48,8 +65,10 @@ export default function trackToCard(track: LibraryTrack): SongCardModel {
     previewUrls: track.preview_urls || {},
     formats: track.formats || [],
     thumbData: track.thumb_data || null,
-    // Capitalized for display and chip matching ('drums' to 'Drums').
-    parts: Object.keys(stems).map(capitalize),
+    // Capitalized for display and chip matching ('drums' to 'Drums'). The card
+    // names the first part, so scored parts lead: stem order put "Bass" on
+    // songs scored for piano and drums (mobile audit, 2026-10-03).
+    parts: Object.keys(stems).sort(byPartRank).map(capitalize),
     popularity: track.popularity ?? 0,
     publishedAt: track.published_at || null,
     plays: track.plays ?? 0,

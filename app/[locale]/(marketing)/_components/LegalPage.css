@@ -102,3 +102,9 @@
     line-height: 26px;
   }
 }
+
+/* Long URLs and OAuth scope strings must wrap instead of running off a phone screen. */
+.legal-page code,
+.legal-page a {
+  overflow-wrap: anywhere;
+}

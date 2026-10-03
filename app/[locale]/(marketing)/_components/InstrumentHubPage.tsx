@@ -27,7 +27,7 @@ import { breadcrumbJsonLd, faqJsonLd } from '@/lib/seo/jsonld';
 import { INSTRUMENT_HUBS, hubPath, type InstrumentHub } from '@/lib/seo/instrumentHubs';
 import JsonLd from '@/app/[locale]/explore/_components/JsonLd';
 import Section from '@/app/[locale]/explore/_components/Section';
-import { serverCard, type SongCardModel } from '@/app/[locale]/explore/_components/trackToCard';
+import { leadWithPart, serverCard, type SongCardModel } from '@/app/[locale]/explore/_components/trackToCard';
 import FaqAccordion from './FaqAccordion';
 import './InstrumentHub.css';
 
@@ -63,11 +63,13 @@ async function loadHub(hub: InstrumentHub): Promise<HubData> {
     searchLibraryTracksServer({ ...base, page: 1 }).catch(() => null),
     searchLibraryTracksServer({ ...base, page: 2 }).catch(() => null),
   ]);
-  const firstTracks = (first?.tracks || []).map(serverCard);
+  // Cards name their first part; on a hub that is the hub's own instrument.
+  const toCard = (t: Parameters<typeof serverCard>[0]) => leadWithPart(serverCard(t), hub.apiInstrument);
+  const firstTracks = (first?.tracks || []).map(toCard);
   const seen = new Set(firstTracks.map((t) => t.id));
   return {
     popular: firstTracks,
-    newest: (second?.tracks || []).map(serverCard).filter((t) => !seen.has(t.id)),
+    newest: (second?.tracks || []).map(toCard).filter((t) => !seen.has(t.id)),
     total: typeof first?.total === 'number' ? first.total : null,
   };
 }

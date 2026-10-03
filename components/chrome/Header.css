@@ -366,13 +366,16 @@
   display: none;
   flex-direction: column;
   justify-content: space-around;
+  /* 30x25 bars inside a 44x45 tap area; the negative margin keeps the bars
+     where they were. */
+  box-sizing: content-box;
   width: 30px;
   height: 25px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0;
-  margin-left: 20px;
+  padding: 10px 7px;
+  margin: -10px -7px -10px 13px;
   z-index: 101;
 }
 

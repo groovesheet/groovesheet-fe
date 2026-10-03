@@ -465,6 +465,7 @@
       "cta": "Try your own song"
     },
     "viewers": {
+      "stemSources": "{count, plural, one {# stem} other {# stems}}, separated by {separator}.",
       "loadingScore": "Loading score…",
       "noNotesTitle": "No notes detected",
       "noNotesBody": "We couldn't find any piano in this section of the audio. Try a recording where the piano is clearly audible.",
@@ -670,7 +671,9 @@
       "transcribedBy": "Transcribed by GrooveSheet",
       "emptyTitle": "No playable assets yet",
       "emptyBody": "This track has not been processed.",
-      "openInfo": "Open info panel"
+      "openInfo": "Download & info",
+      "closeInfo": "Close",
+      "download": "Download"
     },
     "rails": {
       "artistTitle": "More from {artist}",
@@ -791,7 +794,7 @@
       "stemsTitle": "Popular stems",
       "stemsSubtitle": "Isolated vocals, drums, bass, keys.",
       "trendingTitle": "Trending now",
-      "trendingSubtitle": "The tracks musicians download most.",
+      "trendingSubtitle": "The most popular tracks in the library.",
       "newTitle": "Just added",
       "newSubtitle": "The newest transcriptions in the library.",
       "keepDigging": "Keep digging"

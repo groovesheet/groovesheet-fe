@@ -76,6 +76,13 @@ export const metadata: Metadata = {
   },
 };
 
+const ZERO_FACE = ['normal', 'italic']
+  .map(
+    (style) =>
+      `@font-face{font-family:'Hubot Sans';src:url('/fonts/gs-zero.woff2') format('woff2');font-weight:200 900;font-style:${style};font-display:swap;unicode-range:U+30;}`
+  )
+  .join('');
+
 export default async function LocaleLayout({
   children,
   params,
@@ -106,6 +113,11 @@ export default async function LocaleLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Hubot+Sans:ital,wght@0,200..900;1,200..900&display=swap"
         />
+        {/* Hubot Sans only has a slashed zero, which reads as a Greek theta in
+            "2026", "100%" or "0:00". Its sister face Mona Sans (same studio,
+            OFL) supplies just the zero: this face covers U+0030 alone and,
+            declared after the Google stylesheet, wins for that one character. */}
+        <style>{ZERO_FACE}</style>
         <HeadScripts />
       </head>
       <body>

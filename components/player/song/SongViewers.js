@@ -355,11 +355,12 @@ export function StemsView({
   onSeek,
   transport,
   statusText,
-  separatorName = 'GrooveSheet BS-Roformer',
+  separatorName = 'GrooveSheet AI',
   // Stem audio is still downloading: rows exist but have no waveform yet.
   // Without this the empty-wave placeholder reads as a real, silent stem.
   loading = false,
 }) {
+  const tv = useTranslations('song.viewers');
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -408,8 +409,7 @@ export function StemsView({
         }}
       >
         <span>
-          Sources: {stems.length} stems · separated by{' '}
-          <strong style={{ color: 'var(--color-text)' }}>{separatorName}</strong>.
+          {tv('stemSources', { count: stems.length, separator: separatorName })}
         </span>
         {statusText && <span>{statusText}</span>}
       </div>
