@@ -1,26 +1,60 @@
-import { frame, liveWaves, makeWave, rgbMessages, paletteFor, FAMILY_RGB } from './ripple';
+import { frame, liveWaves, makeWave, rgbMessages, paletteFor, effectFor, FAMILY_RGB, FAMILY_EFFECT, EFFECTS } from './ripple';
 import { DEFAULT_GRID } from './layout';
 
 const glowAt = (f, note) => f.glow.get(note);
 
 test('a ripple lights the hit pad first, then a ring that moves outward and fades', () => {
   const w = makeWave(44, 'kick', 0); // row 4, column 4
-  const t0 = frame(0, [w], DEFAULT_GRID, 'ripple');
+  const t0 = frame(0, [w], DEFAULT_GRID);
   expect(glowAt(t0, 44)).toBeCloseTo(1);
   expect(glowAt(t0, 48)).toBeLessThan(0.01); // 4 pads away: not reached yet
   const t = 4 / 11; // the front reaches 4 pads away
-  const later = frame(t, [w], DEFAULT_GRID, 'ripple');
+  const later = frame(t, [w], DEFAULT_GRID);
   expect(glowAt(later, 48)).toBeGreaterThan(glowAt(later, 45)); // the ring has passed the near pad
   expect(glowAt(later, 84)).toBeGreaterThan(0.2); // straight up, same distance
-  expect(frame(2, [w], DEFAULT_GRID, 'ripple').glow.get(48)).toBe(0); // long gone
+  expect(frame(2, [w], DEFAULT_GRID).glow.get(48)).toBe(0); // long gone
 });
 
-test("a cross only runs along the hit pad's row and column", () => {
-  const w = makeWave(44, 'snare', 0);
-  const f = frame(2 / 11, [w], DEFAULT_GRID, 'cross');
-  expect(glowAt(f, 46)).toBeGreaterThan(0.2); // same row
-  expect(glowAt(f, 64)).toBeGreaterThan(0.2); // same column
-  expect(glowAt(f, 66)).toBe(0); // diagonal
+test('each shape only lights the pads on its path', () => {
+  const lit = (shape, t) => {
+    const f = frame(t, [makeWave(44, 'snare', 0, 1, shape)], DEFAULT_GRID);
+    return (note) => f.glow.get(note) > 0.2;
+  };
+  const plus = lit('plus', 2 / 11);
+  expect([plus(46), plus(64), plus(66)]).toEqual([true, true, false]); // row, column, not diagonal
+  const x = lit('x', 2 / 11);
+  expect([x(66), x(22), x(46)]).toEqual([true, true, false]); // diagonals only
+  const star = lit('star', 2 / 11);
+  expect([star(46), star(66), star(65)]).toEqual([true, true, false]);
+  const square = lit('square', 3 / 11);
+  expect([square(77), square(74), square(55)]).toEqual([true, true, false]); // the ring three out (corner and edge), not one
+  const diamond = lit('diamond', 2 / 11);
+  expect([diamond(46), diamond(55), diamond(66)]).toEqual([true, true, false]);
+  const rise = lit('rise', 2 / 11);
+  expect([rise(64), rise(24), rise(46)]).toEqual([true, false, false]); // up the column only
+  const off = lit('off', 2 / 11);
+  expect(off(46)).toBe(false);
+});
+
+test('a twinkle sparkles some pads near the hit, the same ones every frame', () => {
+  const w = makeWave(44, 'shaker', 0, 1, 'twinkle');
+  const near = new Set();
+  for (let t = 0; t < 0.6; t += 0.03) {
+    frame(t, [w], DEFAULT_GRID).glow.forEach((g, note) => { if (g > 0.3 && note !== 44) near.add(note); });
+  }
+  expect(near.size).toBeGreaterThan(4);
+  expect([...near].every((n) => Math.abs(Math.floor(n / 10) - 4) <= 3 && Math.abs((n % 10) - 4) <= 3)).toBe(true);
+  expect(frame(0.2, [w], DEFAULT_GRID).glow).toEqual(frame(0.2, [w], DEFAULT_GRID).glow);
+});
+
+test('each kind of drum has its own shape, a pad can override it, one setting can rule all', () => {
+  expect(new Set(Object.values(FAMILY_EFFECT)).size).toBe(8);
+  expect(Object.values(FAMILY_EFFECT).every((id) => EFFECTS.some((e) => e.id === id))).toBe(true);
+  expect(effectFor('mixed', null, 'kick')).toBe('ripple');
+  expect(effectFor('mixed', null, 'snare')).toBe('x');
+  expect(effectFor('mixed', null, 'hatClosed')).toBe('plus');
+  expect(effectFor('mixed', 'rise', 'kick')).toBe('rise');
+  expect(effectFor('star', 'rise', 'kick')).toBe('star');
 });
 
 test('pads rest dark unless resting colours are on', () => {
@@ -37,7 +71,7 @@ test('the hit pad flashes white, then holds its colour', () => {
 });
 
 test('with resting colours a pad sits on a dim version of its own, and waves never overflow 63', () => {
-  const rest = frame(0, [], DEFAULT_GRID, 'ripple', { rest: true }).colors.get(11); // a kick
+  const rest = frame(0, [], DEFAULT_GRID, { rest: true }).colors.get(11); // a kick
   expect(rest[0]).toBeGreaterThan(rest[1]);
   expect(rest[0]).toBeLessThan(FAMILY_RGB.kick[0] / 2);
   const many = Array.from({ length: 10 }, () => makeWave(11, 'kick', 0));

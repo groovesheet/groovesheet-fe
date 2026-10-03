@@ -6,7 +6,7 @@ import {
   DEFAULT_GRID, FAMILIES, GRID_NOTES, SESSION_LAYOUT, SIDE, SIDE_NOTES, TOP_CCS,
   LP_DIM_BLUE, LP_DIM_RED, LP_OFF, familyOf, hitColor, isGridNote, loopColor, restColor, sanitizeGrid,
 } from './layout';
-import { ANIMATIONS, frame, liveWaves, makeWave, paletteFor, rgbMessages } from './ripple';
+import { ANIMATIONS, EFFECTS, FAMILY_EFFECT, effectFor, frame, isEffect, liveWaves, makeWave, paletteFor, rgbMessages } from './ripple';
 import './LaunchpadDrums.css';
 
 /*
@@ -15,7 +15,8 @@ import './LaunchpadDrums.css';
  *   - The 8x8 grid plays the drums from /midi-keyboard's synthesised kit (all
  *     49 of them, see layout.js), each pad lit in its drum family's colour.
  *     A hit (or a loop replay, softer) sends a wave of light across the grid,
- *     on the Launchpad and on the page alike (see ripple.js).
+ *     on the Launchpad and on the page alike, in a shape that depends on the
+ *     drum (ripple, X, +, star ...) or the pad (see ripple.js).
  *   - The round buttons down the right are a loop pedal: top = Loop (record,
  *     close, overdub), next = Stop (twice clears), next = Undo the last layer.
  *     Same one-button looper as /midi-keyboard.
@@ -39,7 +40,7 @@ const LOOP_OPTS = { trimEnd: true, onePass: true };
 const nowSec = () => performance.now() / 1000;
 const isLaunchpad = (port) => /launchpad/i.test(port?.name || '');
 
-const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'ripple', restLit: false };
+const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'mixed', padFx: {}, restLit: false };
 
 function loadSettings() {
   try {
@@ -50,7 +51,8 @@ function loadSettings() {
       grid: sanitizeGrid(saved.grid),
       strength: num(saved.strength, 20, 127, DEFAULTS.strength),
       volume: num(saved.volume, 0, 1.5, DEFAULTS.volume),
-      anim: ANIMATIONS.some((a) => a.id === saved.anim) ? saved.anim : DEFAULTS.anim,
+      anim: ANIMATIONS.some((a) => a.id === saved.anim) ? saved.anim : saved.anim === 'cross' ? 'plus' : DEFAULTS.anim,
+      padFx: Object.fromEntries(Object.entries(saved.padFx || {}).filter(([n, fx]) => isGridNote(Number(n)) && isEffect(fx))),
       restLit: saved.restLit === true,
     };
   } catch (e) {
@@ -125,7 +127,9 @@ export default function LaunchpadDrums() {
 
   // Start a wave of light from a pad, now or (for a loop replay) when it sounds.
   const wave = useCallback((note, at, amp) => {
-    wavesRef.current.push(makeWave(note, settingsRef.current.grid[note], at, amp));
+    const { grid, anim, padFx } = settingsRef.current;
+    const voice = grid[note];
+    wavesRef.current.push(makeWave(note, voice, at, amp, effectFor(anim, padFx[note], voice)));
   }, []);
 
   // ---- playing --------------------------------------------------------------
@@ -280,8 +284,8 @@ export default function LaunchpadDrums() {
       // Nothing moving and the last frame already drawn: skip the work.
       if (!waves.length && idle && sentRef.current.size) return;
       idle = !waves.length;
-      const { grid, anim, restLit } = settingsRef.current;
-      const { colors, glow } = frame(now, waves, grid, anim, { rest: restLit });
+      const { grid, restLit } = settingsRef.current;
+      const { colors, glow } = frame(now, waves, grid, { rest: restLit });
 
       // The Launchpad: send only the pads whose colour changed.
       const changes = new Map();
@@ -329,7 +333,18 @@ export default function LaunchpadDrums() {
   }, [settings]);
 
   // Repaint the grid when a pad's drum or the animation changes.
-  useEffect(() => { sentRef.current.clear(); }, [settings.grid, settings.anim, settings.restLit]);
+  useEffect(() => { sentRef.current.clear(); }, [settings.grid, settings.restLit]);
+
+  // A pad's own light effect (null = its drum's); shown straight away, without the sound.
+  const setPadFx = (note, fx) => {
+    setSettings((s) => {
+      const padFx = { ...s.padFx };
+      if (fx) padFx[note] = fx; else delete padFx[note];
+      return { ...s, padFx };
+    });
+    const voice = settingsRef.current.grid[note];
+    wavesRef.current.push(makeWave(note, voice, nowSec(), 1, effectFor(settingsRef.current.anim, fx, voice)));
+  };
 
   const assign = (note, id) => {
     setSettings((s) => ({ ...s, grid: { ...s.grid, [note]: id } }));
@@ -439,14 +454,17 @@ export default function LaunchpadDrums() {
 
           <section className="lpdrums__card">
             <h2 className="lpdrums__card-title">Lights</h2>
-            <div className="lpdrums__seg" role="radiogroup" aria-label="Animation">
-              {ANIMATIONS.map((a) => (
-                <button key={a.id} type="button" role="radio" aria-checked={settings.anim === a.id}
-                  className={`lpdrums__seg-btn ${settings.anim === a.id ? 'is-active' : ''}`}
-                  onClick={() => setSettings((s) => ({ ...s, anim: a.id }))}>
-                  {a.label}
-                </button>
-              ))}
+            <div className="lpdrums__fxchips" role="radiogroup" aria-label="Light effect">
+              {ANIMATIONS.map((a) => {
+                const icon = EFFECTS.find((e) => e.id === a.id)?.icon;
+                return (
+                  <button key={a.id} type="button" role="radio" aria-checked={settings.anim === a.id}
+                    className={`lpdrums__fxchip ${a.id === 'mixed' ? 'is-wide' : ''} ${settings.anim === a.id ? 'is-active' : ''}`}
+                    onClick={() => setSettings((s) => ({ ...s, anim: a.id }))}>
+                    {icon && <b aria-hidden="true">{icon}</b>}{a.label}
+                  </button>
+                );
+              })}
             </div>
             <div className="lpdrums__seg" role="radiogroup" aria-label="Pads at rest">
               {[[false, 'Dark'], [true, 'Colours']].map(([v, label]) => (
@@ -457,7 +475,11 @@ export default function LaunchpadDrums() {
                 </button>
               ))}
             </div>
-            <p className="lpdrums__muted">What a hit sends across the grid, and whether the pads show their colours when nothing is playing.</p>
+            <p className="lpdrums__muted">
+              {settings.anim === 'mixed'
+                ? 'Each kind of drum lights its own shape (see Pads below); a pad can have its own in Change sounds.'
+                : 'Every pad lights this shape.'}
+            </p>
           </section>
 
           <section className="lpdrums__card">
@@ -469,7 +491,7 @@ export default function LaunchpadDrums() {
                   {editing ? 'Done' : 'Change sounds'}
                 </button>
                 {editing && (
-                  <button type="button" className="lpdrums__link" onClick={() => setSettings((s) => ({ ...s, grid: DEFAULT_GRID }))}>
+                  <button type="button" className="lpdrums__link" onClick={() => setSettings((s) => ({ ...s, grid: DEFAULT_GRID, padFx: {} }))}>
                     Reset kit
                   </button>
                 )}
@@ -481,6 +503,27 @@ export default function LaunchpadDrums() {
               ) : (
                 <div className="lpdrums__picker">
                   <p className="lpdrums__muted">Pad {selected}: <strong>{selVoice ? selVoice.label : '—'}</strong></p>
+                  <div className="lpdrums__picker-group">
+                    <span className="lpdrums__picker-label">Light effect</span>
+                    <div className="lpdrums__chips">
+                      <button type="button"
+                        className={`lpdrums__chip ${!settings.padFx[selected] ? 'is-active' : ''}`}
+                        onClick={() => setPadFx(selected, null)}>
+                        By drum ({EFFECTS.find((e) => e.id === FAMILY_EFFECT[familyOf(selVoice?.id)])?.label})
+                      </button>
+                      {EFFECTS.map((e) => (
+                        <button key={e.id} type="button"
+                          className={`lpdrums__chip ${settings.padFx[selected] === e.id ? 'is-active' : ''}`}
+                          onClick={() => setPadFx(selected, e.id)}>
+                          {e.icon} {e.label}
+                        </button>
+                      ))}
+                    </div>
+                    {settings.anim !== 'mixed' && (
+                      <p className="lpdrums__muted">Lights is set to one effect for every pad; pick &quot;Each drum its own&quot; there for this to show.</p>
+                    )}
+                  </div>
+                  <span className="lpdrums__picker-label">Drum</span>
                   {VOICES_BY_FAMILY.map(({ family, voices }) => (
                     <div key={family} className="lpdrums__picker-group">
                       <span className="lpdrums__picker-label" style={{ color: FAMILIES[family].css }}>{FAMILIES[family].label}</span>
@@ -501,7 +544,14 @@ export default function LaunchpadDrums() {
             ) : (
               <ul className="lpdrums__legend">
                 {Object.entries(FAMILIES).map(([k, f]) => (
-                  <li key={k}><i style={{ background: f.css }} />{f.label}</li>
+                  <li key={k}>
+                    <i style={{ background: f.css }} />{f.label}
+                    {settings.anim === 'mixed' && (
+                      <span className="lpdrums__legend-fx" title={EFFECTS.find((e) => e.id === FAMILY_EFFECT[k])?.label}>
+                        {EFFECTS.find((e) => e.id === FAMILY_EFFECT[k])?.icon}
+                      </span>
+                    )}
+                  </li>
                 ))}
               </ul>
             )}

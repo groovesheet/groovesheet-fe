@@ -155,6 +155,19 @@
 .lpdrums__chip.is-active { background: var(--pad); color: #0f0f11; }
 
 .lpdrums__seg + .lpdrums__seg { margin-top: 6px; }
+.lpdrums__fxchips + .lpdrums__seg { margin-top: 8px; }
+
+.lpdrums__fxchips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.lpdrums__fxchip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-radius: 8px;
+  border: 1px solid var(--lp-border); background: var(--lp-panel-2);
+  color: var(--lp-muted); font: inherit; font-size: 12px; cursor: pointer; text-align: left;
+}
+.lpdrums__fxchip b { width: 14px; text-align: center; color: var(--lp-text); font-weight: 700; }
+.lpdrums__fxchip.is-wide { grid-column: 1 / -1; }
+.lpdrums__fxchip.is-active { background: var(--lp-primary); border-color: var(--lp-primary); color: var(--lp-text); }
+.lpdrums__legend-fx { margin-left: auto; color: var(--lp-text); font-weight: 700; }
 .lpdrums__seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--lp-panel-2); border: 1px solid var(--lp-border); }
 .lpdrums__seg-btn {
   flex: 1; padding: 6px 8px; border-radius: 7px; border: 0;
