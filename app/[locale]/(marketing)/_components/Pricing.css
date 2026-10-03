@@ -106,7 +106,9 @@
   padding: 8px 12px;
   background: none;
   border: none;
-  color: var(--color-muted-foreground);
+  /* Muted grey on the panel was too faint for the unselected option; three
+     quarters of the foreground reads clearly in both themes. */
+  color: color-mix(in srgb, var(--color-foreground) 75%, transparent);
   font-family: var(--font-family-sans);
   font-size: 14px;
   font-weight: 400;
@@ -136,6 +138,12 @@
 
 .toggle-option .highlight {
   color: var(--color-primary);
+}
+
+/* Brand blue on the near-black panel is about 1.6:1. The light info blue
+   keeps the accent and reads. */
+[data-theme='dark'] .toggle-option .highlight {
+  color: var(--color-info);
 }
 
 .pricing-cards {

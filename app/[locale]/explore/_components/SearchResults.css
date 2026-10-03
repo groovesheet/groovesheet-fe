@@ -443,7 +443,63 @@
     justify-content: space-between;
   }
 
+  /* Two covers per row: one per row made each card ~500px tall and 25
+     results a 10,000px page (mobile audit, 2026-10-03). */
   .rs-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+  }
+
+  /* Half-width cards: square covers, and the format list wraps instead of
+     being cut off ("STEMS · MIDI · SH"). */
+  .rs-grid .sc-thumb {
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .rs-grid .sc-formats {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  /* The format tabs get their own full-width row: beside the Filters button
+     they ran ~30px past a 360px screen and cut off STEMS. */
+  .rs-titleblock-actions {
+    width: 100%;
+  }
+
+  .rs-segmented {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+  }
+
+  .rs-seg {
+    flex: 1;
+    min-height: 40px;
+    padding: 6px 4px;
+  }
+
+  .rs-view {
+    min-height: 40px;
+  }
+
+  /* Nothing to say until a filter is set; it only pushed results down. */
+  .rs-nopills {
+    display: none;
+  }
+
+  .rs-toolbar {
+    margin-top: 14px;
+    padding-bottom: 12px;
+  }
+
+  .rs-crumbs a {
+    display: inline-block;
+    padding: 10px 0;
+  }
+
+  .rs-crumbs {
+    padding-top: 10px;
   }
 }

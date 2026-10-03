@@ -172,7 +172,7 @@ table.pp-table thead th.th-corner {
 }
 .pp-plan-h .pp-plan-tag {
   font-family: var(--font-family-sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -388,5 +388,81 @@ table.pp-table tbody tr:last-child td.is-pop {
   .pp-cta-inner h2 {
     font-size: 30px;
     line-height: 38px;
+  }
+}
+
+/* Phones: the header is in flow, so the desktop top padding was empty space,
+   and the shared Pricing section repeated a second headline under this page's
+   own h1. Together they pushed every plan and price below the first screen.
+   The section's title stays on the home and tool pages, where it is the only
+   heading. */
+@media (max-width: 640px) {
+  .pp-header {
+    padding-top: 16px;
+    gap: 10px;
+  }
+  .pp-title {
+    font-size: 28px;
+    line-height: 34px;
+  }
+  .pp-subhead {
+    font-size: 16px;
+    line-height: 22px;
+  }
+  .pp-main .pricing {
+    padding-top: 24px;
+  }
+  .pp-main .pricing-title-wrapper {
+    display: none;
+  }
+}
+
+/* Phones: the table had a 760px minimum width, so only the Free column showed
+   and Lite and Pro sat off screen. Let the three plan columns share the width
+   with tighter cells and type so the whole table fits at 360px. */
+@media (max-width: 640px) {
+  .pp-compare-wrap {
+    padding: 0 12px;
+  }
+  .pp-compare-sub {
+    font-size: 16px;
+    line-height: 22px;
+    margin-bottom: 20px;
+  }
+  table.pp-table {
+    min-width: 0;
+  }
+  table.pp-table col.col-feat {
+    width: 28%;
+  }
+  table.pp-table thead th {
+    padding: 10px 4px 12px;
+  }
+  .pp-plan-h .pp-plan-tag {
+    height: auto;
+    letter-spacing: 0.2px;
+    line-height: 15px;
+  }
+  .pp-plan-h .pp-plan-name {
+    font-size: 17px;
+    line-height: 22px;
+  }
+  .pp-plan-h .pp-plan-price {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  table.pp-table tbody th[scope='row'],
+  table.pp-table tbody td {
+    padding: 10px 4px;
+    font-size: 13px;
+    line-height: 18px;
+    overflow-wrap: break-word;
+  }
+  .pp-cell-note {
+    font-size: 12px;
+  }
+  .pp-check svg {
+    width: 18px;
+    height: 18px;
   }
 }

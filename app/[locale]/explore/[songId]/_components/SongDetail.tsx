@@ -220,6 +220,31 @@ interface ViewerToolbarProps {
 
 function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, instrumentUi }: ViewerToolbarProps) {
   const t = useTranslations('song.player.tabs');
+  // On a phone the tabs scroll sideways. Keep the active one in view (a
+  // ?view=stems landing opened with Stems off-screen) and mark the strip when
+  // more tabs are hidden to the right, so CSS can fade that edge. Scrolls the
+  // strip itself, never the page.
+  const segRef = useRef<HTMLDivElement>(null);
+  const [moreRight, setMoreRight] = useState(false);
+  useEffect(() => {
+    const seg = segRef.current;
+    if (!seg) return;
+    const update = () => setMoreRight(seg.scrollLeft + seg.clientWidth < seg.scrollWidth - 4);
+    const active = seg.querySelector<HTMLElement>('button.on');
+    if (active && seg.scrollWidth > seg.clientWidth) {
+      const left = active.offsetLeft - seg.offsetLeft;
+      if (left < seg.scrollLeft || left + active.offsetWidth > seg.scrollLeft + seg.clientWidth) {
+        seg.scrollTo({ left: Math.max(0, left - 16) });
+      }
+    }
+    update();
+    seg.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      seg.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [viewMode, available]);
   // Digit label per key: 1-based position among the AVAILABLE tabs.
   const kbdFor: Partial<Record<ViewKey, string>> = {};
   VIEW_ORDER.filter((k) => available[k]).forEach((k, i) => {
@@ -244,8 +269,8 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
   };
   return (
     <div className="gs-viewer-toolbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div className="gs-seg" role="tablist">
+      <div className="gs-viewer-tabsrow" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className={`gs-seg${moreRight ? ' gs-seg-more' : ''}`} role="tablist" ref={segRef}>
           {tab('sheet', Icon.Sheet, t('sheet'))}
           {/* The raw piano roll of whatever MIDI the selected instrument has.
               It is the MIDI tab proper and never renames itself; the
@@ -261,7 +286,7 @@ function ViewerToolbar({ viewMode, onView, viewerInfo, available, noteLabel, ins
         </div>
         {instrumentUi}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{viewerInfo}</div>
+      <div className="gs-viewer-info" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{viewerInfo}</div>
     </div>
   );
 }
@@ -1173,6 +1198,19 @@ export default function SongDetail({
         <div className="gs-song-shell">
           {/* Main column */}
           <div style={{ minWidth: 0 }}>
+            {/* Phones and tablets: the sidebar (title, download) lives in a
+                drawer, so the first screen never said which song this is.
+                Not a heading: the sidebar keeps the page's h1. */}
+            <div className="gs-song-mtitle">
+              <div className="gs-song-mtitle-text">
+                <strong>{track.title}</strong>
+                {track.artist && <span>{track.artist}</span>}
+              </div>
+              <button type="button" className="gs-song-mtitle-btn" onClick={() => setDrawerOpen(true)}>
+                {t('download')}
+              </button>
+            </div>
+
             {/* Sticky header: playback bar + view switcher pinned together */}
             <div
               style={{
@@ -1338,7 +1376,14 @@ export default function SongDetail({
         {drawerOpen && (
           <>
             <div className="gs-rs-drawer-backdrop" onClick={() => setDrawerOpen(false)} />
-            <div className="gs-rs-drawer">{sidebar}</div>
+            <div className="gs-rs-drawer" role="dialog" aria-modal="true" aria-label={t('openInfo')}>
+              <div className="gs-rs-drawer-bar">
+                <button type="button" className="gs-rs-drawer-close" onClick={() => setDrawerOpen(false)} aria-label={t('closeInfo')}>
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+              {sidebar}
+            </div>
           </>
         )}
 

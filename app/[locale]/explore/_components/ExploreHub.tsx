@@ -50,6 +50,9 @@ function searchHref(params: Record<string, string>): string {
   return `/explore/search${qs ? `?${qs}` : ''}`;
 }
 
+/** How many opening cards of a rail count as its lead (one screen on a phone, about three on desktop). */
+const LEAD_COUNT = 3;
+
 export default function ExploreHub({ initialTracks, initialNextCursor, initialError }: ExploreHubProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -213,6 +216,21 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
         songs: byPopularity.filter((t) => t.formats.includes('stem')),
       },
     ];
+    // Every rail ranks by the same popularity, so one track led four of the
+    // five rails and the page read as a one-song library (mobile audit,
+    // 2026-10-03). A track that already opened an earlier rail moves to the
+    // back of the later ones; nothing is dropped.
+    const leads = new Set<string>();
+    const freshLead = (songs: SongCardModel[]) => {
+      const ordered = [...songs.filter((x) => !leads.has(x.id)), ...songs.filter((x) => leads.has(x.id))];
+      ordered.slice(0, LEAD_COUNT).forEach((x) => leads.add(x.id));
+      return ordered;
+    };
+    formatRails.forEach((rail) => {
+      rail.songs = freshLead(rail.songs);
+    });
+    const trending = freshLead(byTrending);
+    const newest = freshLead(byNewest);
     return {
       formatSections: formatRails,
       discoverySections: [
@@ -222,7 +240,7 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
           title: t('rails.trendingTitle'),
           subtitle: t('rails.trendingSubtitle'),
           sort: 'downloads',
-          songs: byTrending,
+          songs: trending,
         },
         {
           key: 'new',
@@ -230,7 +248,7 @@ export default function ExploreHub({ initialTracks, initialNextCursor, initialEr
           title: t('rails.newTitle'),
           subtitle: t('rails.newSubtitle'),
           sort: 'newest',
-          songs: byNewest,
+          songs: newest,
         },
       ],
     };

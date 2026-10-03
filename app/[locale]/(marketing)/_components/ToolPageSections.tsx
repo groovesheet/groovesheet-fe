@@ -22,7 +22,7 @@ interface ToolPageSectionsProps {
 export default function ToolPageSections({ locale, variant, element, beforeFeatures }: ToolPageSectionsProps) {
   return (
     <>
-      <div style={{ marginTop: '120px', position: 'relative' }}>
+      <div className="features-band features-band--tool">
         <div
           style={{
             position: 'absolute',
@@ -37,7 +37,7 @@ export default function ToolPageSections({ locale, variant, element, beforeFeatu
         {beforeFeatures}
         <Features locale={locale} variant={variant} />
       </div>
-      <Pricing />
+      <Pricing variant={variant} />
       <Element {...element} />
       <Testimonials locale={locale} />
       <HomeFaq locale={locale} />

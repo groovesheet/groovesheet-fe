@@ -20,7 +20,7 @@ export default async function RefundPolicyPage(props: LocaleParams) {
       <Header />
       <main className="legal-container">
         <section className="legal-content">
-          <h1 className="legal-title">Refunds Policy</h1>
+          <h1 className="legal-title">Refund Policy</h1>
           <div className="legal-body">
             <div className="legal-section">
               <h2 className="legal-heading">1. Overview</h2>

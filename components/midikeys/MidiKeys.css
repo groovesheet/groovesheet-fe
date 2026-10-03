@@ -344,6 +344,37 @@
   flex-wrap: wrap;
 }
 
+/* The drum pages: tabs over the grid, the active one lit like the knob row. */
+.midikeys__padpages {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.midikeys__padpage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--mk-border);
+  background: none;
+  color: var(--mk-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.midikeys__padpage:hover { color: var(--mk-text); }
+.midikeys__padpage-num { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.midikeys__padpage.is-active {
+  color: var(--mk-live);
+  border-color: var(--mk-live);
+  background: rgba(1, 47, 167, 0.12);
+}
+
 /* Two 4x2 halves side by side, as the pads sit on the Launchkey. */
 .midikeys__padgrid {
   display: grid;

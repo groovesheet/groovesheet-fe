@@ -26,6 +26,7 @@ import { useAuthActions, useSignIn, useSignUp, type OAuthStrategy } from '@/lib/
 import { useLocale, useTranslation } from '@/lib/i18n';
 import { Link } from '@/lib/navigation';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
+import { EVENTS, track } from '@/lib/analytics';
 import './LoginModal.css';
 
 export interface LoginModalProps {
@@ -56,6 +57,11 @@ function asAuthError(err: unknown): AuthErrorShape {
 
 function focusCodeInput(index: number): void {
   document.getElementById(`code-input-${index}`)?.focus();
+}
+
+/** The mail provider only (qq.com, gmail.com): enough to see which inboxes fail, never the address. */
+function emailDomain(email: string): string {
+  return email.split('@')[1]?.trim().toLowerCase().slice(0, 60) || '';
 }
 
 /** Where the visitor is now, so OAuth brings them back to the same page. */
@@ -101,6 +107,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   if (!isOpen || typeof document === 'undefined') return null;
 
   const handleOAuthSignIn = async (strategy: OAuthStrategy) => {
+    track(EVENTS.LOGIN_METHOD_CLICK, { method: strategy.replace('oauth_', ''), email_first: emailFirst });
     try {
       await signIn.authenticateWithRedirect({
         strategy,
@@ -144,6 +151,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           emailAddressId: signInResult.supportedFirstFactors.find((factor) => factor.strategy === 'email_code')
             ?.emailAddressId,
         });
+        track(EVENTS.LOGIN_CODE_SENT, { email_domain: emailDomain(email) });
         return;
       } catch (signInError) {
         // An unknown account (Clerk's 422) falls through to sign-up. Supabase
@@ -154,6 +162,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           await signUp.create({ emailAddress: email });
           await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
           setIsSignUp(true);
+          track(EVENTS.LOGIN_CODE_SENT, { email_domain: emailDomain(email), sign_up: true });
           return;
         }
         throw signInError;
@@ -161,6 +170,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     } catch (err) {
       console.error('Error during email confirmation:', err);
       const e = asAuthError(err);
+      track(EVENTS.LOGIN_CODE_ERROR, { stage: 'send', email_domain: emailDomain(email), message: (e.message || '').slice(0, 120) });
       if (e.errors && e.errors.length > 0) {
         alert(`Error: ${e.errors[0].message}`);
       } else {
@@ -230,6 +240,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       }
 
       if (result.status === 'complete') {
+        track(EVENTS.LOGIN_CODE_VERIFIED, { email_domain: emailDomain(email), sign_up: isSignUp });
         if (!isSignUp && result.createdSessionId) {
           await setActive({ session: result.createdSessionId });
         }
@@ -240,6 +251,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     } catch (err) {
       console.error('Error verifying code:', err);
       const e = asAuthError(err);
+      track(EVENTS.LOGIN_CODE_ERROR, { stage: 'verify', email_domain: emailDomain(email), message: (e.message || '').slice(0, 120) });
       if (e.errors && e.errors.length > 0) {
         alert(`Error: ${e.errors[0].message}`);
       } else {
@@ -281,7 +293,10 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const emailButton = (
     <button
       type="button"
-      onClick={() => setShowEmailSignIn(true)}
+      onClick={() => {
+        track(EVENTS.LOGIN_METHOD_CLICK, { method: 'email', email_first: emailFirst });
+        setShowEmailSignIn(true);
+      }}
       className="auth-button auth-button--email"
       style={backgroundStyle('/images/Email_Bg.png')}
     >

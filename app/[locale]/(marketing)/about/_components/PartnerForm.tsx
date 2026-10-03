@@ -119,7 +119,7 @@ export default function PartnerForm() {
         <input
           type="email"
           name="email"
-          placeholder="Company Email"
+          placeholder="Email"
           className="form-input"
           value={formData.email}
           onChange={handleInputChange}

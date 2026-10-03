@@ -112,3 +112,20 @@
     font-size: 44px !important;
   }
 }
+
+/* Phones: the preview banner had no side margin, so its border and corners
+   ran into the screen edges. The email link gets a taller hit area without
+   moving the line (vertical padding on an inline box does not affect layout),
+   and the Copy button a 40px touch height. */
+@media (max-width: 640px) {
+  .api-preview-banner {
+    margin: 12px 16px 0 !important;
+  }
+  .api-preview-banner a {
+    padding: 10px 0;
+    text-underline-offset: 2px;
+  }
+  .api-copy-btn {
+    min-height: 40px;
+  }
+}
