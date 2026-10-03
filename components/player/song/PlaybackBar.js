@@ -119,7 +119,7 @@ function PlaybackBar({
             <Icon.Next />
           </button>
           <button
-            className={`gs-ctrl ${loopMode !== 'off' ? 'gs-ctrl-on' : ''}`}
+            className={`gs-ctrl ${loopMode !== 'off' ? 'gs-ctrl-on' : ''}${disabledControls.loop ? ' gs-pb-off' : ''}`}
             onClick={onLoopMode}
             disabled={Boolean(disabledControls.loop)}
             style={disabledControls.loop ? disabledStyle : undefined}
@@ -158,6 +158,7 @@ function PlaybackBar({
 
         {/* Tempo */}
         <div
+          className={disabledControls.tempo ? 'gs-pb-off' : undefined}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 10, ...(disabledControls.tempo ? disabledStyle : null) }}
           title={disabledControls.tempo ? DISABLED_TITLE : undefined}
         >
@@ -190,6 +191,7 @@ function PlaybackBar({
 
         {/* Transpose */}
         <div
+          className={disabledControls.transpose ? 'gs-pb-off' : undefined}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...(disabledControls.transpose ? disabledStyle : null) }}
           title={disabledControls.transpose ? DISABLED_TITLE : undefined}
         >
@@ -236,7 +238,7 @@ function PlaybackBar({
 
         {/* Metronome */}
         <button
-          className={`gs-ctrl ${metronome ? 'gs-ctrl-on' : ''}`}
+          className={`gs-ctrl ${metronome ? 'gs-ctrl-on' : ''}${disabledControls.metronome ? ' gs-pb-off' : ''}`}
           onClick={onMetronome}
           disabled={Boolean(disabledControls.metronome)}
           style={disabledControls.metronome ? disabledStyle : undefined}
@@ -246,7 +248,7 @@ function PlaybackBar({
         </button>
 
         {/* Spacer */}
-        <div style={{ flex: 1, minWidth: 8 }} />
+        <div className="gs-pb-flex" style={{ flex: 1, minWidth: 8 }} />
 
         {/* Volume */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -260,7 +262,7 @@ function PlaybackBar({
             step={1}
             value={muted ? 0 : volume}
             onChange={(e) => onVolume(parseInt(e.target.value, 10))}
-            className="gs-slider"
+            className="gs-slider gs-pb-vol-slider"
             style={{ width: 90, '--fill': (muted ? 0 : volFill) + '%' }}
             title={t('volume')}
           />
@@ -268,10 +270,10 @@ function PlaybackBar({
 
         <div className="gs-pb-divider" />
 
-        <button className="gs-ctrl" onClick={onToggleTheme} title={dark ? t('lightTheme') : t('darkTheme')}>
+        <button className="gs-ctrl gs-pb-desk" onClick={onToggleTheme} title={dark ? t('lightTheme') : t('darkTheme')}>
           {dark ? <Icon.Sun /> : <Icon.Moon />}
         </button>
-        <button className="gs-ctrl" onClick={onFullscreen} title={t('fullscreen')}>
+        <button className="gs-ctrl gs-pb-desk" onClick={onFullscreen} title={t('fullscreen')}>
           <Icon.Fullscreen />
         </button>
       </div>

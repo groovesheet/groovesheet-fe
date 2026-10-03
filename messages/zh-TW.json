@@ -465,6 +465,7 @@
       "cta": "試試你自己的歌"
     },
     "viewers": {
+      "stemSources": "共 {count} 條分軌，由 {separator} 分離。",
       "loadingScore": "正在載入樂譜…",
       "noNotesTitle": "沒有偵測到音符",
       "noNotesBody": "在這段音訊中沒有找到鋼琴。請換一段鋼琴清晰可聞的錄音。",
@@ -670,7 +671,9 @@
       "transcribedBy": "GrooveSheet 轉譜",
       "emptyTitle": "暫無可播放的內容",
       "emptyBody": "這首歌還沒有處理完成。",
-      "openInfo": "打開資訊面板"
+      "openInfo": "下載與詳情",
+      "closeInfo": "關閉",
+      "download": "下載"
     },
     "rails": {
       "artistTitle": "{artist}的更多作品",
@@ -791,7 +794,7 @@
       "stemsTitle": "熱門分軌",
       "stemsSubtitle": "獨立的人聲、鼓、貝斯與鍵盤分軌。",
       "trendingTitle": "正在流行",
-      "trendingSubtitle": "音樂人下載最多的曲目。",
+      "trendingSubtitle": "曲庫中最受歡迎的曲目。",
       "newTitle": "最新上架",
       "newSubtitle": "曲庫中最新的轉譜。",
       "keepDigging": "繼續探索"

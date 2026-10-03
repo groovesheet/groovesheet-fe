@@ -25,6 +25,9 @@ interface SongCardProps {
  * title is a real link stretched over the card (see SongCard.css), so every
  * rail on the server-rendered page is a set of crawlable links.
  */
+/** Play and download counts below this are not shown. */
+const STAT_MIN = 10;
+
 function SongCard({ song, variant, href }: SongCardProps) {
   const tSong = useTranslations('song');
   const t = useTranslations('song.card');
@@ -97,15 +100,21 @@ function SongCard({ song, variant, href }: SongCardProps) {
         )}
         <div className="sc-row">
           <span className="sc-genre">{song.year ? `${primary} · ${song.year}` : primary}</span>
+          {/* Counters show once they say something: a library of "0 0" cards
+              read as unused (mobile audit, 2026-10-03). */}
           <span className="sc-stats">
-            <span className="sc-views" aria-label={t('playsAria', { count: song.plays || 0 })}>
-              <Play size={12} weight="regular" />
-              {fmtCount(song.plays || 0)}
-            </span>
-            <span className="sc-views" aria-label={t('downloadsAria', { count: song.downloads || 0 })}>
-              <DownloadSimple size={12} weight="regular" />
-              {fmtCount(song.downloads || 0)}
-            </span>
+            {(song.plays || 0) >= STAT_MIN && (
+              <span className="sc-views" aria-label={t('playsAria', { count: song.plays || 0 })}>
+                <Play size={12} weight="regular" />
+                {fmtCount(song.plays || 0)}
+              </span>
+            )}
+            {(song.downloads || 0) >= STAT_MIN && (
+              <span className="sc-views" aria-label={t('downloadsAria', { count: song.downloads || 0 })}>
+                <DownloadSimple size={12} weight="regular" />
+                {fmtCount(song.downloads || 0)}
+              </span>
+            )}
           </span>
         </div>
         {formats.length > 0 && (

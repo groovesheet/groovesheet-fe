@@ -76,6 +76,9 @@ function RowThumb({ track, alt }: { track: LibraryTrack; alt: string }) {
   );
 }
 
+/** Counters below this are hidden: tiny numbers undersell the page. */
+const STAT_MIN = 10;
+
 export interface SongSidebarProps {
   track: LibraryTrack;
   stems: StemRow[];
@@ -139,7 +142,11 @@ export default function SongSidebar({
 
   const [reportOpen, setReportOpen] = useState(false);
 
-  const subtitle = [track.album, stems.length ? t('stemCount', { count: stems.length }) : null, durationSec ? fmtTime(durationSec) : null]
+  // The album is left out when it only repeats the title (singles).
+  const showPlays = (track.plays || 0) >= STAT_MIN;
+  const showDownloads = (track.downloads || 0) >= STAT_MIN;
+  const albumLabel = track.album && track.album !== track.title ? track.album : null;
+  const subtitle = [albumLabel, stems.length ? t('stemCount', { count: stems.length }) : null, durationSec ? fmtTime(durationSec) : null]
     .filter(Boolean)
     .join(' · ');
 
@@ -154,11 +161,14 @@ export default function SongSidebar({
 
   const moreByArtist = relatedTracks.filter((t) => t.artist === track.artist && t.id !== track.id).slice(0, 5);
 
-  // Publisher row: prefer the real owner from the track payload; fall back to
-  // the deterministic handle for unattributed tracks.
-  const handle = (track.owner && track.owner.username) || creatorHandleForTrack(track);
+  // Publisher row: only a real owner has a /u/ profile. Library tracks have
+  // none, and the handle invented from the artist name linked every one of
+  // them to a 404 (found in the 2026-10-03 mobile audit); those show the
+  // artist instead, linking to their songs in the library.
+  const handle = track.owner && track.owner.username ? creatorHandleForTrack(track) : null;
+  const artistHref = track.artist ? `/explore/search?q=${encodeURIComponent(track.artist)}` : null;
   const avatarUrl = track.owner && track.owner.avatar_url;
-  const displayName = (track.owner && track.owner.display_name) || handle || '';
+  const displayName = (track.owner && track.owner.display_name) || handle || track.artist || '';
 
   // Until the browser knows who is signed in, show the neutral label: the
   // server HTML is cached and shared, so it must not say "Sign in".
@@ -168,9 +178,9 @@ export default function SongSidebar({
     <aside className="gs-rsidebar">
       {/* Header / hero block */}
       <div className="gs-rs-section">
-        {handle && (
+        {(handle || artistHref) && (
           <Link
-            href={`/u/${handle}`}
+            href={handle ? `/u/${handle}` : (artistHref as string)}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -183,7 +193,7 @@ export default function SongSidebar({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
-                alt={t('profileAlt', { handle })}
+                alt={t('profileAlt', { handle: handle ?? track.artist ?? '' })}
                 style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }}
               />
             ) : (
@@ -206,7 +216,7 @@ export default function SongSidebar({
                 {displayName.trim().charAt(0).toUpperCase()}
               </span>
             )}
-            <span style={{ fontSize: 15, color: 'var(--color-text)', fontWeight: 500 }}>@{handle}</span>
+            <span style={{ fontSize: 15, color: 'var(--color-text)', fontWeight: 500 }}>{handle ? `@${handle}` : track.artist}</span>
           </Link>
         )}
         <h1
@@ -239,19 +249,26 @@ export default function SongSidebar({
         </h1>
         {subtitle && <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--color-muted-foreground)' }}>{subtitle}</p>}
 
-        {/* Stats: real engagement counters */}
-        <div className="gs-statrow">
-          <span className="gs-stat" aria-label={t('playsAria', { count: track.plays || 0 })}>
-            <Play size={13} />
-            <strong>{fmtNum(track.plays || 0)}</strong>
-            <span style={{ opacity: 0.7 }}>{t('plays')}</span>
-          </span>
-          <span className="gs-stat" aria-label={t('downloadsAria', { count: track.downloads || 0 })}>
-            <DownloadSimple size={13} />
-            <strong>{fmtNum(track.downloads || 0)}</strong>
-            <span style={{ opacity: 0.7 }}>{t('downloads')}</span>
-          </span>
-        </div>
+        {/* Stats: real engagement counters, shown once they say something.
+            "0 plays · 0 downloads" read as a dead page. */}
+        {(showPlays || showDownloads) && (
+          <div className="gs-statrow">
+            {showPlays && (
+              <span className="gs-stat" aria-label={t('playsAria', { count: track.plays || 0 })}>
+                <Play size={13} />
+                <strong>{fmtNum(track.plays || 0)}</strong>
+                <span style={{ opacity: 0.7 }}>{t('plays')}</span>
+              </span>
+            )}
+            {showDownloads && (
+              <span className="gs-stat" aria-label={t('downloadsAria', { count: track.downloads || 0 })}>
+                <DownloadSimple size={13} />
+                <strong>{fmtNum(track.downloads || 0)}</strong>
+                <span style={{ opacity: 0.7 }}>{t('downloads')}</span>
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Selects row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginTop: 16 }}>
@@ -372,8 +389,6 @@ export default function SongSidebar({
           <dd>{stems.length}</dd>
           <dt>{t('published')}</dt>
           <dd>{fmtDate(track.published_at, LOCALE_HTML_LANG[locale])}</dd>
-          <dt>{t('source')}</dt>
-          <dd>{track.source}</dd>
         </dl>
       </div>
 

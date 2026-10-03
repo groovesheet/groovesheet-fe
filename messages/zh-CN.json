@@ -465,6 +465,7 @@
       "cta": "试试你自己的歌"
     },
     "viewers": {
+      "stemSources": "共 {count} 条分轨，由 {separator} 分离。",
       "loadingScore": "正在加载乐谱…",
       "noNotesTitle": "没有检测到音符",
       "noNotesBody": "在这段音频中没有找到钢琴。请换一段钢琴清晰可闻的录音。",
@@ -670,7 +671,9 @@
       "transcribedBy": "GrooveSheet 转谱",
       "emptyTitle": "暂无可播放的内容",
       "emptyBody": "这首歌还没有处理完成。",
-      "openInfo": "打开信息面板"
+      "openInfo": "下载与详情",
+      "closeInfo": "关闭",
+      "download": "下载"
     },
     "rails": {
       "artistTitle": "{artist}的更多作品",
@@ -791,7 +794,7 @@
       "stemsTitle": "热门分轨",
       "stemsSubtitle": "独立的人声、鼓、贝斯与键盘分轨。",
       "trendingTitle": "正在流行",
-      "trendingSubtitle": "音乐人下载最多的曲目。",
+      "trendingSubtitle": "曲库中最受欢迎的曲目。",
       "newTitle": "最新上架",
       "newSubtitle": "曲库中最新的转谱。",
       "keepDigging": "继续探索"

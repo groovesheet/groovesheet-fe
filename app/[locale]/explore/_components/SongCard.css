@@ -340,3 +340,18 @@
   height: 100%;
   background: #151515;
 }
+
+/* Phones: a 360px card filled the screen, so no rail showed that it scrolls,
+   and the portrait score preview made a sheet card 1.5 screens tall (mobile
+   audit, 2026-10-03). The next card now peeks in and score previews show
+   their first systems. Grids (search results) size cards themselves. */
+@media (max-width: 640px) {
+  .song-card {
+    width: min(78vw, 300px);
+  }
+
+  .sc-thumb-sheet {
+    height: 300px;
+    padding: 8px;
+  }
+}
