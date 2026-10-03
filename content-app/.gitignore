@@ -1,0 +1,9 @@
+node_modules
+.next
+.env.local
+.env*.local
+tsconfig.tsbuildinfo
+next-env.d.ts
+.vercel
+.env*
+.portal-password.txt
