@@ -129,7 +129,8 @@ export default function LaunchpadDrums() {
   const wave = useCallback((note, at, amp) => {
     const { grid, anim, padFx } = settingsRef.current;
     const voice = grid[note];
-    wavesRef.current.push(makeWave(note, voice, at, amp, effectFor(anim, padFx[note], voice)));
+    // padFx can be missing in settings kept from before per-pad effects existed
+    wavesRef.current.push(makeWave(note, voice, at, amp, effectFor(anim, padFx?.[note], voice)));
   }, []);
 
   // ---- playing --------------------------------------------------------------
@@ -338,7 +339,7 @@ export default function LaunchpadDrums() {
   // A pad's own light effect (null = its drum's); shown straight away, without the sound.
   const setPadFx = (note, fx) => {
     setSettings((s) => {
-      const padFx = { ...s.padFx };
+      const padFx = { ...(s.padFx || {}) };
       if (fx) padFx[note] = fx; else delete padFx[note];
       return { ...s, padFx };
     });
@@ -507,13 +508,13 @@ export default function LaunchpadDrums() {
                     <span className="lpdrums__picker-label">Light effect</span>
                     <div className="lpdrums__chips">
                       <button type="button"
-                        className={`lpdrums__chip ${!settings.padFx[selected] ? 'is-active' : ''}`}
+                        className={`lpdrums__chip ${!settings.padFx?.[selected] ? 'is-active' : ''}`}
                         onClick={() => setPadFx(selected, null)}>
                         By drum ({EFFECTS.find((e) => e.id === FAMILY_EFFECT[familyOf(selVoice?.id)])?.label})
                       </button>
                       {EFFECTS.map((e) => (
                         <button key={e.id} type="button"
-                          className={`lpdrums__chip ${settings.padFx[selected] === e.id ? 'is-active' : ''}`}
+                          className={`lpdrums__chip ${settings.padFx?.[selected] === e.id ? 'is-active' : ''}`}
                           onClick={() => setPadFx(selected, e.id)}>
                           {e.icon} {e.label}
                         </button>
