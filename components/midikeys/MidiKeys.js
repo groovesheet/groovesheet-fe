@@ -55,9 +55,9 @@ const SETTINGS_VERSION = 3;
 const LOOKAHEAD_SEC = 0.12; // how far ahead loop events are scheduled
 const HIDDEN_LOOKAHEAD_SEC = 1.2; // background tabs only get ~1 timer per second
 const TICK_MS = 25;
-// The whole page +6 dB: it sat well under /launchpad played side by side.
-// The engine's limiter catches the peaks. /launchpad keeps its own level.
-const OUTPUT_GAIN = 2;
+// Boost: the whole page, before the engine's limiter. It sat well under
+// /launchpad played side by side, so it starts at the top. /launchpad keeps its own level.
+const BOOST_MAX_DB = 30;
 const RISE_SEC = 5; // seconds a note takes to rise the full height of the visualiser
 const PAD_FLASH_SEC = 0.14;
 
@@ -84,6 +84,7 @@ const DEFAULT_SETTINGS = {
   fxPage: 0, // the page of effects the eight knobs turn
   bendRange: 2, // semitones each way
   tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
+  boostDb: BOOST_MAX_DB, // the whole page louder, 0..30 dB
 };
 
 const BEND_RANGES = [1, 2, 7, 12];
@@ -124,6 +125,7 @@ function loadSettings() {
       onePass: saved.onePass !== false,
       bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
       tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
+      boostDb: Number.isFinite(saved.boostDb) ? Math.min(Math.max(saved.boostDb, 0), BOOST_MAX_DB) : DEFAULT_SETTINGS.boostDb,
     };
   } catch (e) {
     return DEFAULT_SETTINGS;
@@ -591,10 +593,11 @@ export default function MidiKeys() {
   useEffect(() => {
     const engine = createSoundEngine({
       onStatus: (status, error) => setAudio({ status, error: error || null }),
-      outputGain: OUTPUT_GAIN,
+      limiter: true,
     });
     if (!engine) return undefined;
     engineRef.current = engine;
+    engine.setBoost(settingsRef.current.boostDb);
     const unlock = () => engine.unlock();
     window.addEventListener('pointerdown', unlock);
     window.addEventListener('keydown', unlock);
@@ -607,6 +610,8 @@ export default function MidiKeys() {
   }, []);
 
   useEffect(() => { engineRef.current?.loadPiano(settings.piano, settings.sampleSet); }, [settings.piano, settings.sampleSet]);
+
+  useEffect(() => { engineRef.current?.setBoost(settings.boostDb); }, [settings.boostDb]);
 
   // Name the sound on the page and on the Launchkey's screen whenever it changes.
   const showSound = useCallback(() => {
@@ -1264,6 +1269,13 @@ export default function MidiKeys() {
                 Reset mixer
               </button>
             </div>
+            <label className="midikeys__range midikeys__boost">
+              <span>Boost +{settings.boostDb} dB</span>
+              <input
+                type="range" min="0" max={BOOST_MAX_DB} step="1" value={settings.boostDb}
+                onChange={(e) => setSettings((s) => ({ ...s, boostDb: Number(e.target.value) }))}
+              />
+            </label>
             <div className="midikeys__faders">
               {FADERS.map((f) => (
                 <Fader

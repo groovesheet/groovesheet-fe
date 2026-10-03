@@ -274,6 +274,8 @@
 
 .midikeys__range span { min-width: 82px; }
 .midikeys__range input { flex: 1; min-width: 60px; accent-color: var(--mk-live); }
+.midikeys__boost { margin: 4px 0 12px; max-width: 420px; }
+.midikeys__boost span { min-width: 104px; color: var(--mk-text); }
 
 .midikeys__lane {
   width: 100%;
