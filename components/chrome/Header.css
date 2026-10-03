@@ -42,16 +42,37 @@
   gap: 32px;
 }
 
+/* The padding/negative-margin pair grows the click target past the image's
+   edges (the header row is much taller than the logo) without moving it. */
 .logo {
   display: flex;
   align-items: center;
-  padding-bottom: 4px;
+  padding: 12px 8px 16px;
+  margin: -12px -8px;
 }
 
 .logo-image {
   height: 36px;
   width: auto;
   object-fit: contain;
+  -webkit-user-drag: none;
+}
+
+.logo-image.is-pending {
+  animation: logo-pending 0.9s ease-in-out infinite;
+}
+
+@keyframes logo-pending {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-image.is-pending {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 .nav-menu {
