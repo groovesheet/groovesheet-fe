@@ -11,6 +11,7 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { searchLibraryTracksServer } from '@/lib/api-server';
+import { redirect } from '@/lib/navigation';
 import { pageMetadata } from '@/lib/seo/metadata';
 import SearchResults, { type InitialResults } from '../_components/SearchResults';
 import {
@@ -70,8 +71,17 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
 
   const state = resultsStateFromParams(readerFromRecord(raw));
   const initial: InitialResults = { key: searchRequestKey(state), data: null, error: null };
+  let onlyMatch: string | null = null;
   try {
     const body = await searchLibraryTracksServer(searchRequestFor(state));
+    // Video descriptions link here as "<title> <artist>" because the upload
+    // runs before the song gets its slug. When that search finds exactly the
+    // one song, send the viewer straight to it with the UTM tags kept, so the
+    // visit still counts for the video that sent it.
+    const tracks = body.tracks || [];
+    if (state.q && state.page === 1 && raw.utm_source && tracks.length === 1 && body.total === 1) {
+      onlyMatch = tracks[0].slug || tracks[0].id;
+    }
     initial.data = {
       tracks: (body.tracks || []).map(serverCard),
       total: typeof body.total === 'number' ? body.total : null,
@@ -83,6 +93,15 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
     // with the error, and the Try again button refetches from the browser.
     console.error('Explore search: library fetch failed', err);
     initial.error = (await getTranslations({ locale, namespace: 'explore.results' }))('loadError');
+  }
+
+  if (onlyMatch) {
+    const utm = new URLSearchParams();
+    for (const [key, value] of Object.entries(raw)) {
+      if (key.startsWith('utm_') && typeof value === 'string') utm.set(key, value);
+    }
+    // Outside the try: redirect() works by throwing.
+    redirect({ href: `/explore/${encodeURIComponent(onlyMatch)}?${utm.toString()}`, locale });
   }
 
   return (
