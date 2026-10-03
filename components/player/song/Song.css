@@ -610,6 +610,39 @@
   display: block;
 }
 
+/* Phones: the desktop row is three columns (140px name, waveform, 200px
+   controls). Below ~640px the fixed columns ate the whole width, so the
+   waveform column (the tap-to-seek target) collapsed to 0px and the volume
+   slider ran off the card. Stack the row instead: name, full-width waveform,
+   then the controls, with mute/solo grown to a usable touch size. */
+@media (max-width: 640px) {
+  .gs-song-page .gs-stem-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px 12px;
+    /* StemRow pins the desktop row to 168px inline; the stacked row sizes
+       to its content. */
+    height: auto !important;
+  }
+  .gs-song-page .gs-stem-row > :last-child {
+    justify-content: flex-start !important;
+  }
+  /* The waveform is drawn 126px tall (inline) and overflows its 52px wrap
+     on purpose in the desktop row; stacked, that overflow lands on the name
+     and the buttons. Give it its own band and keep it inside. */
+  .gs-song-page .gs-stem-wave-wrap {
+    height: 64px;
+  }
+  .gs-song-page .gs-stem-wave-wrap > div {
+    height: 100% !important;
+  }
+  .gs-song-page .gs-ms-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 11px;
+  }
+}
+
 /* =========================================================
    Right sidebar
    ========================================================= */
