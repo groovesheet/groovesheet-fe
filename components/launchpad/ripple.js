@@ -65,16 +65,23 @@ export const FAMILY_RGB = {
 };
 
 const REST_LEVEL = 0.13; // how bright a pad sits at rest, when resting pads are lit
-const SPEED = 11; // pads per second the wave front travels
-const WIDTH = 0.9; // thickness of the ring, in pads
+// Timings at Fade 1. Short and sharp: a wave that hangs around blurs a beat
+// into a glow (Edward, 2026-10-04: "ripple stays lit too long").
+const SPEED = 18; // pads per second the wave front travels: across the grid in ~0.4 s
+const WIDTH = 0.75; // thickness of the ring, in pads
 const RING_GAIN = 1.35; // the ring a touch brighter than its colour, clipped at full
-const LIFE = 1.0; // seconds a wave lasts
-const CORE_HOLD = 0.12; // seconds the hit pad stays fully lit
-const CORE_DECAY = 0.25; // then how fast it fades
-const FLASH_DECAY = 0.07; // the white flash on the hit pad
+const LIFE = 0.55; // seconds a wave lasts
+const RING_DECAY = 0.16; // the ring dims by e every this many seconds
+const CORE_HOLD = 0.06; // seconds the hit pad stays fully lit
+const CORE_DECAY = 0.12; // then how fast it fades
+const FLASH_DECAY = 0.05; // the white flash on the hit pad
 const TWINKLE_REACH = 3; // pads around the hit that may sparkle
-const TWINKLE_SPREAD = 0.45; // seconds over which the sparkles appear
-const TWINKLE_DECAY = 0.11;
+const TWINKLE_SPREAD = 0.3; // seconds over which the sparkles appear
+const TWINKLE_DECAY = 0.07;
+
+/** The Fade setting: how long the light lingers, x0.5 (snappier) to x3 (dreamy). */
+export const FADE_MIN = 0.5;
+export const FADE_MAX = 3;
 
 // A repeatable 0..1 number per wave and pad, so a twinkle doesn't flicker anew each frame.
 function hash(seed, row, col) {
@@ -91,7 +98,7 @@ export const makeWave = (note, voiceId, t0, amp = 1, shape = 'ripple') => ({
 });
 
 /** Waves still worth drawing at `now` (future ones, scheduled by the loop, are kept). */
-export const liveWaves = (waves, now) => waves.filter((w) => now - w.t0 < LIFE);
+export const liveWaves = (waves, now, fade = 1) => waves.filter((w) => now - w.t0 < LIFE * fade);
 
 // How strongly wave `w` lights the pad at (row, col) at time t (0..1).
 // How far the pad is from the hit along the shape's path, or null if the shape never reaches it.
@@ -110,28 +117,29 @@ function pathDistance(shape, dr, dc) {
   }
 }
 
-function strength(w, row, col, t) {
+// `fade` stretches how long the light lingers; the wave still travels at SPEED.
+function strength(w, row, col, t, fade = 1) {
   const dr = row - w.row;
   const dc = col - w.col;
-  if (dr === 0 && dc === 0) return t < CORE_HOLD ? 1 : Math.exp(-(t - CORE_HOLD) / CORE_DECAY);
+  if (dr === 0 && dc === 0) return t < CORE_HOLD * fade ? 1 : Math.exp(-(t - CORE_HOLD * fade) / (CORE_DECAY * fade));
   if (w.shape === 'twinkle') {
     if (Math.max(Math.abs(dr), Math.abs(dc)) > TWINKLE_REACH || hash(w.t0, row, col) > 0.5) return 0;
     const at = hash(w.t0 + 0.5, row, col) * TWINKLE_SPREAD;
-    return t < at ? 0 : Math.exp(-(t - at) / TWINKLE_DECAY);
+    return t < at ? 0 : Math.exp(-(t - at) / (TWINKLE_DECAY * fade));
   }
   const d = pathDistance(w.shape, dr, dc);
   if (d == null) return 0;
   const front = SPEED * t;
   const ring = Math.exp(-((d - front) ** 2) / (2 * WIDTH * WIDTH));
-  const fade = (1 - t / LIFE) ** 1.5;
-  return Math.min(1, ring * fade * RING_GAIN);
+  const dim = Math.exp(-t / (RING_DECAY * fade)) * (1 - t / (LIFE * fade)); // drops fast, gone by LIFE
+  return Math.min(1, ring * dim * RING_GAIN);
 }
 
 /**
  * Every pad's colour at `now`: note -> [r, g, b] (0-63), plus how lit each one
  * is above its resting colour (0..1), for the page's glow.
  */
-export function frame(now, waves, grid, { rest = false } = {}) {
+export function frame(now, waves, grid, { rest = false, fade = 1 } = {}) {
   const restLevel = rest ? REST_LEVEL : 0;
   const colors = new Map();
   const glow = new Map();
@@ -145,8 +153,8 @@ export function frame(now, waves, grid, { rest = false } = {}) {
       let lit = 0;
       for (const w of waves) {
         const t = now - w.t0;
-        if (t < 0 || t >= LIFE) continue;
-        const s = strength(w, row, col, t) * w.amp;
+        if (t < 0 || t >= LIFE * fade) continue;
+        const s = strength(w, row, col, t, fade) * w.amp;
         if (s < 0.01) continue;
         r += w.rgb[0] * s;
         g += w.rgb[1] * s;

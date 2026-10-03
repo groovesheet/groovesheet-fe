@@ -6,7 +6,7 @@ import {
   DEFAULT_GRID, FAMILIES, GRID_NOTES, SESSION_LAYOUT, SIDE, SIDE_NOTES, TOP_CCS,
   LP_DIM_BLUE, LP_DIM_RED, LP_OFF, familyOf, hitColor, isGridNote, loopColor, restColor, sanitizeGrid,
 } from './layout';
-import { ANIMATIONS, EFFECTS, FAMILY_EFFECT, effectFor, frame, isEffect, liveWaves, makeWave, paletteFor, rgbMessages } from './ripple';
+import { ANIMATIONS, EFFECTS, FADE_MAX, FADE_MIN, FAMILY_EFFECT, effectFor, frame, isEffect, liveWaves, makeWave, paletteFor, rgbMessages } from './ripple';
 import { LANGS, drumName, familyName } from './names';
 import './LaunchpadDrums.css';
 
@@ -40,11 +40,13 @@ const TICK_MS = 25;
 const ANIM_MS = 30; // ~33 frames a second for the light show
 const LOOP_WAVE = 0.55; // loop replays ripple softer than live hits
 const LOOP_OPTS = { trimEnd: true, onePass: true };
+const NAME_SCALE_MIN = 0.6;
+const NAME_SCALE_MAX = 2;
 
 const nowSec = () => performance.now() / 1000;
 const isLaunchpad = (port) => /launchpad/i.test(port?.name || '');
 
-const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'mixed', padFx: {}, restLit: false, lang: 'zh' };
+const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'mixed', padFx: {}, restLit: false, lang: 'zh', fade: 1, nameScale: 1 };
 
 function loadSettings() {
   try {
@@ -61,6 +63,8 @@ function loadSettings() {
       padFx: Object.fromEntries(Object.entries(saved.padFx || {}).filter(([n, fx]) => isGridNote(Number(n)) && isEffect(fx))),
       restLit: saved.restLit === true,
       lang: LANGS.some((l) => l.id === saved.lang) ? saved.lang : DEFAULTS.lang,
+      fade: num(saved.fade, FADE_MIN, FADE_MAX, DEFAULTS.fade),
+      nameScale: num(saved.nameScale, NAME_SCALE_MIN, NAME_SCALE_MAX, DEFAULTS.nameScale),
     };
   } catch (e) {
     return DEFAULTS;
@@ -287,13 +291,14 @@ export default function LaunchpadDrums() {
     let idle = false;
     const id = setInterval(() => {
       const now = nowSec();
-      wavesRef.current = liveWaves(wavesRef.current, now);
+      const fadeSetting = settingsRef.current.fade || 1;
+      wavesRef.current = liveWaves(wavesRef.current, now, fadeSetting);
       const waves = wavesRef.current;
       // Nothing moving and the last frame already drawn: skip the work.
       if (!waves.length && idle && sentRef.current.size) return;
       idle = !waves.length;
       const { grid, restLit } = settingsRef.current;
-      const { colors, glow } = frame(now, waves, grid, { rest: restLit });
+      const { colors, glow } = frame(now, waves, grid, { rest: restLit, fade: fadeSetting });
 
       // The Launchpad: send only the pads whose colour changed.
       const changes = new Map();
@@ -365,7 +370,10 @@ export default function LaunchpadDrums() {
   const loopState = loopInfo.state;
 
   return (
-    <div className={`lpdrums ${settings.restLit ? '' : 'is-dark-rest'} is-lang-${settings.lang}`}>
+    <div
+      className={`lpdrums ${settings.restLit ? '' : 'is-dark-rest'} is-lang-${settings.lang}`}
+      style={{ '--name-scale': settings.nameScale }}
+    >
       <header className="lpdrums__head">
         <div>
           <h1 className="lpdrums__title">Launchpad Drums</h1>
@@ -483,6 +491,11 @@ export default function LaunchpadDrums() {
                 </button>
               ))}
             </div>
+            <label className="lpdrums__slider">
+              <span>Fade {settings.fade <= 0.75 ? 'snappy' : settings.fade >= 1.8 ? 'long' : ''}</span>
+              <input type="range" min={FADE_MIN} max={FADE_MAX} step="0.05" value={settings.fade}
+                onChange={(e) => setSettings((s) => ({ ...s, fade: Number(e.target.value) }))} />
+            </label>
             <p className="lpdrums__muted">
               {settings.anim === 'mixed'
                 ? 'Each kind of drum lights its own shape (see Pads below); a pad can have its own in Change sounds.'
@@ -514,6 +527,11 @@ export default function LaunchpadDrums() {
                 )}
               </div>
             </div>
+            <label className="lpdrums__slider">
+              <span>Name size {Math.round(settings.nameScale * 100)}%</span>
+              <input type="range" min={NAME_SCALE_MIN} max={NAME_SCALE_MAX} step="0.05" value={settings.nameScale}
+                onChange={(e) => setSettings((s) => ({ ...s, nameScale: Number(e.target.value) }))} />
+            </label>
             {editing ? (
               selected == null ? (
                 <p className="lpdrums__muted">Hit a pad (here or on the Launchpad), then pick its new drum.</p>

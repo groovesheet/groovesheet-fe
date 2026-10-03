@@ -77,7 +77,8 @@
   color: var(--lp-text);
   font: inherit;
   /* big for reading from the drum stool; Chinese names are short, English ones wrap to 3 lines */
-  font-size: clamp(13px, 3.15cqi, 30px); /* three Chinese characters to a line */
+  /* three Chinese characters to a line at 100%; the Name size slider scales it */
+  font-size: calc(clamp(13px, 3.15cqi, 30px) * var(--name-scale, 1));
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.01em;
@@ -102,11 +103,11 @@
 }
 .lpdrums.is-dark-rest .lpdrums__pad span { color: color-mix(in srgb, var(--pad) 45%, #d8d8d8); }
 
-.lpdrums.is-lang-en .lpdrums__pad { font-size: clamp(11px, 2.2cqi, 20px); } /* "triangle", "whistle" must fit one pad width */
+.lpdrums.is-lang-en .lpdrums__pad { font-size: calc(clamp(11px, 2.2cqi, 20px) * var(--name-scale, 1)); } /* "triangle", "whistle" must fit one pad width */
 
 .lpdrums__pad span {
   position: relative; z-index: 1;
-  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   overflow-wrap: anywhere;
 }
@@ -131,7 +132,7 @@
 .lpdrums__loop-state { margin: 0 0 6px; font-size: 14px; }
 .lpdrums__muted { margin: 6px 0 0; font-size: 12px; color: var(--lp-muted); }
 
-.lpdrums__slider { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 10px; font-size: 13px; margin-top: 6px; }
+.lpdrums__slider { display: grid; grid-template-columns: 116px 1fr; align-items: center; gap: 10px; font-size: 13px; margin-top: 6px; }
 .lpdrums__slider input { width: 100%; accent-color: var(--lp-live); }
 
 .lpdrums__tools { display: flex; gap: 10px; align-items: center; }
@@ -186,7 +187,7 @@
   .lpdrums__deck { max-width: none; padding: 10px; gap: 6px; }
   .lpdrums__grid { gap: 4px; }
   .lpdrums__side { width: 40px; gap: 4px; }
-  .lpdrums__pad { padding: 3px; font-size: clamp(10px, 3.4cqi, 18px); }
-  .lpdrums.is-lang-en .lpdrums__pad { font-size: clamp(8px, 2.2cqi, 12px); }
+  .lpdrums__pad { padding: 3px; font-size: calc(clamp(10px, 3.4cqi, 18px) * var(--name-scale, 1)); }
+  .lpdrums.is-lang-en .lpdrums__pad { font-size: calc(clamp(8px, 2.2cqi, 12px) * var(--name-scale, 1)); }
   .lpdrums__round { font-size: 9px; }
 }
