@@ -1287,3 +1287,14 @@
     border-radius: 8px;
   }
 }
+
+/* Stacked layout (tablet and phone): the success rule above collapses the hero
+   copy sideways (max-width: 0), which only works in a row. In a column the
+   zero-width copy kept its height, wrapped a word per line, and pushed the
+   finished preview down to the bottom of a phone screen, with its play button
+   below the fold. Take it out of the flow instead. */
+@media (max-width: 1280px) {
+  .hero-container.success-expanded .hero-content {
+    display: none;
+  }
+}

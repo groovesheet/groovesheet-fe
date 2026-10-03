@@ -13,7 +13,7 @@ import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFil
 import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { phLog } from '@/lib/observability';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
-import { usePaywall } from '@/components/billing/OutOfMinutesModal';
+import { useFullSongFlow, type UpgradeOutcome, type UpgradeTrigger } from '@/lib/hooks/useFullSongFlow';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
 import { useTheme } from '@/lib/theme';
 import { useIsTouch } from '@/lib/hooks/useMediaQuery';
@@ -21,7 +21,6 @@ import { useWorkflowPersistence } from '@/lib/hooks/useWorkflowPersistence';
 import config from '@/lib/config';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/constants';
 import type { DownloadedFile, WorkflowMetadata, WorkflowQueue } from '@/lib/types';
-import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { BassIcon, MagicWandIcon, ServerIcon, TrayArrowUpIcon } from './icons';
 import ResultView from './ResultView';
@@ -139,11 +138,9 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
-  const { openLoginModal } = useLoginModal();
   const { t } = useTranslation();
   const router = useRouter();
   const isTouch = useIsTouch();
-  const { showPaywall, paywall } = usePaywall(UPLOAD_SOURCE);
 
   const [fileName, setFileName] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -261,9 +258,12 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       currentName ? currentName.replace(/\.[^.]+$/, `${suffix}${extension}`) : `${selectedInstrument}_groovesheet${extension}`
     );
 
-    // Kept for the manual download button, and saved right away.
+    // Kept for the manual download button. Saved right away only for a full
+    // song: a preview is listened to here, and an automatic download on a phone
+    // hands the page to the download sheet (or, in the Facebook and Instagram
+    // in-app browsers, to another app) before the preview is heard.
     const objectUrl = URL.createObjectURL(blob);
-    triggerDownload(objectUrl, filename);
+    if (!isPreview) triggerDownload(objectUrl, filename);
     return { objectUrl, filename };
   };
 
@@ -272,7 +272,8 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   // you can actually print. Best-effort: a failed engraving must not turn a
   // finished transcription into an error.
   const downloadScorePdfFile = async (id: string | null) => {
-    if (!id || !SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
+    // Previews skip it, like the MusicXML above.
+    if (!id || id.startsWith('PRV') || !SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
     try {
       const result = await downloadScorePdf(API_BASE_URL, id, getToken);
       if (!result?.blob) return;
@@ -495,12 +496,19 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     } catch (err) {
       console.error('Upload error:', err);
       const info = errorInfo(err);
+      trackFunnel(FUNNEL.UPLOAD_FAILED, {
+        surface: UPLOAD_SOURCE,
+        instrument: selectedInstrument,
+        status: info.status || 0,
+        signed_in: Boolean(isSignedIn),
+        message: (info.message || '').slice(0, 120) || undefined,
+      });
 
       // Out of minutes: say so, and offer the fix, instead of an error banner.
       if (info.status === 402) {
         setStatus(null);
         stopProgressSimulation();
-        showPaywall(info.message || null);
+        fullSong.showPaywall(info.message || null);
         return;
       }
 
@@ -549,6 +557,14 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     setProgress(saved.progress || 0);
     setSelectedInstrument(saved.instrument || 'piano');
     if (saved.fileName) setFile(saved.fileName);
+
+    // A finished preview comes back after a reload (sign-in and Checkout both
+    // reload the page): poll once more for its output files, which the viewer
+    // needs and localStorage does not keep. Nothing is downloaded again.
+    if (saved.jobId.startsWith('PRV') && isCompletedStatus(saved.status ?? null)) {
+      setTimeout(() => pollStatus(saved.jobId), 0);
+      return;
+    }
 
     // If the job was still in progress, resume polling
     const terminalStatuses = ['completed', 'succeeded', 'success', 'failed', 'error'];
@@ -633,45 +649,51 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
-  // Promote a signed-in user's preview to a full run (no re-upload).
-  const handleUpgradeToFull = async () => {
-    if (!jobId || !jobId.startsWith('PRV')) return;
+  // Promote the preview to a full run (no re-upload). The paywall, sign-in and
+  // the return trip around it live in useFullSongFlow.
+  const handleUpgradeToFull = async (trigger: UpgradeTrigger): Promise<UpgradeOutcome> => {
+    if (!jobId || !jobId.startsWith('PRV')) return { kind: 'failed' };
     const previewId = jobId;
-    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument });
+    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument, trigger });
     try {
       const result = await upgradeToFull<{ workflow_id?: string }>(API_BASE_URL, jobId, getToken);
       const workflowId = result?.workflow_id;
-      if (workflowId) {
-        trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId });
-        // Replace the preview result with the new full workflow's polling.
-        prefetchedFilesRef.current = {};
-        if (downloadUrl) URL.revokeObjectURL(downloadUrl);
-        setDownloadUrl(null);
-        setDownloadFilename(null);
-        setJobId(workflowId);
-        setStatus('processing');
-        setProgress(0);
-        simulateProgress();
-        persist({ jobId: workflowId, status: 'processing', progress: 0, instrument: selectedInstrument, fileName: fileName ?? undefined });
-        setTimeout(() => pollStatus(workflowId), 1000);
-      }
+      if (!workflowId) return { kind: 'failed' };
+      trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId, trigger });
+      // Replace the preview result with the new full workflow's polling.
+      prefetchedFilesRef.current = {};
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+      setDownloadUrl(null);
+      setDownloadFilename(null);
+      setJobId(workflowId);
+      setStatus('processing');
+      setProgress(0);
+      simulateProgress();
+      persist({ jobId: workflowId, status: 'processing', progress: 0, instrument: selectedInstrument, fileName: fileName ?? undefined });
+      setTimeout(() => pollStatus(workflowId), 1000);
+      return { kind: 'started' };
     } catch (err) {
       const info = errorInfo(err);
-      // Out of minutes: say so, and offer the fix, instead of an error banner.
-      if (info.status === 402) {
-        showPaywall(info.message || null, previewId);
-        return;
-      }
+      // Out of minutes: the flow opens the paywall instead of an error banner.
+      if (info.status === 402) return { kind: 'out_of_minutes', message: info.message || null };
       setError(info.message || 'Failed to start full song processing.');
+      return { kind: 'failed' };
     }
   };
 
-  // preview_id is already stashed in localStorage at upload time; after
-  // signup the app-level hook claims it via /preview/{id}/claim.
-  const handleSignUpToUnlock = () => {
-    trackFunnel(FUNNEL.UNLOCK_CLICK, { surface: UPLOAD_SOURCE, preview_id: jobId || undefined, instrument: selectedInstrument });
-    openLoginModal();
-  };
+  const fullSong = useFullSongFlow({
+    surface: UPLOAD_SOURCE,
+    jobId,
+    ready: uiState === 'success',
+    instrument: selectedInstrument,
+    fileName,
+    // Sign-in and Checkout reload the page; the recovery effect above brings
+    // the preview back from this.
+    persistPreview: () => {
+      if (jobId) persist({ jobId, status: 'completed', progress: 100, instrument: selectedInstrument, fileName: fileName ?? undefined });
+    },
+    upgrade: handleUpgradeToFull,
+  });
 
   // Browse is open to anonymous visitors too: they get the preview.
   const handleBrowseClick = () => {
@@ -691,8 +713,11 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     setIsDragging(false);
   };
 
+  // The drop zone sits inside the card and both listen for drops; without
+  // stopPropagation one dropped file was uploaded twice.
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
     if (uiState === 'success') return;
 
@@ -900,13 +925,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               onReset={resetUpload}
               downloadError={downloadError}
               isSignedIn={isSignedIn}
-              onUpgradeToFull={handleUpgradeToFull}
-              onSignUpToUnlock={handleSignUpToUnlock}
+              onUpgradeToFull={fullSong.requestFullSong}
+              onSignUpToUnlock={fullSong.getFullSongSignedOut}
               title={typeof resultMetadata.title === 'string' ? resultMetadata.title : undefined}
               surface={UPLOAD_SOURCE}
             />
           )}
-          {paywall}
+          {fullSong.paywall}
 
           {/* Error message overlay */}
           {error && (

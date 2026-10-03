@@ -265,16 +265,6 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         <div className="login-body">
           <div className="login-subtitle">{t('login.continueWith')}</div>
 
-          <div className="login-subscribe">
-            <div className="login-subscribe-check">
-              <Check size={21} color="white" weight="bold" />
-            </div>
-            <p className="login-subscribe-text">
-              <span className="login-subscribe-long">{t('login.subscribeLong')}</span>
-              <span className="login-subscribe-short">{t('login.subscribeShort')}</span>
-            </p>
-          </div>
-
           <div className="login-providers">
             <div className="login-provider-grid">
               {PROVIDER_BUTTONS.map(({ strategy, labelKey, image, Icon }) => (
@@ -303,6 +293,18 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                   <EnvelopeSimple size={44} color="white" weight="fill" />
                 </span>
               </button>
+            </div>
+
+            {/* Below the sign-in buttons: the choice to make here is how to sign
+                in; the newsletter box is secondary and read on the way out. */}
+            <div className="login-subscribe">
+              <div className="login-subscribe-check">
+                <Check size={21} color="white" weight="bold" />
+              </div>
+              <p className="login-subscribe-text">
+                <span className="login-subscribe-long">{t('login.subscribeLong')}</span>
+                <span className="login-subscribe-short">{t('login.subscribeShort')}</span>
+              </p>
             </div>
 
             <div className="login-terms">

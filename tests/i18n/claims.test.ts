@@ -313,7 +313,11 @@ describe('every upload starts as the free preview', () => {
     expect(cards.length).toBeGreaterThanOrEqual(3);
     for (const card of cards) {
       const src = fs.readFileSync(card, 'utf8');
-      if (/status === 402/.test(src)) expect(src).toMatch(/showPaywall\(/);
+      // Either the card opens the paywall itself, or it hands the 402 to
+      // useFullSongFlow, which does (checked below).
+      if (/status === 402/.test(src)) expect(src).toMatch(/showPaywall\(|kind: 'out_of_minutes'/);
     }
+    const flow = fs.readFileSync(path.join(process.cwd(), 'lib/hooks/useFullSongFlow.tsx'), 'utf8');
+    expect(flow).toMatch(/outcome\.kind === 'out_of_minutes'\) showPaywall\(/);
   });
 });
