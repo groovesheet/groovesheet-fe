@@ -7,6 +7,7 @@ import {
   LP_DIM_BLUE, LP_DIM_RED, LP_OFF, familyOf, hitColor, isGridNote, loopColor, restColor, sanitizeGrid,
 } from './layout';
 import { ANIMATIONS, EFFECTS, FAMILY_EFFECT, effectFor, frame, isEffect, liveWaves, makeWave, paletteFor, rgbMessages } from './ripple';
+import { LANGS, drumName, familyName } from './names';
 import './LaunchpadDrums.css';
 
 /*
@@ -30,6 +31,9 @@ import './LaunchpadDrums.css';
  */
 
 const STORAGE_KEY = 'gs.launchpadDrums.v1';
+// 2: per-drum light shapes. Before it, 'ripple' was the default for every pad,
+// so a saved 'ripple' from then means "the default", now 'mixed'.
+const SETTINGS_VERSION = 2;
 const LOOKAHEAD_SEC = 0.12;
 const HIDDEN_LOOKAHEAD_SEC = 1.2;
 const TICK_MS = 25;
@@ -40,7 +44,7 @@ const LOOP_OPTS = { trimEnd: true, onePass: true };
 const nowSec = () => performance.now() / 1000;
 const isLaunchpad = (port) => /launchpad/i.test(port?.name || '');
 
-const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'mixed', padFx: {}, restLit: false };
+const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'mixed', padFx: {}, restLit: false, lang: 'zh' };
 
 function loadSettings() {
   try {
@@ -51,9 +55,12 @@ function loadSettings() {
       grid: sanitizeGrid(saved.grid),
       strength: num(saved.strength, 20, 127, DEFAULTS.strength),
       volume: num(saved.volume, 0, 1.5, DEFAULTS.volume),
-      anim: ANIMATIONS.some((a) => a.id === saved.anim) ? saved.anim : saved.anim === 'cross' ? 'plus' : DEFAULTS.anim,
+      anim: (saved.version || 1) < 2
+        ? (saved.anim === 'cross' ? 'plus' : saved.anim === 'off' ? 'off' : DEFAULTS.anim)
+        : (ANIMATIONS.some((a) => a.id === saved.anim) ? saved.anim : DEFAULTS.anim),
       padFx: Object.fromEntries(Object.entries(saved.padFx || {}).filter(([n, fx]) => isGridNote(Number(n)) && isEffect(fx))),
       restLit: saved.restLit === true,
+      lang: LANGS.some((l) => l.id === saved.lang) ? saved.lang : DEFAULTS.lang,
     };
   } catch (e) {
     return DEFAULTS;
@@ -330,7 +337,7 @@ export default function LaunchpadDrums() {
   }, [loopAction]);
 
   useEffect(() => {
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) { /* private window */ }
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...settings, version: SETTINGS_VERSION })); } catch (e) { /* private window */ }
   }, [settings]);
 
   // Repaint the grid when a pad's drum or the animation changes.
@@ -414,7 +421,7 @@ export default function LaunchpadDrums() {
                     hitPad(note);
                   }}
                 >
-                  <span>{voice ? voice.label : '—'}</span>
+                  <span>{drumName(voice?.id, settings.lang)}</span>
                 </button>
               );
             })}
@@ -487,6 +494,15 @@ export default function LaunchpadDrums() {
             <div className="lpdrums__card-row">
               <h2 className="lpdrums__card-title">Pads</h2>
               <div className="lpdrums__tools">
+                <div className="lpdrums__seg lpdrums__seg--small" role="radiogroup" aria-label="Drum names">
+                  {LANGS.map((l) => (
+                    <button key={l.id} type="button" role="radio" aria-checked={settings.lang === l.id}
+                      className={`lpdrums__seg-btn ${settings.lang === l.id ? 'is-active' : ''}`}
+                      onClick={() => setSettings((s) => ({ ...s, lang: l.id }))}>
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
                 <button type="button" className={`lpdrums__btn ${editing ? 'is-active' : ''}`}
                   onClick={() => { setEditing((v) => !v); setSelected(null); }}>
                   {editing ? 'Done' : 'Change sounds'}
@@ -503,7 +519,7 @@ export default function LaunchpadDrums() {
                 <p className="lpdrums__muted">Hit a pad (here or on the Launchpad), then pick its new drum.</p>
               ) : (
                 <div className="lpdrums__picker">
-                  <p className="lpdrums__muted">Pad {selected}: <strong>{selVoice ? selVoice.label : '—'}</strong></p>
+                  <p className="lpdrums__muted">Pad {selected}: <strong>{drumName(selVoice?.id, settings.lang)}</strong></p>
                   <div className="lpdrums__picker-group">
                     <span className="lpdrums__picker-label">Light effect</span>
                     <div className="lpdrums__chips">
@@ -527,14 +543,14 @@ export default function LaunchpadDrums() {
                   <span className="lpdrums__picker-label">Drum</span>
                   {VOICES_BY_FAMILY.map(({ family, voices }) => (
                     <div key={family} className="lpdrums__picker-group">
-                      <span className="lpdrums__picker-label" style={{ color: FAMILIES[family].css }}>{FAMILIES[family].label}</span>
+                      <span className="lpdrums__picker-label" style={{ color: FAMILIES[family].css }}>{familyName(family, settings.lang)}</span>
                       <div className="lpdrums__chips">
                         {voices.map((v) => (
                           <button key={v.id} type="button"
                             className={`lpdrums__chip ${selVoice?.id === v.id ? 'is-active' : ''}`}
                             style={{ '--pad': FAMILIES[family].css }}
                             onClick={() => assign(selected, v.id)}>
-                            {v.label}
+                            {drumName(v.id, settings.lang)}
                           </button>
                         ))}
                       </div>
@@ -546,7 +562,7 @@ export default function LaunchpadDrums() {
               <ul className="lpdrums__legend">
                 {Object.entries(FAMILIES).map(([k, f]) => (
                   <li key={k}>
-                    <i style={{ background: f.css }} />{f.label}
+                    <i style={{ background: f.css }} />{familyName(k, settings.lang)}
                     {settings.anim === 'mixed' && (
                       <span className="lpdrums__legend-fx" title={EFFECTS.find((e) => e.id === FAMILY_EFFECT[k])?.label}>
                         {EFFECTS.find((e) => e.id === FAMILY_EFFECT[k])?.icon}

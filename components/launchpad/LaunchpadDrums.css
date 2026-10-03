@@ -155,6 +155,8 @@
 .lpdrums__chip.is-active { background: var(--pad); color: #0f0f11; }
 
 .lpdrums__seg + .lpdrums__seg { margin-top: 6px; }
+.lpdrums__seg--small { padding: 2px; }
+.lpdrums__seg--small .lpdrums__seg-btn { padding: 4px 8px; font-size: 12px; flex: none; }
 .lpdrums__fxchips + .lpdrums__seg { margin-top: 8px; }
 
 .lpdrums__fxchips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
