@@ -57,7 +57,8 @@
 .lpdrums__deck {
   display: flex; gap: 12px; padding: 16px;
   border-radius: 16px; background: var(--lp-panel); border: 1px solid var(--lp-border);
-  max-width: min(100%, calc(100vh - 160px + 90px));
+  /* the whole grid on screen: grid height ≈ width, under the header and notes; + side buttons and padding */
+  max-width: min(100%, calc(100vh - 230px + 108px));
 }
 
 .lpdrums__grid {
@@ -75,11 +76,12 @@
   background: color-mix(in srgb, var(--pad) 22%, var(--lp-panel-2));
   color: var(--lp-text);
   font: inherit;
-  font-size: clamp(11px, 2.35cqi, 20px);
+  /* big for reading from the drum stool; Chinese names are short, English ones wrap to 3 lines */
+  font-size: clamp(13px, 3.15cqi, 30px); /* three Chinese characters to a line */
   font-weight: 800;
-  line-height: 1.05;
+  line-height: 1.15;
   letter-spacing: -0.01em;
-  padding: 6px; display: flex; align-items: flex-end; text-align: left;
+  padding: 4px 5px; display: flex; align-items: flex-end; text-align: left;
   position: relative; overflow: hidden; cursor: pointer; touch-action: manipulation;
   /* the light show sets --glow (0..1) and --glow-rgb each frame */
   box-shadow: 0 0 calc(var(--glow, 0) * 22px) rgba(var(--glow-rgb, 255, 255, 255), calc(var(--glow, 0) * 0.9));
@@ -99,6 +101,8 @@
   border-color: #2a292c;
 }
 .lpdrums.is-dark-rest .lpdrums__pad span { color: color-mix(in srgb, var(--pad) 45%, #d8d8d8); }
+
+.lpdrums.is-lang-en .lpdrums__pad { font-size: clamp(11px, 2.2cqi, 20px); } /* "triangle", "whistle" must fit one pad width */
 
 .lpdrums__pad span {
   position: relative; z-index: 1;
@@ -182,6 +186,7 @@
   .lpdrums__deck { max-width: none; padding: 10px; gap: 6px; }
   .lpdrums__grid { gap: 4px; }
   .lpdrums__side { width: 40px; gap: 4px; }
-  .lpdrums__pad { padding: 3px; font-size: clamp(9px, 2.6cqi, 14px); }
+  .lpdrums__pad { padding: 3px; font-size: clamp(10px, 3.4cqi, 18px); }
+  .lpdrums.is-lang-en .lpdrums__pad { font-size: clamp(8px, 2.2cqi, 12px); }
   .lpdrums__round { font-size: 9px; }
 }

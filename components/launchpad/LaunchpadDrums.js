@@ -365,7 +365,7 @@ export default function LaunchpadDrums() {
   const loopState = loopInfo.state;
 
   return (
-    <div className={`lpdrums ${settings.restLit ? '' : 'is-dark-rest'}`}>
+    <div className={`lpdrums ${settings.restLit ? '' : 'is-dark-rest'} is-lang-${settings.lang}`}>
       <header className="lpdrums__head">
         <div>
           <h1 className="lpdrums__title">Launchpad Drums</h1>
