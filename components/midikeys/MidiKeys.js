@@ -84,12 +84,25 @@ const DEFAULT_SETTINGS = {
   fxPage: 0, // the page of effects the eight knobs turn
   bendRange: 2, // semitones each way
   transpose: 0, // semitones added to every key from the keyboard (not the pads)
+  pedalMode: 'sustain', // what the sustain pedal does, see PEDAL_MODES
   tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
   boostDb: BOOST_MAX_DB, // the whole page louder, 0..30 dB
 };
 
 const BEND_RANGES = [1, 2, 7, 12];
 const TRANSPOSE_MAX = 24; // two octaves each way
+// The sustain pedal (CC 64): a held sustain, a tap-on tap-off sustain, or a
+// footswitch for one of the page's buttons (fired as the pedal goes down).
+const PEDAL_MODES = [
+  { id: 'sustain', label: 'Sustain (hold)' },
+  { id: 'latch', label: 'Sustain (tap on / tap off)' },
+  { id: 'loop', label: 'Loop button' },
+  { id: 'stop', label: 'Stop / clear' },
+  { id: 'nextSound', label: 'Next sound' },
+  { id: 'prevSound', label: 'Previous sound' },
+  { id: 'knobPage', label: 'Knob page' },
+  { id: 'drumPage', label: 'Drum page' },
+];
 const signed = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const TONE_MIN = 250;
 const TONE_MAX = 6000;
@@ -127,6 +140,7 @@ function loadSettings() {
       fxPage: Number.isInteger(saved.fxPage) && saved.fxPage >= 0 && saved.fxPage < PAGE_COUNT ? saved.fxPage : 0,
       onePass: saved.onePass !== false,
       bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
+      pedalMode: PEDAL_MODES.some((m) => m.id === saved.pedalMode) ? saved.pedalMode : 'sustain',
       transpose: Number.isInteger(saved.transpose) ? Math.min(Math.max(saved.transpose, -TRANSPOSE_MAX), TRANSPOSE_MAX) : 0,
       tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
       boostDb: Number.isFinite(saved.boostDb) ? Math.min(Math.max(saved.boostDb, 0), BOOST_MAX_DB) : DEFAULT_SETTINGS.boostDb,
@@ -181,7 +195,11 @@ function controlMap(settings) {
   const sound = soundById(settings.piano);
   return [
     ['Keys', `Play the sound: ${soundTitle(sound)}${settings.transpose ? `, transposed ${signed(settings.transpose)} semitones` : ''}`],
-    ['Sustain pedal', 'Holds the notes, and they record into the loop held'],
+    ['Sustain pedal', settings.pedalMode === 'sustain'
+      ? 'Holds the notes, and they record into the loop held'
+      : settings.pedalMode === 'latch'
+        ? 'Tap for sustain on, tap again for off'
+        : `A footswitch: ${PEDAL_MODES.find((m) => m.id === settings.pedalMode)?.label}`],
     ['Pitch wheel', `Bends the notes you hold, ±${settings.bendRange} semitones`],
     ['Mod wheel', sound.filter ? 'Auto-wah and tremolo on this sound' : 'Vibrato'],
     ['Pads', `Drums, in Drum mode on channel ${settings.drumChannel + 1}; page ${settings.drumPage + 1} of ${PAD_PAGES.length} (${PAD_PAGES[settings.drumPage]}). Change a pad's sound in Drum pads`],
@@ -218,6 +236,8 @@ export default function MidiKeys() {
   const learningRef = useRef(null);
   learningRef.current = learning;
   const [editPads, setEditPads] = useState(false);
+  const [sustainOn, setSustainOn] = useState(false); // lights the Sustain button
+  const pedalDownRef = useRef(false);
   const [showControls, setShowControls] = useState(false); // the full-screen controls map
   const showControlsRef = useRef(false);
   showControlsRef.current = showControls;
@@ -355,6 +375,7 @@ export default function MidiKeys() {
 
   const setSustain = useCallback((down) => {
     sustainRef.current = down;
+    setSustainOn(down);
     if (down) return;
     const now = nowSec();
     sustainedRef.current.forEach((m) => { if (!heldRef.current.has(m)) releaseSound(m, now); });
@@ -435,6 +456,20 @@ export default function MidiKeys() {
     }
     refreshLoopInfo();
   }, [refreshLoopInfo, silenceLoop]);
+
+  // The sustain pedal, by Pedal mode. Footswitch modes fire once per press.
+  const pedal = useCallback((down) => {
+    const wasDown = pedalDownRef.current;
+    pedalDownRef.current = down;
+    const mode = settingsRef.current.pedalMode;
+    if (mode === 'sustain') { setSustain(down); return; }
+    if (!down || wasDown) return; // presses only
+    if (mode === 'latch') setSustain(!sustainRef.current);
+    else loopAction(mode);
+  }, [loopAction, setSustain]);
+
+  // Changing the mode lets go of a sustain the pedal was holding.
+  useEffect(() => { setSustain(false); pedalDownRef.current = false; }, [settings.pedalMode, setSustain]);
 
   // ---- MIDI in -------------------------------------------------------------
 
@@ -542,7 +577,7 @@ export default function MidiKeys() {
     } else if (cmd === 0xb0 && d1 === 1) {
       modRef.current = d2;
       engineRef.current?.setModulation(d2);
-    } else if (cmd === 0xb0 && d1 === 64) setSustain(d2 >= 64);
+    } else if (cmd === 0xb0 && d1 === 64) pedal(d2 >= 64);
     else if (cmd === 0xb0 && d1 === 121) {
       // Reset All Controllers: wheels back to rest, pedal up.
       bendRef.current = 0;
@@ -551,7 +586,7 @@ export default function MidiKeys() {
       engineRef.current?.setModulation(0);
       setSustain(false);
     } else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
-  }, [allNotesOff, drumHit, midiKeyDown, midiKeyUp, loopAction, setSustain, showKnob, showFader]);
+  }, [allNotesOff, drumHit, midiKeyDown, midiKeyUp, loopAction, pedal, setSustain, showKnob, showFader]);
 
   const onMidiRef = useRef(onMidiMessage);
   onMidiRef.current = onMidiMessage;
@@ -1067,6 +1102,21 @@ export default function MidiKeys() {
               <output>{settings.tone >= 1000 ? `${(settings.tone / 1000).toFixed(1)} kHz` : `${settings.tone} Hz`}</output>
             </label>
           )}
+          <label className="midikeys__select">
+            <span>Pedal</span>
+            <select value={settings.pedalMode} onChange={(e) => setSettings((s) => ({ ...s, pedalMode: e.target.value }))}>
+              {PEDAL_MODES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+            </select>
+          </label>
+          <button
+            type="button"
+            className={`midikeys__sustain ${sustainOn ? 'is-on' : ''}`}
+            aria-pressed={sustainOn}
+            title="Sustain on or off. The pedal does the same in the Sustain modes."
+            onClick={() => setSustain(!sustainRef.current)}
+          >
+            Sustain {sustainOn ? 'on' : 'off'}
+          </button>
           <div className="midikeys__transpose" role="group" aria-label="Transpose">
             <span>Transpose</span>
             {[[-12, '−12'], [-1, '−1']].map(([d, label]) => (
