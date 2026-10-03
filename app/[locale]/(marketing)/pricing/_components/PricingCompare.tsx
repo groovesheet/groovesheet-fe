@@ -74,7 +74,7 @@ export default function PricingCompare() {
                 <th scope="col" className="th-corner"></th>
                 <th scope="col">
                   <div className="pp-plan-h">
-                    <span className="pp-plan-tag">{t('hobbyist')}</span>
+                    <span className="pp-plan-tag">{t('forNewcomers')}</span>
                     <span className="pp-plan-name">{t('free')}</span>
                     <span className="pp-plan-price">{t('perMonth', { price: formatMoney(0, currency) ?? '' })}</span>
                   </div>
@@ -88,7 +88,7 @@ export default function PricingCompare() {
                 </th>
                 <th scope="col">
                   <div className="pp-plan-h">
-                    <span className="pp-plan-tag">{t('enterprise')}</span>
+                    <span className="pp-plan-tag">{t('forTeams')}</span>
                     <span className="pp-plan-name">{t('pro')}</span>
                     <span className="pp-plan-price">{t('fromPerUser', { price: proFrom ?? '' })}</span>
                   </div>

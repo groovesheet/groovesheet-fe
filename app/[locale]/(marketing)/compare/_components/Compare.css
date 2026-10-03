@@ -109,6 +109,8 @@
 .cmp-list {
   margin: 0;
   padding-left: 18px;
+  /* The global reset strips markers, which left these as loose lines. */
+  list-style: disc;
   color: var(--color-muted-foreground);
   font-size: 14.5px;
   line-height: 1.6;
@@ -254,5 +256,79 @@
 @media (max-width: 640px) {
   .cmp-main {
     padding-inline: 16px;
+    padding-bottom: 32px;
+  }
+
+  /* The last section's own 48px margin plus the main padding left 200px or
+     more of empty page above the footer. */
+  .cmp-main > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Phones: a 620px table showed the labels and half the GrooveSheet column,
+   with the competitor off screen. Each row becomes a block: the label, then
+   both values, each named by its column. */
+@media (max-width: 599px) {
+  .cmp-table {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .cmp-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .cmp-table tbody,
+  .cmp-table tr,
+  .cmp-table tbody th,
+  .cmp-table td {
+    display: block;
+    width: auto;
+  }
+
+  .cmp-caption {
+    display: block;
+    order: 2;
+  }
+
+  .cmp-table tr {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .cmp-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .cmp-table tbody th,
+  .cmp-table td {
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .cmp-table tbody th {
+    margin-bottom: 8px;
+  }
+
+  .cmp-table td + td {
+    margin-top: 8px;
+  }
+
+  .cmp-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
   }
 }

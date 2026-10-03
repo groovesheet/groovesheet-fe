@@ -53,14 +53,14 @@ export default async function HomePage(props: LocaleParams) {
         mobileDisclaimer={<div className="hero-disclaimer hero-disclaimer-mobile">{disclaimer}</div>}
       />
       <FeaturesGradient />
-      <div style={{ paddingTop: '120px' }}>
+      <div className="features-band">
         {/* In-flight jobs, right under the uploader, so leaving this page never loses sight of them. */}
         <ProcessingJobs />
         <Features locale={locale} />
       </div>
       <Pricing />
       {/* High-Accuracy Drum Scores section */}
-      <Element />
+      <Element titleTop={t('element.titleTop')} titleBottom={t('element.titleBottom')} lede={t('element.lede')} />
       <Testimonials locale={locale} />
       <HomeFaq locale={locale} />
       <Footer />

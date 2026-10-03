@@ -269,3 +269,32 @@
 [data-theme='light'] .feature-icon-wave {
   color: var(--color-primary);
 }
+
+/* Wrapper between the upload card and the features band: the home page pads
+   it, the tool pages offset it (their fade gradient hangs off its top). */
+.features-band {
+  padding-top: 120px;
+}
+
+.features-band--tool {
+  padding-top: 0;
+  margin-top: 120px;
+  position: relative;
+}
+
+/* Phones: 120px here plus the band's own 60px left about 200px of empty
+   space under the upload card before the first heading. */
+@media (max-width: 640px) {
+  .features-band {
+    padding-top: 24px;
+  }
+
+  .features-band--tool {
+    padding-top: 0;
+    margin-top: 24px;
+  }
+
+  .features-band .features {
+    padding-top: 20px;
+  }
+}
