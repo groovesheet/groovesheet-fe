@@ -3,13 +3,15 @@ import posthog from 'posthog-js';
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
-if (!projectToken) {
+// Without a token or host there is nothing to send to, so PostHog is simply
+// not started. Locally that is the normal case (the token lives in Vercel):
+// say so once in the console rather than throwing, which used to break the
+// page's hydration in `next dev`.
+if (!projectToken || !host) {
   if (process.env.NODE_ENV === 'development') {
-    throw new Error('NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN is configured');
-  }
-} else if (!host) {
-  if (process.env.NODE_ENV === 'development') {
-    throw new Error('NEXT_PUBLIC_POSTHOG_HOST variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once NEXT_PUBLIC_POSTHOG_HOST is configured');
+    console.info(
+      `[analytics] PostHog is off: NEXT_PUBLIC_POSTHOG_${projectToken ? 'HOST' : 'PROJECT_TOKEN'} is not set.`
+    );
   }
 } else {
   posthog.init(projectToken, {

@@ -8,6 +8,9 @@
  *
  *   loop button  = Play (Start), Record, Loop
  *   stop / clear = Stop
+ *   sound - / +  = Track left / right (CC 103 / 102)
+ *   knob page    = nothing: the page buttons beside the knobs send no MIDI in
+ *                  Standalone mode, so it is learnt from a spare button
  *
  * A binding is one of
  *   { kind: 'rt', status }          a real-time message (FAh Start, FBh Continue, FCh Stop)
@@ -21,7 +24,7 @@ export const RT_CONTINUE = 0xfb;
 export const RT_STOP = 0xfc;
 const LK_CHANNEL = 15; // channel 16, zero-based
 
-export const ACTIONS = ['loop', 'stop'];
+export const ACTIONS = ['loop', 'stop', 'prevSound', 'nextSound', 'knobPage'];
 
 export const DEFAULT_BINDINGS = {
   loop: [
@@ -30,6 +33,9 @@ export const DEFAULT_BINDINGS = {
     { kind: 'cc', channel: LK_CHANNEL, cc: 118 },
   ],
   stop: [{ kind: 'rt', status: RT_STOP }],
+  prevSound: [{ kind: 'cc', channel: LK_CHANNEL, cc: 103 }],
+  nextSound: [{ kind: 'cc', channel: LK_CHANNEL, cc: 102 }],
+  knobPage: [],
 };
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -49,8 +55,9 @@ export function pressFromMessage(data, { strict = false } = {}) {
   const channel = status & 0x0f;
   if (cmd === 0xb0) {
     const value = data[2];
-    // Sustain and the "all notes off" family are never buttons.
-    if (data[1] === 64 || data[1] >= 120) return null;
+    // The mod wheel, sustain and the "all notes off" family are never buttons
+    // (a mod wheel pushed all the way sends 127, just like a button).
+    if (data[1] === 1 || data[1] === 64 || data[1] >= 120) return null;
     if (strict ? value !== 127 : value === 0) return null;
     return { kind: 'cc', channel, cc: data[1] };
   }
@@ -84,6 +91,8 @@ export function describeBinding(b) {
   if (b.kind === 'cc') {
     if (b.channel === LK_CHANNEL && b.cc === 117) return 'Record ●';
     if (b.channel === LK_CHANNEL && b.cc === 118) return 'Loop';
+    if (b.channel === LK_CHANNEL && b.cc === 103) return 'Track ◄';
+    if (b.channel === LK_CHANNEL && b.cc === 102) return 'Track ►';
     return `CC ${b.cc} · ch ${b.channel + 1}`;
   }
   return `${noteLabel(b.note)} · ch ${b.channel + 1}`;
@@ -99,7 +108,7 @@ export function sanitizeBindings(saved) {
   const out = {};
   for (const action of ACTIONS) {
     const list = Array.isArray(saved?.[action]) ? saved[action].filter(valid) : null;
-    out[action] = list && list.length ? list : DEFAULT_BINDINGS[action];
+    out[action] = list && (list.length || !DEFAULT_BINDINGS[action].length) ? list : DEFAULT_BINDINGS[action];
   }
   return out;
 }

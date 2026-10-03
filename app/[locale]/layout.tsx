@@ -91,7 +91,11 @@ export default async function LocaleLayout({
     <html lang={LOCALE_HTML_LANG[locale]} data-theme="dark" suppressHydrationWarning>
       <head>
         {/* Applies the saved light/dark choice before first paint. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        {/* AdSense inserts its own scripts at the top of <head> before React
+            hydrates, so this slot can hold one of theirs by then. Scripts do
+            not re-run on hydration, so the difference is harmless; this stops
+            React reporting it as a mismatch. */}
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* The stylesheets across the app name 'Hubot Sans' literally, so the

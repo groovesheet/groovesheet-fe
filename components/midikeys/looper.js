@@ -11,11 +11,19 @@
  *   armed  --note--->  recording   the loop starts AT the first note, not at
  *                                  the press, because you cannot hit the loop
  *                                  button and the first key at the same instant
- *   recording --press--> playing   the press closes the loop: its length runs
- *                                  from the first note to this press, and
- *                                  playback starts again from the first note
- *   playing --press-->  overdub    layer more notes over the running loop
- *   overdub --press-->  playing
+ *   recording --press--> playing   the press closes the loop and playback
+ *                                  starts again from the first note. The end
+ *                                  is trimmed like the start: the gap between
+ *                                  letting go of the last note and the press
+ *                                  is cut (see loopEnd), so the next pass
+ *                                  follows straight on from the last note
+ *   playing --press-->  overdub    layer more notes over the running loop. Like
+ *                                  the first take, the layer starts on the
+ *                                  first note played, and (by default) it ends
+ *                                  by itself one loop later: one pass, with any
+ *                                  note still held cut off there, so nothing
+ *                                  keeps recording or ringing into the next pass
+ *   overdub --press-->  playing    (ends the layer early)
  *   stopped --press-->  playing    from the top
  *
  * Stop: playing / overdub / recording -> stopped (a loop being recorded is
@@ -27,17 +35,45 @@
 export const MIN_LOOP_SEC = 0.25;
 // Floor for a note's length, so a staccato tap still sounds when replayed.
 const MIN_NOTE_SEC = 0.05;
+// Onsets closer than this are one chord / flam, not a step in the rhythm.
+const SAME_ONSET_SEC = 0.03;
+
+/**
+ * Where a just-recorded take ends, relative to its first note.
+ *
+ * A piano note ends when its sound ends (key up, or pedal up if it was
+ * sustained). A drum hit has no length, so it is given one step of the rhythm
+ * that was played: the median gap between successive onsets. Ending the loop
+ * on the last hit itself would land that hit on top of the first one; one step
+ * after it puts the first note where the next beat would have been.
+ */
+export function loopEnd(events) {
+  const onsets = [...new Set(events.map((e) => e.t))].sort((a, b) => a - b);
+  const gaps = [];
+  for (let i = 1; i < onsets.length; i += 1) {
+    const g = onsets[i] - onsets[i - 1];
+    if (g > SAME_ONSET_SEC) gaps.push(g);
+  }
+  gaps.sort((a, b) => a - b);
+  const step = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
+  return events.reduce((end, e) => Math.max(end, e.type === 'piano' ? e.t + e.dur : e.t + step), 0);
+}
 
 const byTime = (a, b) => a.t - b.t;
 
 export function createLooper() {
   let state = 'empty';
-  let events = []; // { type: 'piano', midi, vel, t, dur, layer } | { type: 'drum', note, voice, vel, t, layer }
+  // { type: 'piano', midi, vel, t, dur, layer, ...meta } | { type: 'drum', note, voice, vel, t, layer, ...meta }
+  // meta is whatever the page records with the note: the instrument it was
+  // played on and the level it was played at, so each layer replays as played.
+  let events = [];
   let length = 0; // seconds, set when the loop is closed
   let recStart = 0; // clock time of the first recorded note
   let playStart = 0; // clock time the current playback began (offset 0)
   let scheduledUntil = 0; // everything before this has been handed out
   let layer = 0; // 0 = the base take, 1.. = overdub passes
+  let odStart = null; // clock time of the current overdub's first note
+  let odOnePass = true; // end the overdub one loop after its first note
   const open = new Map(); // midi -> { ev, abs }: piano notes still held
 
   const offsetAt = (now) => {
@@ -56,21 +92,39 @@ export function createLooper() {
     open.clear();
   };
 
+  // A one-pass overdub that has run a full loop since its first note ends
+  // there; notes still held are cut at that moment, not at `now`.
+  const endOverdubIfDue = (now) => {
+    if (state !== 'overdub' || !odOnePass || odStart == null) return;
+    const end = odStart + length;
+    if (now < end) return;
+    closeOpen(end);
+    state = 'playing';
+    odStart = null;
+  };
+
   const startPlaying = (now) => {
     state = 'playing';
     playStart = now;
     scheduledUntil = now;
   };
 
-  const closeLoop = (now) => {
-    const len = now - recStart;
-    if (len < MIN_LOOP_SEC) {
+  const closeLoop = (now, trimEnd) => {
+    const full = now - recStart;
+    if (full < MIN_LOOP_SEC) {
       reset();
       return false;
     }
-    length = len;
+    // A key still held at the press means the loop really does end now.
+    const held = open.size > 0;
+    length = full;
     closeOpen(now);
     events.sort(byTime);
+    if (trimEnd && !held) {
+      const end = loopEnd(events);
+      // Too short to be a loop (a single tap): keep the press as the end.
+      if (end >= MIN_LOOP_SEC && end < full) length = end;
+    }
     return true;
   };
 
@@ -82,8 +136,12 @@ export function createLooper() {
     open.clear();
   }
 
-  /** The loop button. */
-  function press(now) {
+  /**
+   * The loop button. `trimEnd` (default on) cuts the silence after the last
+   * note when the first take is closed.
+   */
+  function press(now, { trimEnd = true, onePass = true } = {}) {
+    endOverdubIfDue(now);
     switch (state) {
       case 'empty':
         state = 'armed';
@@ -92,11 +150,13 @@ export function createLooper() {
         state = 'empty';
         break;
       case 'recording':
-        if (closeLoop(now)) startPlaying(now);
+        if (closeLoop(now, trimEnd)) startPlaying(now);
         break;
       case 'playing':
         state = 'overdub';
         layer += 1;
+        odStart = null;
+        odOnePass = onePass;
         break;
       case 'overdub':
         closeOpen(now);
@@ -112,14 +172,15 @@ export function createLooper() {
   }
 
   /** The stop button: stop, and a second stop clears. */
-  function stop(now) {
+  function stop(now, { trimEnd = true } = {}) {
+    endOverdubIfDue(now);
     switch (state) {
       case 'armed':
       case 'stopped':
         reset();
         break;
       case 'recording':
-        if (closeLoop(now)) state = 'stopped';
+        if (closeLoop(now, trimEnd)) state = 'stopped';
         break;
       case 'playing':
       case 'overdub':
@@ -140,17 +201,21 @@ export function createLooper() {
       return 0;
     }
     if (state === 'recording') return now - recStart;
-    if (state === 'overdub') return offsetAt(now);
+    endOverdubIfDue(now);
+    if (state === 'overdub') {
+      if (odStart == null) odStart = now;
+      return offsetAt(now);
+    }
     return null;
   };
 
-  function pianoOn(midi, vel, now) {
+  function pianoOn(midi, vel, now, meta) {
     const t = recordOffset(now);
     if (t == null) return;
     // A re-press of a key still held closes the earlier note first.
     const prev = open.get(midi);
     if (prev) prev.ev.dur = Math.max(MIN_NOTE_SEC, now - prev.abs);
-    const ev = { type: 'piano', midi, vel, t, dur: MIN_NOTE_SEC, layer };
+    const ev = { ...meta, type: 'piano', midi, vel, t, dur: MIN_NOTE_SEC, layer };
     events.push(ev);
     open.set(midi, { ev, abs: now });
   }
@@ -162,10 +227,10 @@ export function createLooper() {
     held.ev.dur = Math.max(MIN_NOTE_SEC, Math.min(now - held.abs, length || Infinity));
   }
 
-  function drum(note, voice, vel, now) {
+  function drum(note, voice, vel, now, meta) {
     const t = recordOffset(now);
     if (t == null) return;
-    events.push({ type: 'drum', note, voice, vel, t, layer });
+    events.push({ ...meta, type: 'drum', note, voice, vel, t, layer });
   }
 
   /**
@@ -175,6 +240,7 @@ export function createLooper() {
    * land behind scheduledUntil, so they first replay on the next pass.
    */
   function schedule(now, lookahead, emit) {
+    endOverdubIfDue(now);
     if ((state !== 'playing' && state !== 'overdub') || !length) return;
     if (state === 'overdub') events.sort(byTime);
     const from = Math.max(scheduledUntil, playStart);
@@ -194,6 +260,7 @@ export function createLooper() {
 
   /** Drop the newest overdub pass (the base take is never undone this way). */
   function undoLayer(now) {
+    endOverdubIfDue(now);
     const top = events.reduce((m, e) => Math.max(m, e.layer), 0);
     if (top === 0) return false;
     if (state === 'overdub') {
@@ -215,6 +282,9 @@ export function createLooper() {
       elapsed: recording ? now - recStart : 0,
       position: looping ? offsetAt(now) : 0,
       count: events.length,
+      // overdub armed but nothing played into it yet / how much of its pass is left
+      overdubWaiting: state === 'overdub' && odStart == null,
+      overdubLeft: state === 'overdub' && odStart != null && odOnePass ? Math.max(0, odStart + length - now) : 0,
       layers: events.reduce((m, e) => Math.max(m, e.layer), 0),
     };
   }
