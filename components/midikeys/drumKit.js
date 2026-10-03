@@ -11,6 +11,12 @@
  * the GM sound for its note (36 kick, 38 snare, 42 closed hat ...). Any pad can
  * be reassigned to any voice from the page.
  *
+ * Pages: the 16 pads flip through three pages of the GM percussion map, 16
+ * notes apart, so page 2 plays notes 52-67 (cymbals and hand drums) and page 3
+ * plays 68-83 (shakers, whistles, guiros, blocks and bells). The page is added
+ * to whatever the pads send, so the Launchkey's own pad arrows (which shift the
+ * pads in steps of 4 notes) still land on a real sound.
+ *
  * Voices are synthesised with Web Audio rather than sampled: nothing to
  * download, no licensing question, and the hit starts the instant the pad is
  * struck. Every voice takes a `when` (AudioContext time) so the looper can
@@ -23,6 +29,15 @@ export const PAD_ROWS = [
   [40, 41, 42, 43, 48, 49, 50, 51],
   [36, 37, 38, 39, 44, 45, 46, 47],
 ];
+
+export const PAD_PAGE_SIZE = 16;
+export const PAD_PAGES = ['Kit', 'Cymbals and hand drums', 'Shakers, whistles and bells'];
+
+/** The pad rows of a page: page 0 is the Launchkey's own layout, the others 16 notes up each. */
+export const padRowsFor = (page) => PAD_ROWS.map((row) => row.map((n) => n + page * PAD_PAGE_SIZE));
+
+/** The note a pad plays on a page: what the pad sent, moved up by the page. */
+export const pageNote = (note, page) => Math.min(127, note + (page || 0) * PAD_PAGE_SIZE);
 
 // `gm` is the General MIDI drum note the voice is exported as in a .mid file.
 // `trimDb` evens out a voice that sits too loud against the rest of the kit.
@@ -44,10 +59,40 @@ export const DRUM_VOICES = [
   { id: 'tom6', label: 'High tom', gm: 50, freq: 196 },
   { id: 'crash', label: 'Crash', gm: 49 },
   { id: 'ride', label: 'Ride', gm: 51 },
+  // page 2: notes 52-67
+  { id: 'china', label: 'China cymbal', gm: 52 },
+  { id: 'rideBell', label: 'Ride bell', gm: 53 },
   { id: 'tambourine', label: 'Tambourine', gm: 54 },
+  { id: 'splash', label: 'Splash', gm: 55 },
   { id: 'cowbell', label: 'Cowbell', gm: 56 },
+  { id: 'crash2', label: 'Crash 2', gm: 57 },
+  { id: 'vibraslap', label: 'Vibraslap', gm: 58 },
+  { id: 'ride2', label: 'Ride 2', gm: 59 },
+  { id: 'bongoHigh', label: 'High bongo', gm: 60 },
+  { id: 'bongoLow', label: 'Low bongo', gm: 61 },
+  { id: 'congaMute', label: 'Muted conga', gm: 62 },
+  { id: 'congaOpen', label: 'Open conga', gm: 63 },
+  { id: 'congaLow', label: 'Low conga', gm: 64 },
+  { id: 'timbaleHigh', label: 'High timbale', gm: 65 },
+  { id: 'timbaleLow', label: 'Low timbale', gm: 66 },
+  { id: 'agogoHigh', label: 'High agogo', gm: 67 },
+  // page 3: notes 68-83
+  { id: 'agogoLow', label: 'Low agogo', gm: 68 },
+  { id: 'cabasa', label: 'Cabasa', gm: 69 },
   { id: 'shaker', label: 'Shaker', gm: 70 },
+  { id: 'whistleShort', label: 'Short whistle', gm: 71 },
+  { id: 'whistleLong', label: 'Long whistle', gm: 72 },
+  { id: 'guiroShort', label: 'Short guiro', gm: 73 },
+  { id: 'guiroLong', label: 'Long guiro', gm: 74 },
   { id: 'clave', label: 'Clave', gm: 75 },
+  { id: 'blockHigh', label: 'High wood block', gm: 76 },
+  { id: 'blockLow', label: 'Low wood block', gm: 77 },
+  { id: 'cuicaMute', label: 'Muted cuica', gm: 78 },
+  { id: 'cuicaOpen', label: 'Open cuica', gm: 79 },
+  { id: 'triangleMute', label: 'Muted triangle', gm: 80 },
+  { id: 'triangleOpen', label: 'Open triangle', gm: 81 },
+  { id: 'eggShaker', label: 'Egg shaker', gm: 82 },
+  { id: 'jingle', label: 'Jingle bells', gm: 83 },
 ];
 
 const VOICE_BY_ID = new Map(DRUM_VOICES.map((v) => [v.id, v]));
@@ -55,9 +100,10 @@ const VOICE_BY_GM = new Map(DRUM_VOICES.map((v) => [v.gm, v]));
 
 export const voiceById = (id) => VOICE_BY_ID.get(id) || null;
 
-/** Pad note -> voice id. Every pad starts on the GM sound for its note. */
+/** Pad note -> voice id, for every page. Every pad starts on the GM sound for its note. */
 export const DEFAULT_PAD_MAP = Object.fromEntries(
-  PAD_ROWS.flat().map((note) => [note, (VOICE_BY_GM.get(note) || VOICE_BY_ID.get('snare')).id])
+  PAD_PAGES.flatMap((_, page) => padRowsFor(page).flat())
+    .map((note) => [note, (VOICE_BY_GM.get(note) || VOICE_BY_ID.get('snare')).id])
 );
 
 /** The voice a drum-channel note plays: the pad's assignment, else its GM sound. */
@@ -154,6 +200,63 @@ export function createDrumSynth(ctx) {
     }
   };
 
+  // A hand drum: a short pitch dip on the skin plus a touch of slap.
+  const skin = (out, t, v, freq, decay) => {
+    pitchDrop(out, t, freq * 1.18, freq, 0.025, 0.7 * v, decay);
+    noiseHit(out, t, 0.12 * v, 0.015, [filter('bandpass', freq * 6, 1)]);
+  };
+
+  // A timbale: a ringing shell over a bright stick crack.
+  const timbale = (out, t, v, freq) => {
+    pitchDrop(out, t, freq * 1.06, freq, 0.02, 0.5 * v, 0.32, 'triangle');
+    tone(out, t, freq * 2.3, 0.12 * v, 0.2, 'sine');
+    noiseHit(out, t, 0.3 * v, 0.08, [filter('bandpass', 4200, 1)]);
+  };
+
+  // An agogo bell: a pure tone with an inharmonic partial.
+  const bell = (out, t, v, freq) => {
+    tone(out, t, freq, 0.35 * v, 0.4, 'sine');
+    tone(out, t, freq * 2.76, 0.12 * v, 0.22, 'sine');
+  };
+
+  // A shaken noise burst with a slower attack than a hit.
+  const shake = (out, t, peak, decay, attack, hp) => {
+    const src = noise();
+    const f = filter('highpass', hp);
+    src.connect(f);
+    f.connect(envGain(out, t, peak, decay, attack));
+    src.start(t, Math.random());
+    src.stop(t + attack + decay + 0.05);
+  };
+
+  // A pea whistle: a high sine with a fast warble.
+  const whistle = (out, t, v, length) => {
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = 2450;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 32;
+    const depth = ctx.createGain();
+    depth.gain.value = 90;
+    lfo.connect(depth);
+    depth.connect(o.frequency);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22 * v, t + 0.015);
+    g.gain.setValueAtTime(0.22 * v, t + length);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + length + 0.04);
+    o.connect(g);
+    g.connect(out);
+    for (const n of [o, lfo]) { n.start(t); n.stop(t + length + 0.1); }
+  };
+
+  // A guiro: a run of quick ticks, the stick over the ridges.
+  const scrape = (out, t, v, ticks, gap) => {
+    for (let i = 0; i < ticks; i += 1) {
+      noiseHit(out, t + i * gap, 0.35 * v, 0.012, [filter('bandpass', 2800, 3)]);
+    }
+  };
+
   const VOICES = {
     kick: (o, t, v) => {
       pitchDrop(o, t, 160, 48, 0.11, 1.0 * v, 0.42);
@@ -215,6 +318,81 @@ export function createDrumSynth(ctx) {
       src.stop(t + 0.15);
     },
     clave: (o, t, v) => tone(o, t, 2500, 0.45 * v, 0.05, 'sine'),
+
+    // ---- page 2: cymbals and hand drums
+    china: (o, t, v) => {
+      metal(o, t, 0.28 * v, 1.3, 36, 3200, 5200);
+      noiseHit(o, t, 0.3 * v, 1.0, [filter('bandpass', 4200, 1.2)]);
+    },
+    rideBell: (o, t, v) => {
+      tone(o, t, 1180, 0.22 * v, 1.1, 'sine');
+      tone(o, t, 2960, 0.1 * v, 0.6, 'sine');
+      metal(o, t, 0.08 * v, 0.5, 52, 5000, 8000);
+    },
+    splash: (o, t, v) => {
+      metal(o, t, 0.24 * v, 0.55, 48, 6500, 9500);
+      noiseHit(o, t, 0.28 * v, 0.45, [filter('highpass', 6500)]);
+    },
+    crash2: (o, t, v) => {
+      metal(o, t, 0.25 * v, 1.9, 37, 4500, 7000);
+      noiseHit(o, t, 0.3 * v, 1.7, [filter('highpass', 4500)]);
+    },
+    vibraslap: (o, t, v) => {
+      // a fast rattle that slows and dies away
+      let at = t;
+      for (let i = 0; i < 14; i += 1) {
+        noiseHit(o, at, 0.4 * v * Math.pow(0.82, i), 0.025, [filter('bandpass', 2600, 4)]);
+        at += 0.028 + i * 0.003;
+      }
+    },
+    ride2: (o, t, v) => {
+      metal(o, t, 0.18 * v, 1.3, 46, 4000, 6000);
+      tone(o, t, 2100, 0.05 * v, 0.8, 'sine');
+    },
+    bongoHigh: (o, t, v) => skin(o, t, v, 400, 0.16),
+    bongoLow: (o, t, v) => skin(o, t, v, 290, 0.2),
+    congaMute: (o, t, v) => {
+      skin(o, t, v, 330, 0.06);
+      noiseHit(o, t, 0.25 * v, 0.03, [filter('bandpass', 1800, 1.5)]);
+    },
+    congaOpen: (o, t, v) => skin(o, t, v, 300, 0.32),
+    congaLow: (o, t, v) => skin(o, t, v, 210, 0.36),
+    timbaleHigh: (o, t, v) => timbale(o, t, v, 520),
+    timbaleLow: (o, t, v) => timbale(o, t, v, 390),
+    agogoHigh: (o, t, v) => bell(o, t, v, 940),
+
+    // ---- page 3: shakers, whistles and bells
+    agogoLow: (o, t, v) => bell(o, t, v, 660),
+    cabasa: (o, t, v) => shake(o, t, 0.32 * v, 0.1, 0.012, 5000),
+    whistleShort: (o, t, v) => whistle(o, t, v, 0.1),
+    whistleLong: (o, t, v) => whistle(o, t, v, 0.42),
+    guiroShort: (o, t, v) => scrape(o, t, v, 6, 0.018),
+    guiroLong: (o, t, v) => scrape(o, t, v, 20, 0.022),
+    blockHigh: (o, t, v) => {
+      tone(o, t, 1850, 0.45 * v, 0.05, 'sine');
+      tone(o, t, 4300, 0.1 * v, 0.02, 'sine');
+    },
+    blockLow: (o, t, v) => {
+      tone(o, t, 1250, 0.45 * v, 0.06, 'sine');
+      tone(o, t, 2950, 0.1 * v, 0.025, 'sine');
+    },
+    cuicaMute: (o, t, v) => pitchDrop(o, t, 1100, 760, 0.08, 0.35 * v, 0.1),
+    cuicaOpen: (o, t, v) => pitchDrop(o, t, 480, 900, 0.22, 0.35 * v, 0.26),
+    triangleMute: (o, t, v) => {
+      tone(o, t, 4100, 0.16 * v, 0.07, 'sine');
+      tone(o, t, 6300, 0.07 * v, 0.05, 'sine');
+    },
+    triangleOpen: (o, t, v) => {
+      tone(o, t, 4100, 0.14 * v, 1.4, 'sine');
+      tone(o, t, 6300, 0.06 * v, 1.0, 'sine');
+      tone(o, t, 8900, 0.03 * v, 0.6, 'sine');
+    },
+    eggShaker: (o, t, v) => shake(o, t, 0.28 * v, 0.13, 0.03, 4500),
+    jingle: (o, t, v) => {
+      // a few bells struck a hair apart
+      for (const d of [0, 0.012, 0.03, 0.05]) metal(o, t + d, 0.1 * v, 0.4, 64 + d * 400, 7500, 10500);
+      noiseHit(o, t, 0.15 * v, 0.3, [filter('highpass', 8000)]);
+    },
   };
 
   return function play(id, when, velocity, destination) {
