@@ -6,14 +6,16 @@ import {
   DEFAULT_GRID, FAMILIES, GRID_NOTES, SESSION_LAYOUT, SIDE, SIDE_NOTES, TOP_CCS,
   LP_DIM_BLUE, LP_DIM_RED, LP_OFF, familyOf, hitColor, isGridNote, loopColor, restColor, sanitizeGrid,
 } from './layout';
+import { ANIMATIONS, frame, liveWaves, makeWave, paletteFor, rgbMessages } from './ripple';
 import './LaunchpadDrums.css';
 
 /*
  * /launchpad: a drum kit on a Novation Launchpad, for a drummer to jam on.
  *
  *   - The 8x8 grid plays the drums from /midi-keyboard's synthesised kit (all
- *     49 of them, see layout.js), each pad lit in its drum family's colour and
- *     flashing bright when hit or replayed by the loop.
+ *     49 of them, see layout.js), each pad lit in its drum family's colour.
+ *     A hit (or a loop replay, softer) sends a wave of light across the grid,
+ *     on the Launchpad and on the page alike (see ripple.js).
  *   - The round buttons down the right are a loop pedal: top = Loop (record,
  *     close, overdub), next = Stop (twice clears), next = Undo the last layer.
  *     Same one-button looper as /midi-keyboard.
@@ -30,13 +32,14 @@ const STORAGE_KEY = 'gs.launchpadDrums.v1';
 const LOOKAHEAD_SEC = 0.12;
 const HIDDEN_LOOKAHEAD_SEC = 1.2;
 const TICK_MS = 25;
-const FLASH_MS = 120;
+const ANIM_MS = 30; // ~33 frames a second for the light show
+const LOOP_WAVE = 0.55; // loop replays ripple softer than live hits
 const LOOP_OPTS = { trimEnd: true, onePass: true };
 
 const nowSec = () => performance.now() / 1000;
 const isLaunchpad = (port) => /launchpad/i.test(port?.name || '');
 
-const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9 };
+const DEFAULTS = { grid: DEFAULT_GRID, strength: 110, volume: 0.9, anim: 'ripple', restLit: false };
 
 function loadSettings() {
   try {
@@ -47,6 +50,8 @@ function loadSettings() {
       grid: sanitizeGrid(saved.grid),
       strength: num(saved.strength, 20, 127, DEFAULTS.strength),
       volume: num(saved.volume, 0, 1.5, DEFAULTS.volume),
+      anim: ANIMATIONS.some((a) => a.id === saved.anim) ? saved.anim : DEFAULTS.anim,
+      restLit: saved.restLit === true,
     };
   } catch (e) {
     return DEFAULTS;
@@ -85,7 +90,10 @@ export default function LaunchpadDrums() {
   if (!looperRef.current) looperRef.current = createLooper();
   const outputsRef = useRef([]); // Launchpad outputs, to light the pads
   const padElsRef = useRef(new Map());
-  const flashTimersRef = useRef(new Map());
+  const wavesRef = useRef([]); // light waves running across the grid
+  const sentRef = useRef(new Map()); // note -> what the Launchpad shows now ('r,g,b' or palette index)
+  const shownRef = useRef(new Map()); // note -> glow drawn on the page
+  const sysexRef = useRef(false); // RGB lights need SysEx; without it, palette colours
   const lastLoopKeyRef = useRef('');
 
   // ---- Launchpad lights -----------------------------------------------------
@@ -102,9 +110,9 @@ export default function LaunchpadDrums() {
     lightPad(SIDE.undo, info.layers > 0 ? LP_DIM_BLUE : LP_OFF);
   }, [lightPad]);
 
+  // The grid is drawn by the light show; this makes it resend every pad.
   const paintAll = useCallback(() => {
-    const grid = settingsRef.current.grid;
-    GRID_NOTES.forEach((n) => lightPad(n, restColor(grid[n])));
+    sentRef.current.clear();
     SIDE_NOTES.forEach((n) => lightPad(n, LP_OFF));
     TOP_CCS.forEach((cc) => send([0xb0, cc, LP_OFF]));
     paintSide(looperRef.current.info(nowSec()));
@@ -115,18 +123,10 @@ export default function LaunchpadDrums() {
     TOP_CCS.forEach((cc) => send([0xb0, cc, LP_OFF]));
   }, [lightPad, send]);
 
-  // Flash a pad on the page and on the Launchpad, then back to its colour.
-  const flash = useCallback((note, loop) => {
-    const voice = settingsRef.current.grid[note];
-    const el = padElsRef.current.get(note);
-    if (el) el.classList.add(loop ? 'is-loop-hit' : 'is-hit');
-    lightPad(note, hitColor(voice));
-    clearTimeout(flashTimersRef.current.get(note));
-    flashTimersRef.current.set(note, setTimeout(() => {
-      if (el) el.classList.remove('is-hit', 'is-loop-hit');
-      lightPad(note, restColor(settingsRef.current.grid[note]));
-    }, FLASH_MS));
-  }, [lightPad]);
+  // Start a wave of light from a pad, now or (for a loop replay) when it sounds.
+  const wave = useCallback((note, at, amp) => {
+    wavesRef.current.push(makeWave(note, settingsRef.current.grid[note], at, amp));
+  }, []);
 
   // ---- playing --------------------------------------------------------------
 
@@ -151,8 +151,8 @@ export default function LaunchpadDrums() {
   const hitPad = useCallback((note, vel = 127) => {
     const voice = settingsRef.current.grid[note];
     play(voice, Math.max(1, Math.round((vel * settingsRef.current.strength) / 127)), note);
-    flash(note, false);
-  }, [flash, play]);
+    wave(note, nowSec(), 1);
+  }, [wave, play]);
 
   const loopAction = useCallback((action) => {
     const now = nowSec();
@@ -209,6 +209,7 @@ export default function LaunchpadDrums() {
       const fresh = outs.filter((o) => !outputsRef.current.includes(o));
       outputsRef.current = outs;
       // Session layout, so the grid sends 11-88 whatever mode it was left in.
+      sysexRef.current = !!access.sysexEnabled;
       if (access.sysexEnabled) fresh.forEach((o) => { try { o.send(SESSION_LAYOUT); } catch (e) { /* ignore */ } });
       if (fresh.length) paintAll();
       setMidi({ status: 'ready', launchpad, others });
@@ -259,12 +260,57 @@ export default function LaunchpadDrums() {
       const now = nowSec();
       looperRef.current.schedule(now, document.hidden ? HIDDEN_LOOKAHEAD_SEC : LOOKAHEAD_SEC, (ev, at) => {
         engineRef.current?.scheduleLoopEvent(ev, at);
-        if (isGridNote(ev.note)) setTimeout(() => flash(ev.note, true), Math.max(0, (at - now) * 1000));
+        if (isGridNote(ev.note)) wave(ev.note, at, LOOP_WAVE);
       });
       refreshLoop();
     }, TICK_MS);
     return () => clearInterval(id);
-  }, [flash, refreshLoop]);
+  }, [wave, refreshLoop]);
+
+  // ---- the light show -------------------------------------------------------
+
+  // A timer, not requestAnimationFrame, so the Launchpad keeps animating when
+  // the page is in a background tab.
+  useEffect(() => {
+    let idle = false;
+    const id = setInterval(() => {
+      const now = nowSec();
+      wavesRef.current = liveWaves(wavesRef.current, now);
+      const waves = wavesRef.current;
+      // Nothing moving and the last frame already drawn: skip the work.
+      if (!waves.length && idle && sentRef.current.size) return;
+      idle = !waves.length;
+      const { grid, anim, restLit } = settingsRef.current;
+      const { colors, glow } = frame(now, waves, grid, anim, { rest: restLit });
+
+      // The Launchpad: send only the pads whose colour changed.
+      const changes = new Map();
+      colors.forEach((rgb, note) => {
+        const voice = grid[note];
+        const value = sysexRef.current
+          ? rgb.join(',')
+          : paletteFor(glow.get(note), hitColor(voice), restColor(voice), restLit ? restColor(voice) : LP_OFF);
+        if (sentRef.current.get(note) === value) return;
+        sentRef.current.set(note, value);
+        if (sysexRef.current) changes.set(note, rgb);
+        else lightPad(note, value);
+      });
+      if (changes.size) rgbMessages(changes).forEach(send);
+
+      // The page: a glow over each pad in the wave's colour.
+      glow.forEach((level, note) => {
+        const shown = Math.round(level * 50) / 50;
+        if (shownRef.current.get(note) === shown) return;
+        shownRef.current.set(note, shown);
+        const el = padElsRef.current.get(note);
+        if (!el) return;
+        const [r, g, b] = colors.get(note);
+        el.style.setProperty('--glow', String(shown));
+        el.style.setProperty('--glow-rgb', `${Math.min(255, r * 4)}, ${Math.min(255, g * 4)}, ${Math.min(255, b * 4)}`);
+      });
+    }, ANIM_MS);
+    return () => clearInterval(id);
+  }, [lightPad, send]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -282,10 +328,8 @@ export default function LaunchpadDrums() {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) { /* private window */ }
   }, [settings]);
 
-  // Repaint the grid when a pad's drum changes.
-  useEffect(() => {
-    GRID_NOTES.forEach((n) => lightPad(n, restColor(settings.grid[n])));
-  }, [settings.grid, lightPad]);
+  // Repaint the grid when a pad's drum or the animation changes.
+  useEffect(() => { sentRef.current.clear(); }, [settings.grid, settings.anim, settings.restLit]);
 
   const assign = (note, id) => {
     setSettings((s) => ({ ...s, grid: { ...s.grid, [note]: id } }));
@@ -298,7 +342,7 @@ export default function LaunchpadDrums() {
   const loopState = loopInfo.state;
 
   return (
-    <div className="lpdrums">
+    <div className={`lpdrums ${settings.restLit ? '' : 'is-dark-rest'}`}>
       <header className="lpdrums__head">
         <div>
           <h1 className="lpdrums__title">Launchpad Drums</h1>
@@ -391,6 +435,29 @@ export default function LaunchpadDrums() {
                 onChange={(e) => setSettings((s) => ({ ...s, strength: Number(e.target.value) }))} />
             </label>
             <p className="lpdrums__muted">The Launchpad MK2&apos;s pads hit at one strength; this sets how hard.</p>
+          </section>
+
+          <section className="lpdrums__card">
+            <h2 className="lpdrums__card-title">Lights</h2>
+            <div className="lpdrums__seg" role="radiogroup" aria-label="Animation">
+              {ANIMATIONS.map((a) => (
+                <button key={a.id} type="button" role="radio" aria-checked={settings.anim === a.id}
+                  className={`lpdrums__seg-btn ${settings.anim === a.id ? 'is-active' : ''}`}
+                  onClick={() => setSettings((s) => ({ ...s, anim: a.id }))}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+            <div className="lpdrums__seg" role="radiogroup" aria-label="Pads at rest">
+              {[[false, 'Dark'], [true, 'Colours']].map(([v, label]) => (
+                <button key={label} type="button" role="radio" aria-checked={settings.restLit === v}
+                  className={`lpdrums__seg-btn ${settings.restLit === v ? 'is-active' : ''}`}
+                  onClick={() => setSettings((s) => ({ ...s, restLit: v }))}>
+                  {label} at rest
+                </button>
+              ))}
+            </div>
+            <p className="lpdrums__muted">What a hit sends across the grid, and whether the pads show their colours when nothing is playing.</p>
           </section>
 
           <section className="lpdrums__card">

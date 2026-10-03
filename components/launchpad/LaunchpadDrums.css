@@ -60,7 +60,11 @@
   max-width: min(100%, calc(100vh - 160px + 90px));
 }
 
-.lpdrums__grid { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.lpdrums__grid {
+  flex: 1; min-width: 0;
+  display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px;
+  container-type: inline-size; /* pad names scale with the grid */
+}
 
 .lpdrums__pad {
   --pad: #8d8c8d;
@@ -70,14 +74,38 @@
   border: 1px solid color-mix(in srgb, var(--pad) 55%, transparent);
   background: color-mix(in srgb, var(--pad) 22%, var(--lp-panel-2));
   color: var(--lp-text);
-  font: inherit; font-size: 11px; font-weight: 600; line-height: 1.15;
-  padding: 4px; display: flex; align-items: flex-end; text-align: left;
-  overflow: hidden; cursor: pointer; touch-action: manipulation;
-  transition: background 0.1s ease-out, box-shadow 0.1s ease-out;
+  font: inherit;
+  font-size: clamp(11px, 2.35cqi, 20px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  padding: 6px; display: flex; align-items: flex-end; text-align: left;
+  position: relative; overflow: hidden; cursor: pointer; touch-action: manipulation;
+  /* the light show sets --glow (0..1) and --glow-rgb each frame */
+  box-shadow: 0 0 calc(var(--glow, 0) * 22px) rgba(var(--glow-rgb, 255, 255, 255), calc(var(--glow, 0) * 0.9));
 }
-.lpdrums__pad span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.lpdrums__pad.is-hit { background: var(--pad); color: #0f0f11; box-shadow: 0 0 18px var(--pad); transition: none; }
-.lpdrums__pad.is-loop-hit { background: color-mix(in srgb, var(--pad) 60%, var(--lp-panel-2)); transition: none; }
+/* the wave of light, under the name */
+.lpdrums__pad::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: rgb(var(--glow-rgb, 255, 255, 255));
+  opacity: calc(var(--glow, 0) * 0.95);
+  pointer-events: none;
+}
+/* Dark at rest: pads go neutral until a hit lights them; the name keeps a hint of the colour. */
+.lpdrums.is-dark-rest .lpdrums__pad {
+  background: #141416;
+  border-color: #2a292c;
+}
+.lpdrums.is-dark-rest .lpdrums__pad span { color: color-mix(in srgb, var(--pad) 45%, #d8d8d8); }
+
+.lpdrums__pad span {
+  position: relative; z-index: 1;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  overflow-wrap: anywhere;
+}
 .lpdrums__pad.is-selected { outline: 2px solid #fff; outline-offset: 1px; }
 
 .lpdrums__side { display: grid; grid-template-rows: repeat(8, minmax(0, 1fr)); gap: 6px; width: 64px; }
@@ -126,11 +154,19 @@
 }
 .lpdrums__chip.is-active { background: var(--pad); color: #0f0f11; }
 
+.lpdrums__seg + .lpdrums__seg { margin-top: 6px; }
+.lpdrums__seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--lp-panel-2); border: 1px solid var(--lp-border); }
+.lpdrums__seg-btn {
+  flex: 1; padding: 6px 8px; border-radius: 7px; border: 0;
+  background: none; color: var(--lp-muted); font: inherit; font-size: 13px; cursor: pointer;
+}
+.lpdrums__seg-btn.is-active { background: var(--lp-primary); color: var(--lp-text); }
+
 @media (max-width: 900px) {
   .lpdrums__main { grid-template-columns: 1fr; }
   .lpdrums__deck { max-width: none; padding: 10px; gap: 6px; }
   .lpdrums__grid { gap: 4px; }
   .lpdrums__side { width: 40px; gap: 4px; }
-  .lpdrums__pad { font-size: 9px; padding: 3px; }
+  .lpdrums__pad { padding: 3px; font-size: clamp(9px, 2.6cqi, 14px); }
   .lpdrums__round { font-size: 9px; }
 }
