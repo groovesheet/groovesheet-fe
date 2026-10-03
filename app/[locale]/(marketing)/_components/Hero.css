@@ -1287,3 +1287,81 @@
     border-radius: 8px;
   }
 }
+
+/* Stacked layout (tablet and phone): the success rule above collapses the hero
+   copy sideways (max-width: 0), which only works in a row. In a column the
+   zero-width copy kept its height, wrapped a word per line, and pushed the
+   finished preview down to the bottom of a phone screen, with its play button
+   below the fold. Take it out of the flow instead. */
+@media (max-width: 1280px) {
+  .hero-container.success-expanded .hero-content {
+    display: none;
+  }
+}
+
+/* A failed preview: what happened and the ways on, in place of the upload card. */
+.upload-failed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.upload-failed-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.upload-failed-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-muted-foreground);
+}
+
+.upload-failed-label {
+  margin: 4px 0 -4px;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+
+.upload-failed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.upload-failed-instruments {
+  width: 100%;
+  max-width: 360px;
+}
+
+.upload-failed-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.upload-failed-btn--primary {
+  border-color: transparent;
+  background: var(--color-primary);
+  color: var(--color-button-light);
+}

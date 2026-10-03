@@ -141,24 +141,43 @@ export function clearPendingPreviewId(): void {
   } catch { /* localStorage disabled */ }
 }
 
+// The claim in flight, shared by every caller. AppBoot claims on sign-in and an
+// upload card waiting to run the full song needs the same claim to have landed
+// first; two separate requests also used to log preview_claimed twice.
+let claimInFlight: Promise<unknown> | null = null;
+
 /**
  * Run the pending-claim flow if we have a preview_id stashed from a pre-signup
  * upload. Safe to call unconditionally on app load / after sign-in. Returns
- * the claimed preview info, or null if there was nothing pending.
+ * the claimed preview info to the first caller, or null if there was nothing
+ * pending; a caller that arrives while a claim is running waits for it and
+ * gets null.
  */
 export async function claimPendingPreviewIfAny<T = JsonObject>(apiBaseUrl: string, getToken: GetToken): Promise<T | null> {
+  if (claimInFlight) {
+    await claimInFlight.catch(() => undefined);
+    return null;
+  }
   const previewId = getPendingPreviewId();
   if (!previewId) return null;
-  try {
-    const result = await claimPreview<T>(apiBaseUrl, previewId, getToken);
-    clearPendingPreviewId();
-    return result;
-  } catch (err) {
-    // Don't loop forever on a stale or unauthorized preview_id.
-    const status = (err as HttpError).status;
-    if (status === 403 || status === 404 || status === 409) {
+  const run = (async () => {
+    try {
+      const result = await claimPreview<T>(apiBaseUrl, previewId, getToken);
       clearPendingPreviewId();
+      return result;
+    } catch (err) {
+      // Don't loop forever on a stale or unauthorized preview_id.
+      const status = (err as HttpError).status;
+      if (status === 403 || status === 404 || status === 409) {
+        clearPendingPreviewId();
+      }
+      throw err;
     }
-    throw err;
+  })();
+  claimInFlight = run;
+  try {
+    return await run;
+  } finally {
+    claimInFlight = null;
   }
 }

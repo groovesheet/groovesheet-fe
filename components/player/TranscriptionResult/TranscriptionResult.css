@@ -339,3 +339,165 @@
     line-height: 21px;
   }
 }
+
+.tr-btn-short {
+  display: none;
+}
+
+/* Phones ---------------------------------------------------------------------
+   Measured at 375px before this block: the check icon took its own column, the
+   rating wrapped "No" onto a line of its own, five buttons and the close X
+   wrapped over three rows, and the transport carried tempo, transpose, loop
+   and metronome controls that a preview cannot use. The score started 540px
+   down the card. Here: title and X on one line, rating on one line, the full
+   song button on its own row with the downloads beside each other under it,
+   and a one-row transport. */
+@media (max-width: 768px) {
+  .tr-result {
+    gap: 8px;
+  }
+
+  .tr-header {
+    gap: 12px;
+    padding: 4px 0 0;
+  }
+
+  .tr-header-info {
+    width: 100%;
+  }
+
+  .tr-check {
+    display: none;
+  }
+
+  .tr-header-text {
+    width: 100%;
+    /* room for the close button, which sits in the corner */
+    padding-right: 40px;
+  }
+
+  .tr-title {
+    font-size: 19px;
+    line-height: 24px;
+  }
+
+  .tr-filename {
+    margin-top: 2px;
+  }
+
+  .tr-rate {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .tr-rate-btn {
+    padding: 3px 9px;
+    font-size: 12px;
+  }
+
+  .tr-header-actions {
+    gap: 6px;
+  }
+
+  .tr-header-actions .tr-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    height: 36px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  .tr-header-actions .tr-btn-primary {
+    flex: 1 1 100%;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .tr-btn-long {
+    display: none;
+  }
+
+  .tr-btn-short {
+    display: inline;
+  }
+
+  .tr-close {
+    position: absolute;
+    top: 0;
+    right: -6px;
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Transport: a preview cannot change tempo, transpose, loop or click, and a
+     phone has volume buttons. What is left fits on one row. */
+  /* !important: PlaybackBar sets display inline on these groups. */
+  .tr-result .gs-playbar-inner > div:has(> .gs-pb-knob-label),
+  .tr-result .gs-playbar-inner > div:has(> .gs-slider),
+  .tr-result .gs-playbar-inner .gs-ctrl[disabled] {
+    display: none !important;
+  }
+
+  .tr-result .gs-playbar-inner > .gs-pb-time {
+    margin-right: auto;
+  }
+
+  .tr-result .gs-playbar-inner {
+    flex-wrap: nowrap;
+    padding: 16px 8px 8px;
+  }
+
+  .tr-result .gs-playbar-scrub {
+    margin: 0 10px;
+  }
+
+  /* The head was drawn as a 16px white square on phones. */
+  .tr-result .gs-playbar-scrub-head {
+    top: 50%;
+    bottom: auto;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Four view tabs share the width instead of scrolling the last one off. */
+  .tr-result .gs-viewer-toolbar {
+    padding: 8px 0 0;
+    margin: 4px 0;
+  }
+
+  .tr-result .gs-seg {
+    flex: 1 1 auto;
+    display: flex;
+  }
+
+  .tr-result .gs-seg button {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .tr-result .gs-seg button svg {
+    display: none;
+  }
+
+  .tr-result .gs-viewer {
+    margin: 8px 0 0;
+  }
+
+  /* A preview is a few bars. In a fixed 72dvh scroll box it left a page of
+     blank paper and hid the "unlock the rest" panel below it, inside a scroll
+     area a thumb on the page never reaches. Let it grow with the page. */
+  .tr-result--preview .gs-sheet-scroll {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

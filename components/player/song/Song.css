@@ -191,28 +191,47 @@
    shut until the visitor taps the info toggle — so on the widths most of the
    YouTube traffic arrives at, the only route to the paid flow was behind a
    tap. Breakpoint mirrors .gs-song-sidebar-desktop exactly. */
-.gs-song-page .gs-song-upload-cta-mobile {
-  display: none;
+.gs-song-page .gs-song-own-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
 }
-@media (max-width: 1024px) {
-  .gs-song-page .gs-song-upload-cta-mobile {
-    display: block;
-    margin: 18px 0 96px;
-    padding: 14px 16px;
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
+.gs-song-page .gs-song-own-track-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.gs-song-page .gs-song-own-track-text strong {
+  font-weight: 600;
+  color: var(--color-text);
+}
+.gs-song-page .gs-song-own-track-text span {
+  color: var(--color-muted-foreground);
+}
+.gs-song-page .gs-song-own-track-btn {
+  flex: none;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-button-light);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .gs-song-page .gs-song-own-track {
+    flex-direction: column;
+    align-items: stretch;
     text-align: center;
-    text-decoration: none;
-    color: var(--color-text);
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  .gs-song-page .gs-song-upload-cta-mobile strong {
-    display: block;
-    font-weight: 600;
-  }
-  .gs-song-page .gs-song-upload-cta-mobile span {
-    color: var(--color-muted-foreground);
   }
 }
 
@@ -608,6 +627,39 @@
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* Phones: the desktop row is three columns (140px name, waveform, 200px
+   controls). Below ~640px the fixed columns ate the whole width, so the
+   waveform column (the tap-to-seek target) collapsed to 0px and the volume
+   slider ran off the card. Stack the row instead: name, full-width waveform,
+   then the controls, with mute/solo grown to a usable touch size. */
+@media (max-width: 640px) {
+  .gs-song-page .gs-stem-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px 12px;
+    /* StemRow pins the desktop row to 168px inline; the stacked row sizes
+       to its content. */
+    height: auto !important;
+  }
+  .gs-song-page .gs-stem-row > :last-child {
+    justify-content: flex-start !important;
+  }
+  /* The waveform is drawn 126px tall (inline) and overflows its 52px wrap
+     on purpose in the desktop row; stacked, that overflow lands on the name
+     and the buttons. Give it its own band and keep it inside. */
+  .gs-song-page .gs-stem-wave-wrap {
+    height: 64px;
+  }
+  .gs-song-page .gs-stem-wave-wrap > div {
+    height: 100% !important;
+  }
+  .gs-song-page .gs-ms-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 11px;
+  }
 }
 
 /* =========================================================

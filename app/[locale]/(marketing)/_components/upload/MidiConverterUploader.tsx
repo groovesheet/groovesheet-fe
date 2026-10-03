@@ -13,20 +13,20 @@ import { queueSummary } from '@/lib/queue';
 import { saveActiveJob, loadActiveJob, clearActiveJob } from '@/lib/activeJob';
 import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
-import { usePaywall } from '@/components/billing/OutOfMinutesModal';
+import { useFullSongFlow, type UpgradeOutcome, type UpgradeTrigger } from '@/lib/hooks/useFullSongFlow';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/constants';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
 import { useTheme } from '@/lib/theme';
 import { useIsTouch } from '@/lib/hooks/useMediaQuery';
 import config from '@/lib/config';
 import type { DownloadedFile, WorkflowQueue } from '@/lib/types';
-import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { BassIcon, MagicWandIcon, ServerIcon, TrayArrowUpIcon } from './icons';
 import ResultView from './ResultView';
 import {
   UPLOAD_ACCEPT,
   errorInfo,
+  failureMessage,
   filenameFromResponse,
   isCompletedStatus,
   isFailedStatus,
@@ -66,6 +66,8 @@ const UPLOAD_SOURCE = 'midi_converter';
 
 // Key for the resumable job in localStorage (lib/activeJob).
 const SURFACE = 'midi-converter';
+// How long a finished preview comes back after a reload.
+const FINISHED_PREVIEW_TTL_MS = 2 * 60 * 60 * 1000;
 
 // NOTE: Download key maps and download handlers are shared across the home,
 // MIDI converter and stem splitter cards and TranscriptionHistory. When
@@ -138,8 +140,6 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
-  const { openLoginModal } = useLoginModal();
-  const { showPaywall, paywall } = usePaywall(UPLOAD_SOURCE);
   const router = useRouter();
   const isTouch = useIsTouch();
 
@@ -215,7 +215,10 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
     );
 
     const objectUrl = URL.createObjectURL(blob);
-    triggerDownload(objectUrl, filename);
+    // A preview is listened to here, not saved: an automatic download on a
+    // phone hands the page to the download sheet (or, in the Facebook and
+    // Instagram in-app browsers, to another app) before the preview is heard.
+    if (!isPreview) triggerDownload(objectUrl, filename);
     return { objectUrl, filename };
   };
 
@@ -224,7 +227,8 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
   // you can actually print. Best-effort: a failed engraving must not turn a
   // finished transcription into an error.
   const downloadScorePdfFile = async (id: string | null) => {
-    if (!id || !SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
+    // Previews skip it, like the MIDI file above.
+    if (!id || id.startsWith('PRV') || !SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
     try {
       const result = await downloadScorePdf(API_BASE_URL, id, getToken);
       if (!result?.blob) return;
@@ -294,7 +298,10 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
             stopProgressSimulation();
             sendNotification('GrooveSheet', { body: t('tools.uploader.notify.midiReady') });
             stopped = true;
-            clearActiveJob(SURFACE);
+            // A finished preview stays restorable for a while: sign-in,
+            // Checkout and a stale-chunk reload all reload this page.
+            if (id.startsWith('PRV')) saveActiveJob(SURFACE, id, { instrument: selectedInstrument, fileName: fileNameRef.current ?? undefined, completed: true });
+            else clearActiveJob(SURFACE);
             setResultFiles(data.outputs?.files || null);
             try {
               const { objectUrl, filename } = await downloadInstrumentFile(id);
@@ -312,7 +319,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
             if (id.startsWith('PRV')) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
-            setError(data.message || t('tools.uploader.errors.processingFailed'));
+            setError(failureMessage(data) || t('tools.uploader.errors.processingFailed'));
             stopped = true;
             clearActiveJob(SURFACE);
             return;
@@ -355,9 +362,16 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
     resumedRef.current = true;
     const saved = loadActiveJob(SURFACE);
     if (!saved) return;
+    // A finished preview is only worth showing again shortly after; later the
+    // visitor expects an empty upload box.
+    if (saved.completed && Date.now() - saved.savedAt > FINISHED_PREVIEW_TTL_MS) {
+      clearActiveJob(SURFACE);
+      return;
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring a job saved in localStorage, which only the browser can read
     setJobId(saved.jobId);
     if (typeof saved.instrument === 'string') setSelectedInstrument(saved.instrument);
+    if (typeof saved.fileName === 'string') setFile(saved.fileName);
     setStatus('started');
     setProgress(0);
     pollStatus(saved.jobId);
@@ -399,6 +413,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
 
       if (workflowId && (data.cached || data.status === 'completed')) {
         setJobId(workflowId);
+        saveActiveJob(SURFACE, workflowId, { instrument: selectedInstrument, fileName: fileToUpload.name, completed: true });
         setResultFiles(data.outputs?.files || null);
         setStatus('completed');
         setProgress(100);
@@ -430,6 +445,13 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
       setTimeout(() => pollStatus(workflowId), 1000);
     } catch (err) {
       const info = errorInfo(err);
+      trackFunnel(FUNNEL.UPLOAD_FAILED, {
+        surface: UPLOAD_SOURCE,
+        instrument: selectedInstrument,
+        status: info.status || 0,
+        signed_in: Boolean(isSignedIn),
+        message: (info.message || '').slice(0, 120) || undefined,
+      });
       if (info.status === 429) {
         setError(info.message || t('tools.uploader.errors.rateLimited', { seconds: info.retryAfterSeconds || 60 }));
       } else if (info.message && (info.message.includes('fetch') || info.name === 'TypeError')) {
@@ -528,39 +550,49 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
     handleBrowseClick();
   };
 
-  const handleUpgradeToFull = async () => {
-    if (!jobId || !jobId.startsWith('PRV')) return;
+  // Promote the preview to a full run (no re-upload). The paywall, sign-in and
+  // the return trip around it live in useFullSongFlow.
+  const handleUpgradeToFull = async (trigger: UpgradeTrigger): Promise<UpgradeOutcome> => {
+    if (!jobId || !jobId.startsWith('PRV')) return { kind: 'failed' };
     const previewId = jobId;
-    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument });
+    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument, trigger });
     try {
       const result = await upgradeToFull<{ workflow_id?: string }>(API_BASE_URL, jobId, getToken);
       const workflowId = result?.workflow_id;
-      if (workflowId) {
-        trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId });
-        setJobId(workflowId);
-        setStatus('processing');
-        setProgress(0);
-        setDownloadUrl(null);
-        setDownloadFilename(null);
-        prefetchedFilesRef.current = {};
-        simulateProgress();
-        setTimeout(() => pollStatus(workflowId), 1000);
-      }
+      if (!workflowId) return { kind: 'failed' };
+      trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId, trigger });
+      setJobId(workflowId);
+      setStatus('processing');
+      setProgress(0);
+      setDownloadUrl(null);
+      setDownloadFilename(null);
+      prefetchedFilesRef.current = {};
+      simulateProgress();
+      saveActiveJob(SURFACE, workflowId, { instrument: selectedInstrument });
+      setTimeout(() => pollStatus(workflowId), 1000);
+      return { kind: 'started' };
     } catch (err) {
       const info = errorInfo(err);
-      // Out of minutes: say so, and offer the fix, instead of an error banner.
-      if (info.status === 402) {
-        showPaywall(info.message || null, previewId);
-        return;
-      }
+      // Out of minutes: the flow opens the paywall instead of an error banner.
+      if (info.status === 402) return { kind: 'out_of_minutes', message: info.message || null };
       setError(info.message || t('tools.uploader.errors.fullSongFailed'));
+      return { kind: 'failed' };
     }
   };
 
-  const handleSignUpToUnlock = () => {
-    trackFunnel(FUNNEL.UNLOCK_CLICK, { surface: UPLOAD_SOURCE, preview_id: jobId || undefined, instrument: selectedInstrument });
-    openLoginModal();
-  };
+  const fullSong = useFullSongFlow({
+    surface: UPLOAD_SOURCE,
+    jobId,
+    ready: uiState === 'success',
+    instrument: selectedInstrument,
+    fileName,
+    // Sign-in and Checkout reload the page; the resume effect above brings the
+    // preview back from this.
+    persistPreview: () => {
+      if (jobId) saveActiveJob(SURFACE, jobId, { instrument: selectedInstrument, fileName: fileName ?? undefined, completed: true });
+    },
+    upgrade: handleUpgradeToFull,
+  });
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -570,8 +602,11 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
     e.preventDefault();
     setIsDragging(false);
   };
+  // The drop zone sits inside the card and both listen for drops; without
+  // stopPropagation one dropped file was uploaded twice.
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) handleFileChange(droppedFile);
@@ -775,8 +810,8 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
               onReset={resetUpload}
               downloadError={error}
               isSignedIn={isSignedIn}
-              onUpgradeToFull={handleUpgradeToFull}
-              onSignUpToUnlock={handleSignUpToUnlock}
+              onUpgradeToFull={fullSong.requestFullSong}
+              onSignUpToUnlock={fullSong.getFullSongSignedOut}
               surface={UPLOAD_SOURCE}
               // This page sells MIDI: open on the note view (piano roll /
               // fretboard / drum kit), with the engraving one tab over.
@@ -784,7 +819,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
               statusLabel="MIDI conversion complete"
             />
           )}
-          {paywall}
+          {fullSong.paywall}
           {error && uiState !== 'success' && (
             <div className="error-overlay">
               <StatusMessage variant="error">{error}</StatusMessage>

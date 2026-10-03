@@ -6,14 +6,14 @@ import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import { Piano } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { useRouter } from '@/lib/navigation';
+import { Link, useRouter } from '@/lib/navigation';
 import { useUser, useAuth } from '@/lib/auth';
 import { queueSummary } from '@/lib/queue';
 import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
 import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { phLog } from '@/lib/observability';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
-import { usePaywall } from '@/components/billing/OutOfMinutesModal';
+import { useFullSongFlow, type UpgradeOutcome, type UpgradeTrigger } from '@/lib/hooks/useFullSongFlow';
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications';
 import { useTheme } from '@/lib/theme';
 import { useIsTouch } from '@/lib/hooks/useMediaQuery';
@@ -21,16 +21,17 @@ import { useWorkflowPersistence } from '@/lib/hooks/useWorkflowPersistence';
 import config from '@/lib/config';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '@/lib/constants';
 import type { DownloadedFile, WorkflowMetadata, WorkflowQueue } from '@/lib/types';
-import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { BassIcon, MagicWandIcon, ServerIcon, TrayArrowUpIcon } from './icons';
 import ResultView from './ResultView';
 import {
   UPLOAD_ACCEPT,
   errorInfo,
+  failureMessage,
   filenameFromResponse,
   isCompletedStatus,
   isFailedStatus,
+  isNoInstrumentMessage,
   makeFileTypeCheck,
   trackPointer,
   triggerDownload,
@@ -139,11 +140,9 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { isDarkMode } = useTheme();
-  const { openLoginModal } = useLoginModal();
   const { t } = useTranslation();
   const router = useRouter();
   const isTouch = useIsTouch();
-  const { showPaywall, paywall } = usePaywall(UPLOAD_SOURCE);
 
   const [fileName, setFileName] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -164,6 +163,16 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   // instrument that was asked for and can't build the "everything else" row.
   const [resultFiles, setResultFiles] = useState<Record<string, unknown> | null>(null);
   const [selectedInstrument, setSelectedInstrument] = useState('piano');
+  // A preview the server failed. Shown as its own card with a way forward,
+  // instead of an error laid over the "Transcribing" card, whose only exit
+  // was Cancel (a Meta-ads visitor clicked around it and left, 2026-10-02).
+  const [failure, setFailure] = useState<{ message: string; instrument: string; noInstrument: boolean } | null>(null);
+  // The last file sent, so "try another instrument" needs no second upload pick.
+  // Gone after a reload; then the failed card only offers a new upload.
+  const [lastFile, setLastFile] = useState<File | null>(null);
+  // Set by "try another instrument": upload this file once the new instrument
+  // is the selected one (handleUpload reads the instrument from render state).
+  const [retry, setRetry] = useState<{ file: File; instrument: string } | null>(null);
 
   // The polling loop and the download helpers run long after the render that
   // started them, so they read the live values from refs, not from the
@@ -261,9 +270,12 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       currentName ? currentName.replace(/\.[^.]+$/, `${suffix}${extension}`) : `${selectedInstrument}_groovesheet${extension}`
     );
 
-    // Kept for the manual download button, and saved right away.
+    // Kept for the manual download button. Saved right away only for a full
+    // song: a preview is listened to here, and an automatic download on a phone
+    // hands the page to the download sheet (or, in the Facebook and Instagram
+    // in-app browsers, to another app) before the preview is heard.
     const objectUrl = URL.createObjectURL(blob);
-    triggerDownload(objectUrl, filename);
+    if (!isPreview) triggerDownload(objectUrl, filename);
     return { objectUrl, filename };
   };
 
@@ -272,7 +284,8 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   // you can actually print. Best-effort: a failed engraving must not turn a
   // finished transcription into an error.
   const downloadScorePdfFile = async (id: string | null) => {
-    if (!id || !SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
+    // Previews skip it, like the MusicXML above.
+    if (!id || id.startsWith('PRV') || !SCORE_INSTRUMENTS.includes(selectedInstrument)) return;
     try {
       const result = await downloadScorePdf(API_BASE_URL, id, getToken);
       if (!result?.blob) return;
@@ -375,7 +388,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               is_preview: isPreview,
             });
             if (isPreview) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
-            setError(data.message || 'Processing failed.');
+            const message = failureMessage(data) || 'Processing failed.';
+            setFailure({ message, instrument: selectedInstrument, noInstrument: isNoInstrumentMessage(message) });
+            setStatus(null);
+            setQueue(null);
+            setProgress(0);
+            // A reload must not resume (and re-fail) this job.
+            clearPersistence();
             stopped = true;
             return;
           }
@@ -427,6 +446,8 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     }
 
     setError(null);
+    setFailure(null);
+    setLastFile(fileToUpload);
     setStatus('uploading');
     trackFunnel(FUNNEL.UPLOAD_STARTED, {
       surface: UPLOAD_SOURCE,
@@ -495,12 +516,19 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     } catch (err) {
       console.error('Upload error:', err);
       const info = errorInfo(err);
+      trackFunnel(FUNNEL.UPLOAD_FAILED, {
+        surface: UPLOAD_SOURCE,
+        instrument: selectedInstrument,
+        status: info.status || 0,
+        signed_in: Boolean(isSignedIn),
+        message: (info.message || '').slice(0, 120) || undefined,
+      });
 
       // Out of minutes: say so, and offer the fix, instead of an error banner.
       if (info.status === 402) {
         setStatus(null);
         stopProgressSimulation();
-        showPaywall(info.message || null);
+        fullSong.showPaywall(info.message || null);
         return;
       }
 
@@ -534,6 +562,16 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     handleUpload(selectedFile);
   };
 
+  // `/?instrument=drums` (from a library song page's "try your own song")
+  // opens with that instrument picked.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('instrument');
+    if (wanted && VISIBLE_INSTRUMENTS.includes(wanted)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the landing URL
+      setSelectedInstrument(wanted);
+    }
+  }, []);
+
   // Recover a persisted workflow on mount: a reload mid-job resumes polling
   // instead of showing an empty card while the song is still processing.
   useEffect(() => {
@@ -549,6 +587,14 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     setProgress(saved.progress || 0);
     setSelectedInstrument(saved.instrument || 'piano');
     if (saved.fileName) setFile(saved.fileName);
+
+    // A finished preview comes back after a reload (sign-in and Checkout both
+    // reload the page): poll once more for its output files, which the viewer
+    // needs and localStorage does not keep. Nothing is downloaded again.
+    if (saved.jobId.startsWith('PRV') && isCompletedStatus(saved.status ?? null)) {
+      setTimeout(() => pollStatus(saved.jobId), 0);
+      return;
+    }
 
     // If the job was still in progress, resume polling
     const terminalStatuses = ['completed', 'succeeded', 'success', 'failed', 'error'];
@@ -583,6 +629,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     setResultMetadata({});
     setResultFiles(null);
     resultFilesRef.current = null;
+    setFailure(null);
     clearPersistence();
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -633,45 +680,51 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     handleDownloadFile(midiKey, '.mid', 'midi');
   };
 
-  // Promote a signed-in user's preview to a full run (no re-upload).
-  const handleUpgradeToFull = async () => {
-    if (!jobId || !jobId.startsWith('PRV')) return;
+  // Promote the preview to a full run (no re-upload). The paywall, sign-in and
+  // the return trip around it live in useFullSongFlow.
+  const handleUpgradeToFull = async (trigger: UpgradeTrigger): Promise<UpgradeOutcome> => {
+    if (!jobId || !jobId.startsWith('PRV')) return { kind: 'failed' };
     const previewId = jobId;
-    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument });
+    trackFunnel(FUNNEL.FULL_SONG_CLICK, { surface: UPLOAD_SOURCE, preview_id: previewId, instrument: selectedInstrument, trigger });
     try {
       const result = await upgradeToFull<{ workflow_id?: string }>(API_BASE_URL, jobId, getToken);
       const workflowId = result?.workflow_id;
-      if (workflowId) {
-        trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId });
-        // Replace the preview result with the new full workflow's polling.
-        prefetchedFilesRef.current = {};
-        if (downloadUrl) URL.revokeObjectURL(downloadUrl);
-        setDownloadUrl(null);
-        setDownloadFilename(null);
-        setJobId(workflowId);
-        setStatus('processing');
-        setProgress(0);
-        simulateProgress();
-        persist({ jobId: workflowId, status: 'processing', progress: 0, instrument: selectedInstrument, fileName: fileName ?? undefined });
-        setTimeout(() => pollStatus(workflowId), 1000);
-      }
+      if (!workflowId) return { kind: 'failed' };
+      trackFunnel(FUNNEL.FULL_SONG_STARTED, { surface: UPLOAD_SOURCE, preview_id: previewId, workflow_id: workflowId, trigger });
+      // Replace the preview result with the new full workflow's polling.
+      prefetchedFilesRef.current = {};
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+      setDownloadUrl(null);
+      setDownloadFilename(null);
+      setJobId(workflowId);
+      setStatus('processing');
+      setProgress(0);
+      simulateProgress();
+      persist({ jobId: workflowId, status: 'processing', progress: 0, instrument: selectedInstrument, fileName: fileName ?? undefined });
+      setTimeout(() => pollStatus(workflowId), 1000);
+      return { kind: 'started' };
     } catch (err) {
       const info = errorInfo(err);
-      // Out of minutes: say so, and offer the fix, instead of an error banner.
-      if (info.status === 402) {
-        showPaywall(info.message || null, previewId);
-        return;
-      }
+      // Out of minutes: the flow opens the paywall instead of an error banner.
+      if (info.status === 402) return { kind: 'out_of_minutes', message: info.message || null };
       setError(info.message || 'Failed to start full song processing.');
+      return { kind: 'failed' };
     }
   };
 
-  // preview_id is already stashed in localStorage at upload time; after
-  // signup the app-level hook claims it via /preview/{id}/claim.
-  const handleSignUpToUnlock = () => {
-    trackFunnel(FUNNEL.UNLOCK_CLICK, { surface: UPLOAD_SOURCE, preview_id: jobId || undefined, instrument: selectedInstrument });
-    openLoginModal();
-  };
+  const fullSong = useFullSongFlow({
+    surface: UPLOAD_SOURCE,
+    jobId,
+    ready: uiState === 'success',
+    instrument: selectedInstrument,
+    fileName,
+    // Sign-in and Checkout reload the page; the recovery effect above brings
+    // the preview back from this.
+    persistPreview: () => {
+      if (jobId) persist({ jobId, status: 'completed', progress: 100, instrument: selectedInstrument, fileName: fileName ?? undefined });
+    },
+    upgrade: handleUpgradeToFull,
+  });
 
   // Browse is open to anonymous visitors too: they get the preview.
   const handleBrowseClick = () => {
@@ -691,8 +744,11 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     setIsDragging(false);
   };
 
+  // The drop zone sits inside the card and both listen for drops; without
+  // stopPropagation one dropped file was uploaded twice.
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
     if (uiState === 'success') return;
 
@@ -711,17 +767,84 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     handleBrowseClick();
   };
 
+  // "Try another instrument" on the failed card: the instrument change has to
+  // render before handleUpload can see it, so the upload starts from here.
+  useEffect(() => {
+    if (!retry || retry.instrument !== selectedInstrument) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- consumes the one-shot retry request
+    setRetry(null);
+    setFile(retry.file.name);
+    void handleUpload(retry.file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a retry is requested or its instrument lands
+  }, [retry, selectedInstrument]);
+
+  const instrumentTabs = [
+    { value: 'vocals', label: t('hero.instruments.vocal'), icon: LiaMicrophoneAltSolid },
+    { value: 'drums', label: t('hero.instruments.drums'), icon: LuDrum },
+    { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
+    { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
+    { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon },
+  ].filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value));
+
+  const tryInstrument = (instrument: string) => {
+    const file = lastFile;
+    phLog('preview_failed_next_step', { choice: 'instrument', instrument, from: failure?.instrument ?? '', surface: UPLOAD_SOURCE });
+    setFailure(null);
+    if (file) setRetry({ file, instrument });
+    setSelectedInstrument(instrument);
+  };
+
+  const renderFailedState = (f: NonNullable<typeof failure>) => {
+    const failedLabel = instrumentTabs.find((i) => i.value === f.instrument)?.label ?? f.instrument;
+    const others = instrumentTabs.filter((i) => i.value !== f.instrument);
+    return (
+      <div className="upload-failed">
+        <h3 className="upload-failed-title">
+          {f.noInstrument ? t('hero.failed.noInstrumentTitle', { instrument: failedLabel }) : t('hero.failed.title')}
+        </h3>
+        <p className="upload-failed-body">{f.noInstrument ? t('hero.failed.noInstrumentBody') : f.message}</p>
+        {lastFile && others.length > 0 && (
+          <>
+            <p className="upload-failed-label">{t('hero.failed.tryAnother')}</p>
+            <div className="instrument-tabs upload-failed-instruments">
+              {others.map((instrument) => {
+                const IconComp = instrument.icon;
+                return (
+                  <button key={instrument.value} className="instrument-tab" onClick={() => tryInstrument(instrument.value)}>
+                    <IconComp size={22.74} />
+                    <span>{instrument.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+        <div className="upload-failed-actions">
+          <Link
+            href="/stem-splitter"
+            className="upload-failed-btn upload-failed-btn--primary"
+            onClick={() => phLog('preview_failed_next_step', { choice: 'stem_splitter', from: f.instrument, surface: UPLOAD_SOURCE })}
+          >
+            {t('hero.failed.splitStems')}
+          </Link>
+          <button
+            className="upload-failed-btn"
+            onClick={() => {
+              phLog('preview_failed_next_step', { choice: 'new_song', from: f.instrument, surface: UPLOAD_SOURCE });
+              resetUpload();
+            }}
+          >
+            {t('hero.failed.newSong')}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderIdleState = () => (
     <>
       <div className="instrument-tabs">
-        {[
-          { value: 'vocals', label: t('hero.instruments.vocal'), icon: LiaMicrophoneAltSolid },
-          { value: 'drums', label: t('hero.instruments.drums'), icon: LuDrum },
-          { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
-          { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
-          { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon },
-        ]
-          .filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value))
+        {instrumentTabs
           .map((instrument) => {
             const IconComp = instrument.icon;
             const isSelected = selectedInstrument === instrument.value;
@@ -873,7 +996,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
             style={{ display: 'none' }}
           />
 
-          {uiState === 'idle' && renderIdleState()}
+          {uiState === 'idle' && (failure ? renderFailedState(failure) : renderIdleState())}
           {uiState === 'uploading' && renderUploadingState()}
           {pollFailures >= 3 && uiState !== 'idle' && uiState !== 'success' && (
             <p className="cold-start-sub" style={{ margin: '0 0 10px', opacity: 0.85 }}>
@@ -900,13 +1023,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               onReset={resetUpload}
               downloadError={downloadError}
               isSignedIn={isSignedIn}
-              onUpgradeToFull={handleUpgradeToFull}
-              onSignUpToUnlock={handleSignUpToUnlock}
+              onUpgradeToFull={fullSong.requestFullSong}
+              onSignUpToUnlock={fullSong.getFullSongSignedOut}
               title={typeof resultMetadata.title === 'string' ? resultMetadata.title : undefined}
               surface={UPLOAD_SOURCE}
             />
           )}
-          {paywall}
+          {fullSong.paywall}
 
           {/* Error message overlay */}
           {error && (

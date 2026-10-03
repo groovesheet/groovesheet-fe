@@ -68,6 +68,14 @@
       "guitar": "Guitar",
       "bass": "Bass"
     },
+    "failed": {
+      "title": "This preview didn't work",
+      "noInstrumentTitle": "No {instrument} found in this track",
+      "noInstrumentBody": "The separated part came out silent, so there was nothing to write down. The song itself is fine: try another instrument, or split it into stems to hear what's in it.",
+      "tryAnother": "Try the same song with:",
+      "splitStems": "Split into stems instead",
+      "newSong": "Upload a different song"
+    },
     "errors": {
       "fileFormat": "That format isn't supported \u2014 we accept MP3, WAV, FLAC, OGG and M4A.",
       "fileSize": "File size too large. Max 32MB."
@@ -206,7 +214,13 @@
     "minutesPerMonth": "{minutes} minutes / month",
     "minutesAdded": "{minutes} minutes added",
     "canceledNotice": "Checkout canceled \u2014 you were not charged.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "payNote": {
+      "plansCardOnly": "Plans renew automatically and are billed to a bank card.",
+      "walletsOnTopups": "To pay with Alipay or WeChat Pay, choose a one-time top-up.",
+      "topupsWallets": "One-time payment by Alipay, WeChat Pay or card. Nothing renews.",
+      "topupsOnce": "One-time payment. Nothing renews."
+    }
   },
   "testimonials": {
     "title": "Trusted by Musicians and Educators",
@@ -307,7 +321,9 @@
     "emailPlaceholder": "groovesheet@gmail.com",
     "confirm": "Confirm",
     "codePrompt": "Please enter your 6-digit verification code:",
-    "closeAria": "Close modal"
+    "closeAria": "Close modal",
+    "mainlandHint": "In mainland China? Google and Facebook may not open there. Email or Apple works.",
+    "codeHint": "Sent to {email}. It can take a minute; check spam or promotions if it is not in your inbox."
   },
   "campaign": {
     "fallbackGroup": "your group",
@@ -443,6 +459,11 @@
     }
   },
   "song": {
+    "ownTrack": {
+      "title": "Have a song that isn't in the library?",
+      "body": "Upload your own track and get a free 10-second preview of the same thing.",
+      "cta": "Try your own song"
+    },
     "viewers": {
       "loadingScore": "Loading score…",
       "noNotesTitle": "No notes detected",
@@ -1114,5 +1135,22 @@
         "midiTurn": "It's your turn. Converting your audio now."
       }
     }
+  },
+  "paywall": {
+    "titleSignedOut": "Get the full song",
+    "titleOut": "You're out of minutes",
+    "bodySignedOut": "The 10-second preview is free. The full song uses minutes from a minute pack or a monthly plan. Pick one and sign in to pay; you come straight back to this song.",
+    "bodyOut": "Transcribing the full song uses minutes from a plan or a minute pack.",
+    "previewStays": "Your preview stays here while you top up.",
+    "payWallets": "Minute packs are a one-time payment by Alipay, WeChat Pay or card. Monthly plans are card-only.",
+    "payOnce": "Minute packs are a one-time payment. Monthly plans renew and are card-only.",
+    "minutes": "{minutes} minutes",
+    "priceOnce": "{price} once",
+    "opening": "Opening…",
+    "choose": "Choose",
+    "buy": "Buy",
+    "seePlans": "See monthly plans",
+    "haveAPlan": "I have a plan: sign in",
+    "notNow": "Not now"
   }
 }

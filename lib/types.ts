@@ -133,6 +133,8 @@ export interface BillingCatalog {
   plans: BillingPlan[];
   topups: BillingTopup[];
   currency?: string;
+  /** One-time wallets Stripe takes for top-ups here ('alipay', 'wechat_pay'); plans are card-only. */
+  wallets?: string[];
   [key: string]: unknown;
 }
 

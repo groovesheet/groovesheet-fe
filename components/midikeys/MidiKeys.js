@@ -1,10 +1,22 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import StatusMessage from '@/components/ui/StatusMessage';
 import { buildKeyLayout, keyAtPoint, noteName } from '../bistable/keyLayout';
 import { createLooper } from './looper';
-import { createSoundEngine, PIANO_SOUNDS } from './soundEngine';
+import {
+  createSoundEngine, DEFAULT_TONE_HZ, DEFAULT_SOUND, SOUND_FAMILIES, soundById, soundTitle, stepSound, isKnownSound,
+} from './soundEngine';
+import { SAMPLE_SETS, instrumentForProgram } from './instruments';
+import { findLaunchkeyOutput, showLines, TARGET_GLOBAL, TARGET_KNOB_1 } from './launchkeyDisplay';
 import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_ROWS, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
+import { bendAmount } from './wheels';
+import { FX, DEFAULT_FX, DEFAULT_KNOBS, PAGE_COUNT, PAGE_NAMES, PAGE_SCREEN_NAMES, fxOnPage, knobForMessage, sanitizeFx } from './fx';
+import Knob from './Knob';
+import Fader from './Fader';
+import {
+  FADERS, DEFAULT_FADERS, DEFAULT_FADER_BINDINGS, faderForMessage, faderGain, faderLabel, sanitizeFaders, FIRST_FADER_CC,
+} from './faders';
 import './MidiKeys.css';
 
 /**
@@ -19,6 +31,13 @@ import './MidiKeys.css';
  *     first note, then layers overdubs. On a Launchkey MK4 the Play button
  *     (MIDI Start) is the loop button and Stop stops / clears; both can be
  *     re-learnt from any button. Space and Esc do the same from the computer.
+ *   - The eight knobs play a stage-piano effects section on the keys (Drive,
+ *     Treble, Bass, Tremolo, Phaser, Delay amount and time, Reverb), each
+ *     re-learnable from any knob; see fx.js.
+ *   - The pitch wheel bends the notes you are playing (±2 semitones by default,
+ *     the GM convention) and the mod wheel adds vibrato. The keys' sound can be
+ *     run through a band-pass filter (the "Aluminium band-pass" preset), whose
+ *     centre is the Tone slider.
  *
  * Its sibling /bistable is the projection-mapped installation view; this page
  * is the one to keep open while practising.
@@ -29,6 +48,9 @@ import './MidiKeys.css';
  */
 
 const STORAGE_KEY = 'gs.midiKeyboard.v1';
+// Bumped when a default changes enough that a saved value should be reset to it.
+// v3: levels moved from `volumes` (gains) to `faders` (positions).
+const SETTINGS_VERSION = 3;
 const LOOKAHEAD_SEC = 0.12; // how far ahead loop events are scheduled
 const HIDDEN_LOOKAHEAD_SEC = 1.2; // background tabs only get ~1 timer per second
 const TICK_MS = 25;
@@ -46,9 +68,26 @@ const DEFAULT_SETTINGS = {
   padMap: DEFAULT_PAD_MAP,
   drumChannel: DRUM_CHANNEL,
   bindings: DEFAULT_BINDINGS,
-  piano: PIANO_SOUNDS[0].id,
-  volumes: { master: 0.9, piano: 1, drums: 0.9, loop: 0.9 },
+  piano: DEFAULT_SOUND, // the keys' sound: a GM instrument id, or one of ours
+  sampleSet: SAMPLE_SETS[0].id,
+  faders: DEFAULT_FADERS, // 0..1 positions, see faders.js
+  faderBindings: DEFAULT_FADER_BINDINGS,
+  trimEnd: true, // cut the silence after the last note when the first take is closed
+  onePass: true, // an overdub ends by itself one loop after its first note
+  fx: DEFAULT_FX, // 0..1 per effect
+  knobs: DEFAULT_KNOBS, // controls learnt to one effect each
+  fxPage: 0, // the page of effects the eight knobs turn
+  bendRange: 2, // semitones each way
+  tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
 };
+
+const BEND_RANGES = [1, 2, 7, 12];
+const TONE_MIN = 250;
+const TONE_MAX = 6000;
+// The Tone slider is logarithmic: equal travel = equal musical interval.
+const toneToSlider = (hz) => Math.log(hz / TONE_MIN) / Math.log(TONE_MAX / TONE_MIN);
+const sliderToTone = (x) => Math.round(TONE_MIN * Math.pow(TONE_MAX / TONE_MIN, x));
+
 
 function loadSettings() {
   try {
@@ -59,12 +98,26 @@ function loadSettings() {
       Object.entries(saved.padMap).forEach(([note, id]) => { if (voiceById(id)) padMap[note] = id; });
     }
     const ch = Number(saved.drumChannel);
+    const fx = sanitizeFx(saved.fx, saved.knobs);
+    // Levels saved as gains before the faders carry over; v1's drums were the
+    // old loud default, so those start from the new one.
+    const oldVolumes = saved.volumes && (saved.version || 1) < 2 ? { ...saved.volumes, drums: undefined } : saved.volumes;
+    const mixer = sanitizeFaders(saved.faders, saved.faderBindings, saved.faders ? null : oldVolumes);
     return {
       padMap,
       drumChannel: Number.isInteger(ch) && ch >= 0 && ch <= 15 ? ch : DRUM_CHANNEL,
       bindings: sanitizeBindings(saved.bindings),
-      piano: PIANO_SOUNDS.some((p) => p.id === saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
-      volumes: { ...DEFAULT_SETTINGS.volumes, ...(saved.volumes || {}) },
+      piano: isKnownSound(saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
+      sampleSet: SAMPLE_SETS.some((x) => x.id === saved.sampleSet) ? saved.sampleSet : DEFAULT_SETTINGS.sampleSet,
+      faders: mixer.values,
+      faderBindings: mixer.bindings,
+      trimEnd: saved.trimEnd !== false,
+      fx: fx.values,
+      knobs: fx.knobs,
+      fxPage: Number.isInteger(saved.fxPage) && saved.fxPage >= 0 && saved.fxPage < PAGE_COUNT ? saved.fxPage : 0,
+      onePass: saved.onePass !== false,
+      bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
+      tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
     };
   } catch (e) {
     return DEFAULT_SETTINGS;
@@ -72,7 +125,9 @@ function loadSettings() {
 }
 
 function saveSettings(settings) {
-  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) { /* private window */ }
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...settings, version: SETTINGS_VERSION }));
+  } catch (e) { /* private window */ }
 }
 
 const fmtTime = (sec) => {
@@ -87,7 +142,53 @@ const LOOP_COPY = {
   recording: { label: 'Recording', hint: 'Press again to close the loop.' },
   playing: { label: 'Playing', hint: 'Press to layer an overdub.' },
   overdub: { label: 'Overdub', hint: 'Press to stop layering.' },
+  overdubWaiting: { label: 'Overdub', hint: 'Play to start the layer. It records one pass, then stops.' },
   stopped: { label: 'Stopped', hint: 'Press to play from the top. Stop again clears.' },
+};
+
+// The line under each non-layer fader.
+const FADER_SUBS = {
+  keys: (st) => soundById(st.piano).label,
+  drums: () => 'Pads',
+  loop: () => 'All layers',
+  master: () => 'Output',
+};
+
+/** Per mixer layer slot (0..4), the instruments its notes were played on. */
+function layerSummary(events) {
+  const names = Array.from({ length: 5 }, () => new Set());
+  events.forEach((e) => {
+    const slot = Math.min(e.layer || 0, 4);
+    names[slot].add(e.type === 'drum' ? 'Drums' : (e.sound ? soundById(e.sound).label : 'Keys'));
+  });
+  return names.map((set) => [...set].join(' + '));
+}
+
+// What each part of the keyboard does, for the controls map.
+function controlMap(settings) {
+  const sound = soundById(settings.piano);
+  return [
+    ['Keys', `Play the sound: ${soundTitle(sound)}`],
+    ['Sustain pedal', 'Holds the notes, and they record into the loop held'],
+    ['Pitch wheel', `Bends the notes you hold, ±${settings.bendRange} semitones`],
+    ['Mod wheel', sound.filter ? 'Auto-wah and tremolo on this sound' : 'Vibrato'],
+    ['Pads', `Drums, in Drum mode on channel ${settings.drumChannel + 1}; change a pad's sound in Drum pads`],
+    ['Knobs 1-8', `The highlighted effects row (now row ${settings.fxPage + 1})`],
+    ['Faders 1-9 (CC 71-79)', 'Keys, Drums, Take 1, Layers 2-5+, Loop, Master (the Mixer)'],
+    ['Play ▶ / Record ● / Loop', 'Loop button: arm, close the loop, overdub'],
+    ['Stop ■', 'Stop the loop; press again to clear'],
+    ['Track ◄ ►', 'Previous / next sound'],
+    ['Program change', 'Picks that General MIDI instrument'],
+  ];
+}
+
+// The controller buttons each row of bindings shows, and the computer key for it.
+const BINDING_ROWS = {
+  loop: { label: 'Loop button', key: 'Space' },
+  stop: { label: 'Stop / clear', key: 'Esc' },
+  prevSound: { label: 'Previous sound', key: '[' },
+  nextSound: { label: 'Next sound', key: ']' },
+  knobPage: { label: 'Knob page', key: null },
 };
 
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
@@ -104,6 +205,16 @@ export default function MidiKeys() {
   const learningRef = useRef(null);
   learningRef.current = learning;
   const [editPads, setEditPads] = useState(false);
+  const [showControls, setShowControls] = useState(false); // the full-screen controls map
+  const showControlsRef = useRef(false);
+  showControlsRef.current = showControls;
+  const [toast, setToast] = useState(null); // { id, title, detail }: sound / page changes
+  const lkOutRef = useRef(null); // { output, sku }: the Launchkey screen, if SysEx is allowed
+  const showSoundRef = useRef(() => {}); // names the sound on screen once the Launchkey appears
+  const knobScreenRef = useRef(new Map()); // slot -> { timer, last } throttle for knob screens
+  const [learningKnob, setLearningKnob] = useState(null); // effect id
+  const learningKnobRef = useRef(null);
+  learningKnobRef.current = learningKnob;
 
   const engineRef = useRef(null);
   const looperRef = useRef(null);
@@ -115,6 +226,10 @@ export default function MidiKeys() {
   const trailsRef = useRef([]); // { midi, start, end|null, loop, vel, layer }
   const liveTrailRef = useRef(new Map()); // midi -> its open live trail
   const flashesRef = useRef([]); // { note, at, loop }
+  const bendRef = useRef(0); // pitch wheel, -1..1
+  const modRef = useRef(0); // mod wheel, 0..127
+  const bendFillRef = useRef(null);
+  const modFillRef = useRef(null);
 
   const canvasRef = useRef(null);
   const laneRef = useRef(null);
@@ -129,11 +244,56 @@ export default function MidiKeys() {
   const lastInfoKeyRef = useRef('');
   const refreshLoopInfo = useCallback(() => {
     const info = looperRef.current.info(nowSec());
-    const key = `${info.state}|${info.length.toFixed(2)}|${Math.floor(info.elapsed * 10)}|${info.count}|${info.layers}`;
+    const key = `${info.state}|${info.length.toFixed(2)}|${Math.floor(info.elapsed * 10)}|${info.count}|${info.layers}|${info.overdubWaiting}|${Math.ceil(info.overdubLeft * 10)}`;
     if (key === lastInfoKeyRef.current) return;
     lastInfoKeyRef.current = key;
     setLoopInfo(info);
   }, []);
+
+  // ---- the Launchkey screen and the on-page toast -------------------------
+
+  const sendToScreen = useCallback((target, lines) => {
+    const lk = lkOutRef.current;
+    if (!lk) return;
+    try { showLines(lk.sku, target, lines).forEach((msg) => lk.output.send(msg)); } catch (e) { /* port gone */ }
+  }, []);
+
+  const announce = useCallback((title, detail, screenLines) => {
+    setToast({ id: Date.now(), title, detail });
+    sendToScreen(TARGET_GLOBAL, screenLines);
+  }, [sendToScreen]);
+
+  // A knob's name and value on its own screen, at most every 40 ms per knob
+  // (the last value always lands).
+  const showKnob = useCallback((knob) => {
+    const f = FX.find((x) => x.id === knob.id);
+    if (!f || !lkOutRef.current) return;
+    const name = ['Amount', 'Time', 'Feedback'].includes(f.label) ? `${f.group} ${f.label.toLowerCase()}` : f.label;
+    const send = () => {
+      const lines = [name, f.fmt(settingsRef.current.fx[f.id])];
+      // CC 21-28 are the knobs themselves; a learnt control uses the general display
+      sendToScreen(knob.viaKnob ? TARGET_KNOB_1 + knob.slot : TARGET_GLOBAL, lines);
+    };
+    const st = knobScreenRef.current.get(knob.slot) || {};
+    const now = performance.now();
+    clearTimeout(st.timer);
+    if (!st.last || now - st.last > 40) {
+      st.last = now;
+      send();
+    } else {
+      st.timer = setTimeout(() => { st.last = performance.now(); send(); }, 40);
+    }
+    knobScreenRef.current.set(knob.slot, st);
+  }, [sendToScreen]);
+
+  // A fader's name and level on the Launchkey: its own display (targets
+  // 05h-0Dh) when it is one of the nine faders, else the general one.
+  const showFader = useCallback((fader, onFader) => {
+    if (!lkOutRef.current) return;
+    const f = FADERS.find((x) => x.id === fader.id);
+    if (!f) return;
+    sendToScreen(onFader ? 0x05 + fader.slot : TARGET_GLOBAL, [f.label, faderLabel(fader.value)]);
+  }, [sendToScreen]);
 
   // ---- note handling -----------------------------------------------------
 
@@ -161,7 +321,8 @@ export default function MidiKeys() {
     endLiveTrail(midiNote, now);
     heldRef.current.set(midiNote, vel);
     engineRef.current?.pianoOn(midiNote, vel);
-    looperRef.current.pianoOn(midiNote, vel, now);
+    const st = settingsRef.current;
+    looperRef.current.pianoOn(midiNote, vel, now, { sound: st.piano, set: st.sampleSet, level: faderGain(st.faders.keys) });
     const trail = { midi: midiNote, start: now, end: null, loop: false, vel };
     trailsRef.current.push(trail);
     liveTrailRef.current.set(midiNote, trail);
@@ -200,7 +361,7 @@ export default function MidiKeys() {
     if (!voice) return;
     const now = nowSec();
     engineRef.current?.drum(voice, vel);
-    looperRef.current.drum(note, voice, vel, now);
+    looperRef.current.drum(note, voice, vel, now, { level: faderGain(settingsRef.current.faders.drums) });
     flashesRef.current.push({ note, at: now, loop: false });
     refreshLoopInfo();
   }, [refreshLoopInfo]);
@@ -216,12 +377,21 @@ export default function MidiKeys() {
   }, []);
 
   const loopAction = useCallback((action) => {
+    if (action === 'prevSound' || action === 'nextSound') {
+      setSettings((s) => ({ ...s, piano: stepSound(s.piano, action === 'nextSound' ? 1 : -1) }));
+      return;
+    }
+    if (action === 'knobPage') {
+      setSettings((s) => ({ ...s, fxPage: (s.fxPage + 1) % PAGE_COUNT }));
+      return;
+    }
     const now = nowSec();
     const looper = looperRef.current;
+    const opts = { trimEnd: settingsRef.current.trimEnd, onePass: settingsRef.current.onePass };
     if (action === 'loop') {
-      looper.press(now);
+      looper.press(now, opts);
     } else if (action === 'stop') {
-      looper.stop(now);
+      looper.stop(now, opts);
       if (looper.state !== 'playing' && looper.state !== 'overdub') silenceLoop(now);
     } else if (action === 'undo') {
       looper.undoLayer(now);
@@ -237,6 +407,56 @@ export default function MidiKeys() {
   const onMidiMessage = useCallback((data) => {
     const status = data[0];
     if (status === 0xf8 || status === 0xfe) return; // clock, active sensing
+
+    if (learningKnobRef.current && (status & 0xf0) === 0xb0) {
+      const cc = data[1];
+      if (cc !== 1 && cc !== 64 && cc < 120) {
+        const id = learningKnobRef.current;
+        const channel = status & 0x0f;
+        if (FADERS.some((f) => f.id === id)) {
+          setSettings((s) => ({
+            ...s,
+            faderBindings: s.faderBindings.map((b) => {
+              if (b.id === id) return { id, cc, channel };
+              return b.cc === cc && (b.channel == null || b.channel === channel) ? { ...b, cc: null } : b;
+            }),
+            faders: { ...s.faders, [id]: data[2] / 127 },
+          }));
+          setLearningKnob(null);
+          return;
+        }
+        setSettings((s) => ({
+          ...s,
+          // the control now belongs to this effect alone
+          knobs: s.knobs.map((k) => {
+            if (k.id === id) return { id, cc, channel };
+            return k.cc === cc && (k.channel == null || k.channel === channel) ? { ...k, cc: null } : k; // unassigned
+          }),
+          fx: { ...s.fx, [id]: data[2] / 127 },
+        }));
+        setLearningKnob(null);
+        return;
+      }
+    }
+
+    const knob = knobForMessage(settingsRef.current.knobs, data, settingsRef.current.fxPage);
+    if (knob) {
+      // settingsRef first, so the screen shows this value, not the last render's
+      settingsRef.current = { ...settingsRef.current, fx: { ...settingsRef.current.fx, [knob.id]: knob.value } };
+      setSettings((s) => ({ ...s, fx: { ...s.fx, [knob.id]: knob.value } }));
+      const cc = data[1];
+      showKnob({ ...knob, viaKnob: cc >= 21 && cc <= 28 && knob.slot === cc - 21 });
+      return;
+    }
+
+    const fader = faderForMessage(settingsRef.current.faderBindings, data);
+    if (fader) {
+      settingsRef.current = { ...settingsRef.current, faders: { ...settingsRef.current.faders, [fader.id]: fader.value } };
+      setSettings((s) => ({ ...s, faders: { ...s.faders, [fader.id]: fader.value } }));
+      // the fader's own display (targets 05h-0Dh) when it is the fader's default CC
+      showFader(fader, data[1] === FIRST_FADER_CC + fader.slot);
+      return;
+    }
 
     if (learningRef.current) {
       const press = pressFromMessage(data, { strict: true });
@@ -265,9 +485,27 @@ export default function MidiKeys() {
     }
     if (cmd === 0x90 && d2 > 0) keyDown(d1, d2);
     else if (cmd === 0x80 || cmd === 0x90) keyUp(d1);
-    else if (cmd === 0xb0 && d1 === 64) setSustain(d2 >= 64);
-    else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
-  }, [allNotesOff, drumHit, keyDown, keyUp, loopAction, setSustain]);
+    else if (cmd === 0xc0) {
+      // Program Change: the General MIDI instrument with that number
+      const inst = instrumentForProgram(d1);
+      if (inst) setSettings((s) => ({ ...s, piano: inst.id }));
+    }
+    else if (cmd === 0xe0) {
+      bendRef.current = bendAmount(d1, d2);
+      engineRef.current?.setPitchBend(bendRef.current, settingsRef.current.bendRange);
+    } else if (cmd === 0xb0 && d1 === 1) {
+      modRef.current = d2;
+      engineRef.current?.setModulation(d2);
+    } else if (cmd === 0xb0 && d1 === 64) setSustain(d2 >= 64);
+    else if (cmd === 0xb0 && d1 === 121) {
+      // Reset All Controllers: wheels back to rest, pedal up.
+      bendRef.current = 0;
+      modRef.current = 0;
+      engineRef.current?.setPitchBend(0, settingsRef.current.bendRange);
+      engineRef.current?.setModulation(0);
+      setSustain(false);
+    } else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
+  }, [allNotesOff, drumHit, keyDown, keyUp, loopAction, setSustain, showKnob, showFader]);
 
   const onMidiRef = useRef(onMidiMessage);
   onMidiRef.current = onMidiMessage;
@@ -293,10 +531,16 @@ export default function MidiKeys() {
         }
         if (input.state !== 'disconnected') list.push({ id: input.id, name: input.name });
       });
-      setMidi({ status: 'ready', error: null, inputs: list });
+      const hadScreen = !!lkOutRef.current;
+      lkOutRef.current = access.sysexEnabled && access.outputs ? findLaunchkeyOutput(access.outputs.values()) : null;
+      setMidi({ status: 'ready', error: null, inputs: list, screen: !!lkOutRef.current });
+      if (lkOutRef.current && !hadScreen) showSoundRef.current();
     };
 
-    navigator.requestMIDIAccess({ sysex: false })
+    // SysEx lets the page write to the Launchkey's screen. If that permission
+    // is refused, ask again without it: everything else works the same.
+    navigator.requestMIDIAccess({ sysex: true })
+      .catch(() => navigator.requestMIDIAccess({ sysex: false }))
       .then((a) => {
         if (cancelled) return;
         access = a;
@@ -333,13 +577,56 @@ export default function MidiKeys() {
     };
   }, []);
 
-  useEffect(() => { engineRef.current?.loadPiano(settings.piano); }, [settings.piano]);
+  useEffect(() => { engineRef.current?.loadPiano(settings.piano, settings.sampleSet); }, [settings.piano, settings.sampleSet]);
 
+  // Name the sound on the page and on the Launchkey's screen whenever it changes.
+  const showSound = useCallback(() => {
+    const sound = soundById(settingsRef.current.piano);
+    const set = SAMPLE_SETS.find((x) => x.id === settingsRef.current.sampleSet);
+    announce(soundTitle(sound), set ? `${set.label} samples` : '', ['Sound', soundTitle(sound), set ? set.label : '']);
+  }, [announce]);
+  useEffect(() => { showSoundRef.current = showSound; }, [showSound]);
+  const firstSoundRef = useRef(true);
+  useEffect(() => {
+    if (firstSoundRef.current) { firstSoundRef.current = false; return; }
+    showSound();
+  }, [settings.piano, settings.sampleSet, showSound]);
+
+  const firstPageRef = useRef(true);
+  useEffect(() => {
+    if (firstPageRef.current) { firstPageRef.current = false; return; }
+    const p = settings.fxPage;
+    announce(`Knob page ${p + 1}`, PAGE_NAMES[p], ['Knobs', `Page ${p + 1} of ${PAGE_COUNT}`, PAGE_SCREEN_NAMES[p]]);
+  }, [settings.fxPage, announce]);
+
+  // Push only the faders that moved.
+  const appliedFadersRef = useRef({});
   useEffect(() => {
     const e = engineRef.current;
     if (!e) return;
-    Object.entries(settings.volumes).forEach(([k, v]) => e.setVolume(k, v));
-  }, [settings.volumes]);
+    Object.entries(settings.faders).forEach(([k, v]) => {
+      if (appliedFadersRef.current[k] === v) return;
+      appliedFadersRef.current[k] = v;
+      e.setLevel(k, faderGain(v));
+    });
+  }, [settings.faders]);
+
+  useEffect(() => { engineRef.current?.setTone(settings.tone); }, [settings.tone]);
+
+  // Push only the effects that changed (a drive change rebuilds its curve).
+  const appliedFxRef = useRef({});
+  useEffect(() => {
+    const e = engineRef.current;
+    if (!e) return;
+    Object.entries(settings.fx).forEach(([id, v]) => {
+      if (appliedFxRef.current[id] === v) return;
+      appliedFxRef.current[id] = v;
+      e.setFx(id, v);
+    });
+  }, [settings.fx]);
+
+  // A new range re-applies the wheel where it is now.
+  useEffect(() => { engineRef.current?.setPitchBend(bendRef.current, settings.bendRange); }, [settings.bendRange]);
 
   // ---- loop scheduler ----------------------------------------------------
 
@@ -354,15 +641,31 @@ export default function MidiKeys() {
           flashesRef.current.push({ note: ev.note, at, loop: true });
         }
       });
+      // A one-pass overdub can end on its own; show that even when no frame is drawn.
+      refreshLoopInfo();
     }, TICK_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [refreshLoopInfo]);
 
   // ---- computer keyboard -------------------------------------------------
 
   useEffect(() => {
     const onKey = (e) => {
       if (e.repeat || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'Escape' && learningKnobRef.current) {
+        setLearningKnob(null);
+        return;
+      }
+      // Esc closes the controls map (after cancelling a learn inside it)
+      if (e.key === 'Escape' && showControlsRef.current) {
+        if (learningRef.current) setLearning(null);
+        else setShowControls(false);
+        return;
+      }
+      if (e.key === '[' || e.key === ']') {
+        loopAction(e.key === ']' ? 'nextSound' : 'prevSound');
+        return;
+      }
       if (e.code === 'Space') {
         e.preventDefault();
         loopAction('loop');
@@ -394,7 +697,18 @@ export default function MidiKeys() {
       drawLane(laneRef.current, looperRef.current, now);
       updateRing(ringRef.current, looperRef.current, now);
       updatePads(now);
+      updateWheels();
       refreshLoopInfo();
+    };
+
+    const updateWheels = () => {
+      const b = bendRef.current;
+      if (bendFillRef.current) {
+        // fills from the centre line, up for sharp, down for flat
+        bendFillRef.current.style.top = `${50 - Math.max(b, 0) * 50}%`;
+        bendFillRef.current.style.height = `${Math.abs(b) * 50}%`;
+      }
+      if (modFillRef.current) modFillRef.current.style.height = `${(modRef.current / 127) * 100}%`;
     };
 
     const drawVisualizer = (canvas, now) => {
@@ -537,7 +851,7 @@ export default function MidiKeys() {
   // ---- settings helpers ----------------------------------------------------
 
   const setPad = (note, id) => setSettings((s) => ({ ...s, padMap: { ...s.padMap, [note]: id } }));
-  const setVolume = (k, v) => setSettings((s) => ({ ...s, volumes: { ...s.volumes, [k]: v } }));
+  const setFader = (k, v) => setSettings((s) => ({ ...s, faders: { ...s.faders, [k]: v } }));
 
   const downloadLoop = async () => {
     const looper = looperRef.current;
@@ -545,18 +859,35 @@ export default function MidiKeys() {
     const { Midi } = await import('@tonejs/midi');
     const file = new Midi();
     file.header.name = 'GrooveSheet loop';
-    const keys = file.addTrack();
-    keys.name = 'Keys';
-    keys.channel = 0;
-    const drums = file.addTrack();
-    drums.name = 'Drums';
-    drums.channel = 9;
+    // One track per instrument the loop was played on, with its General MIDI
+    // program, and the level each note was played at folded into its velocity.
+    const tracks = new Map();
+    const trackFor = (soundId) => {
+      if (!tracks.has(soundId)) {
+        const sound = soundById(soundId);
+        const t = file.addTrack();
+        t.name = sound.label;
+        t.channel = tracks.size >= 9 ? tracks.size + 1 : tracks.size; // skip channel 10 (drums)
+        const program = Number.isInteger(sound.program) ? sound.program
+          : (soundById(sound.after) || {}).program;
+        if (Number.isInteger(program)) t.instrument.number = program;
+        tracks.set(soundId, t);
+      }
+      return tracks.get(soundId);
+    };
+    let drums = null;
+    const vel = (ev) => Math.min(1, (ev.vel / 127) * Math.min(Number.isFinite(ev.level) ? ev.level : 1, 1.25));
     looper.events.forEach((ev) => {
       if (ev.type === 'piano') {
-        keys.addNote({ midi: ev.midi, time: ev.t, duration: ev.dur, velocity: ev.vel / 127 });
+        trackFor(ev.sound || settingsRef.current.piano).addNote({ midi: ev.midi, time: ev.t, duration: ev.dur, velocity: vel(ev) });
       } else {
+        if (!drums) {
+          drums = file.addTrack();
+          drums.name = 'Drums';
+          drums.channel = 9;
+        }
         const v = voiceById(ev.voice);
-        drums.addNote({ midi: v ? v.gm : ev.note, time: ev.t, duration: 0.1, velocity: ev.vel / 127 });
+        drums.addNote({ midi: v ? v.gm : ev.note, time: ev.t, duration: 0.1, velocity: vel(ev) });
       }
     });
     const blob = new Blob([file.toArray()], { type: 'audio/midi' });
@@ -570,7 +901,35 @@ export default function MidiKeys() {
 
   // ---- render ----------------------------------------------------------------
 
-  const copy = LOOP_COPY[loopInfo.state] || LOOP_COPY.empty;
+  const bindingRow = (action) => {
+    const meta = BINDING_ROWS[action];
+    return (
+      <div key={action} className="midikeys__binding">
+        <span className="midikeys__binding-name">{meta.label}</span>
+        <span className="midikeys__chips">
+          {learning === action ? (
+            <span className="midikeys__chip is-learning">Press a button on the keyboard… (Esc cancels)</span>
+          ) : (
+            <>
+              {settings.bindings[action].map((b) => <span key={describeBinding(b)} className="midikeys__chip">{describeBinding(b)}</span>)}
+              {!settings.bindings[action].length && <span className="midikeys__chip is-key">Not set</span>}
+              {meta.key && <span className="midikeys__chip is-key">{meta.key}</span>}
+            </>
+          )}
+        </span>
+        <button type="button" className="midikeys__link" onClick={() => setLearning(learning === action ? null : action)}>
+          {learning === action ? 'Cancel' : 'Learn'}
+        </button>
+      </div>
+    );
+  };
+
+  // What each loop layer was played on, for its mixer channel ('' = empty).
+  // Re-read whenever the loop changes, which re-renders through loopInfo.
+  const layerNames = layerSummary(looperRef.current.events);
+  let copy = LOOP_COPY[loopInfo.state] || LOOP_COPY.empty;
+  if (loopInfo.overdubWaiting) copy = LOOP_COPY.overdubWaiting;
+  else if (loopInfo.overdubLeft > 0) copy = { ...copy, hint: `Layering, ${loopInfo.overdubLeft.toFixed(1)} s of the pass left. Press to stop early.` };
   const hasLoop = loopInfo.length > 0;
   const readout = loopInfo.state === 'recording'
     ? fmtTime(loopInfo.elapsed)
@@ -581,11 +940,16 @@ export default function MidiKeys() {
   return (
     <div className="midikeys">
       <header className="midikeys__head">
-        <div>
-          <h1 className="midikeys__title">MIDI Keyboard</h1>
-          <p className="midikeys__sub">
-            Play, loop and layer. Keys play piano, pads play drums, and the Launchkey&apos;s Play ▶ works the looper.
-          </p>
+        <div className="midikeys__titlebar">
+          <div>
+            <h1 className="midikeys__title">MIDI Keyboard</h1>
+            <p className="midikeys__sub">
+              Play, loop and layer. Keys play any of 128 instruments, pads play drums, and the Launchkey&apos;s Play ▶ works the looper.
+            </p>
+          </div>
+          <button type="button" className="midikeys__btn midikeys__controls-btn" onClick={() => setShowControls(true)}>
+            Controls
+          </button>
         </div>
         <div className="midikeys__status">
           <span className={`midikeys__pill ${midi.inputs.length ? 'is-on' : ''}`}>
@@ -602,9 +966,39 @@ export default function MidiKeys() {
             {audio.status === 'error' && 'Sound failed'}
           </span>
           <label className="midikeys__select">
-            <span>Piano</span>
+            <span>Sound</span>
             <select value={settings.piano} onChange={(e) => setSettings((s) => ({ ...s, piano: e.target.value }))}>
-              {PIANO_SOUNDS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              {SOUND_FAMILIES.map((f) => (
+                <optgroup key={f.family} label={f.family}>
+                  {f.sounds.map((x) => <option key={x.id} value={x.id}>{soundTitle(x)}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <label className="midikeys__select">
+            <span>Samples</span>
+            <select value={settings.sampleSet} onChange={(e) => setSettings((s) => ({ ...s, sampleSet: e.target.value }))}>
+              {SAMPLE_SETS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            </select>
+          </label>
+          {soundById(settings.piano).filter && (
+            <label className="midikeys__range midikeys__tone">
+              <span>Tone</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.005"
+                value={toneToSlider(settings.tone)}
+                onChange={(e) => setSettings((s) => ({ ...s, tone: sliderToTone(Number(e.target.value)) }))}
+              />
+              <output>{settings.tone >= 1000 ? `${(settings.tone / 1000).toFixed(1)} kHz` : `${settings.tone} Hz`}</output>
+            </label>
+          )}
+          <label className="midikeys__select">
+            <span>Bend</span>
+            <select value={settings.bendRange} onChange={(e) => setSettings((s) => ({ ...s, bendRange: Number(e.target.value) }))}>
+              {BEND_RANGES.map((r) => <option key={r} value={r}>±{r} st</option>)}
             </select>
           </label>
         </div>
@@ -630,131 +1024,209 @@ export default function MidiKeys() {
       )}
 
       <div className="midikeys__deck">
-        {/* ---- looper ---- */}
-        <section className="midikeys__card midikeys__looper" aria-label="Looper">
-          <div className="midikeys__looper-main">
-            <button
-              type="button"
-              className={`midikeys__loopbtn is-${loopInfo.state}`}
-              onClick={() => loopAction('loop')}
-              aria-label={`Looper: ${copy.label}`}
-            >
-              <svg className="midikeys__ring" viewBox="0 0 120 120" aria-hidden="true">
-                <circle cx="60" cy="60" r="54" className="midikeys__ring-track" />
-                <circle ref={ringRef} cx="60" cy="60" r="54" className="midikeys__ring-fill" pathLength="1" />
-              </svg>
-              <span className="midikeys__loopbtn-label">{copy.label}</span>
-              <span className="midikeys__loopbtn-time">{readout}</span>
-            </button>
-            <div className="midikeys__looper-side">
-              <p className="midikeys__hint">{copy.hint}</p>
-              <div className="midikeys__btnrow">
-                <button type="button" className="midikeys__btn" onClick={() => loopAction('stop')} disabled={loopInfo.state === 'empty'}>
-                  {stopLabel}
-                </button>
-                <button type="button" className="midikeys__btn" onClick={() => loopAction('undo')} disabled={!loopInfo.layers}>
-                  Undo layer
-                </button>
-                <button type="button" className="midikeys__btn" onClick={downloadLoop} disabled={!hasLoop || !loopInfo.count}>
-                  Save .mid
-                </button>
-              </div>
-              <label className="midikeys__range">
-                <span>Loop volume</span>
-                <input type="range" min="0" max="1.2" step="0.05" value={settings.volumes.loop} onChange={(e) => setVolume('loop', Number(e.target.value))} />
-              </label>
-            </div>
-          </div>
-
-          <canvas ref={laneRef} className="midikeys__lane" aria-label="The recorded loop" />
-
-          <div className="midikeys__bindings">
-            {ACTIONS.map((action) => (
-              <div key={action} className="midikeys__binding">
-                <span className="midikeys__binding-name">{action === 'loop' ? 'Loop button' : 'Stop / clear'}</span>
-                <span className="midikeys__chips">
-                  {learning === action ? (
-                    <span className="midikeys__chip is-learning">Press a button on the keyboard… (Esc cancels)</span>
-                  ) : (
-                    <>
-                      {settings.bindings[action].map((b) => <span key={describeBinding(b)} className="midikeys__chip">{describeBinding(b)}</span>)}
-                      <span className="midikeys__chip is-key">{action === 'loop' ? 'Space' : 'Esc'}</span>
-                    </>
-                  )}
-                </span>
-                <button type="button" className="midikeys__link" onClick={() => setLearning(learning === action ? null : action)}>
-                  {learning === action ? 'Cancel' : 'Learn'}
-                </button>
-              </div>
-            ))}
-            <button type="button" className="midikeys__link midikeys__link--reset" onClick={() => setSettings((s) => ({ ...s, bindings: DEFAULT_BINDINGS }))}>
-              Reset to Launchkey defaults
-            </button>
-          </div>
-        </section>
-
-        {/* ---- drum pads ---- */}
-        <section className="midikeys__card midikeys__pads" aria-label="Drum pads">
-          <div className="midikeys__card-head">
-            <div>
-              <h2 className="midikeys__card-title">Drum pads</h2>
-              <p className="midikeys__card-sub">Launchkey pads in Drum mode send on channel {drumCh + 1}. Tap a pad here to try it.</p>
-            </div>
-            <div className="midikeys__pad-tools">
-              <label className="midikeys__select">
-                <span>Channel</span>
-                <select value={drumCh} onChange={(e) => setSettings((s) => ({ ...s, drumChannel: Number(e.target.value) }))}>
-                  {Array.from({ length: 16 }, (_, i) => <option key={i} value={i}>{i + 1}</option>)}
-                </select>
-              </label>
-              <button type="button" className={`midikeys__btn ${editPads ? 'is-active' : ''}`} onClick={() => setEditPads((v) => !v)}>
-                {editPads ? 'Done' : 'Change sounds'}
+        <div className="midikeys__col">
+          {/* ---- looper ---- */}
+          <section className="midikeys__card midikeys__looper" aria-label="Looper">
+            <div className="midikeys__looper-main">
+              <button
+                type="button"
+                className={`midikeys__loopbtn is-${loopInfo.state}`}
+                onClick={() => loopAction('loop')}
+                aria-label={`Looper: ${copy.label}`}
+              >
+                <svg className="midikeys__ring" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle cx="60" cy="60" r="54" className="midikeys__ring-track" />
+                  <circle ref={ringRef} cx="60" cy="60" r="54" className="midikeys__ring-fill" pathLength="1" />
+                </svg>
+                <span className="midikeys__loopbtn-label">{copy.label}</span>
+                <span className="midikeys__loopbtn-time">{readout}</span>
               </button>
-              {editPads && (
-                <button type="button" className="midikeys__link" onClick={() => setSettings((s) => ({ ...s, padMap: DEFAULT_PAD_MAP }))}>
-                  Reset
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="midikeys__padgrid">
-            {[0, 1].map((half) => (
-              <div key={half} className="midikeys__padhalf">
-                {PAD_ROWS.map((row) => row.slice(half * 4, half * 4 + 4).map((note) => {
-                  const voice = voiceById(voiceForNote(settings.padMap, note));
-                  const setEl = (el) => { if (el) padElsRef.current.set(note, el); else padElsRef.current.delete(note); };
-                  return editPads ? (
-                    <label key={note} ref={setEl} className="midikeys__pad is-editing">
-                      <span className="midikeys__pad-note">Pad {note}</span>
-                      <select value={voice ? voice.id : ''} onChange={(e) => setPad(note, e.target.value)}>
-                        {DRUM_VOICES.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
-                      </select>
-                    </label>
-                  ) : (
-                    <button
-                      key={note}
-                      ref={setEl}
-                      type="button"
-                      className="midikeys__pad"
-                      onPointerDown={(e) => { e.preventDefault(); drumHit(note, 100); }}
-                    >
-                      <span className="midikeys__pad-name">{voice ? voice.label : '—'}</span>
-                      <span className="midikeys__pad-note">{note}</span>
-                    </button>
-                  );
-                }))}
+              <div className="midikeys__looper-side">
+                <p className="midikeys__hint">{copy.hint}</p>
+                <div className="midikeys__btnrow">
+                  <button type="button" className="midikeys__btn" onClick={() => loopAction('stop')} disabled={loopInfo.state === 'empty'}>
+                    {stopLabel}
+                  </button>
+                  <button type="button" className="midikeys__btn" onClick={() => loopAction('undo')} disabled={!loopInfo.layers}>
+                    Undo layer
+                  </button>
+                  <button type="button" className="midikeys__btn" onClick={downloadLoop} disabled={!hasLoop || !loopInfo.count}>
+                    Save .mid
+                  </button>
+                </div>
+                <label className="midikeys__check">
+                  <input
+                    type="checkbox"
+                    checked={settings.trimEnd}
+                    onChange={(e) => setSettings((s) => ({ ...s, trimEnd: e.target.checked }))}
+                  />
+                  Trim the silence after the last note
+                </label>
+                <label className="midikeys__check">
+                  <input
+                    type="checkbox"
+                    checked={settings.onePass}
+                    onChange={(e) => setSettings((s) => ({ ...s, onePass: e.target.checked }))}
+                  />
+                  Overdubs stop after one pass
+                </label>
               </div>
-            ))}
-          </div>
-          <div className="midikeys__mixer">
-            {[['master', 'Master'], ['piano', 'Piano'], ['drums', 'Drums']].map(([k, label]) => (
-              <label key={k} className="midikeys__range">
-                <span>{label}</span>
-                <input type="range" min="0" max="1.2" step="0.05" value={settings.volumes[k]} onChange={(e) => setVolume(k, Number(e.target.value))} />
-              </label>
-            ))}
-          </div>
-        </section>
+            </div>
+
+            <canvas ref={laneRef} className="midikeys__lane" aria-label="The recorded loop" />
+          </section>
+
+          {/* ---- drum pads ---- */}
+          <section className="midikeys__card midikeys__pads" aria-label="Drum pads">
+            <div className="midikeys__card-head">
+              <div>
+                <h2 className="midikeys__card-title">Drum pads</h2>
+                <p className="midikeys__card-sub">Launchkey pads in Drum mode send on channel {drumCh + 1}. Tap a pad here to try it.</p>
+              </div>
+              <div className="midikeys__pad-tools">
+                <label className="midikeys__select">
+                  <span>Channel</span>
+                  <select value={drumCh} onChange={(e) => setSettings((s) => ({ ...s, drumChannel: Number(e.target.value) }))}>
+                    {Array.from({ length: 16 }, (_, i) => <option key={i} value={i}>{i + 1}</option>)}
+                  </select>
+                </label>
+                <button type="button" className={`midikeys__btn ${editPads ? 'is-active' : ''}`} onClick={() => setEditPads((v) => !v)}>
+                  {editPads ? 'Done' : 'Change sounds'}
+                </button>
+                {editPads && (
+                  <button type="button" className="midikeys__link" onClick={() => setSettings((s) => ({ ...s, padMap: DEFAULT_PAD_MAP }))}>
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="midikeys__padgrid">
+              {[0, 1].map((half) => (
+                <div key={half} className="midikeys__padhalf">
+                  {PAD_ROWS.map((row) => row.slice(half * 4, half * 4 + 4).map((note) => {
+                    const voice = voiceById(voiceForNote(settings.padMap, note));
+                    const setEl = (el) => { if (el) padElsRef.current.set(note, el); else padElsRef.current.delete(note); };
+                    return editPads ? (
+                      <label key={note} ref={setEl} className="midikeys__pad is-editing">
+                        <span className="midikeys__pad-note">Pad {note}</span>
+                        <select value={voice ? voice.id : ''} onChange={(e) => setPad(note, e.target.value)}>
+                          {DRUM_VOICES.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
+                        </select>
+                      </label>
+                    ) : (
+                      <button
+                        key={note}
+                        ref={setEl}
+                        type="button"
+                        className="midikeys__pad"
+                        onPointerDown={(e) => { e.preventDefault(); drumHit(note, 100); }}
+                      >
+                        <span className="midikeys__pad-name">{voice ? voice.label : '—'}</span>
+                        <span className="midikeys__pad-note">{note}</span>
+                      </button>
+                    );
+                  }))}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="midikeys__col">
+          {/* ---- effects (the Launchkey knobs) ---- */}
+          <section className="midikeys__card midikeys__fx" aria-label="Effects">
+            <div className="midikeys__card-head">
+              <div>
+                <h2 className="midikeys__card-title">Effects</h2>
+                <p className="midikeys__card-sub">
+                  The eight Launchkey knobs, left to right, turn the highlighted row. Drag a knob here, double-click to reset.
+                </p>
+              </div>
+            </div>
+            {PAGE_NAMES.map((pageName, p) => {
+              const rowFx = fxOnPage(p);
+              const active = settings.fxPage === p;
+              return (
+                <div key={pageName} className={`midikeys__fxpage ${active ? 'is-active' : ''}`}>
+                  <button
+                    type="button"
+                    className="midikeys__fxpage-tag"
+                    aria-pressed={active}
+                    title={active ? 'The Launchkey knobs turn this row' : 'Make the Launchkey knobs turn this row'}
+                    onClick={() => setSettings((s) => ({ ...s, fxPage: p }))}
+                  >
+                    <span className="midikeys__fxpage-num">{p + 1}</span>
+                    <span className="midikeys__fxpage-state">{active ? 'Knobs' : 'Use'}</span>
+                  </button>
+                  <div className="midikeys__fxrow">
+                    {rowFx.map((f, i) => {
+                      const groupStart = i === 0 || rowFx[i - 1].group !== f.group;
+                      return (
+                        <div key={f.id} className={`midikeys__fxslot ${groupStart ? 'is-group-start' : ''}`}>
+                          <span className="midikeys__fxgroup">{groupStart ? f.group : '\u00a0'}</span>
+                          <Knob
+                            label={f.label}
+                            value={settings.fx[f.id]}
+                            def={f.def}
+                            centred={f.def === 0.5}
+                            display={f.fmt(settings.fx[f.id])}
+                            learning={learningKnob === f.id}
+                            onLearn={() => setLearningKnob(learningKnob === f.id ? null : f.id)}
+                            onChange={(v) => setSettings((s) => ({ ...s, fx: { ...s.fx, [f.id]: v } }))}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="midikeys__fxfoot">
+              <button
+                type="button"
+                className="midikeys__link midikeys__link--reset"
+                onClick={() => setSettings((s) => ({ ...s, fx: DEFAULT_FX, knobs: DEFAULT_KNOBS, fxPage: 0 }))}
+              >
+                Reset effects
+              </button>
+            </div>
+          </section>
+
+          {/* ---- mixer (the Launchkey faders) ---- */}
+          <section className="midikeys__card midikeys__mixercard" aria-label="Mixer">
+            <div className="midikeys__card-head">
+              <div>
+                <h2 className="midikeys__card-title">Mixer</h2>
+                <p className="midikeys__card-sub">
+                  The nine Launchkey faders, left to right. Every loop layer keeps the instrument and level it was played at.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="midikeys__link"
+                onClick={() => setSettings((s) => ({ ...s, faders: DEFAULT_FADERS, faderBindings: DEFAULT_FADER_BINDINGS }))}
+              >
+                Reset mixer
+              </button>
+            </div>
+            <div className="midikeys__faders">
+              {FADERS.map((f) => (
+                <Fader
+                  key={f.id}
+                  label={f.label}
+                  sub={f.layer != null ? layerNames[f.layer] || 'Empty' : FADER_SUBS[f.id](settings)}
+                  dim={f.layer != null && !layerNames[f.layer]}
+                  value={settings.faders[f.id]}
+                  def={f.def}
+                  display={faderLabel(settings.faders[f.id])}
+                  learning={learningKnob === f.id}
+                  onLearn={() => setLearningKnob(learningKnob === f.id ? null : f.id)}
+                  onChange={(v) => setFader(f.id, v)}
+                />
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
 
       <div className="midikeys__stage">
@@ -766,11 +1238,110 @@ export default function MidiKeys() {
           onPointerUp={onCanvasUp}
           onPointerCancel={onCanvasUp}
         />
+        {toast && (
+          <div key={toast.id} className="midikeys__toast" role="status">
+            <strong>{toast.title}</strong>
+            {toast.detail && <span>{toast.detail}</span>}
+          </div>
+        )}
+        <div className="midikeys__wheels" aria-hidden="true">
+          <div className="midikeys__wheel">
+            <div className="midikeys__wheel-track midikeys__wheel-track--bend">
+              <div ref={bendFillRef} className="midikeys__wheel-fill" />
+            </div>
+            <span>Pitch</span>
+          </div>
+          <div className="midikeys__wheel">
+            <div className="midikeys__wheel-track">
+              <div ref={modFillRef} className="midikeys__wheel-fill midikeys__wheel-fill--mod" />
+            </div>
+            <span>Mod</span>
+          </div>
+        </div>
         <div className="midikeys__legend" aria-hidden="true">
           <span><i style={{ background: LIVE }} /> You</span>
           <span><i style={{ background: LOOP }} /> Loop</span>
         </div>
       </div>
+
+      {showControls && createPortal(
+        <div className="midikeys midikeys-controls" role="dialog" aria-modal="true" aria-label="Controls">
+          <div className="midikeys-controls__inner">
+            <div className="midikeys-controls__head">
+              <div>
+                <h2 className="midikeys__title">Controls</h2>
+                <p className="midikeys__sub">What every part of the Launchkey does here, and which buttons are mapped. Esc closes.</p>
+              </div>
+              <button type="button" className="midikeys__btn" onClick={() => setShowControls(false)}>Close</button>
+            </div>
+
+            <div className="midikeys-controls__grid">
+              <section className="midikeys__card">
+                <h3 className="midikeys__card-title">Buttons</h3>
+                <p className="midikeys__card-sub">Click Learn, then press the button on the Launchkey you want for it.</p>
+                <div className="midikeys__bindings">
+                  {['loop', 'stop', 'prevSound', 'nextSound', 'knobPage'].map(bindingRow)}
+                  <button
+                    type="button"
+                    className="midikeys__link midikeys__link--reset"
+                    onClick={() => setSettings((s) => ({ ...s, bindings: DEFAULT_BINDINGS }))}
+                  >
+                    Reset to Launchkey defaults
+                  </button>
+                </div>
+              </section>
+
+              <section className="midikeys__card">
+                <h3 className="midikeys__card-title">The keyboard</h3>
+                <dl className="midikeys-controls__map">
+                  {controlMap(settings).map(([part, does]) => (
+                    <React.Fragment key={part}>
+                      <dt>{part}</dt>
+                      <dd>{does}</dd>
+                    </React.Fragment>
+                  ))}
+                </dl>
+              </section>
+
+              <section className="midikeys__card">
+                <h3 className="midikeys__card-title">Knobs</h3>
+                <p className="midikeys__card-sub">
+                  Knobs 1 to 8 turn row {settings.fxPage + 1} of the effects. Effects with a control of their own:
+                </p>
+                <dl className="midikeys-controls__map">
+                  {settings.knobs.filter((k) => k.cc != null).map((k) => {
+                    const f = FX.find((x) => x.id === k.id);
+                    return (
+                      <React.Fragment key={k.id}>
+                        <dt>{`CC ${k.cc}${k.channel == null ? '' : ` · ch ${k.channel + 1}`}`}</dt>
+                        <dd>{f ? `${f.group}: ${f.label}` : k.id}</dd>
+                      </React.Fragment>
+                    );
+                  })}
+                  {!settings.knobs.some((k) => k.cc != null) && <dd className="midikeys-controls__none">None yet. Use Learn under a knob.</dd>}
+                </dl>
+              </section>
+
+              <section className="midikeys__card">
+                <h3 className="midikeys__card-title">Computer keys</h3>
+                <dl className="midikeys-controls__map">
+                  <dt>Space</dt><dd>Loop button</dd>
+                  <dt>Esc</dt><dd>Stop, then clear</dd>
+                  <dt>[ and ]</dt><dd>Previous / next sound</dd>
+                  <dt>Click the keys</dt><dd>Play the on-screen keyboard</dd>
+                </dl>
+              </section>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      <p className="midikeys__credits">
+        Instrument samples: the MusyngKite (CC BY-SA 3.0), FluidR3 (CC BY 3.0) and FatBoy (CC BY-SA 3.0) General MIDI
+        soundfonts, rendered by{' '}
+        <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener noreferrer">gleitz/midi-js-soundfonts</a>.
+      </p>
     </div>
   );
 }

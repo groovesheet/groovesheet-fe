@@ -15,6 +15,8 @@ test('Record and Loop (CC 117 / 118 on channel 16) also work the looper, on pres
 test('keys, sustain and MIDI clock are never mistaken for buttons', () => {
   expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0x90, 60, 100]))).toBeNull();
   expect(pressFromMessage([0xb0, 64, 127])).toBeNull();
+  expect(pressFromMessage([0xb0, 1, 127], { strict: true })).toBeNull(); // mod wheel at the top
+  expect(pressFromMessage([0xe0, 0, 127])).toBeNull(); // pitch wheel
   expect(pressFromMessage([0xf8])).toBeNull();
 });
 
@@ -45,4 +47,18 @@ test('a reassigned pad plays its new voice; other drum notes fall back to GM', (
   expect(voiceForNote(map, 56)).toBe('cowbell');
   expect(voiceForNote(map, 100)).toBeNull();
   expect(DRUM_VOICES.every((v) => typeof v.gm === 'number')).toBe(true);
+});
+
+test('the Track buttons step the sound, and the knob page starts unassigned', () => {
+  expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0xbf, 103, 127]))).toBe('prevSound');
+  expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0xbf, 102, 127]))).toBe('nextSound');
+  expect(describeBinding(DEFAULT_BINDINGS.nextSound[0])).toBe('Track ►');
+  expect(DEFAULT_BINDINGS.knobPage).toEqual([]);
+  expect(sanitizeBindings({ knobPage: [] }).knobPage).toEqual([]);
+  expect(sanitizeBindings({ loop: [] }).loop).toEqual(DEFAULT_BINDINGS.loop); // the loop button can't be lost
+});
+
+test('the floor tom sits 2 dB under the rest of the kit', () => {
+  expect(DRUM_VOICES.find((v) => v.id === 'tom1').trimDb).toBe(-2);
+  expect(DRUM_VOICES.filter((v) => v.trimDb).map((v) => v.id)).toEqual(['tom1']);
 });

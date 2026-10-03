@@ -519,3 +519,59 @@
 body.modal-open {
   overflow: hidden;
 }
+
+/* Phones: the 36px title wrapped onto two lines with a 31px line height, so
+   the lines overlapped, and the close button was centred against the whole
+   block instead of sitting in the corner. The 16px frame also took a tenth of
+   the screen width. */
+@media (max-width: 640px) {
+  .login-card {
+    padding: 20px 16px 16px;
+    border-width: 8px;
+  }
+
+  .login-topbar--welcome {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .login-title {
+    font-size: 1.625rem;
+    line-height: 1.2;
+    justify-content: flex-start;
+  }
+
+  .login-subtitle {
+    font-size: 1.125rem;
+  }
+
+  .close-button {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    margin: -2px -4px 0 0;
+  }
+
+  .close-button svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* zh-CN only: why email is the first choice there. */
+.login-region-hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Under the code prompt: where the code went and what to do if it is not there. */
+.login-code-hint {
+  margin: -12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  overflow-wrap: anywhere;
+}

@@ -49,6 +49,49 @@ export default function ClientOnly({ children, fallback = null }: { children: Re
   return <>{isClient ? children : fallback}</>;
 }
 
+const CHUNK_RELOAD_KEY = 'gs_chunk_reload_at';
+
+function isChunkLoadError(err: unknown): boolean {
+  const e = err as { name?: string; message?: string } | null;
+  return Boolean(e && (e.name === 'ChunkLoadError' || /Loading chunk|Failed to load chunk|dynamically imported module/i.test(e.message || '')));
+}
+
+/**
+ * A chunk that will not load is almost always a page opened before a deploy:
+ * its chunk names are gone from the new build. Seen on /stem-splitter on
+ * 2026-09-30, where it hid a finished preview behind an error. Try once more,
+ * then reload the page once (the upload cards bring a finished preview back
+ * after a reload). The timestamp stops a broken build from reloading forever.
+ */
+async function loadWithChunkRecovery<T>(loader: () => Promise<T>): Promise<T> {
+  try {
+    return await loader();
+  } catch (err) {
+    if (!isChunkLoadError(err)) throw err;
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      return await loader();
+    } catch (retryErr) {
+      if (!isChunkLoadError(retryErr) || typeof window === 'undefined') throw retryErr;
+      let last = 0;
+      try {
+        last = Number(window.sessionStorage.getItem(CHUNK_RELOAD_KEY)) || 0;
+      } catch {
+        /* storage blocked */
+      }
+      if (Date.now() - last < 60_000) throw retryErr;
+      try {
+        window.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+      } catch {
+        /* storage blocked: still reload once for this page */
+      }
+      window.location.reload();
+      // The page is going away; never settle.
+      return new Promise<T>(() => {});
+    }
+  }
+}
+
 /**
  * next/dynamic with ssr: false, with an optional fallback shown on the server
  * and while the chunk loads. Call it at module scope, never inside render.
@@ -58,7 +101,7 @@ export function clientOnly<P extends object>(
   options: { fallback?: ReactNode } = {}
 ): ComponentType<P> {
   const { fallback = null } = options;
-  return dynamic(loader, {
+  return dynamic(() => loadWithChunkRecovery(loader), {
     ssr: false,
     loading: () => <>{fallback}</>,
   });

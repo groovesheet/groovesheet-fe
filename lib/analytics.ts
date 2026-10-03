@@ -62,6 +62,8 @@ export const EVENTS = {
  */
 export const FUNNEL = {
   UPLOAD_STARTED: 'upload_started',
+  /** The upload was refused or broke before a preview existed (429, 413, network). */
+  UPLOAD_FAILED: 'upload_failed',
   PREVIEW_READY: 'preview_ready',
   PREVIEW_FAILED: 'preview_failed',
   PREVIEW_PLAYED: 'preview_played',
@@ -76,6 +78,8 @@ export const FUNNEL = {
   /** Out of minutes (HTTP 402). */
   PAYWALL_SHOWN: 'paywall_shown',
   PAYWALL_DISMISSED: 'paywall_dismissed',
+  /** Signed-out paywall: a pack picked (or "I have a plan"), sign-in opened next. */
+  PAYWALL_SIGN_IN: 'paywall_sign_in',
   BEGIN_CHECKOUT: 'begin_checkout',
   CHECKOUT_ERROR: 'checkout_error',
   FULL_SONG_STARTED: 'full_song_started',
