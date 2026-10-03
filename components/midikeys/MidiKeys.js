@@ -8,7 +8,7 @@ import {
 } from './soundEngine';
 import { SAMPLE_SETS, instrumentForProgram } from './instruments';
 import { findLaunchkeyOutput, showLines, TARGET_GLOBAL, TARGET_KNOB_1 } from './launchkeyDisplay';
-import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_ROWS, voiceById, voiceForNote } from './drumKit';
+import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_PAGES, padRowsFor, pageNote, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
 import { bendAmount } from './wheels';
 import { FX, DEFAULT_FX, DEFAULT_KNOBS, PAGE_COUNT, PAGE_NAMES, PAGE_SCREEN_NAMES, fxOnPage, knobForMessage, sanitizeFx } from './fx';
@@ -25,7 +25,8 @@ import './MidiKeys.css';
  *   - The keys play a sampled piano (with the sustain pedal) and rise as light
  *     out of an 88-key keyboard, so you can see what you just played.
  *   - The pads (channel 10, the Launchkey's Drum mode) play a drum kit; each
- *     pad's sound can be changed on the page.
+ *     pad's sound can be changed on the page, and the pads flip through three
+ *     pages of drums (a learnt button, the page tabs, or , and .).
  *   - A one-button looper records what you play from your FIRST NOTE after
  *     arming, closes the loop on the next press and plays it back from that
  *     first note, then layers overdubs. On a Launchkey MK4 the Play button
@@ -67,6 +68,7 @@ const nowSec = () => performance.now() / 1000;
 const DEFAULT_SETTINGS = {
   padMap: DEFAULT_PAD_MAP,
   drumChannel: DRUM_CHANNEL,
+  drumPage: 0, // the page of drums the pads play, see drumKit.js
   bindings: DEFAULT_BINDINGS,
   piano: DEFAULT_SOUND, // the keys' sound: a GM instrument id, or one of ours
   sampleSet: SAMPLE_SETS[0].id,
@@ -106,6 +108,7 @@ function loadSettings() {
     return {
       padMap,
       drumChannel: Number.isInteger(ch) && ch >= 0 && ch <= 15 ? ch : DRUM_CHANNEL,
+      drumPage: Number.isInteger(saved.drumPage) && saved.drumPage >= 0 && saved.drumPage < PAD_PAGES.length ? saved.drumPage : 0,
       bindings: sanitizeBindings(saved.bindings),
       piano: isKnownSound(saved.piano) ? saved.piano : DEFAULT_SETTINGS.piano,
       sampleSet: SAMPLE_SETS.some((x) => x.id === saved.sampleSet) ? saved.sampleSet : DEFAULT_SETTINGS.sampleSet,
@@ -172,7 +175,7 @@ function controlMap(settings) {
     ['Sustain pedal', 'Holds the notes, and they record into the loop held'],
     ['Pitch wheel', `Bends the notes you hold, ±${settings.bendRange} semitones`],
     ['Mod wheel', sound.filter ? 'Auto-wah and tremolo on this sound' : 'Vibrato'],
-    ['Pads', `Drums, in Drum mode on channel ${settings.drumChannel + 1}; change a pad's sound in Drum pads`],
+    ['Pads', `Drums, in Drum mode on channel ${settings.drumChannel + 1}; page ${settings.drumPage + 1} of ${PAD_PAGES.length} (${PAD_PAGES[settings.drumPage]}). Change a pad's sound in Drum pads`],
     ['Knobs 1-8', `The highlighted effects row (now row ${settings.fxPage + 1})`],
     ['Faders 1-9 (CC 71-79)', 'Keys, Drums, Take 1, Layers 2-5+, Loop, Master (the Mixer)'],
     ['Play ▶ / Record ● / Loop', 'Loop button: arm, close the loop, overdub'],
@@ -189,6 +192,7 @@ const BINDING_ROWS = {
   prevSound: { label: 'Previous sound', key: '[' },
   nextSound: { label: 'Next sound', key: ']' },
   knobPage: { label: 'Knob page', key: null },
+  drumPage: { label: 'Drum page', key: ', / .' },
 };
 
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
@@ -385,6 +389,11 @@ export default function MidiKeys() {
       setSettings((s) => ({ ...s, fxPage: (s.fxPage + 1) % PAGE_COUNT }));
       return;
     }
+    if (action === 'drumPage' || action === 'prevDrumPage') {
+      const step = action === 'drumPage' ? 1 : -1;
+      setSettings((s) => ({ ...s, drumPage: (s.drumPage + step + PAD_PAGES.length) % PAD_PAGES.length }));
+      return;
+    }
     const now = nowSec();
     const looper = looperRef.current;
     const opts = { trimEnd: settingsRef.current.trimEnd, onePass: settingsRef.current.onePass };
@@ -480,7 +489,8 @@ export default function MidiKeys() {
     const [, d1, d2] = data;
 
     if (channel === settingsRef.current.drumChannel) {
-      if (cmd === 0x90 && d2 > 0) drumHit(d1, d2);
+      // the drum page moves what the pad sent up to that page's drum
+      if (cmd === 0x90 && d2 > 0) drumHit(pageNote(d1, settingsRef.current.drumPage), d2);
       return; // pad releases and pad aftertouch are not needed
     }
     if (cmd === 0x90 && d2 > 0) keyDown(d1, d2);
@@ -599,6 +609,13 @@ export default function MidiKeys() {
     announce(`Knob page ${p + 1}`, PAGE_NAMES[p], ['Knobs', `Page ${p + 1} of ${PAGE_COUNT}`, PAGE_SCREEN_NAMES[p]]);
   }, [settings.fxPage, announce]);
 
+  const firstDrumPageRef = useRef(true);
+  useEffect(() => {
+    if (firstDrumPageRef.current) { firstDrumPageRef.current = false; return; }
+    const p = settings.drumPage;
+    announce(`Drum page ${p + 1}`, PAD_PAGES[p], ['Pads', `Page ${p + 1} of ${PAD_PAGES.length}`, PAD_PAGES[p]]);
+  }, [settings.drumPage, announce]);
+
   // Push only the faders that moved.
   const appliedFadersRef = useRef({});
   useEffect(() => {
@@ -664,6 +681,10 @@ export default function MidiKeys() {
       }
       if (e.key === '[' || e.key === ']') {
         loopAction(e.key === ']' ? 'nextSound' : 'prevSound');
+        return;
+      }
+      if (e.key === ',' || e.key === '.') {
+        loopAction(e.key === '.' ? 'drumPage' : 'prevDrumPage');
         return;
       }
       if (e.code === 'Space') {
@@ -1081,7 +1102,7 @@ export default function MidiKeys() {
             <div className="midikeys__card-head">
               <div>
                 <h2 className="midikeys__card-title">Drum pads</h2>
-                <p className="midikeys__card-sub">Launchkey pads in Drum mode send on channel {drumCh + 1}. Tap a pad here to try it.</p>
+                <p className="midikeys__card-sub">Launchkey pads in Drum mode send on channel {drumCh + 1}. Tap a pad here to try it, flip pages for more drums.</p>
               </div>
               <div className="midikeys__pad-tools">
                 <label className="midikeys__select">
@@ -1100,10 +1121,25 @@ export default function MidiKeys() {
                 )}
               </div>
             </div>
+            <div className="midikeys__padpages" role="tablist" aria-label="Drum pages">
+              {PAD_PAGES.map((name, p) => (
+                <button
+                  key={name}
+                  type="button"
+                  role="tab"
+                  aria-selected={settings.drumPage === p}
+                  className={`midikeys__padpage ${settings.drumPage === p ? 'is-active' : ''}`}
+                  onClick={() => setSettings((s) => ({ ...s, drumPage: p }))}
+                >
+                  <span className="midikeys__padpage-num">{p + 1}</span>
+                  <span className="midikeys__padpage-name">{name}</span>
+                </button>
+              ))}
+            </div>
             <div className="midikeys__padgrid">
               {[0, 1].map((half) => (
                 <div key={half} className="midikeys__padhalf">
-                  {PAD_ROWS.map((row) => row.slice(half * 4, half * 4 + 4).map((note) => {
+                  {padRowsFor(settings.drumPage).map((row) => row.slice(half * 4, half * 4 + 4).map((note) => {
                     const voice = voiceById(voiceForNote(settings.padMap, note));
                     const setEl = (el) => { if (el) padElsRef.current.set(note, el); else padElsRef.current.delete(note); };
                     return editPads ? (
@@ -1280,7 +1316,7 @@ export default function MidiKeys() {
                 <h3 className="midikeys__card-title">Buttons</h3>
                 <p className="midikeys__card-sub">Click Learn, then press the button on the Launchkey you want for it.</p>
                 <div className="midikeys__bindings">
-                  {['loop', 'stop', 'prevSound', 'nextSound', 'knobPage'].map(bindingRow)}
+                  {['loop', 'stop', 'prevSound', 'nextSound', 'knobPage', 'drumPage'].map(bindingRow)}
                   <button
                     type="button"
                     className="midikeys__link midikeys__link--reset"

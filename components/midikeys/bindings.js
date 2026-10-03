@@ -11,6 +11,8 @@
  *   sound - / +  = Track left / right (CC 103 / 102)
  *   knob page    = nothing: the page buttons beside the knobs send no MIDI in
  *                  Standalone mode, so it is learnt from a spare button
+ *   drum page    = nothing, for the same reason: the arrows beside the pads
+ *                  shift the pads on the keyboard itself and send no message
  *
  * A binding is one of
  *   { kind: 'rt', status }          a real-time message (FAh Start, FBh Continue, FCh Stop)
@@ -24,7 +26,7 @@ export const RT_CONTINUE = 0xfb;
 export const RT_STOP = 0xfc;
 const LK_CHANNEL = 15; // channel 16, zero-based
 
-export const ACTIONS = ['loop', 'stop', 'prevSound', 'nextSound', 'knobPage'];
+export const ACTIONS = ['loop', 'stop', 'prevSound', 'nextSound', 'knobPage', 'drumPage'];
 
 export const DEFAULT_BINDINGS = {
   loop: [
@@ -36,6 +38,7 @@ export const DEFAULT_BINDINGS = {
   prevSound: [{ kind: 'cc', channel: LK_CHANNEL, cc: 103 }],
   nextSound: [{ kind: 'cc', channel: LK_CHANNEL, cc: 102 }],
   knobPage: [],
+  drumPage: [],
 };
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
