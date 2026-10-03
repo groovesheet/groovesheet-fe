@@ -465,6 +465,7 @@ export function createSoundEngine({ onStatus } = {}) {
     loadPiano,
     unlock,
     status,
+    isRunning: running, // audio is on (a drums-only page has no samples to wait for)
     pianoOn,
     pianoOff,
     drum,

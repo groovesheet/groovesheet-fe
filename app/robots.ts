@@ -35,6 +35,7 @@ export default function robots(): MetadataRoute.Robots {
           '/video2',
           '/bistable',
           '/midi-keyboard',
+          '/launchpad',
           '/api/',
           '/og',
         ],
