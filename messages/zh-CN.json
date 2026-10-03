@@ -216,9 +216,9 @@
     "canceledNotice": "已取消结账，未向您收费。",
     "dismiss": "关闭",
     "payNote": {
-      "plansCardOnly": "套餐为自动续费订阅,只能用银行卡付款。",
+      "plansCardOnly": "套餐为自动续费订阅,只能用银行卡或 Apple Pay 付款。",
       "walletsOnTopups": "想用支付宝或微信支付?请选择一次性「充值」。",
-      "topupsWallets": "一次性付款,支持支付宝、微信支付和银行卡,不会自动续费。",
+      "topupsWallets": "一次性付款,支持支付宝、微信支付、Apple Pay 和银行卡,不会自动续费。",
       "topupsOnce": "一次性付款,不会自动续费。"
     }
   },
@@ -1142,8 +1142,8 @@
     "bodySignedOut": "10 秒预览是免费的。整首歌会消耗充值时长或套餐时长。选好后登录付款,完成后会直接回到这首歌。",
     "bodyOut": "转录整首歌会消耗套餐或充值时长。",
     "previewStays": "充值期间,你的预览会保留在这里。",
-    "payWallets": "充值为一次性付款,支持支付宝、微信支付和银行卡。月度套餐只能用银行卡。",
-    "payOnce": "充值为一次性付款。月度套餐自动续费,只能用银行卡。",
+    "payWallets": "充值为一次性付款,支持支付宝、微信支付、Apple Pay 和银行卡。月度套餐只能用银行卡或 Apple Pay。",
+    "payOnce": "充值为一次性付款。月度套餐自动续费,只能用银行卡或 Apple Pay。",
     "minutes": "{minutes} 分钟",
     "priceOnce": "{price} 一次性",
     "opening": "正在打开…",

@@ -50,6 +50,14 @@ export const EVENTS = {
   EXPLORE_UPLOAD_CTA: 'explore_upload_cta_click',
   WORKFLOW_STARTED: 'workflow_started',
   PURCHASE: 'purchase',
+  /** Which sign-in button was pressed (google / facebook / apple / email). */
+  LOGIN_METHOD_CLICK: 'login_method_click',
+  /** Email sign-in: the code was requested, and how it ended. */
+  LOGIN_CODE_SENT: 'login_code_sent',
+  LOGIN_CODE_ERROR: 'login_code_error',
+  LOGIN_CODE_VERIFIED: 'login_code_verified',
+  /** What a visitor chose on the failed-preview card. */
+  PREVIEW_FAILED_NEXT_STEP: 'preview_failed_next_step',
 } as const;
 
 /**

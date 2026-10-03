@@ -10,7 +10,7 @@
  *     renders, using getClaims(), which verifies the token signature.
  *     Never getSession() here (brief 5.3).
  *
- * The matcher keeps it off /api, the content-app paths (/blog, /blog-media,
+ * The matcher keeps it off /api, /ingest (PostHog), the content-app paths (/blog, /blog-media,
  * /internal, /content-assets), Next's own assets and any path with a file
  * extension.
  */
@@ -68,6 +68,6 @@ export const config = {
     // `og` and `sitemaps` are locale-less route handlers (the share-card image
     // and the sitemap children); without the exclusion the locale rewrite
     // would send them to /en/og and the catch-all 404.
-    '/((?!(?:api|blog|blog-media|internal|content-assets|og|sitemaps|_next|_vercel)(?:/|$)|.*\\..*).*)',
+    '/((?!(?:api|ingest|blog|blog-media|internal|content-assets|og|sitemaps|_next|_vercel)(?:/|$)|.*\\..*).*)',
   ],
 };

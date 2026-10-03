@@ -22,7 +22,7 @@
       "permanent": false
     },
     {
-      "source": "/:path((?!api/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
+      "source": "/:path((?!api/|ingest/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
       "has": [
         {
           "type": "header",
@@ -66,7 +66,7 @@
       "permanent": false
     },
     {
-      "source": "/:path((?!api/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
+      "source": "/:path((?!api/|ingest/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
       "has": [
         {
           "type": "header",
@@ -91,6 +91,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/ingest/static/(.*)", "destination": "https://us-assets.i.posthog.com/static/$1" },
+    { "source": "/ingest/(.*)", "destination": "https://us.i.posthog.com/$1" },
     {
       "source": "/api/internal/:path*",
       "destination": "https://groovesheet-content-kelin-studio.vercel.app/api/internal/:path*"

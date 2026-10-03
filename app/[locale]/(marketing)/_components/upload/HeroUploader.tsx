@@ -10,7 +10,7 @@ import { Link, useRouter } from '@/lib/navigation';
 import { useUser, useAuth } from '@/lib/auth';
 import { queueSummary } from '@/lib/queue';
 import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
-import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
+import { EVENTS, FUNNEL, track, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { phLog } from '@/lib/observability';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
 import { useFullSongFlow, type UpgradeOutcome, type UpgradeTrigger } from '@/lib/hooks/useFullSongFlow';
@@ -788,7 +788,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
 
   const tryInstrument = (instrument: string) => {
     const file = lastFile;
-    phLog('preview_failed_next_step', { choice: 'instrument', instrument, from: failure?.instrument ?? '', surface: UPLOAD_SOURCE });
+    track(EVENTS.PREVIEW_FAILED_NEXT_STEP, { choice: 'instrument', instrument, from: failure?.instrument ?? '', surface: UPLOAD_SOURCE });
     setFailure(null);
     if (file) setRetry({ file, instrument });
     setSelectedInstrument(instrument);
@@ -823,14 +823,14 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
           <Link
             href="/stem-splitter"
             className="upload-failed-btn upload-failed-btn--primary"
-            onClick={() => phLog('preview_failed_next_step', { choice: 'stem_splitter', from: f.instrument, surface: UPLOAD_SOURCE })}
+            onClick={() => track(EVENTS.PREVIEW_FAILED_NEXT_STEP, { choice: 'stem_splitter', from: f.instrument, surface: UPLOAD_SOURCE })}
           >
             {t('hero.failed.splitStems')}
           </Link>
           <button
             className="upload-failed-btn"
             onClick={() => {
-              phLog('preview_failed_next_step', { choice: 'new_song', from: f.instrument, surface: UPLOAD_SOURCE });
+              track(EVENTS.PREVIEW_FAILED_NEXT_STEP, { choice: 'new_song', from: f.instrument, surface: UPLOAD_SOURCE });
               resetUpload();
             }}
           >

@@ -29,6 +29,8 @@ const publicEnv = Object.fromEntries(
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // PostHog's API paths end in a slash (/ingest/e/); a redirect would drop the POST body.
+  skipTrailingSlashRedirect: true,
   env: publicEnv,
 
   /**
@@ -44,6 +46,9 @@ const nextConfig: NextConfig = {
    */
   async rewrites() {
     return [
+      // PostHog through our own domain (see instrumentation-client.ts).
+      { source: '/ingest/static/:path*', destination: 'https://us-assets.i.posthog.com/static/:path*' },
+      { source: '/ingest/:path*', destination: 'https://us.i.posthog.com/:path*' },
       { source: '/api/internal/:path*', destination: `${CONTENT_APP}/api/internal/:path*` },
       { source: '/blog', destination: `${CONTENT_APP}/blog` },
       { source: '/blog/:path*', destination: `${CONTENT_APP}/blog/:path*` },
