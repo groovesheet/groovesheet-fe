@@ -8,7 +8,7 @@ import {
 } from './soundEngine';
 import { SAMPLE_SETS, instrumentForProgram } from './instruments';
 import { findLaunchkeyOutput, showLines, TARGET_GLOBAL, TARGET_KNOB_1 } from './launchkeyDisplay';
-import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_PAGES, padRowsFor, pageNote, voiceById, voiceForNote } from './drumKit';
+import { DEFAULT_PAD_MAP, DRUM_CHANNEL, DRUM_VOICES, PAD_PAGES, hardwareBank, padRowsFor, pageNote, stepPage, voiceById, voiceForNote } from './drumKit';
 import { ACTIONS, DEFAULT_BINDINGS, actionFor, describeBinding, pressFromMessage, sanitizeBindings } from './bindings';
 import { bendAmount } from './wheels';
 import { FX, DEFAULT_FX, DEFAULT_KNOBS, PAGE_COUNT, PAGE_NAMES, PAGE_SCREEN_NAMES, fxOnPage, knobForMessage, sanitizeFx } from './fx';
@@ -239,6 +239,7 @@ export default function MidiKeys() {
   const laneRef = useRef(null);
   const ringRef = useRef(null);
   const padElsRef = useRef(new Map());
+  const hwBankRef = useRef(0); // the bank the Launchkey's pads were last heard in; it starts on 36-51
   const keyLayoutRef = useRef(null);
   const pointerKeyRef = useRef(new Map()); // pointerId -> midi
 
@@ -489,8 +490,19 @@ export default function MidiKeys() {
     const [, d1, d2] = data;
 
     if (channel === settingsRef.current.drumChannel) {
-      // the drum page moves what the pad sent up to that page's drum
-      if (cmd === 0x90 && d2 > 0) drumHit(pageNote(d1, settingsRef.current.drumPage), d2);
+      if (cmd === 0x90 && d2 > 0) {
+        // The Launchkey's page arrows move the pads a bank of 16 notes and send
+        // nothing, so the first hit in a new bank is when the page flips.
+        const bank = hardwareBank(d1);
+        let page = settingsRef.current.drumPage;
+        if (bank !== hwBankRef.current) {
+          page = stepPage(page, bank - hwBankRef.current);
+          hwBankRef.current = bank;
+          settingsRef.current = { ...settingsRef.current, drumPage: page };
+          setSettings((s) => ({ ...s, drumPage: page }));
+        }
+        drumHit(pageNote(d1, page), d2);
+      }
       return; // pad releases and pad aftertouch are not needed
     }
     if (cmd === 0x90 && d2 > 0) keyDown(d1, d2);

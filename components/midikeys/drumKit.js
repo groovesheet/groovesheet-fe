@@ -13,9 +13,13 @@
  *
  * Pages: the 16 pads flip through three pages of the GM percussion map, 16
  * notes apart, so page 2 plays notes 52-67 (cymbals and hand drums) and page 3
- * plays 68-83 (shakers, whistles, guiros, blocks and bells). The page is added
- * to whatever the pads send, so the Launchkey's own pad arrows (which shift the
- * pads in steps of 4 notes) still land on a real sound.
+ * plays 68-83 (shakers, whistles, guiros, blocks and bells).
+ *
+ * The Launchkey's own page arrows beside the pads send no message: they move
+ * the pads a whole bank of 16 notes (measured on the MK4 49: one press down
+ * and the first pad sent 20 instead of 36). So a pad's place in its bank says
+ * which pad it is, and a change of bank is a press of those arrows, which
+ * steps the page the same way (see stepPage), wrapping round the three pages.
  *
  * Voices are synthesised with Web Audio rather than sampled: nothing to
  * download, no licensing question, and the hit starts the instant the pad is
@@ -36,8 +40,17 @@ export const PAD_PAGES = ['Kit', 'Cymbals and hand drums', 'Shakers, whistles an
 /** The pad rows of a page: page 0 is the Launchkey's own layout, the others 16 notes up each. */
 export const padRowsFor = (page) => PAD_ROWS.map((row) => row.map((n) => n + page * PAD_PAGE_SIZE));
 
-/** The note a pad plays on a page: what the pad sent, moved up by the page. */
-export const pageNote = (note, page) => Math.min(127, note + (page || 0) * PAD_PAGE_SIZE);
+const PAD_BASE = 36; // the first pad's note in the Launchkey's default bank
+const mod = (a, n) => ((a % n) + n) % n;
+
+/** Which bank of 16 a pad note is in, counted from the default 36-51 (below it is negative). */
+export const hardwareBank = (note) => Math.floor((note - PAD_BASE) / PAD_PAGE_SIZE);
+
+/** The note a pad plays on a page: the pad's place in its bank, on that page. */
+export const pageNote = (note, page) => PAD_BASE + mod(page || 0, PAD_PAGES.length) * PAD_PAGE_SIZE + mod(note - PAD_BASE, PAD_PAGE_SIZE);
+
+/** The page after moving `steps` pages, wrapping round. */
+export const stepPage = (page, steps) => mod(page + steps, PAD_PAGES.length);
 
 // `gm` is the General MIDI drum note the voice is exported as in a .mid file.
 // `trimDb` evens out a voice that sits too loud against the rest of the kit.

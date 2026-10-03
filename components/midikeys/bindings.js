@@ -11,8 +11,9 @@
  *   sound - / +  = Track left / right (CC 103 / 102)
  *   knob page    = nothing: the page buttons beside the knobs send no MIDI in
  *                  Standalone mode, so it is learnt from a spare button
- *   drum page    = nothing, for the same reason: the arrows beside the pads
- *                  shift the pads on the keyboard itself and send no message
+ *   drum page    = nothing to learn by default: the arrows beside the pads
+ *                  send no message, they move the pads a bank of 16 notes,
+ *                  and the page follows that by itself (see drumKit.js)
  *
  * A binding is one of
  *   { kind: 'rt', status }          a real-time message (FAh Start, FBh Continue, FCh Stop)

@@ -1,5 +1,5 @@
 import { actionFor, DEFAULT_BINDINGS, pressFromMessage, sanitizeBindings, describeBinding } from './bindings';
-import { DEFAULT_PAD_MAP, PAD_ROWS, PAD_PAGES, padRowsFor, pageNote, voiceForNote, DRUM_VOICES, createDrumSynth } from './drumKit';
+import { DEFAULT_PAD_MAP, PAD_ROWS, PAD_PAGES, padRowsFor, pageNote, hardwareBank, stepPage, voiceForNote, DRUM_VOICES, createDrumSynth } from './drumKit';
 
 test('the Launchkey Play button (MIDI Start) is the loop button, Stop stops', () => {
   expect(actionFor(DEFAULT_BINDINGS, pressFromMessage([0xfa]))).toBe('loop');
@@ -48,12 +48,25 @@ test('the pads flip through three pages of the GM percussion map, 16 notes apart
   expect(padRowsFor(1)[1].slice(0, 4)).toEqual([52, 53, 54, 55]);
   expect(pageNote(36, 1)).toBe(52);
   expect(pageNote(36, 2)).toBe(68);
-  expect(pageNote(120, 2)).toBe(127); // never past the top of MIDI
+  expect(pageNote(51, 2)).toBe(83);
   const all = PAD_PAGES.flatMap((_, p) => padRowsFor(p).flat());
   expect(all).toHaveLength(48);
   expect(new Set(all.map((n) => DEFAULT_PAD_MAP[n])).size).toBe(48); // 48 different drums
   expect(DEFAULT_PAD_MAP[60]).toBe('bongoHigh');
   expect(DEFAULT_PAD_MAP[81]).toBe('triangleOpen');
+});
+
+test("the Launchkey's page arrows move the pads a bank of 16, and the page steps with them", () => {
+  // measured on the MK4 49: one press down and the first pad sent 20
+  expect(hardwareBank(36)).toBe(0);
+  expect(hardwareBank(20)).toBe(-1);
+  expect(hardwareBank(55)).toBe(1);
+  expect(stepPage(0, -1)).toBe(2); // down from the kit wraps to page 3
+  expect(stepPage(2, 1)).toBe(0);
+  // a pad keeps its place: the first pad in any bank is the first pad of the page
+  expect(pageNote(20, 2)).toBe(68);
+  expect(pageNote(52, 1)).toBe(52);
+  expect(pageNote(4, 0)).toBe(36);
 });
 
 test('every drum voice synthesises without throwing', () => {
