@@ -264,6 +264,19 @@
 .midikeys__btn:disabled { opacity: 0.4; cursor: default; }
 .midikeys__btn.is-active { background: var(--mk-primary); border-color: var(--mk-primary); }
 
+/* Transpose: −12 −1 [value] +1 +12, the value resets to 0 */
+.midikeys__transpose { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--mk-muted); }
+.midikeys__transpose > span { margin-right: 4px; }
+.midikeys__tbtn, .midikeys__tval {
+  background: var(--mk-panel-2); color: var(--mk-text);
+  border: 1px solid var(--mk-border); border-radius: 7px;
+  font: inherit; font-size: 13px; cursor: pointer;
+  padding: 5px 8px; min-width: 34px; font-variant-numeric: tabular-nums;
+}
+.midikeys__tbtn:disabled { opacity: 0.35; cursor: default; }
+.midikeys__tval { min-width: 44px; font-weight: 700; }
+.midikeys__tval.is-on { background: var(--mk-primary); border-color: var(--mk-primary); }
+
 .midikeys__range {
   display: flex;
   align-items: center;

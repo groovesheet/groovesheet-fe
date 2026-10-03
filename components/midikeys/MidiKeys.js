@@ -83,11 +83,14 @@ const DEFAULT_SETTINGS = {
   knobs: DEFAULT_KNOBS, // controls learnt to one effect each
   fxPage: 0, // the page of effects the eight knobs turn
   bendRange: 2, // semitones each way
+  transpose: 0, // semitones added to every key from the keyboard (not the pads)
   tone: DEFAULT_TONE_HZ, // band-pass centre, Hz
   boostDb: BOOST_MAX_DB, // the whole page louder, 0..30 dB
 };
 
 const BEND_RANGES = [1, 2, 7, 12];
+const TRANSPOSE_MAX = 24; // two octaves each way
+const signed = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const TONE_MIN = 250;
 const TONE_MAX = 6000;
 // The Tone slider is logarithmic: equal travel = equal musical interval.
@@ -124,6 +127,7 @@ function loadSettings() {
       fxPage: Number.isInteger(saved.fxPage) && saved.fxPage >= 0 && saved.fxPage < PAGE_COUNT ? saved.fxPage : 0,
       onePass: saved.onePass !== false,
       bendRange: BEND_RANGES.includes(saved.bendRange) ? saved.bendRange : DEFAULT_SETTINGS.bendRange,
+      transpose: Number.isInteger(saved.transpose) ? Math.min(Math.max(saved.transpose, -TRANSPOSE_MAX), TRANSPOSE_MAX) : 0,
       tone: Number.isFinite(saved.tone) ? Math.min(Math.max(saved.tone, TONE_MIN), TONE_MAX) : DEFAULT_SETTINGS.tone,
       boostDb: Number.isFinite(saved.boostDb) ? Math.min(Math.max(saved.boostDb, 0), BOOST_MAX_DB) : DEFAULT_SETTINGS.boostDb,
     };
@@ -176,7 +180,7 @@ function layerSummary(events) {
 function controlMap(settings) {
   const sound = soundById(settings.piano);
   return [
-    ['Keys', `Play the sound: ${soundTitle(sound)}`],
+    ['Keys', `Play the sound: ${soundTitle(sound)}${settings.transpose ? `, transposed ${signed(settings.transpose)} semitones` : ''}`],
     ['Sustain pedal', 'Holds the notes, and they record into the loop held'],
     ['Pitch wheel', `Bends the notes you hold, ±${settings.bendRange} semitones`],
     ['Mod wheel', sound.filter ? 'Auto-wah and tremolo on this sound' : 'Vibrato'],
@@ -357,6 +361,21 @@ export default function MidiKeys() {
     sustainedRef.current.clear();
   }, [releaseSound]);
 
+  // Transpose: a key from the keyboard sounds `transpose` semitones away. Each
+  // physical key remembers the note it started, so changing the transpose
+  // while holding a key still releases the right note.
+  const transposedRef = useRef(new Map()); // physical key -> sounding note
+  const midiKeyDown = useCallback((key, vel) => {
+    const note = Math.min(127, Math.max(0, key + settingsRef.current.transpose));
+    transposedRef.current.set(key, note);
+    keyDown(note, vel);
+  }, [keyDown]);
+  const midiKeyUp = useCallback((key) => {
+    const note = transposedRef.current.has(key) ? transposedRef.current.get(key) : key + settingsRef.current.transpose;
+    transposedRef.current.delete(key);
+    keyUp(note);
+  }, [keyUp]);
+
   const allNotesOff = useCallback(() => {
     const now = nowSec();
     heldRef.current.forEach((_, m) => releaseSound(m, now));
@@ -510,8 +529,8 @@ export default function MidiKeys() {
       }
       return; // pad releases and pad aftertouch are not needed
     }
-    if (cmd === 0x90 && d2 > 0) keyDown(d1, d2);
-    else if (cmd === 0x80 || cmd === 0x90) keyUp(d1);
+    if (cmd === 0x90 && d2 > 0) midiKeyDown(d1, d2);
+    else if (cmd === 0x80 || cmd === 0x90) midiKeyUp(d1);
     else if (cmd === 0xc0) {
       // Program Change: the General MIDI instrument with that number
       const inst = instrumentForProgram(d1);
@@ -532,7 +551,7 @@ export default function MidiKeys() {
       engineRef.current?.setModulation(0);
       setSustain(false);
     } else if (cmd === 0xb0 && (d1 === 120 || d1 === 123)) allNotesOff();
-  }, [allNotesOff, drumHit, keyDown, keyUp, loopAction, setSustain, showKnob, showFader]);
+  }, [allNotesOff, drumHit, midiKeyDown, midiKeyUp, loopAction, setSustain, showKnob, showFader]);
 
   const onMidiRef = useRef(onMidiMessage);
   onMidiRef.current = onMidiMessage;
@@ -632,6 +651,14 @@ export default function MidiKeys() {
     const p = settings.fxPage;
     announce(`Knob page ${p + 1}`, PAGE_NAMES[p], ['Knobs', `Page ${p + 1} of ${PAGE_COUNT}`, PAGE_SCREEN_NAMES[p]]);
   }, [settings.fxPage, announce]);
+
+  const firstTransposeRef = useRef(true);
+  useEffect(() => {
+    if (firstTransposeRef.current) { firstTransposeRef.current = false; return; }
+    const t = settings.transpose;
+    const detail = t === 0 ? 'Keys at concert pitch' : `${Math.abs(t)} semitone${Math.abs(t) === 1 ? '' : 's'} ${t > 0 ? 'up' : 'down'}`;
+    announce(`Transpose ${signed(t)}`, detail, ['Transpose', signed(t), '']);
+  }, [settings.transpose, announce]);
 
   const firstDrumPageRef = useRef(true);
   useEffect(() => {
@@ -1040,6 +1067,29 @@ export default function MidiKeys() {
               <output>{settings.tone >= 1000 ? `${(settings.tone / 1000).toFixed(1)} kHz` : `${settings.tone} Hz`}</output>
             </label>
           )}
+          <div className="midikeys__transpose" role="group" aria-label="Transpose">
+            <span>Transpose</span>
+            {[[-12, '−12'], [-1, '−1']].map(([d, label]) => (
+              <button key={label} type="button" className="midikeys__tbtn"
+                title={d === -12 ? 'Down an octave' : 'Down a semitone'}
+                disabled={settings.transpose + d < -TRANSPOSE_MAX}
+                onClick={() => setSettings((s) => ({ ...s, transpose: Math.max(-TRANSPOSE_MAX, s.transpose + d) }))}>
+                {label}
+              </button>
+            ))}
+            <button type="button" className={`midikeys__tval ${settings.transpose ? 'is-on' : ''}`}
+              title="Back to 0" onClick={() => setSettings((s) => ({ ...s, transpose: 0 }))}>
+              {signed(settings.transpose)}
+            </button>
+            {[[1, '+1'], [12, '+12']].map(([d, label]) => (
+              <button key={label} type="button" className="midikeys__tbtn"
+                title={d === 12 ? 'Up an octave' : 'Up a semitone'}
+                disabled={settings.transpose + d > TRANSPOSE_MAX}
+                onClick={() => setSettings((s) => ({ ...s, transpose: Math.min(TRANSPOSE_MAX, s.transpose + d) }))}>
+                {label}
+              </button>
+            ))}
+          </div>
           <label className="midikeys__select">
             <span>Bend</span>
             <select value={settings.bendRange} onChange={(e) => setSettings((s) => ({ ...s, bendRange: Number(e.target.value) }))}>
