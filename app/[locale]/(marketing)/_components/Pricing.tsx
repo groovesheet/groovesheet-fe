@@ -96,11 +96,16 @@ export default function Pricing({ onLoginClick }: PricingProps) {
   const [loading, setLoading] = useState<PlanSlug | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<PricingTab>('plans');
+  const tabChosen = useRef(false);
+  const chooseTab = (tab: PricingTab) => {
+    tabChosen.current = true;
+    setActiveTab(tab);
+  };
   const [billingMode, setBillingMode] = useState<BillingMode>('annual');
 
   // Public pricing catalog from the backend (single source of truth for
   // numbers) plus the currency it quoted this visitor in.
-  const { catalog, loading: catalogLoading, currency } = useBillingCatalog();
+  const { catalog, loading: catalogLoading, currency, wallets } = useBillingCatalog();
   const formatPrice = (value: number | null | undefined) => formatMoney(value, currency);
 
   // "Checkout canceled" notice, shown when checkout returns the user to /pricing?canceled.
@@ -118,14 +123,29 @@ export default function Pricing({ onLoginClick }: PricingProps) {
     if (params.get('tab') === 'topups') {
       setActiveTab('topups');
     }
+    if (params.has('tab')) tabChosen.current = true;
   }, []);
+
+  // Visitors quoted in yuan open on top-ups: plans are subscriptions, which
+  // Stripe bills to cards only, and most mainland buyers pay by Alipay or
+  // WeChat. The first real checkout attempt (2026-10-01) was a mainland
+  // visitor bouncing off a card-only Pro annual page. A tab the visitor (or
+  // the URL) already picked is left alone.
+  useEffect(() => {
+    if (currency === 'cny' && !tabChosen.current) {
+      setActiveTab('topups');
+    }
+  }, [currency]);
 
   // Same signal, but for the pricing section rendered in-page on the landing
   // and tool routes, where there is no navigation to carry a query string.
   useEffect(() => {
     const onTab = (e: Event) => {
       const detail = (e as CustomEvent<unknown>).detail;
-      if (detail === 'topups' || detail === 'plans') setActiveTab(detail);
+      if (detail === 'topups' || detail === 'plans') {
+        tabChosen.current = true;
+        setActiveTab(detail);
+      }
     };
     window.addEventListener(PRICING_TAB_EVENT, onTab);
     return () => window.removeEventListener(PRICING_TAB_EVENT, onTab);
@@ -283,14 +303,21 @@ export default function Pricing({ onLoginClick }: PricingProps) {
           </div>
 
           <div className="pricing-tabs">
-            <button className={`pricing-tab ${activeTab === 'plans' ? 'active' : ''}`} onClick={() => setActiveTab('plans')}>
+            <button className={`pricing-tab ${activeTab === 'plans' ? 'active' : ''}`} onClick={() => chooseTab('plans')}>
               {t('pricing.tabs.plans')}
             </button>
-            <button className={`pricing-tab ${activeTab === 'topups' ? 'active' : ''}`} onClick={() => setActiveTab('topups')}>
+            <button className={`pricing-tab ${activeTab === 'topups' ? 'active' : ''}`} onClick={() => chooseTab('topups')}>
               {t('pricing.tabs.topups')}
             </button>
             <div className="pricing-tab-indicator" style={{ left: activeTab === 'plans' ? '0' : '50%' }}></div>
           </div>
+          {currency === 'cny' && (
+            <p className="pricing-pay-note">
+              {activeTab === 'plans'
+                ? `${t('pricing.payNote.plansCardOnly')}${wallets.length ? ` ${t('pricing.payNote.walletsOnTopups')}` : ''}`
+                : t(wallets.length ? 'pricing.payNote.topupsWallets' : 'pricing.payNote.topupsOnce')}
+            </p>
+          )}
         </div>
 
         {activeTab === 'plans' && (

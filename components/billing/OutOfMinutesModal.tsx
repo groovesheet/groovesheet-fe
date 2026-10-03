@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@/lib/auth';
+import { useTranslation } from '@/lib/i18n';
 import { createCheckoutSession } from '@/lib/api';
 import { startProviderCheckout } from '@/lib/airwallex';
 import { getClickIds } from '@/lib/attribution';
@@ -84,7 +85,8 @@ function OutOfMinutesModal({
   onClose: (reason: string) => void;
 }) {
   const { getToken } = useAuth();
-  const { catalog, currency } = useBillingCatalog();
+  const { catalog, currency, wallets } = useBillingCatalog();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,23 +124,22 @@ function OutOfMinutesModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={signedOut ? 'Get the full song' : 'Out of minutes'}
+        aria-label={signedOut ? t('paywall.titleSignedOut') : t('paywall.titleOut')}
         onClick={(e) => e.stopPropagation()}
         style={panel}
       >
         <div style={{ fontSize: 19, fontWeight: 500, color: 'var(--color-text)' }}>
-          {signedOut ? 'Get the full song' : <>You&apos;re out of minutes</>}
+          {signedOut ? t('paywall.titleSignedOut') : t('paywall.titleOut')}
         </div>
         {signedOut ? (
-          <p style={muted}>
-            The 10-second preview is free. The full song uses minutes from a minute pack or a monthly plan. Pick one and
-            sign in to pay; you come straight back to this song.
-          </p>
+          <p style={muted}>{t('paywall.bodySignedOut')}</p>
         ) : (
           <p style={muted}>
-            {state.message || 'Transcribing the full song uses minutes from a plan or a minute pack.'} Your preview stays
-            here while you top up.
+            {state.message || t('paywall.bodyOut')} {t('paywall.previewStays')}
           </p>
+        )}
+        {currency === 'cny' && (
+          <p style={muted}>{t(wallets.length ? 'paywall.payWallets' : 'paywall.payOnce')}</p>
         )}
         {error && <p style={{ margin: 0, fontSize: 13, color: '#FF6B7A' }}>{error}</p>}
         {topups.map((topup) => {
@@ -147,14 +148,14 @@ function OutOfMinutesModal({
           return (
             <div key={key} style={row}>
               <div style={{ color: 'var(--color-text)', fontSize: 14 }}>
-                {minutes != null ? `${minutes} minutes` : topup.display_name}
+                {minutes != null ? t('paywall.minutes', { minutes }) : topup.display_name}
                 <span style={{ color: 'var(--color-muted-foreground)' }}>
                   {' '}
-                  · {formatMoney(topup.price ?? topup.price_usd, currency)} once
+                  · {t('paywall.priceOnce', { price: formatMoney(topup.price ?? topup.price_usd, currency) ?? '' })}
                 </span>
               </div>
               <Button size="small" disabled={busy !== null} onClick={() => buy(key)}>
-                {busy === key ? 'Opening…' : signedOut ? 'Choose' : 'Buy'}
+                {busy === key ? t('paywall.opening') : signedOut ? t('paywall.choose') : t('paywall.buy')}
               </Button>
             </div>
           );
@@ -168,7 +169,7 @@ function OutOfMinutesModal({
               scrollToPricing({ tab: 'plans' });
             }}
           >
-            See monthly plans
+            {t('paywall.seePlans')}
           </Button>
           {signedOut && (
             <Button
@@ -180,11 +181,11 @@ function OutOfMinutesModal({
                 options.onSignInToBuy?.(null);
               }}
             >
-              I have a plan: sign in
+              {t('paywall.haveAPlan')}
             </Button>
           )}
           <Button variant="secondary" size="small" onClick={() => onClose('not_now')}>
-            Not now
+            {t('paywall.notNow')}
           </Button>
         </div>
       </div>

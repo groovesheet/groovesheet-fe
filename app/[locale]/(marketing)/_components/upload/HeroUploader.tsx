@@ -6,7 +6,7 @@ import { LuGuitar, LuDrum } from 'react-icons/lu';
 import { LiaMicrophoneAltSolid } from 'react-icons/lia';
 import { Piano } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { useRouter } from '@/lib/navigation';
+import { Link, useRouter } from '@/lib/navigation';
 import { useUser, useAuth } from '@/lib/auth';
 import { queueSummary } from '@/lib/queue';
 import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
@@ -27,9 +27,11 @@ import ResultView from './ResultView';
 import {
   UPLOAD_ACCEPT,
   errorInfo,
+  failureMessage,
   filenameFromResponse,
   isCompletedStatus,
   isFailedStatus,
+  isNoInstrumentMessage,
   makeFileTypeCheck,
   trackPointer,
   triggerDownload,
@@ -161,6 +163,16 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
   // instrument that was asked for and can't build the "everything else" row.
   const [resultFiles, setResultFiles] = useState<Record<string, unknown> | null>(null);
   const [selectedInstrument, setSelectedInstrument] = useState('piano');
+  // A preview the server failed. Shown as its own card with a way forward,
+  // instead of an error laid over the "Transcribing" card, whose only exit
+  // was Cancel (a Meta-ads visitor clicked around it and left, 2026-10-02).
+  const [failure, setFailure] = useState<{ message: string; instrument: string; noInstrument: boolean } | null>(null);
+  // The last file sent, so "try another instrument" needs no second upload pick.
+  // Gone after a reload; then the failed card only offers a new upload.
+  const [lastFile, setLastFile] = useState<File | null>(null);
+  // Set by "try another instrument": upload this file once the new instrument
+  // is the selected one (handleUpload reads the instrument from render state).
+  const [retry, setRetry] = useState<{ file: File; instrument: string } | null>(null);
 
   // The polling loop and the download helpers run long after the render that
   // started them, so they read the live values from refs, not from the
@@ -376,7 +388,13 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               is_preview: isPreview,
             });
             if (isPreview) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
-            setError(data.message || 'Processing failed.');
+            const message = failureMessage(data) || 'Processing failed.';
+            setFailure({ message, instrument: selectedInstrument, noInstrument: isNoInstrumentMessage(message) });
+            setStatus(null);
+            setQueue(null);
+            setProgress(0);
+            // A reload must not resume (and re-fail) this job.
+            clearPersistence();
             stopped = true;
             return;
           }
@@ -428,6 +446,8 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     }
 
     setError(null);
+    setFailure(null);
+    setLastFile(fileToUpload);
     setStatus('uploading');
     trackFunnel(FUNNEL.UPLOAD_STARTED, {
       surface: UPLOAD_SOURCE,
@@ -542,6 +562,16 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     handleUpload(selectedFile);
   };
 
+  // `/?instrument=drums` (from a library song page's "try your own song")
+  // opens with that instrument picked.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('instrument');
+    if (wanted && VISIBLE_INSTRUMENTS.includes(wanted)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the landing URL
+      setSelectedInstrument(wanted);
+    }
+  }, []);
+
   // Recover a persisted workflow on mount: a reload mid-job resumes polling
   // instead of showing an empty card while the song is still processing.
   useEffect(() => {
@@ -599,6 +629,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     setResultMetadata({});
     setResultFiles(null);
     resultFilesRef.current = null;
+    setFailure(null);
     clearPersistence();
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -736,17 +767,84 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
     handleBrowseClick();
   };
 
+  // "Try another instrument" on the failed card: the instrument change has to
+  // render before handleUpload can see it, so the upload starts from here.
+  useEffect(() => {
+    if (!retry || retry.instrument !== selectedInstrument) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- consumes the one-shot retry request
+    setRetry(null);
+    setFile(retry.file.name);
+    void handleUpload(retry.file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a retry is requested or its instrument lands
+  }, [retry, selectedInstrument]);
+
+  const instrumentTabs = [
+    { value: 'vocals', label: t('hero.instruments.vocal'), icon: LiaMicrophoneAltSolid },
+    { value: 'drums', label: t('hero.instruments.drums'), icon: LuDrum },
+    { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
+    { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
+    { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon },
+  ].filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value));
+
+  const tryInstrument = (instrument: string) => {
+    const file = lastFile;
+    phLog('preview_failed_next_step', { choice: 'instrument', instrument, from: failure?.instrument ?? '', surface: UPLOAD_SOURCE });
+    setFailure(null);
+    if (file) setRetry({ file, instrument });
+    setSelectedInstrument(instrument);
+  };
+
+  const renderFailedState = (f: NonNullable<typeof failure>) => {
+    const failedLabel = instrumentTabs.find((i) => i.value === f.instrument)?.label ?? f.instrument;
+    const others = instrumentTabs.filter((i) => i.value !== f.instrument);
+    return (
+      <div className="upload-failed">
+        <h3 className="upload-failed-title">
+          {f.noInstrument ? t('hero.failed.noInstrumentTitle', { instrument: failedLabel }) : t('hero.failed.title')}
+        </h3>
+        <p className="upload-failed-body">{f.noInstrument ? t('hero.failed.noInstrumentBody') : f.message}</p>
+        {lastFile && others.length > 0 && (
+          <>
+            <p className="upload-failed-label">{t('hero.failed.tryAnother')}</p>
+            <div className="instrument-tabs upload-failed-instruments">
+              {others.map((instrument) => {
+                const IconComp = instrument.icon;
+                return (
+                  <button key={instrument.value} className="instrument-tab" onClick={() => tryInstrument(instrument.value)}>
+                    <IconComp size={22.74} />
+                    <span>{instrument.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+        <div className="upload-failed-actions">
+          <Link
+            href="/stem-splitter"
+            className="upload-failed-btn upload-failed-btn--primary"
+            onClick={() => phLog('preview_failed_next_step', { choice: 'stem_splitter', from: f.instrument, surface: UPLOAD_SOURCE })}
+          >
+            {t('hero.failed.splitStems')}
+          </Link>
+          <button
+            className="upload-failed-btn"
+            onClick={() => {
+              phLog('preview_failed_next_step', { choice: 'new_song', from: f.instrument, surface: UPLOAD_SOURCE });
+              resetUpload();
+            }}
+          >
+            {t('hero.failed.newSong')}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderIdleState = () => (
     <>
       <div className="instrument-tabs">
-        {[
-          { value: 'vocals', label: t('hero.instruments.vocal'), icon: LiaMicrophoneAltSolid },
-          { value: 'drums', label: t('hero.instruments.drums'), icon: LuDrum },
-          { value: 'piano', label: t('hero.instruments.piano'), icon: Piano },
-          { value: 'guitar', label: t('hero.instruments.guitar'), icon: LuGuitar },
-          { value: 'bass', label: t('hero.instruments.bass'), icon: BassIcon },
-        ]
-          .filter((instrument) => VISIBLE_INSTRUMENTS.includes(instrument.value))
+        {instrumentTabs
           .map((instrument) => {
             const IconComp = instrument.icon;
             const isSelected = selectedInstrument === instrument.value;
@@ -898,7 +996,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
             style={{ display: 'none' }}
           />
 
-          {uiState === 'idle' && renderIdleState()}
+          {uiState === 'idle' && (failure ? renderFailedState(failure) : renderIdleState())}
           {uiState === 'uploading' && renderUploadingState()}
           {pollFailures >= 3 && uiState !== 'idle' && uiState !== 'success' && (
             <p className="cold-start-sub" style={{ margin: '0 0 10px', opacity: 0.85 }}>

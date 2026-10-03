@@ -81,6 +81,9 @@ import SongSidebar from './SongSidebar';
 import UrlIntent, { type SongUrlIntent } from './UrlIntent';
 import { assetKey, instrumentWord, trackAssets, trackDurationSec, type SongAsset, type SongT } from './songData';
 
+/** Instruments the home uploader turns into a score (its VISIBLE_INSTRUMENTS). */
+const OWN_TRACK_SCORE_INSTRUMENTS = ['piano', 'drums', 'bass'];
+
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 // Backend stem_name to signature color (Explore palette). Labels and the
@@ -488,6 +491,13 @@ export default function SongDetail({
   // --- view (tab) ------------------------------------------------------------
   const intentView = isViewKey(intent.view) ? intent.view : null;
   const view = resolveView(available, preferredView ?? intentView);
+
+  // Where "try your own song" goes: the tool that makes what this tab shows.
+  // Scores exist for piano, drums and bass; everything else is stems.
+  const ownTrackHref =
+    view === 'stems' || view === 'spectrum' || !OWN_TRACK_SCORE_INSTRUMENTS.includes(instrument ?? '')
+      ? '/stem-splitter'
+      : `/?instrument=${instrument}`;
 
   // Explicit tab clicks are the visitor's own choice.
   const chooseView = useCallback((v: ViewKey) => setPreferredView(v), []);
@@ -1285,6 +1295,23 @@ export default function SongDetail({
               {!view && <CenteredNotice title={t('emptyTitle')} body={t('emptyBody')} />}
             </div>
 
+            {/* Right under the player, where the people who just played a
+                library song are looking: try the same thing on your own track.
+                The sidebar link and a footer link drew 2 clicks in 30 days. */}
+            <div className="gs-song-own-track">
+              <div className="gs-song-own-track-text">
+                <strong>{tSong('ownTrack.title')}</strong>
+                <span>{tSong('ownTrack.body')}</span>
+              </div>
+              <Link
+                className="gs-song-own-track-btn"
+                href={ownTrackHref}
+                onClick={() => trackExploreUploadCta(track, { placement: 'below_player', target: ownTrackHref, view: view ?? undefined })}
+              >
+                {tSong('ownTrack.cta')}
+              </Link>
+            </div>
+
             {/* What this track is, server-rendered (see TrackFacts). */}
             {facts}
 
@@ -1303,17 +1330,6 @@ export default function SongDetail({
           {/* Right sidebar (desktop) */}
           <div className="gs-song-sidebar-desktop">{sidebar}</div>
         </div>
-
-        {/* Same bridge as the sidebar's, for the widths where the sidebar is
-            replaced by a drawer that starts closed. */}
-        <Link
-          className="gs-song-upload-cta-mobile"
-          href="/"
-          onClick={() => trackExploreUploadCta(track, { placement: 'mobile_inline' })}
-        >
-          <strong>{tSong('sidebar.ctaTitle')}</strong>
-          <span>{tSong('sidebar.ctaBody')}</span>
-        </Link>
 
         {/* Mobile sidebar drawer */}
         <button className="gs-rs-toggle" onClick={() => setDrawerOpen(true)}>

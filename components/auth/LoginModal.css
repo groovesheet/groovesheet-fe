@@ -558,3 +558,20 @@ body.modal-open {
     height: 26px;
   }
 }
+
+/* zh-CN only: why email is the first choice there. */
+.login-region-hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Under the code prompt: where the code went and what to do if it is not there. */
+.login-code-hint {
+  margin: -12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  overflow-wrap: anywhere;
+}

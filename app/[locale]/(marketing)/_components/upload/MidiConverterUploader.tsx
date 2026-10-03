@@ -26,6 +26,7 @@ import ResultView from './ResultView';
 import {
   UPLOAD_ACCEPT,
   errorInfo,
+  failureMessage,
   filenameFromResponse,
   isCompletedStatus,
   isFailedStatus,
@@ -318,7 +319,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
           } else if (isFailedStatus(newStatus)) {
             stopProgressSimulation();
             if (id.startsWith('PRV')) trackFunnel(FUNNEL.PREVIEW_FAILED, { surface: UPLOAD_SOURCE, preview_id: id, instrument: selectedInstrument });
-            setError(data.message || t('tools.uploader.errors.processingFailed'));
+            setError(failureMessage(data) || t('tools.uploader.errors.processingFailed'));
             stopped = true;
             clearActiveJob(SURFACE);
             return;

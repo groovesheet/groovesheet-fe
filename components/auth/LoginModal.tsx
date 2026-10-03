@@ -23,7 +23,7 @@ import { useState, type ClipboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { AppleLogo, ArrowLeft, Check, EnvelopeSimple, FacebookLogo, GoogleLogo, X } from '@phosphor-icons/react';
 import { useAuthActions, useSignIn, useSignUp, type OAuthStrategy } from '@/lib/auth';
-import { useTranslation } from '@/lib/i18n';
+import { useLocale, useTranslation } from '@/lib/i18n';
 import { Link } from '@/lib/navigation';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import './LoginModal.css';
@@ -74,6 +74,13 @@ const PROVIDER_BUTTONS: Array<{
   { strategy: 'oauth_apple', labelKey: 'login.apple', image: '/images/Apple_Bg.png', Icon: AppleLogo },
 ];
 
+/**
+ * Google and Facebook do not load in mainland China, so a zh-CN visitor who
+ * taps them lands on a dead page and gives up (seen in PostHog, 2026-10-02).
+ * There, email comes first and Apple, which does work, next.
+ */
+const MAINLAND_ORDER: OAuthStrategy[] = ['oauth_apple', 'oauth_google', 'oauth_facebook'];
+
 function backgroundStyle(image: string) {
   return { backgroundImage: `url(${image})`, backgroundSize: 'cover', backgroundPosition: 'center' } as const;
 }
@@ -84,6 +91,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const { setActive } = useAuthActions();
   const { returnTo } = useLoginModal();
   const { t } = useTranslation();
+  const emailFirst = useLocale() === 'zh-CN';
   const [showEmailSignIn, setShowEmailSignIn] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [email, setEmail] = useState('');
@@ -253,6 +261,37 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     </button>
   );
 
+  const providers = emailFirst
+    ? MAINLAND_ORDER.map((strategy) => PROVIDER_BUTTONS.find((p) => p.strategy === strategy)!)
+    : PROVIDER_BUTTONS;
+  const providerButtons = providers.map(({ strategy, labelKey, image, Icon }) => (
+    <button
+      key={strategy}
+      type="button"
+      onClick={() => handleOAuthSignIn(strategy)}
+      className="auth-button"
+      style={backgroundStyle(image)}
+    >
+      <span className="auth-button-label">{t(labelKey)}</span>
+      <span className="auth-icon">
+        <Icon size={44} color="white" weight="fill" />
+      </span>
+    </button>
+  ));
+  const emailButton = (
+    <button
+      type="button"
+      onClick={() => setShowEmailSignIn(true)}
+      className="auth-button auth-button--email"
+      style={backgroundStyle('/images/Email_Bg.png')}
+    >
+      <span className="auth-button-label">{t('login.email')}</span>
+      <span className="auth-icon auth-icon--email">
+        <EnvelopeSimple size={44} color="white" weight="fill" />
+      </span>
+    </button>
+  );
+
   let step;
   if (!showEmailSignIn && !showVerification) {
     step = (
@@ -267,33 +306,11 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
           <div className="login-providers">
             <div className="login-provider-grid">
-              {PROVIDER_BUTTONS.map(({ strategy, labelKey, image, Icon }) => (
-                <button
-                  key={strategy}
-                  type="button"
-                  onClick={() => handleOAuthSignIn(strategy)}
-                  className="auth-button"
-                  style={backgroundStyle(image)}
-                >
-                  <span className="auth-button-label">{t(labelKey)}</span>
-                  <span className="auth-icon">
-                    <Icon size={44} color="white" weight="fill" />
-                  </span>
-                </button>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => setShowEmailSignIn(true)}
-                className="auth-button auth-button--email"
-                style={backgroundStyle('/images/Email_Bg.png')}
-              >
-                <span className="auth-button-label">{t('login.email')}</span>
-                <span className="auth-icon auth-icon--email">
-                  <EnvelopeSimple size={44} color="white" weight="fill" />
-                </span>
-              </button>
+              {emailFirst && emailButton}
+              {providerButtons}
+              {!emailFirst && emailButton}
             </div>
+            {emailFirst && <p className="login-region-hint">{t('login.mainlandHint')}</p>}
 
             {/* Below the sign-in buttons: the choice to make here is how to sign
                 in; the newsletter box is secondary and read on the way out. */}
@@ -360,6 +377,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             {closeButton}
           </div>
           <p className="login-prompt">{t('login.codePrompt')}</p>
+          <p className="login-code-hint">{t('login.codeHint', { email })}</p>
         </div>
 
         <div className="login-code-area">

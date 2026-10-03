@@ -572,3 +572,12 @@
     line-height: 16px;
   }
 }
+
+/* Yuan visitors only: which way each tab can be paid (plans are card-only). */
+.pricing-pay-note {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+  text-align: center;
+}
