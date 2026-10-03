@@ -13,7 +13,11 @@ import { COMPANY } from '@/lib/company';
 const GTM_ID = 'GTM-PHXB57NW';
 const GA4_ID = 'G-LJ5P8PF3YH';
 const ADS_ID = 'AW-18426875153';
-const META_PIXEL_ID = '2726179107784436';
+// Two Meta datasets while ads move to the verified Kelin Studio portfolio:
+// 1438487874888003 is the new "GrooveSheet Web" there, 2726179107784436 the old
+// Kelin Marketing one the running campaigns still optimise on. fbq('track')
+// reaches every initialised pixel. Drop the old ID once the move is finished.
+const META_PIXEL_IDS = ['1438487874888003', '2726179107784436'];
 const ADSENSE_CLIENT = 'ca-pub-8631844190242419';
 
 const ORGANIZATION_JSON_LD = {
@@ -111,7 +115,7 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${META_PIXEL_ID}');
+${META_PIXEL_IDS.map((id) => `fbq('init', '${id}');`).join('\n')}
 fbq('track', 'PageView');`}
       </Script>
 
@@ -153,14 +157,17 @@ export function BodyNoScript() {
         />
       </noscript>
       <noscript>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          height="1"
-          width="1"
-          style={{ display: 'none' }}
-          src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
-          alt=""
-        />
+        {META_PIXEL_IDS.map((id) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={id}
+            height="1"
+            width="1"
+            style={{ display: 'none' }}
+            src={`https://www.facebook.com/tr?id=${id}&ev=PageView&noscript=1`}
+            alt=""
+          />
+        ))}
       </noscript>
     </>
   );
