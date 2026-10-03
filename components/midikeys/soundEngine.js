@@ -94,7 +94,11 @@ const MOD = {
 const RELEASE_SEC = 0.25; // damper fall on key-up
 const nowSec = () => performance.now() / 1000;
 
-export function createSoundEngine({ onStatus } = {}) {
+/**
+ * `outputGain` lifts the whole page before the limiter (1 = as built). Each
+ * page sets its own, so /midi-keyboard can sit louder without moving /launchpad.
+ */
+export function createSoundEngine({ onStatus, outputGain = 1 } = {}) {
   const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
   if (!AC) {
     onStatus?.('error', 'This browser has no Web Audio support.');
@@ -106,8 +110,11 @@ export function createSoundEngine({ onStatus } = {}) {
   comp.threshold.value = -8;
   comp.ratio.value = 4;
   comp.connect(ctx.destination);
+  const output = ctx.createGain();
+  output.gain.value = outputGain;
+  output.connect(comp);
   const master = ctx.createGain();
-  master.connect(comp);
+  master.connect(output);
   // The keys (live and replayed) go through the stage-piano effects; the
   // drums stay dry, as a drum machine beside the keyboard would.
   const fx = createFxChain(ctx, master);

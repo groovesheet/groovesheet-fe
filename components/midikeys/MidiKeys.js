@@ -55,6 +55,9 @@ const SETTINGS_VERSION = 3;
 const LOOKAHEAD_SEC = 0.12; // how far ahead loop events are scheduled
 const HIDDEN_LOOKAHEAD_SEC = 1.2; // background tabs only get ~1 timer per second
 const TICK_MS = 25;
+// The whole page +6 dB: it sat well under /launchpad played side by side.
+// The engine's limiter catches the peaks. /launchpad keeps its own level.
+const OUTPUT_GAIN = 2;
 const RISE_SEC = 5; // seconds a note takes to rise the full height of the visualiser
 const PAD_FLASH_SEC = 0.14;
 
@@ -588,6 +591,7 @@ export default function MidiKeys() {
   useEffect(() => {
     const engine = createSoundEngine({
       onStatus: (status, error) => setAudio({ status, error: error || null }),
+      outputGain: OUTPUT_GAIN,
     });
     if (!engine) return undefined;
     engineRef.current = engine;
