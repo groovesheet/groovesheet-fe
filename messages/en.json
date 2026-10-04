@@ -219,9 +219,15 @@
     "dismiss": "Dismiss",
     "payNote": {
       "plansCardOnly": "Plans renew automatically and are billed to a card or Apple Pay.",
-      "walletsOnTopups": "To pay with Alipay or WeChat Pay, choose a one-time top-up.",
-      "topupsWallets": "One-time payment by Alipay, WeChat Pay, Apple Pay or card. Nothing renews.",
+      "walletsOnTopups": "To pay with {wallets}, choose a one-time top-up.",
+      "topupsWallets": "One-time payment by {wallets}, Apple Pay or card. Nothing renews.",
       "topupsOnce": "One-time payment. Nothing renews."
+    },
+    "wallets": {
+      "alipay": "Alipay",
+      "wechat_pay": "WeChat Pay",
+      "list": ", ",
+      "or": " or "
     }
   },
   "element": {
@@ -1163,7 +1169,7 @@
     "bodySignedOut": "The 10-second preview is free. The full song uses minutes from a minute pack or a monthly plan. Pick one and sign in to pay; you come straight back to this song.",
     "bodyOut": "Transcribing the full song uses minutes from a plan or a minute pack.",
     "previewStays": "Your preview stays here while you top up.",
-    "payWallets": "Minute packs are a one-time payment by Alipay, WeChat Pay, Apple Pay or card. Monthly plans take a card or Apple Pay only.",
+    "payWallets": "Minute packs are a one-time payment by {wallets}, Apple Pay or card. Monthly plans take a card or Apple Pay only.",
     "payOnce": "Minute packs are a one-time payment. Monthly plans renew and take a card or Apple Pay only.",
     "minutes": "{minutes} minutes",
     "priceOnce": "{price} once",

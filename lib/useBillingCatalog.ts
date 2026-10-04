@@ -52,6 +52,25 @@ export function formatMoney(value: number | string | null | undefined, currency:
 
 const NO_WALLETS: string[] = [];
 
+// The wallets the copy knows how to name, in the order it names them.
+const WALLET_ORDER = ['alipay', 'wechat_pay'];
+
+/**
+ * The active wallets as words for the payment note: "WeChat Pay",
+ * "Alipay, WeChat Pay" (`join: 'list'`) or "Alipay or WeChat Pay"
+ * (`join: 'or'`). Only names what Stripe reports active, so the page never
+ * promises Alipay while only WeChat Pay is approved. Empty when none are.
+ */
+export function walletNames(
+  wallets: string[],
+  t: (key: string) => string,
+  join: 'list' | 'or' = 'list',
+): string {
+  return WALLET_ORDER.filter((w) => wallets.includes(w))
+    .map((w) => t(`pricing.wallets.${w}`))
+    .join(t(`pricing.wallets.${join}`));
+}
+
 export default function useBillingCatalog(): {
   catalog: BillingCatalog | null;
   loading: boolean;
