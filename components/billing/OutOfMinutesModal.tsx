@@ -8,7 +8,7 @@ import { createCheckoutSession } from '@/lib/api';
 import { startProviderCheckout } from '@/lib/airwallex';
 import { getClickIds } from '@/lib/attribution';
 import { FUNNEL, trackFunnel } from '@/lib/analytics';
-import useBillingCatalog, { formatMoney } from '@/lib/useBillingCatalog';
+import useBillingCatalog, { formatMoney, walletNames } from '@/lib/useBillingCatalog';
 import { scrollToPricing } from '@/lib/scrollToPricing';
 import { Button } from '@/components/ui/Button';
 import type { GetToken } from '@/lib/types';
@@ -87,6 +87,7 @@ function OutOfMinutesModal({
   const { getToken } = useAuth();
   const { catalog, currency, wallets } = useBillingCatalog();
   const { t } = useTranslation();
+  const walletList = walletNames(wallets, t);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,7 +140,9 @@ function OutOfMinutesModal({
           </p>
         )}
         {currency === 'cny' && (
-          <p style={muted}>{t(wallets.length ? 'paywall.payWallets' : 'paywall.payOnce')}</p>
+          <p style={muted}>
+            {walletList ? t('paywall.payWallets', { wallets: walletList }) : t('paywall.payOnce')}
+          </p>
         )}
         {error && <p style={{ margin: 0, fontSize: 13, color: '#FF6B7A' }}>{error}</p>}
         {topups.map((topup) => {

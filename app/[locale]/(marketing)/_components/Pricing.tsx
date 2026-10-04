@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useUser, useAuth } from '@/lib/auth';
 import { createCheckoutSession } from '@/lib/api';
-import useBillingCatalog, { formatMoney } from '@/lib/useBillingCatalog';
+import useBillingCatalog, { formatMoney, walletNames } from '@/lib/useBillingCatalog';
 import { startProviderCheckout } from '@/lib/airwallex';
 import { PRICING_SECTION_ID, PRICING_TAB_EVENT } from '@/lib/scrollToPricing';
 import { MAX_UPLOAD_MB } from '@/lib/constants';
@@ -113,6 +113,7 @@ export default function Pricing({ onLoginClick, variant = 'notation' }: PricingP
   // Public pricing catalog from the backend (single source of truth for
   // numbers) plus the currency it quoted this visitor in.
   const { catalog, loading: catalogLoading, currency, wallets } = useBillingCatalog();
+  const walletList = walletNames(wallets, t);
   const formatPrice = (value: number | null | undefined) => formatMoney(value, currency);
 
   // "Checkout canceled" notice, shown when checkout returns the user to /pricing?canceled.
@@ -321,8 +322,10 @@ export default function Pricing({ onLoginClick, variant = 'notation' }: PricingP
           {currency === 'cny' && (
             <p className="pricing-pay-note">
               {activeTab === 'plans'
-                ? `${t('pricing.payNote.plansCardOnly')}${wallets.length ? ` ${t('pricing.payNote.walletsOnTopups')}` : ''}`
-                : t(wallets.length ? 'pricing.payNote.topupsWallets' : 'pricing.payNote.topupsOnce')}
+                ? `${t('pricing.payNote.plansCardOnly')}${walletList ? ` ${t('pricing.payNote.walletsOnTopups', { wallets: walletNames(wallets, t, 'or') })}` : ''}`
+                : walletList
+                  ? t('pricing.payNote.topupsWallets', { wallets: walletList })
+                  : t('pricing.payNote.topupsOnce')}
             </p>
           )}
         </div>
