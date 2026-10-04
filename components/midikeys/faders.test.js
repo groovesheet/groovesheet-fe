@@ -2,16 +2,26 @@ import {
   DEFAULT_FADER_BINDINGS, DEFAULT_FADERS, FADERS, faderForLayer, faderForMessage, faderGain, faderLabel, gainToFader, sanitizeFaders,
 } from './faders';
 
-test('nine faders on CC 71-79, channel 15, left to right (as the Launchkey sends them)', () => {
+test('nine faders on CC 71-79, left to right (as the Launchkey sends them)', () => {
   expect(FADERS.map((f) => f.id)).toEqual(['keys', 'drums', 'layer0', 'layer1', 'layer2', 'layer3', 'layer4', 'loop', 'master']);
   expect(DEFAULT_FADER_BINDINGS.map((b) => b.cc)).toEqual([71, 72, 73, 74, 75, 76, 77, 78, 79]);
   expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbe, 71, 127])).toEqual({ id: 'keys', value: 1, slot: 0 });
   expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbe, 79, 0])).toMatchObject({ id: 'master', slot: 8 });
 });
 
-test('the same CCs on another channel are not faders', () => {
-  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xb0, 71, 100])).toBeNull();
+test('the faders answer on any channel: the Launchkey moved from 15 to 16 between sessions', () => {
+  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbf, 78, 9])).toMatchObject({ id: 'loop', slot: 7 }); // logged 2026-10-04
+  expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbe, 71, 127])).toMatchObject({ id: 'keys' });
   expect(faderForMessage(DEFAULT_FADER_BINDINGS, [0xbf, 5, 100])).toBeNull();
+  // a fader learnt to one channel stays on it
+  const learnt = DEFAULT_FADER_BINDINGS.map((b) => (b.id === 'keys' ? { ...b, cc: 20, channel: 3 } : b));
+  expect(faderForMessage(learnt, [0xb3, 20, 64])).toMatchObject({ id: 'keys' });
+  expect(faderForMessage(learnt, [0xb0, 20, 64])).toBeNull();
+});
+
+test('bindings saved when the defaults were tied to channel 15 become any-channel', () => {
+  const saved = FADERS.map((f, i) => ({ id: f.id, cc: 71 + i, channel: 14 }));
+  expect(sanitizeFaders({}, saved).bindings).toEqual(DEFAULT_FADER_BINDINGS);
 });
 
 test('bindings saved under the old guessed CC 5-13 become the measured defaults', () => {

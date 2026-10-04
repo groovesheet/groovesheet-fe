@@ -1,0 +1,193 @@
+/* LaunchpadDrums: /launchpad. Dark, like /midi-keyboard. */
+
+.lpdrums {
+  --lp-bg: #0f0f11;
+  --lp-panel: #1a1a1c;
+  --lp-panel-2: #232226;
+  --lp-border: #3d3b3e;
+  --lp-text: #f4f4f4;
+  --lp-muted: #8d8c8d;
+  --lp-primary: #012fa7;
+  --lp-live: #3f74e8;
+  --lp-amber: #ffb020;
+  --lp-red: #ff5a5a;
+  --lp-green: #22c55e;
+
+  min-height: 100vh;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: 'Hubot Sans', Inter, system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px clamp(16px, 3vw, 40px);
+  box-sizing: border-box;
+}
+
+.lpdrums *, .lpdrums *::before, .lpdrums *::after { box-sizing: border-box; }
+
+.lpdrums__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px 24px; flex-wrap: wrap; }
+.lpdrums__title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.lpdrums__sub { margin: 4px 0 0; font-size: 14px; color: var(--lp-muted); max-width: 60ch; }
+.lpdrums__status { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.lpdrums__pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--lp-border); background: var(--lp-panel);
+  font-size: 13px; color: var(--lp-muted);
+}
+.lpdrums__pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--lp-muted); }
+.lpdrums__pill.is-on { color: var(--lp-text); }
+.lpdrums__pill.is-on i { background: var(--lp-green); box-shadow: 0 0 8px rgba(34, 197, 94, 0.7); }
+
+.lpdrums__start {
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left;
+  padding: 14px 18px; border-radius: 12px;
+  border: 1px solid var(--lp-live); background: rgba(1, 47, 167, 0.25);
+  color: var(--lp-text); font: inherit; cursor: pointer;
+}
+.lpdrums__start strong { font-size: 16px; }
+.lpdrums__start span { font-size: 13px; color: #c9d6ff; }
+
+.lpdrums__note { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--lp-panel); border: 1px solid var(--lp-border); font-size: 14px; }
+
+.lpdrums__main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+
+.lpdrums__deck {
+  display: flex; gap: 12px; padding: 16px;
+  border-radius: 16px; background: var(--lp-panel); border: 1px solid var(--lp-border);
+  /* the whole grid on screen: grid height ≈ width, under the header and notes; + side buttons and padding */
+  max-width: min(100%, calc(100vh - 230px + 108px));
+}
+
+.lpdrums__grid {
+  flex: 1; min-width: 0;
+  display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px;
+  container-type: inline-size; /* pad names scale with the grid */
+}
+
+.lpdrums__pad {
+  --pad: #8d8c8d;
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--pad) 55%, transparent);
+  background: color-mix(in srgb, var(--pad) 22%, var(--lp-panel-2));
+  color: var(--lp-text);
+  font: inherit;
+  /* big for reading from the drum stool; Chinese names are short, English ones wrap to 3 lines */
+  /* three Chinese characters to a line at 100%; the Name size slider scales it */
+  font-size: calc(clamp(13px, 3.15cqi, 30px) * var(--name-scale, 1));
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  padding: 4px 5px; display: flex; align-items: flex-end; text-align: left;
+  position: relative; overflow: hidden; cursor: pointer; touch-action: manipulation;
+  /* the light show sets --glow (0..1) and --glow-rgb each frame */
+  box-shadow: 0 0 calc(var(--glow, 0) * 22px) rgba(var(--glow-rgb, 255, 255, 255), calc(var(--glow, 0) * 0.9));
+}
+/* the wave of light, under the name */
+.lpdrums__pad::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: rgb(var(--glow-rgb, 255, 255, 255));
+  opacity: calc(var(--glow, 0) * 0.95);
+  pointer-events: none;
+}
+/* Dark at rest: pads go neutral until a hit lights them; the name keeps a hint of the colour. */
+.lpdrums.is-dark-rest .lpdrums__pad {
+  background: #141416;
+  border-color: #2a292c;
+}
+.lpdrums.is-dark-rest .lpdrums__pad span { color: color-mix(in srgb, var(--pad) 45%, #d8d8d8); }
+
+.lpdrums.is-lang-en .lpdrums__pad { font-size: calc(clamp(11px, 2.2cqi, 20px) * var(--name-scale, 1)); } /* "triangle", "whistle" must fit one pad width */
+
+.lpdrums__pad span {
+  position: relative; z-index: 1;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  overflow-wrap: anywhere;
+}
+.lpdrums__pad.is-selected { outline: 2px solid #fff; outline-offset: 1px; }
+
+.lpdrums__side { display: grid; grid-template-rows: repeat(8, minmax(0, 1fr)); gap: 6px; width: 64px; }
+.lpdrums__round {
+  aspect-ratio: 1; border-radius: 50%;
+  border: 1px solid var(--lp-border); background: var(--lp-panel-2);
+  color: var(--lp-text); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+}
+.lpdrums__round:disabled { opacity: 0.35; cursor: default; }
+.lpdrums__round.is-loop.is-armed, .lpdrums__round.is-loop.is-overdub { border-color: var(--lp-amber); color: var(--lp-amber); }
+.lpdrums__round.is-loop.is-recording { background: var(--lp-red); border-color: var(--lp-red); color: #fff; }
+.lpdrums__round.is-loop.is-playing { border-color: var(--lp-green); color: var(--lp-green); }
+
+.lpdrums__panel { display: flex; flex-direction: column; gap: 12px; }
+.lpdrums__card { padding: 16px; border-radius: 14px; background: var(--lp-panel); border: 1px solid var(--lp-border); }
+.lpdrums__card-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lpdrums__card-title { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.lpdrums__card-row .lpdrums__card-title { margin: 0; }
+.lpdrums__loop-state { margin: 0 0 6px; font-size: 14px; }
+.lpdrums__muted { margin: 6px 0 0; font-size: 12px; color: var(--lp-muted); }
+
+.lpdrums__slider { display: grid; grid-template-columns: 116px 1fr; align-items: center; gap: 10px; font-size: 13px; margin-top: 6px; }
+.lpdrums__slider input { width: 100%; accent-color: var(--lp-live); }
+
+.lpdrums__tools { display: flex; gap: 10px; align-items: center; }
+.lpdrums__btn {
+  background: var(--lp-panel-2); color: var(--lp-text); border: 1px solid var(--lp-border);
+  border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer;
+}
+.lpdrums__btn.is-active { background: var(--lp-primary); border-color: var(--lp-primary); }
+.lpdrums__link { background: none; border: 0; padding: 0; color: var(--lp-live); font: inherit; font-size: 13px; cursor: pointer; }
+
+.lpdrums__legend { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 12px; color: var(--lp-muted); }
+.lpdrums__legend li { display: flex; align-items: center; gap: 6px; }
+.lpdrums__legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.lpdrums__picker { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.lpdrums__picker-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.lpdrums__chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.lpdrums__chip {
+  --pad: #8d8c8d;
+  padding: 4px 8px; border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--pad) 45%, transparent);
+  background: var(--lp-panel-2); color: var(--lp-text);
+  font: inherit; font-size: 12px; cursor: pointer;
+}
+.lpdrums__chip.is-active { background: var(--pad); color: #0f0f11; }
+
+.lpdrums__seg + .lpdrums__seg { margin-top: 6px; }
+.lpdrums__seg--small { padding: 2px; }
+.lpdrums__seg--small .lpdrums__seg-btn { padding: 4px 8px; font-size: 12px; flex: none; }
+.lpdrums__fxchips + .lpdrums__seg { margin-top: 8px; }
+
+.lpdrums__fxchips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.lpdrums__fxchip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-radius: 8px;
+  border: 1px solid var(--lp-border); background: var(--lp-panel-2);
+  color: var(--lp-muted); font: inherit; font-size: 12px; cursor: pointer; text-align: left;
+}
+.lpdrums__fxchip b { width: 14px; text-align: center; color: var(--lp-text); font-weight: 700; }
+.lpdrums__fxchip.is-wide { grid-column: 1 / -1; }
+.lpdrums__fxchip.is-active { background: var(--lp-primary); border-color: var(--lp-primary); color: var(--lp-text); }
+.lpdrums__legend-fx { margin-left: auto; color: var(--lp-text); font-weight: 700; }
+.lpdrums__seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--lp-panel-2); border: 1px solid var(--lp-border); }
+.lpdrums__seg-btn {
+  flex: 1; padding: 6px 8px; border-radius: 7px; border: 0;
+  background: none; color: var(--lp-muted); font: inherit; font-size: 13px; cursor: pointer;
+}
+.lpdrums__seg-btn.is-active { background: var(--lp-primary); color: var(--lp-text); }
+
+@media (max-width: 900px) {
+  .lpdrums__main { grid-template-columns: 1fr; }
+  .lpdrums__deck { max-width: none; padding: 10px; gap: 6px; }
+  .lpdrums__grid { gap: 4px; }
+  .lpdrums__side { width: 40px; gap: 4px; }
+  .lpdrums__pad { padding: 3px; font-size: calc(clamp(10px, 3.4cqi, 18px) * var(--name-scale, 1)); }
+  .lpdrums.is-lang-en .lpdrums__pad { font-size: calc(clamp(8px, 2.2cqi, 12px) * var(--name-scale, 1)); }
+  .lpdrums__round { font-size: 9px; }
+}

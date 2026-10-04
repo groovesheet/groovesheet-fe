@@ -94,7 +94,12 @@ const MOD = {
 const RELEASE_SEC = 0.25; // damper fall on key-up
 const nowSec = () => performance.now() / 1000;
 
-export function createSoundEngine({ onStatus } = {}) {
+/**
+ * `limiter: true` (/midi-keyboard) adds a boost before the compressor
+ * (setBoost, in dB) and a peak limiter after it, so the page can be pushed
+ * far louder without clipping. Without it (/launchpad) the chain is as built.
+ */
+export function createSoundEngine({ onStatus, limiter = false } = {}) {
   const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
   if (!AC) {
     onStatus?.('error', 'This browser has no Web Audio support.');
@@ -105,9 +110,41 @@ export function createSoundEngine({ onStatus } = {}) {
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -8;
   comp.ratio.value = 4;
-  comp.connect(ctx.destination);
+  const output = ctx.createGain(); // the page's boost
+  output.connect(comp);
+  if (limiter) {
+    // A brick wall just under full scale: catches what the boost pushes over.
+    const lim = ctx.createDynamicsCompressor();
+    lim.threshold.value = -1;
+    lim.knee.value = 0;
+    lim.ratio.value = 20;
+    lim.attack.value = 0.002;
+    lim.release.value = 0.12;
+    comp.connect(lim);
+    // The limiter's attack lets the first millisecond of a hit through, which
+    // a +30 dB boost turns into clipping (measured peaks 1.2), so a soft
+    // clipper rounds anything over 0.85 off below full scale. The shaper only
+    // reads -1..1, so it works on half-scale input and scales back up.
+    const half = ctx.createGain();
+    half.gain.value = 0.5;
+    const clip = ctx.createWaveShaper();
+    const n = 2048;
+    const curve = new Float32Array(n);
+    for (let i = 0; i < n; i += 1) {
+      const v = ((i / (n - 1)) * 2 - 1) * 2; // the real level, -2..2
+      const a = Math.abs(v);
+      curve[i] = a < 0.85 ? v : Math.sign(v) * (0.85 + 0.13 * Math.tanh((a - 0.85) / 0.13));
+    }
+    clip.curve = curve;
+    clip.oversample = 'none'; // oversampling's filter rang past full scale on snare noise
+    lim.connect(half);
+    half.connect(clip);
+    clip.connect(ctx.destination);
+  } else {
+    comp.connect(ctx.destination);
+  }
   const master = ctx.createGain();
-  master.connect(comp);
+  master.connect(output);
   // The keys (live and replayed) go through the stage-piano effects; the
   // drums stay dry, as a drum machine beside the keyboard would.
   const fx = createFxChain(ctx, master);
@@ -465,6 +502,7 @@ export function createSoundEngine({ onStatus } = {}) {
     loadPiano,
     unlock,
     status,
+    isRunning: running, // audio is on (a drums-only page has no samples to wait for)
     pianoOn,
     pianoOff,
     drum,
@@ -476,6 +514,11 @@ export function createSoundEngine({ onStatus } = {}) {
     setModulation,
     setTone,
     setFx: (id, value) => { if (!closed) fx.set(id, value); },
+    /** The page boost in dB (0 = as built); only with `limiter`. */
+    setBoost: (db) => {
+      if (closed || !limiter) return;
+      output.gain.setTargetAtTime(Math.pow(10, Math.min(Math.max(db, 0), 30) / 20), ctx.currentTime, 0.05);
+    },
     close,
   };
 }

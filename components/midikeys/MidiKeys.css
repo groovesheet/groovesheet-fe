@@ -264,6 +264,27 @@
 .midikeys__btn:disabled { opacity: 0.4; cursor: default; }
 .midikeys__btn.is-active { background: var(--mk-primary); border-color: var(--mk-primary); }
 
+/* the on-screen sustain switch, lit while sustain is on (pedal or click) */
+.midikeys__sustain {
+  background: var(--mk-panel-2); color: var(--mk-muted);
+  border: 1px solid var(--mk-border); border-radius: 7px;
+  font: inherit; font-size: 13px; padding: 5px 10px; cursor: pointer;
+}
+.midikeys__sustain.is-on { background: var(--mk-amber); border-color: var(--mk-amber); color: #1a1a1c; font-weight: 700; }
+
+/* Transpose: −12 −1 [value] +1 +12, the value resets to 0 */
+.midikeys__transpose { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--mk-muted); }
+.midikeys__transpose > span { margin-right: 4px; }
+.midikeys__tbtn, .midikeys__tval {
+  background: var(--mk-panel-2); color: var(--mk-text);
+  border: 1px solid var(--mk-border); border-radius: 7px;
+  font: inherit; font-size: 13px; cursor: pointer;
+  padding: 5px 8px; min-width: 34px; font-variant-numeric: tabular-nums;
+}
+.midikeys__tbtn:disabled { opacity: 0.35; cursor: default; }
+.midikeys__tval { min-width: 44px; font-weight: 700; }
+.midikeys__tval.is-on { background: var(--mk-primary); border-color: var(--mk-primary); }
+
 .midikeys__range {
   display: flex;
   align-items: center;
@@ -274,6 +295,8 @@
 
 .midikeys__range span { min-width: 82px; }
 .midikeys__range input { flex: 1; min-width: 60px; accent-color: var(--mk-live); }
+.midikeys__boost { margin: 4px 0 12px; max-width: 420px; }
+.midikeys__boost span { min-width: 104px; color: var(--mk-text); }
 
 .midikeys__lane {
   width: 100%;

@@ -219,9 +219,15 @@
     "dismiss": "關閉",
     "payNote": {
       "plansCardOnly": "方案為自動續訂，只能用銀行卡或 Apple Pay 付款。",
-      "walletsOnTopups": "想用支付寶或微信支付？請選擇一次性「加值」。",
-      "topupsWallets": "一次性付款，支援支付寶、微信支付、Apple Pay 和銀行卡，不會自動續訂。",
+      "walletsOnTopups": "想用{wallets}？請選擇一次性「加值」。",
+      "topupsWallets": "一次性付款，支援{wallets}、Apple Pay 和銀行卡，不會自動續訂。",
       "topupsOnce": "一次性付款，不會自動續訂。"
+    },
+    "wallets": {
+      "alipay": "支付寶",
+      "wechat_pay": "微信支付",
+      "list": "、",
+      "or": "或"
     }
   },
   "element": {
@@ -1163,7 +1169,7 @@
     "bodySignedOut": "10 秒預覽是免費的。整首歌會使用加值時長或方案時長。選好後登入付款，完成後會直接回到這首歌。",
     "bodyOut": "轉錄整首歌會使用方案或加值時長。",
     "previewStays": "加值期間，你的預覽會保留在這裡。",
-    "payWallets": "加值為一次性付款，支援支付寶、微信支付、Apple Pay 和銀行卡。月度方案只能用銀行卡或 Apple Pay。",
+    "payWallets": "加值為一次性付款，支援{wallets}、Apple Pay 和銀行卡。月度方案只能用銀行卡或 Apple Pay。",
     "payOnce": "加值為一次性付款。月度方案自動續訂，只能用銀行卡或 Apple Pay。",
     "minutes": "{minutes} 分鐘",
     "priceOnce": "{price} 一次性",
