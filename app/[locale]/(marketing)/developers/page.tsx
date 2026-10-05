@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: LocaleParams) {
 const CAPABILITIES = [
   {
     title: 'Separate stems',
-    body: 'Split any track into isolated drums, bass, piano, and vocal stems.',
+    body: 'Split any track into isolated vocals, drums, bass, guitar, piano and other stems.',
     svg: (
       <>
         <path d="M2 12h6l2.5-5 4 11 3-8 2.5 4H36" />
@@ -26,7 +26,7 @@ const CAPABILITIES = [
   },
   {
     title: 'Transcribe parts',
-    body: 'Turn drums, piano, or bass into clean, quantized notation with tempo and time signature.',
+    body: 'Turn drums or piano into clean, quantized notation with tempo and time signature.',
     svg: (
       <>
         <path d="M3 10h32M3 18h32M3 26h32" opacity=".35" />

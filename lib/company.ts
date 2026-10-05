@@ -48,6 +48,6 @@ export const COMPANY = {
    */
   phone: '+65 8410 6368',
   phoneHref: 'https://wa.me/6584106368',
-  businessEmail: 'business@usefool-ai.com',
+  businessEmail: 'groovesheet@gmail.com',
   supportEmail: 'support@groovesheet.net',
 } as const;

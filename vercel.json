@@ -1,6 +1,8 @@
 {
   "framework": "nextjs",
   "redirects": [
+    { "source": "/sheet-music/bass", "destination": "/stems/bass", "permanent": true },
+    { "source": "/:locale(zh-CN|zh-TW)/sheet-music/bass", "destination": "/:locale/stems/bass", "permanent": true },
     {
       "source": "/",
       "has": [

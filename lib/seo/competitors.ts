@@ -77,11 +77,11 @@ export const COMPETITORS: Competitor[] = [
     lede:
       'Klangio is the broadest transcription catalogue in this category: a separate AI model per instrument family, from piano and guitar through strings and winds, plus a sheet-music scanner and a DAW plugin. GrooveSheet covers fewer instruments and adds something Klangio does not describe: it separates the recording into isolated parts you can solo and download, and keeps every transcription playable against the original audio.',
     theirFit:
-      'Pick Klangio if the instrument you need is one GrooveSheet does not transcribe, which is most of them: guitar, voice, violin, brass and woodwinds all have their own Klangio app. Pick it too if you want guitar tab or Guitar Pro files, if you work from YouTube links, or if you want transcription inside your DAW.',
+      'Pick Klangio if the instrument you need is one GrooveSheet does not transcribe, which is most of them: bass, guitar, voice, violin, brass and woodwinds all have their own Klangio app. Pick it too if you want guitar tab or Guitar Pro files, if you work from YouTube links, or if you want transcription inside your DAW.',
     ourFit:
-      'Pick GrooveSheet if you are working on drums, piano or bass and want the isolated audio as well as the notation, so you can mute a part and play it yourself. The library of already-transcribed songs is free to browse and download, which is worth checking before you spend anything on either tool.',
+      'Pick GrooveSheet if you are working on drums or piano and want the isolated audio as well as the notation, so you can mute a part and play it yourself. The library of already-transcribed songs is free to browse and download, which is worth checking before you spend anything on either tool.',
     wins: [
-      'Transcribes instruments GrooveSheet does not: guitar, voice, violin and other strings, brass and woodwinds.',
+      'Transcribes instruments GrooveSheet does not: bass, guitar, voice, violin and other strings, brass and woodwinds.',
       'Exports guitar tab and Guitar Pro files; GrooveSheet exports standard notation only.',
       'Takes a YouTube link as input, alongside uploads and live recording.',
       'Runs in the browser, on iOS and Android, and as a plugin inside a DAW.',

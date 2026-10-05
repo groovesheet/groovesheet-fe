@@ -78,7 +78,8 @@ export default async function PrivacyPolicyPage(props: LocaleParams) {
             <div className="legal-section">
               <h2 className="legal-heading">8. Your choices</h2>
               <p className="legal-text">
-                You can update account information and request access or deletion by contacting business@usefool-ai.com.
+                You can update account information and request access or deletion by contacting{' '}
+                <a href="mailto:groovesheet@gmail.com">groovesheet@gmail.com</a>.
               </p>
             </div>
 
@@ -169,7 +170,8 @@ export default async function PrivacyPolicyPage(props: LocaleParams) {
                 . Revocation takes effect immediately and stops all further uploads.
               </p>
               <p className="legal-text">
-                For privacy inquiries related to the YouTube integration, contact business@usefool-ai.com.
+                For privacy inquiries related to the YouTube integration, contact{' '}
+                <a href="mailto:groovesheet@gmail.com">groovesheet@gmail.com</a>.
               </p>
             </div>
           </div>

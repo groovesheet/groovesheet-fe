@@ -79,7 +79,8 @@ const UPLOAD_SOURCE = 'transcribe';
 // TODO(launch): piano, drums and bass are production-ready today. The other
 // instruments are temporarily hidden from the picker; add them back here once
 // their pipelines ship.
-const VISIBLE_INSTRUMENTS = ['piano', 'drums', 'bass'];
+// Transcription to notation is drums and piano only for now.
+const VISIBLE_INSTRUMENTS = ['piano', 'drums'];
 
 const SCORE_CAPABLE = ['drums', 'jazz_bass', 'bass', 'piano'];
 

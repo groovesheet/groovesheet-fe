@@ -47,7 +47,7 @@ Four sibling pages (`/privacy-policy`, `/refund-policy`, `/terms`, `/business-in
 - Section headings: numbered, Title Case ("1. What we collect", "2. Audio & Processing Data")
 - Body text: sentence case, third-person professional ("We collect information you provide…", "We retain data as long as needed…")
 - Lists with `<ul.legal-list>` for grouped items
-- Contact email: `business@usefool-ai.com`
+- Contact email: `groovesheet@gmail.com`
 - Entity: USEFOOL TECHNOLOGY PRIVATE LIMITED (Hong Kong)
 
 ## Do / Don't

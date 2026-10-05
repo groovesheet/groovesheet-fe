@@ -82,7 +82,7 @@ import UrlIntent, { type SongUrlIntent } from './UrlIntent';
 import { assetKey, instrumentWord, trackAssets, trackDurationSec, type SongAsset, type SongT } from './songData';
 
 /** Instruments the home uploader turns into a score (its VISIBLE_INSTRUMENTS). */
-const OWN_TRACK_SCORE_INSTRUMENTS = ['piano', 'drums', 'bass'];
+const OWN_TRACK_SCORE_INSTRUMENTS = ['piano', 'drums'];
 
 const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 

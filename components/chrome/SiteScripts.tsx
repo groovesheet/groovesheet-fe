@@ -67,11 +67,11 @@ const ORGANIZATION_JSON_LD = {
       operatingSystem: 'Web',
       url: 'https://www.groovesheet.net/',
       description:
-        'AI music transcription: turn any recording into drum, piano and bass notation, separate stems, and convert audio to MIDI. Exports PDF, MusicXML and MIDI.',
+        'AI music transcription: turn any recording into drum and piano notation, separate stems, and convert audio to MIDI. Exports PDF, MusicXML and MIDI.',
       featureList: [
         'AI stem splitter (vocals, drums, bass, other)',
         'Audio to MIDI conversion',
-        'Drum, piano and bass transcription to sheet music',
+        'Drum and piano transcription to sheet music',
         'PDF, MusicXML and MIDI export',
       ],
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
