@@ -17,7 +17,7 @@ Implements the **LegalPage shared layout** — see [`LegalPage.md`](LegalPage.md
   <p>Hong Kong Business Registration No.: 77709205 (Established 2025)
   <p>Registered Address: Unit 2A, 17/F, Glenealy Tower, No.1 Glenealy, Central, Hong Kong S.A.R.
   <p>Phone: +65 8575 5666
-  <p>Email: business@usefool-ai.com
+  <p>Email: groovesheet@gmail.com
 ```
 
 ## Props

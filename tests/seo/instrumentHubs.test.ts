@@ -17,7 +17,7 @@ import { searchLibraryQuery } from '@/lib/libraryApi';
 /**
  * The hubs are the only pages that assert what the product transcribes, so
  * these are claims tests as much as routing tests: a hub under /sheet-music
- * promises notation, and only drums, piano and bass have a transcriber behind
+ * promises notation, and only drums and piano have a transcriber behind
  * them. Moving vocals or guitar there needs a model, not an edit.
  */
 describe('instrument hubs', () => {
@@ -35,13 +35,13 @@ describe('instrument hubs', () => {
   });
 
   it('only puts transcribed instruments under /sheet-music', () => {
-    expect(hubsOfKind('notation').map((h) => h.slug).sort()).toEqual(['bass', 'drums', 'piano']);
+    expect(hubsOfKind('notation').map((h) => h.slug).sort()).toEqual(['drums', 'piano']);
     for (const hub of hubsOfKind('notation')) expect(hubPath(hub)).toBe(`/sheet-music/${hub.slug}`);
   });
 
   it('puts stem-only parts under /stems and says so in the copy', () => {
     const stemHubs = hubsOfKind('stems');
-    expect(stemHubs.map((h) => h.slug).sort()).toEqual(['guitar', 'vocals']);
+    expect(stemHubs.map((h) => h.slug).sort()).toEqual(['bass', 'guitar', 'vocals']);
     for (const hub of stemHubs) {
       expect(hubPath(hub)).toBe(`/stems/${hub.slug}`);
       // The lede must disclaim notation, since the URL and title do not.
@@ -109,6 +109,7 @@ describe('hubsForTrack', () => {
       '/sheet-music/piano',
       '/stems/vocals',
       '/stems/guitar',
+      '/stems/bass',
     ]);
     expect(hubs.map(hubPath)).not.toContain('/sheet-music/bass');
   });

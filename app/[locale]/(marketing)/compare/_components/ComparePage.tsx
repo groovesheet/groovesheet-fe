@@ -53,7 +53,7 @@ function oursByLabel(entry: string | null): Record<string, string> {
     Price: entry || 'See the pricing page',
     'Free trial': '10-second preview of any song',
     'Longest single transcription': `No length cap; files up to ${MAX_UPLOAD_MB} MB`,
-    'Instruments transcribed': 'Drums, piano and bass',
+    'Instruments transcribed': 'Drums and piano',
     'Notation exports': 'PDF, MusicXML and MIDI',
     'Guitar tab': 'No',
     'Isolated stems': 'Yes: vocals, drums, bass, piano, guitar and the rest of the mix',

@@ -59,7 +59,7 @@ const STATIC_ROUTE_META: Record<string, RouteMeta> = {
   '/': {
     title: 'Audio to Sheet Music, Stems & MIDI',
     description:
-      'Turn any song into sheet music. AI transcription for drums, piano and bass, plus stem separation and audio-to-MIDI. Export PDF, MusicXML and MIDI.',
+      'Turn any song into sheet music. AI transcription for drums and piano, plus stem separation and audio-to-MIDI. Export PDF, MusicXML and MIDI.',
   },
 
   // The biggest market this product is in, by roughly 10x. Every competitor

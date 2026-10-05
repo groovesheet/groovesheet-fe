@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: DEFAULT_TITLE,
     description:
-      'Upload any song and get editable notation for drums, piano and bass, plus isolated stems and MIDI. PDF, MusicXML and MIDI export.',
+      'Upload any song and get editable notation for drums and piano, plus isolated stems and MIDI. PDF, MusicXML and MIDI export.',
     images: [DEFAULT_OG_IMAGE.url],
   },
   icons: {
