@@ -540,6 +540,25 @@
 [data-theme='light'] .gs-song-page .gs-pianoroll {
   background: #f4f4f5;
 }
+/* "Notes start at 0:21": shown over the roll while the first note is still
+   beyond the visible window, so a long intro does not read as an empty part.
+   The canvas is dark in both themes, so the pill is too. */
+.gs-song-page .gs-roll-later {
+  position: absolute;
+  top: 34px;
+  right: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(21, 21, 21, 0.85);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.gs-song-page .gs-roll-later:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
 
 /* Stems list */
 .gs-song-page .gs-stems-list {

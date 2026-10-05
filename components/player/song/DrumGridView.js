@@ -56,8 +56,10 @@ function DrumGridView({ midiBuffer, transport, loading, error }) {
         </div>
       )}
       {!loading && !error && !parseError && midiBuffer && (
-        <div style={{ width: '100%', height: 460, background: '#151515' }}>
-          <VideoDrumKit notes={notes} timeRef={timeRef} />
+        // The kit photo is ~2:1, so a fixed 460px box left a phone with a
+        // strip of kit floating in empty space; scale the box with the width.
+        <div style={{ width: '100%', height: 'clamp(240px, 56vw, 460px)', background: '#151515' }}>
+          <VideoDrumKit notes={notes} timeRef={timeRef} glow />
         </div>
       )}
     </div>

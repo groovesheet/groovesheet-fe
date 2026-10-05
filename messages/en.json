@@ -510,7 +510,26 @@
       "adding": "Adding layers… {percent}%",
       "spectrumUnavailable": "Spectrum unavailable",
       "noStemAudio": "No stem audio to analyse",
-      "analyseError": "Could not analyse the stems"
+      "analyseError": "Could not analyse the stems",
+      "notesStartAt": "Notes start at {time}",
+      "jumpToFirstNote": "Jump to the first note",
+      "drumPieces": {
+        "kick": "Kick",
+        "snare": "Snare",
+        "sideStick": "Side stick",
+        "clap": "Clap",
+        "closedHat": "Closed hat",
+        "pedalHat": "Pedal hat",
+        "openHat": "Open hat",
+        "tom": "Tom",
+        "crash": "Crash",
+        "ride": "Ride",
+        "rideBell": "Ride bell",
+        "china": "China",
+        "splash": "Splash",
+        "tambourine": "Tambourine",
+        "cowbell": "Cowbell"
+      }
     },
     "instruments": {
       "drums": {
