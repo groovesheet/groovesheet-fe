@@ -2,8 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- the format artwork swaps with the theme; same markup as the CRA card */
 import { useCallback, useEffect, useRef, useState, type DragEvent, type MouseEvent, type ReactNode } from 'react';
-import { LuGuitar, LuDrum } from 'react-icons/lu';
-import { LiaMicrophoneAltSolid } from 'react-icons/lia';
+import { LuDrum } from 'react-icons/lu';
 import { Piano } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useRouter } from '@/lib/navigation';
@@ -21,7 +20,7 @@ import { useIsTouch } from '@/lib/hooks/useMediaQuery';
 import config from '@/lib/config';
 import type { DownloadedFile, WorkflowQueue } from '@/lib/types';
 import StatusMessage from '@/components/ui/StatusMessage';
-import { BassIcon, MagicWandIcon, ServerIcon, TrayArrowUpIcon } from './icons';
+import { MagicWandIcon, ServerIcon, TrayArrowUpIcon } from './icons';
 import ResultView from './ResultView';
 import {
   UPLOAD_ACCEPT,
@@ -96,12 +95,10 @@ const SEPARATION_KEYS: Record<string, string> = {
   other: 'bs_roformer_other_stem',
 };
 
+// MIDI transcription is drums and piano only for now.
 const INSTRUMENTS = [
-  { value: 'vocals', label: 'Vocal', icon: LiaMicrophoneAltSolid },
   { value: 'drums', label: 'Drums', icon: LuDrum },
   { value: 'piano', label: 'Piano', icon: Piano },
-  { value: 'guitar', label: 'Guitar', icon: LuGuitar },
-  { value: 'bass', label: 'Bass', icon: BassIcon },
 ];
 
 // Map the selected instrument to a workflow name (without the /workflow or

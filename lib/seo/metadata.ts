@@ -21,7 +21,7 @@ export const SITE_URL = 'https://www.groovesheet.net';
 export const SITE_NAME = 'GrooveSheet';
 export const DEFAULT_TITLE = 'Audio to Sheet Music, Stems & MIDI | GrooveSheet';
 export const DEFAULT_DESCRIPTION =
-  'Turn any song into sheet music. AI transcription for drums, piano and bass, plus stem separation and audio-to-MIDI. Export PDF, MusicXML and MIDI.';
+  'Turn any song into sheet music. AI transcription for drums and piano, plus stem separation and audio-to-MIDI. Export PDF, MusicXML and MIDI.';
 export const DEFAULT_OG_IMAGE = {
   url: `${SITE_URL}/images/Preview.png`,
   width: 1200,

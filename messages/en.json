@@ -332,8 +332,6 @@
   "login": {
     "welcome": "Welcome to GrooveSheet",
     "continueWith": "Continue with",
-    "subscribeLong": "Subscribe to GrooveSheet updates and never miss a beat!",
-    "subscribeShort": "Subscribe to GrooveSheet updates",
     "google": "Google",
     "facebook": "Facebook",
     "apple": "Apple",
@@ -374,7 +372,6 @@
     "confirm": "Confirm",
     "confirming": "Confirming…",
     "claiming": "Claiming…",
-    "optIn": "Subscribe to GrooveSheet updates and never miss a beat!",
     "disclaimerA": "By continuing you agree to our ",
     "disclaimerB": " and ",
     "terms": "Terms of Service",
@@ -421,7 +418,7 @@
       "s1": "Pick a track",
       "s1b": "MP3, WAV, FLAC or OGG, up to 32 MB.",
       "s2": "Choose an instrument",
-      "s2b": "Drums, piano, bass or guitar, or split the stems first.",
+      "s2b": "Drums or piano, or split the stems first.",
       "s3": "Take the chart away",
       "s3b": "PDF, MusicXML and MIDI on every result."
     },
@@ -433,7 +430,7 @@
     "what": {
       "title": "Three Things It Does",
       "f1": "Transcription",
-      "f1b": "Audio in, notated sheet music out: drums, piano, bass or guitar.",
+      "f1b": "Audio in, notated sheet music out: drums or piano.",
       "f2": "Stem separation",
       "f2b": "Split a mixed track into isolated instruments, so you can practice along with just the bass.",
       "f3": "MIDI generation",
@@ -451,7 +448,7 @@
       "title": "FAQ",
       "section": "Before you sign up",
       "q1": "Does it work for my instrument?",
-      "a1": "Drums, piano, bass and guitar today. Studio recordings give the cleanest notation; live phone recordings work but results vary.",
+      "a1": "Drums and piano today. Studio recordings give the cleanest notation; live phone recordings work but results vary. For other instruments you can separate the stems.",
       "q2": "What files can I upload?",
       "a2": "MP3, WAV, FLAC and OGG, up to 32 MB per file.",
       "q3": "What happens when the {minutes} minutes run out?",
@@ -510,7 +507,26 @@
       "adding": "Adding layers… {percent}%",
       "spectrumUnavailable": "Spectrum unavailable",
       "noStemAudio": "No stem audio to analyse",
-      "analyseError": "Could not analyse the stems"
+      "analyseError": "Could not analyse the stems",
+      "notesStartAt": "Notes start at {time}",
+      "jumpToFirstNote": "Jump to the first note",
+      "drumPieces": {
+        "kick": "Kick",
+        "snare": "Snare",
+        "sideStick": "Side stick",
+        "clap": "Clap",
+        "closedHat": "Closed hat",
+        "pedalHat": "Pedal hat",
+        "openHat": "Open hat",
+        "tom": "Tom",
+        "crash": "Crash",
+        "ride": "Ride",
+        "rideBell": "Ride bell",
+        "china": "China",
+        "splash": "Splash",
+        "tambourine": "Tambourine",
+        "cowbell": "Cowbell"
+      }
     },
     "instruments": {
       "drums": {
@@ -773,7 +789,7 @@
     "scrollRight": "Scroll right",
     "meta": {
       "title": "Explore Free Sheet Music, MIDI and Stems",
-      "description": "Browse AI transcriptions from the GrooveSheet library: sheet music, MIDI files, and isolated stems for drums, piano, bass and more.",
+      "description": "Browse AI transcriptions from the GrooveSheet library: drum and piano sheet music, MIDI files, and isolated stems for every part.",
       "collectionName": "Explore the GrooveSheet library"
     },
     "hero": {
@@ -1051,7 +1067,7 @@
     "trust": {
       "checkout": "Stripe-secure checkout",
       "formats": "All formats included: PDF · MusicXML · MIDI",
-      "instruments": "Drums · Piano · Bass"
+      "instruments": "Drums · Piano"
     },
     "faqTitle": "Billing FAQ",
     "faqSection": "Packs & Minutes",
@@ -1087,7 +1103,7 @@
     },
     "cta": {
       "title": "Start transcribing free.",
-      "body": "Drag in a track and get clean drum, bass and piano notation. No card required to try.",
+      "body": "Drag in a track and get clean drum and piano notation. No card required to try.",
       "upload": "Go to upload",
       "preview": "Try a free preview",
       "talk": "Talk to us"
@@ -1179,5 +1195,65 @@
     "seePlans": "See monthly plans",
     "haveAPlan": "I have a plan: sign in",
     "notNow": "Not now"
+  },
+  "changelogPage": {
+    "title": "Changelog",
+    "subtitle": "What's new in GrooveSheet.",
+    "badges": {
+      "new": "New",
+      "improved": "Improved",
+      "fixed": "Fixed"
+    },
+    "entries": {
+      "v1_9": {
+        "title": "WeChat Pay, and a smoother road to the full song",
+        "items": {
+          "wechat": "Top-ups priced in yuan can now be paid with WeChat Pay as well as by card. Subscriptions are still card only.",
+          "keepPreview": "Your preview now waits for you while you sign in and pay. Pick a minute pack, sign in, check out, and the full song starts on its own.",
+          "phones": "Song pages, Explore and search work better on phones: the song title sits above the player, the controls fit on one row and the tabs scroll.",
+          "signIn": "Signing in from mainland China puts email first, and the code screen tells you where the code went and to check your spam folder.",
+          "downloads": "Fixed: finished previews no longer start downloads on their own, and a dropped file is no longer uploaded twice."
+        }
+      },
+      "v1_8": {
+        "title": "A page for every part, and more of the site in Chinese",
+        "items": {
+          "partPages": "Every transcribed part now has its own page, such as a song's drum score or its piano score, listing the downloads that part actually has.",
+          "chinese": "Song pages, Help, Pricing, Explore and the stem splitter and MIDI converter pages are now in Simplified and Traditional Chinese.",
+          "previewFirst": "Every upload starts with a free 10-second preview, signed in or not. Going on to the full song is a separate step that uses minutes.",
+          "outOfMinutes": "Running out of minutes now opens a short dialog where you can buy a top-up in one click, instead of jumping to the pricing table.",
+          "playback": "Fixed: clicking or seeking inside the score no longer stops playback."
+        }
+      },
+      "v1_7": {
+        "title": "Printable scores, library search and new ways to see a song",
+        "items": {
+          "pdf": "Download any score as a printable PDF with the song title and credits, from Explore and from Your Library.",
+          "search": "Explore has a full search page: filter, sort and page through every song in the library.",
+          "views": "Song pages have two new views: Falling keys shows where your hands go on piano parts, and Spectrum overlays every stem's spectrogram.",
+          "phone": "Upload phone recordings: M4A files from iPhone Voice Memos and most Android recorders now work, and so do OGG files.",
+          "codes": "Got a signup code from a club or event? Its link adds free minutes to your account when you sign up."
+        }
+      },
+      "v1_6": {
+        "title": "GrooveSheet in Chinese, with prices in yuan",
+        "items": {
+          "geo": "Visitors from mainland China now land on the Simplified Chinese site, and visitors from Taiwan, Hong Kong and Macau on the Traditional Chinese site. Choose English and it stays English.",
+          "yuan": "Visitors in mainland China see prices in yuan, the same on every plan card and in the comparison table.",
+          "scorePreviews": "Explore cards show the first page of the real score, so you can see the notation before you open a song.",
+          "credits": "Scores now carry the song title and a transcription credit on the page.",
+          "sync": "Fixed: the score cursor and the drum audio now stay in step during playback."
+        }
+      },
+      "v1_5": {
+        "title": "Drum transcription and a full-screen result view",
+        "items": {
+          "drums": "Drum transcription is here: choose Drums when you upload to get a drum score and MIDI, plus a drum kit view that lights up with every hit.",
+          "fullScreen": "A finished piano transcription opens full screen, with the sheet music, piano roll and stems on one shared player.",
+          "refunds": "If a transcription fails, the minutes it used go back to your account automatically.",
+          "noNotes": "Fixed: a song with no piano in it now shows a clear \"no notes found\" message instead of breaking the viewer."
+        }
+      }
+    }
   }
 }

@@ -21,7 +21,7 @@
 
 import { useState, type ClipboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { AppleLogo, ArrowLeft, Check, EnvelopeSimple, FacebookLogo, GoogleLogo, X } from '@phosphor-icons/react';
+import { AppleLogo, ArrowLeft, EnvelopeSimple, FacebookLogo, GoogleLogo, X } from '@phosphor-icons/react';
 import { useAuthActions, useSignIn, useSignUp, type OAuthStrategy } from '@/lib/auth';
 import { useLocale, useTranslation } from '@/lib/i18n';
 import { Link } from '@/lib/navigation';
@@ -326,18 +326,6 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               {!emailFirst && emailButton}
             </div>
             {emailFirst && <p className="login-region-hint">{t('login.mainlandHint')}</p>}
-
-            {/* Below the sign-in buttons: the choice to make here is how to sign
-                in; the newsletter box is secondary and read on the way out. */}
-            <div className="login-subscribe">
-              <div className="login-subscribe-check">
-                <Check size={21} color="white" weight="bold" />
-              </div>
-              <p className="login-subscribe-text">
-                <span className="login-subscribe-long">{t('login.subscribeLong')}</span>
-                <span className="login-subscribe-short">{t('login.subscribeShort')}</span>
-              </p>
-            </div>
 
             <div className="login-terms">
               <p className="login-terms-text">{t('login.termsPrefix')}&nbsp;</p>

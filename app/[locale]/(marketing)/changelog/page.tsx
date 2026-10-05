@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import Header from '@/components/chrome/Header';
 import Footer from '@/components/chrome/Footer';
 import { staticRouteMetadata } from '@/lib/seo/metadata';
@@ -11,68 +12,61 @@ export async function generateMetadata({ params }: LocaleParams) {
 
 type ChangelogTag = 'new' | 'improved' | 'fixed';
 
-interface ChangelogEntry {
-  date: string;
+interface ChangelogRelease {
+  /** Key under `changelogPage.entries` in messages/{locale}.json. */
+  id: string;
   datetime: string;
-  version?: string;
+  version: string;
   tags: ChangelogTag[];
-  title: string;
-  body: string[];
-  caption?: string;
+  /** Keys under `changelogPage.entries.<id>.items`, in display order. */
+  items: string[];
+  /** The release has a `caption` message and shows the illustration. */
+  caption?: boolean;
 }
 
-// Static changelog entries, newest first. Update this list when shipping.
-const ENTRIES: ChangelogEntry[] = [
+/**
+ * Releases, newest first. The words live in messages/{locale}.json under
+ * `changelogPage.entries.<id>`, so the page reads in the visitor's language;
+ * this list holds only the shape. Add a release here and in all three message
+ * files when shipping.
+ */
+const RELEASES: ChangelogRelease[] = [
   {
-    date: 'June 24, 2026',
-    datetime: '2026-06-24',
-    version: '1.4',
+    id: 'v1_9',
+    datetime: '2026-10-05',
+    version: '1.9',
+    tags: ['new', 'improved', 'fixed'],
+    items: ['wechat', 'keepPreview', 'phones', 'signIn', 'downloads'],
+  },
+  {
+    id: 'v1_8',
+    datetime: '2026-09-29',
+    version: '1.8',
+    tags: ['new', 'improved', 'fixed'],
+    items: ['partPages', 'chinese', 'previewFirst', 'outOfMinutes', 'playback'],
+  },
+  {
+    id: 'v1_7',
+    datetime: '2026-09-07',
+    version: '1.7',
     tags: ['new', 'improved'],
-    title: 'Batch uploads and a faster drum model',
-    body: [
-      'Upload up to 10 tracks at once \u2014 they queue and process in the background while you keep working.',
-      'gs-drums-v3 runs about 40% faster and holds onto ghost notes through busy fills.',
-      'The tempo map now follows gradual accelerandos instead of snapping to a single BPM.',
-    ],
-    caption: 'Batch queue \u2014 ten tracks transcribing at once, newest at the top.',
+    items: ['pdf', 'search', 'views', 'phone', 'codes'],
   },
   {
-    date: 'May 30, 2026',
-    datetime: '2026-05-30',
-    version: '1.3',
-    tags: ['new'],
-    title: 'Piano transcription leaves beta',
-    body: [
-      'Full piano notation with separate treble and bass staves, plus pedal markings.',
-      'Export piano parts to MusicXML for Sibelius, MuseScore and Dorico.',
-    ],
+    id: 'v1_6',
+    datetime: '2026-08-25',
+    version: '1.6',
+    tags: ['new', 'improved', 'fixed'],
+    items: ['geo', 'yuan', 'scorePreviews', 'credits', 'sync'],
   },
   {
-    date: 'May 12, 2026',
-    datetime: '2026-05-12',
-    version: '1.2',
-    tags: ['improved', 'fixed'],
-    title: 'Cleaner exports and kit mapping',
-    body: [
-      'PDF scores now respect your saved kit-mapping preset on every export.',
-      'Fixed: MIDI files no longer drop the last bar on tracks that end mid-beat.',
-      'Fixed: time signatures other than 4/4 rendered with the wrong note grouping.',
-    ],
-  },
-  {
-    date: 'April 28, 2026',
-    datetime: '2026-04-28',
-    version: '1.1',
-    tags: ['fixed'],
-    title: 'Stability fixes',
-    body: [
-      'Large FLAC uploads over 20 MB occasionally timed out \u2014 resolved.',
-      'The progress bar could stall at 99% after a job had already finished.',
-    ],
+    id: 'v1_5',
+    datetime: '2026-07-11',
+    version: '1.5',
+    tags: ['new', 'improved', 'fixed'],
+    items: ['drums', 'fullScreen', 'refunds', 'noNotes'],
   },
 ];
-
-const BADGE_LABELS: Record<ChangelogTag, string> = { new: 'New', improved: 'Improved', fixed: 'Fixed' };
 
 function CaptionArt() {
   return (
@@ -102,7 +96,11 @@ function CaptionArt() {
 }
 
 export default async function ChangelogPage(props: LocaleParams) {
-  await routeLocale(props);
+  const locale = await routeLocale(props);
+  const t = await getTranslations({ locale, namespace: 'changelogPage' });
+  // Dates are stored as ISO days and read in the visitor's locale:
+  // "October 5, 2026" in English, "2026年10月5日" in Chinese.
+  const dateFormat = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 
   return (
     <div className="changelog-page">
@@ -111,34 +109,18 @@ export default async function ChangelogPage(props: LocaleParams) {
       <main className="changelog-main">
         <div className="changelog-head">
           <div>
-            <h1 className="changelog-title">Changelog</h1>
-            <p className="changelog-subtitle">What&apos;s new in GrooveSheet.</p>
+            <h1 className="changelog-title">{t('title')}</h1>
+            <p className="changelog-subtitle">{t('subtitle')}</p>
           </div>
-          <button type="button" className="changelog-subscribe">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M4 4h16v12H5.2L4 18.5z" />
-              <path d="M8 9h8M8 12h5" />
-            </svg>
-            Subscribe for updates
-          </button>
         </div>
 
         <ol className="changelog-list">
           <div className="changelog-rail" aria-hidden="true" />
-          {ENTRIES.map((entry, i) => {
+          {RELEASES.map((entry, i) => {
             const isLatest = i === 0;
+            const key = `entries.${entry.id}`;
             return (
-              <li className="changelog-item" key={entry.datetime}>
+              <li className="changelog-item" key={entry.id}>
                 <span
                   className={`changelog-dot${isLatest ? ' is-latest' : ''}`}
                   aria-hidden="true"
@@ -146,35 +128,31 @@ export default async function ChangelogPage(props: LocaleParams) {
                 <article className="changelog-card">
                   <div className="changelog-card-head">
                     <div className="changelog-meta">
-                      <h2 className="changelog-entry-title">{entry.title}</h2>
+                      <h2 className="changelog-entry-title">{t(`${key}.title`)}</h2>
                       <div className="changelog-datewrap">
                         <time className="changelog-date" dateTime={entry.datetime}>
-                          {entry.date}
+                          {dateFormat.format(new Date(entry.datetime))}
                         </time>
-                        {entry.version && (
-                          <>
-                            <span className="changelog-sep" aria-hidden="true">
-                              ·
-                            </span>
-                            <span className="changelog-version">v{entry.version}</span>
-                          </>
-                        )}
+                        <span className="changelog-sep" aria-hidden="true">
+                          ·
+                        </span>
+                        <span className="changelog-version">v{entry.version}</span>
                       </div>
                     </div>
                     <div className="changelog-badges">
                       {entry.tags.map((tag) => (
                         <span key={tag} className={`changelog-badge badge-${tag}`}>
-                          {BADGE_LABELS[tag]}
+                          {t(`badges.${tag}`)}
                         </span>
                       ))}
                     </div>
                   </div>
 
                   <ul className="changelog-body">
-                    {entry.body.map((line, j) => (
-                      <li key={j}>
+                    {entry.items.map((item) => (
+                      <li key={item}>
                         <span className="changelog-bullet" aria-hidden="true" />
-                        <span>{line}</span>
+                        <span>{t(`${key}.items.${item}`)}</span>
                       </li>
                     ))}
                   </ul>
@@ -182,7 +160,7 @@ export default async function ChangelogPage(props: LocaleParams) {
                   {entry.caption && (
                     <div className="changelog-image">
                       <CaptionArt />
-                      <span className="changelog-caption">{entry.caption}</span>
+                      <span className="changelog-caption">{t(`${key}.caption`)}</span>
                     </div>
                   )}
                 </article>

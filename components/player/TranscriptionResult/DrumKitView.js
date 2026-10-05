@@ -110,7 +110,7 @@ export default function DrumKitView({ midiBuffer, transport, syncPairsRef, loadi
       )}
       {ready && (
         <div className="tr-drumkit-stage">
-          <VideoDrumKit notes={parsed.hits} timeRef={timeRef} />
+          <VideoDrumKit notes={parsed.hits} timeRef={timeRef} glow />
         </div>
       )}
     </div>

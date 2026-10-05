@@ -16,12 +16,48 @@ import { drumVoice } from './videoSynth';
  * Time is driven externally by `timeRef` (seconds, looping); the component runs
  * its own rAF loop and reads `timeRef.current` each frame so the parent keeps a
  * single master clock without a per-frame React re-render.
+ *
+ * `fitRange` (piano mode): draw only the octaves the notes use (whole C-to-B
+ * octaves, at least two) instead of all 88 keys, and place each note on its
+ * key. At phone width 88 keys are 6px each; a typical part spans four or five
+ * octaves, which doubles the key width. The video frame keeps the full
+ * keyboard, so its layout is unchanged.
  */
 
 const NOTE_COLOR = '#012FA7'; // GrooveSheet brand blue (piano mode)
 const VISIBLE_WINDOW = 3; // seconds of lookahead; smaller = taller notes + faster fall
 const MIN_PITCH = 21;
 const MAX_PITCH = 108;
+const FIT_MIN_OCTAVES = 2;
+const isBlackKey = (p) => [1, 3, 6, 8, 10].includes(p % 12);
+
+/** Whole octaves (C to B) covering the notes, at least FIT_MIN_OCTAVES, inside A0..C8. */
+function fittedRange(notes) {
+  if (!notes.length) return { lo: MIN_PITCH, hi: MAX_PITCH };
+  let lo = 127;
+  let hi = 0;
+  notes.forEach((n) => {
+    if (n.midi < lo) lo = n.midi;
+    if (n.midi > hi) hi = n.midi;
+  });
+  lo -= lo % 12;
+  hi += 11 - (hi % 12);
+  while (hi - lo + 1 < FIT_MIN_OCTAVES * 12) {
+    if (hi + 12 <= MAX_PITCH) hi += 12; else lo -= 12;
+  }
+  return { lo: Math.max(MIN_PITCH, lo), hi: Math.min(MAX_PITCH, hi) };
+}
+
+/** White-key index of every pitch in lo..hi; a black key maps to the white key after it. */
+function keyLayout(lo, hi) {
+  const whiteIdx = {};
+  let n = 0;
+  for (let p = lo; p <= hi; p += 1) {
+    whiteIdx[p] = n;
+    if (!isBlackKey(p)) n += 1;
+  }
+  return { lo, hi, whiteIdx, whiteCount: n };
+}
 
 // Drum lanes, left→right. Each GM voice family maps to one lane; openhat folds
 // into Hi-Hat and ride into Crash so the common 5-piece kit stays legible.
@@ -39,27 +75,23 @@ function laneForMidi(midi) {
   return idx == null ? 1 : idx;
 }
 
-function drawKeyboard(ctx, width, height, y) {
-  const whiteKeyWidth = width / 52;
+function drawKeyboard(ctx, width, height, y, layout) {
+  const { lo, hi, whiteIdx, whiteCount } = layout;
+  const whiteKeyWidth = width / whiteCount;
 
   ctx.fillStyle = '#f5f5ef';
   ctx.fillRect(0, y, width, height);
 
-  let whiteIdx = 0;
-  for (let p = MIN_PITCH; p <= MAX_PITCH; p += 1) {
-    const isBlack = [1, 3, 6, 8, 10].includes(p % 12);
-    if (!isBlack) {
+  for (let p = lo; p <= hi; p += 1) {
+    if (!isBlackKey(p)) {
       ctx.strokeStyle = '#c9c9c2';
       ctx.lineWidth = 1;
-      ctx.strokeRect(whiteIdx * whiteKeyWidth, y, whiteKeyWidth, height);
-      whiteIdx += 1;
+      ctx.strokeRect(whiteIdx[p] * whiteKeyWidth, y, whiteKeyWidth, height);
     }
   }
-  whiteIdx = 0;
-  for (let p = MIN_PITCH; p <= MAX_PITCH; p += 1) {
-    const isBlack = [1, 3, 6, 8, 10].includes(p % 12);
-    if (!isBlack) { whiteIdx += 1; continue; }
-    const blackX = whiteIdx * whiteKeyWidth - whiteKeyWidth * 0.3;
+  for (let p = lo; p <= hi; p += 1) {
+    if (!isBlackKey(p)) continue;
+    const blackX = whiteIdx[p] * whiteKeyWidth - whiteKeyWidth * 0.3;
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(blackX, y, whiteKeyWidth * 0.6, height * 0.62);
   }
@@ -95,7 +127,7 @@ function drawDrumBase(ctx, width, height, y) {
   }
 }
 
-export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'piano' }) {
+export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'piano', fitRange = false }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
 
@@ -137,6 +169,8 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'pia
     window.addEventListener('resize', resize);
 
     const range = MAX_PITCH - MIN_PITCH;
+    const fitted = fitRange && !isDrums ? fittedRange(allNotes) : null;
+    const layout = fitted ? keyLayout(fitted.lo, fitted.hi) : keyLayout(MIN_PITCH, MAX_PITCH);
 
     const renderPiano = (w, h) => {
       const keyHeight = Math.round(h * 0.28);
@@ -148,13 +182,16 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'pia
 
       ctx.strokeStyle = 'rgba(56, 224, 123, 0.06)';
       ctx.lineWidth = 1;
-      for (let i = 0; i <= 52; i += 1) {
-        const x = (i / 52) * w;
+      for (let i = 0; i <= layout.whiteCount; i += 1) {
+        const x = (i / layout.whiteCount) * w;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, fallHeight); ctx.stroke();
       }
 
-      const nw = w / range;
-      const r = Math.min(nw / 2, 8 * (w / 3840));
+      // Fitted: each note sits on its key (white or black). Full keyboard: the
+      // video frame's original linear pitch spacing.
+      const ww = w / layout.whiteCount;
+      const nw = fitted ? ww : w / range;
+      const r = Math.min((fitted ? ww * 0.6 : nw) / 2, 8 * (w / 3840));
       const path = new Path2D();
       for (let i = 0; i < allNotes.length; i += 1) {
         const note = allNotes[i];
@@ -162,11 +199,16 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'pia
         if (note.time + note.duration < elapsed) continue;
         const startY = fallHeight - ((note.time - elapsed) / VISIBLE_WINDOW) * fallHeight;
         const endY = fallHeight - ((note.time + note.duration - elapsed) / VISIBLE_WINDOW) * fallHeight;
-        const x = ((note.midi - MIN_PITCH) / range) * w;
+        if (fitted && (note.midi < layout.lo || note.midi > layout.hi)) continue;
+        const black = fitted && isBlackKey(note.midi);
+        const x = fitted
+          ? layout.whiteIdx[note.midi] * ww - (black ? ww * 0.3 : 0)
+          : ((note.midi - MIN_PITCH) / range) * w;
+        const noteW = black ? ww * 0.6 : nw;
         const top = Math.max(0, endY);
         const bottom = Math.min(fallHeight, startY);
         if (bottom - top <= 0) continue;
-        path.roundRect(x + 1, top, nw - 2, bottom - top, r);
+        path.roundRect(x + 1, top, noteW - 2, bottom - top, r);
       }
       ctx.fillStyle = NOTE_COLOR;
       ctx.shadowColor = NOTE_COLOR;
@@ -174,7 +216,7 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'pia
       ctx.fill(path);
       ctx.shadowBlur = 0;
 
-      drawKeyboard(ctx, w, keyHeight, fallHeight);
+      drawKeyboard(ctx, w, keyHeight, fallHeight, layout);
     };
 
     const renderDrums = (w, h) => {
@@ -231,7 +273,7 @@ export default function VideoPianoRoll({ midiBuffer, notes, timeRef, mode = 'pia
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
     };
-  }, [midiBuffer, notes, timeRef, mode]);
+  }, [midiBuffer, notes, timeRef, mode, fitRange]);
 
   return (
     <canvas

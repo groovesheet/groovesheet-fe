@@ -145,43 +145,6 @@
   line-height: normal;
 }
 
-.login-subscribe {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-}
-
-.login-subscribe-check {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background-color: #5f5e60;
-  border-radius: 6px;
-}
-
-.login-subscribe-text {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 300;
-  letter-spacing: 0;
-  line-height: 1rem;
-  white-space: nowrap;
-}
-
-.login-subscribe-long {
-  display: none;
-}
-
 .login-providers {
   position: relative;
   display: flex;
@@ -478,14 +441,6 @@
 @media (min-width: 640px) {
   .login-title {
     white-space: nowrap;
-  }
-
-  .login-subscribe-long {
-    display: inline;
-  }
-
-  .login-subscribe-short {
-    display: none;
   }
 
   .login-provider-grid {

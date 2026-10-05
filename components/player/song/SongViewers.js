@@ -98,6 +98,74 @@ const ROLL_WINDOW_SEC = 12; // visible time span
 const ROLL_PLAYHEAD_FRAC = 0.25; // playhead position within the window
 const ROLL_RULER_H = 24;
 const ROLL_GUTTER_W = 46;
+// Vertical fit. A whole part routinely spans six octaves (a piano part from
+// A0 to A7) while any 12-second window uses two, so a part-wide scale leaves
+// the notes on screen as thin dashes in one band of an empty grid. The pitch
+// range follows the notes around the playhead instead: the lowest to highest
+// note from the window's left edge to a little past its right edge (so the
+// range opens before a note scrolls in), padded, never under two octaves, and
+// eased so the grid glides rather than jumps.
+const ROLL_FIT_LOOKAHEAD_SEC = 3;
+const ROLL_FIT_PAD = 3; // semitones above and below the outermost notes
+const ROLL_FIT_MIN_SPAN = 24; // never zoom tighter than two octaves
+const ROLL_FIT_EASE_SEC = 0.35; // time constant of the range glide
+// Drum rows never grow taller than this; a three-piece part stays compact and
+// is centred in the canvas instead of turning into three huge bands.
+const ROLL_DRUM_ROW_MAX_H = 56;
+
+// General MIDI percussion → kit piece, listed top to bottom in the order a
+// drum roll reads (cymbals over hats over toms over snare over kick). Toms get
+// one row per pitch, numbered from the highest, so a fill stays readable.
+const DRUM_PIECES = [
+  { key: 'crash', midis: [49, 57] },
+  { key: 'china', midis: [52] },
+  { key: 'splash', midis: [55] },
+  { key: 'ride', midis: [51, 59] },
+  { key: 'rideBell', midis: [53] },
+  { key: 'cowbell', midis: [56] },
+  { key: 'tambourine', midis: [54] },
+  { key: 'openHat', midis: [46] },
+  { key: 'closedHat', midis: [42] },
+  { key: 'pedalHat', midis: [44] },
+  { key: 'tom', midis: [50, 48, 47, 45, 43, 41], perPitch: true },
+  { key: 'clap', midis: [39] },
+  { key: 'sideStick', midis: [37] },
+  { key: 'snare', midis: [38, 40] },
+  { key: 'kick', midis: [35, 36] },
+];
+const PITCH_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const pitchName = (p) => `${PITCH_NAMES[p % 12]}${Math.floor(p / 12) - 1}`;
+
+/**
+ * Rows for a percussion part: only pieces that actually occur, labelled with
+ * the kit piece. Pitches outside the GM map keep a row of their own, labelled
+ * by pitch name, above the kit. Returns { rows: [{ label }], rowOf: Map }.
+ */
+function drumRowsFor(notes, label) {
+  const used = new Set(notes.map((n) => n.midi));
+  const rows = [];
+  const rowOf = new Map();
+  const mapped = new Set();
+  DRUM_PIECES.forEach((piece) => piece.midis.forEach((m) => mapped.add(m)));
+  [...used].filter((m) => !mapped.has(m)).sort((a, b) => b - a).forEach((m) => {
+    rowOf.set(m, rows.length);
+    rows.push({ label: pitchName(m) });
+  });
+  DRUM_PIECES.forEach((piece) => {
+    const present = piece.midis.filter((m) => used.has(m));
+    if (!present.length) return;
+    if (piece.perPitch) {
+      present.forEach((m, i) => {
+        rowOf.set(m, rows.length);
+        rows.push({ label: present.length > 1 ? `${label(piece.key)} ${i + 1}` : label(piece.key) });
+      });
+      return;
+    }
+    present.forEach((m) => rowOf.set(m, rows.length));
+    rows.push({ label: label(piece.key) });
+  });
+  return { rows, rowOf };
+}
 
 function fmtClock(s) {
   const m = Math.floor(s / 60);
@@ -108,13 +176,19 @@ function fmtClock(s) {
 // `ghosts` — other pitched instruments' MIDI, rendered faint behind the
 // selected one so switching instruments keeps musical context:
 //   [{ name, color, buffer: ArrayBuffer }]
-export function PianoRollView({ midiBuffer, transport, loading, error, ghosts }) {
+// `percussion`: the part is a drum kit (General MIDI channel 10): rows are
+// kit pieces instead of pitches. Files that put every note on channel 10 are
+// detected without it.
+export function PianoRollView({ midiBuffer, transport, loading, error, ghosts, percussion = false }) {
   const tv = useTranslations('song.viewers');
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const transportRef = useRef(transport);
-  const parsedRef = useRef(null); // { notes, ghostNotes, minPitch, maxPitch, duration, trackCount }
+  const parsedRef = useRef(null); // { notes, ghostNotes, drums, boundLo, boundHi, firstTime, gutterW }
   const [parseError, setParseError] = useState(null);
+  // Start time of the first note while it is still beyond the visible window
+  // (a long intro would otherwise show an empty grid), else null.
+  const [laterStart, setLaterStart] = useState(null);
 
   useEffect(() => { transportRef.current = transport; }, [transport]);
 
@@ -140,39 +214,65 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
         }))
       )
       .sort((a, b) => a.time - b.time);
-    // Non-selected instruments' notes, drawn first at very low opacity.
+    const isDrums = percussion || (tracks.length > 0 && tracks.every((t) => t.channel === 9));
+    // Non-selected instruments' notes, drawn first at very low opacity. They
+    // never widen the pitch range: off-range ghosts are simply clipped.
     const ghostNotes = [];
-    (ghosts || []).forEach((g) => {
-      if (!g || !g.buffer) return;
-      let gm;
-      try {
-        gm = new Midi(g.buffer);
-      } catch (e) {
-        return; // a bad ghost file never blocks the main roll
-      }
-      gm.tracks.forEach((t) => {
-        (t.notes || []).forEach((n) => {
-          ghostNotes.push({ time: n.time, duration: n.duration, midi: n.midi, color: g.color || '#8d8c8d' });
+    if (!isDrums) {
+      (ghosts || []).forEach((g) => {
+        if (!g || !g.buffer) return;
+        let gm;
+        try {
+          gm = new Midi(g.buffer);
+        } catch (e) {
+          return; // a bad ghost file never blocks the main roll
+        }
+        gm.tracks.forEach((t) => {
+          (t.notes || []).forEach((n) => {
+            ghostNotes.push({ time: n.time, duration: n.duration, midi: n.midi, color: g.color || '#8d8c8d' });
+          });
         });
       });
-    });
-    let minPitch = 108;
-    let maxPitch = 21;
-    notes.concat(ghostNotes).forEach((n) => {
-      if (n.midi < minPitch) minPitch = n.midi;
-      if (n.midi > maxPitch) maxPitch = n.midi;
-    });
-    if (!notes.length) { minPitch = 48; maxPitch = 72; }
-    minPitch = Math.max(0, minPitch - 2);
-    maxPitch = Math.min(127, maxPitch + 2);
-    while (maxPitch - minPitch < 24) { // keep a sane vertical scale
-      if (minPitch > 0) minPitch -= 1;
-      if (maxPitch < 127) maxPitch += 1;
     }
-    parsedRef.current = { notes, ghostNotes, minPitch, maxPitch, duration: midi.duration || 0, trackCount: tracks.length };
+    let partMin = 127;
+    let partMax = 0;
+    notes.forEach((n) => {
+      if (n.midi < partMin) partMin = n.midi;
+      if (n.midi > partMax) partMax = n.midi;
+    });
+    if (!notes.length) { partMin = 48; partMax = 72; }
+    // The furthest the fitted range may reach: the part's own notes, padded,
+    // widened to the minimum span and kept inside MIDI 0..127.
+    let boundLo = partMin - ROLL_FIT_PAD;
+    let boundHi = partMax + ROLL_FIT_PAD;
+    const short = ROLL_FIT_MIN_SPAN - (boundHi - boundLo);
+    if (short > 0) {
+      boundLo -= short / 2;
+      boundHi += short / 2;
+    }
+    if (boundLo < 0) { boundHi -= boundLo; boundLo = 0; }
+    if (boundHi > 127) { boundLo -= boundHi - 127; boundHi = 127; }
+    const drums = isDrums ? drumRowsFor(notes, (key) => tv(`drumPieces.${key}`)) : null;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    let gutterW = ROLL_GUTTER_W;
+    if (drums) {
+      ctx.font = '11px sans-serif';
+      drums.rows.forEach((r) => {
+        gutterW = Math.max(gutterW, Math.ceil(ctx.measureText(r.label).width) + 16);
+      });
+    }
+    parsedRef.current = {
+      notes,
+      ghostNotes,
+      drums,
+      boundLo,
+      boundHi,
+      firstTime: notes.length ? notes[0].time : 0,
+      gutterW,
+    };
+
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = canvas.clientWidth * dpr;
@@ -181,7 +281,38 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
     resize();
     window.addEventListener('resize', resize);
 
-    const render = () => {
+    // Pitch range target for the window [from, to]: outermost notes, padded,
+    // at least ROLL_FIT_MIN_SPAN wide, kept inside the part's own range.
+    const fitRange = (parsed, from, to) => {
+      let lo = 128;
+      let hi = -1;
+      for (let i = 0; i < parsed.notes.length; i += 1) {
+        const n = parsed.notes[i];
+        if (n.time > to) break; // sorted by start time
+        if (n.time + n.duration < from) continue;
+        if (n.midi < lo) lo = n.midi;
+        if (n.midi > hi) hi = n.midi;
+      }
+      if (hi < 0) return null;
+      lo -= ROLL_FIT_PAD;
+      hi += ROLL_FIT_PAD;
+      const grow = ROLL_FIT_MIN_SPAN - (hi - lo);
+      if (grow > 0) {
+        lo -= grow / 2;
+        hi += grow / 2;
+      }
+      // Slide (not squeeze) back inside the part's own padded range.
+      const { boundLo, boundHi } = parsed;
+      if (lo < boundLo) { hi += boundLo - lo; lo = boundLo; }
+      if (hi > boundHi) { lo -= hi - boundHi; hi = boundHi; }
+      return { lo: Math.max(boundLo, lo), hi };
+    };
+
+    let view = null; // eased { lo, hi } pitch range, fractional
+    let lastFrame = 0;
+    let shownLater = null;
+
+    const render = (now) => {
       const parsed = parsedRef.current;
       const t = transportRef.current;
       const pos = t ? t.getPosition() : 0;
@@ -194,43 +325,108 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
       ctx.fillStyle = '#151515';
       ctx.fillRect(0, 0, w, h);
 
-      const rollX = ROLL_GUTTER_W;
-      const rollW = w - ROLL_GUTTER_W;
+      const gw = parsed.gutterW;
+      const rollX = gw;
+      const rollW = w - gw;
       const rollY = ROLL_RULER_H;
       const rollH = h - ROLL_RULER_H;
-      const span = parsed.maxPitch - parsed.minPitch;
-      const pitchH = rollH / span;
       const leftTime = pos - ROLL_WINDOW_SEC * ROLL_PLAYHEAD_FRAC;
+      const rightTime = leftTime + ROLL_WINDOW_SEC;
       const pxPerSec = rollW / ROLL_WINDOW_SEC;
+
+      // Long intro: point at where the notes begin instead of an empty grid.
+      const later = parsed.notes.length && parsed.firstTime > rightTime ? parsed.firstTime : null;
+      if (later !== shownLater) {
+        shownLater = later;
+        setLaterStart(later);
+      }
+
+      // Row geometry. yOf(note) is the top edge of the note's row.
+      let rowH;
+      let yOf;
+      let rowsTop = rollY;
+      if (parsed.drums) {
+        const n = Math.max(1, parsed.drums.rows.length);
+        rowH = Math.min(rollH / n, ROLL_DRUM_ROW_MAX_H);
+        rowsTop = rollY + (rollH - rowH * n) / 2;
+        yOf = (midi) => rowsTop + parsed.drums.rowOf.get(midi) * rowH;
+      } else {
+        const target =
+          fitRange(parsed, leftTime, rightTime + ROLL_FIT_LOOKAHEAD_SEC) ||
+          (view ? null : fitRange(parsed, parsed.firstTime, parsed.firstTime + ROLL_WINDOW_SEC)) ||
+          view || { lo: parsed.boundLo, hi: parsed.boundHi };
+        if (!view) {
+          view = { ...target };
+        } else {
+          const dt = Math.min(0.25, Math.max(0, (now - lastFrame) / 1000));
+          const k = 1 - Math.exp(-dt / ROLL_FIT_EASE_SEC);
+          view.lo += (target.lo - view.lo) * k;
+          view.hi += (target.hi - view.hi) * k;
+        }
+        rowH = rollH / (view.hi - view.lo + 1);
+        const top = view.hi;
+        yOf = (midi) => rollY + (top - midi) * rowH;
+      }
+      lastFrame = now;
+
+      // Everything below the ruler is clipped to the roll's own band, so a
+      // row half-scrolled out of range never paints over the time ruler.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, rollY, w, rollH);
+      ctx.clip();
 
       // pitch rows + keyboard gutter
       ctx.fillStyle = '#1f1f1f';
-      ctx.fillRect(0, 0, ROLL_GUTTER_W, h);
-      for (let p = parsed.minPitch; p <= parsed.maxPitch; p += 1) {
-        const y = rollY + (parsed.maxPitch - p) * pitchH;
-        const isBlack = [1, 3, 6, 8, 10].includes(p % 12);
-        if (isBlack) {
-          ctx.fillStyle = 'rgba(255,255,255,0.025)';
-          ctx.fillRect(rollX, y, rollW, pitchH);
-        }
-        if (p % 12 === 0) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.fillRect(0, 0, gw, h);
+      if (parsed.drums) {
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        parsed.drums.rows.forEach((r, i) => {
+          const y = rowsTop + i * rowH;
+          if (i % 2 === 1) {
+            ctx.fillStyle = 'rgba(255,255,255,0.025)';
+            ctx.fillRect(rollX, y, rollW, rowH);
+          }
+          ctx.strokeStyle = 'rgba(255,255,255,0.08)';
           ctx.beginPath();
-          ctx.moveTo(0, y + pitchH);
-          ctx.lineTo(w, y + pitchH);
+          ctx.moveTo(0, y + rowH);
+          ctx.lineTo(w, y + rowH);
           ctx.stroke();
-          ctx.fillStyle = 'rgba(255,255,255,0.55)';
-          ctx.font = '9px monospace';
-          ctx.textAlign = 'right';
-          ctx.fillText(`C${Math.floor(p / 12) - 1}`, ROLL_GUTTER_W - 5, y + pitchH - 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.fillText(r.label, gw - 8, y + rowH / 2);
+        });
+        ctx.textBaseline = 'alphabetic';
+      } else {
+        for (let p = Math.floor(view.lo) - 1; p <= Math.ceil(view.hi) + 1; p += 1) {
+          if (p < 0 || p > 127) continue;
+          const y = yOf(p);
+          const isBlack = [1, 3, 6, 8, 10].includes(p % 12);
+          if (isBlack) {
+            ctx.fillStyle = 'rgba(255,255,255,0.025)';
+            ctx.fillRect(rollX, y, rollW, rowH);
+          }
+          if (p % 12 === 0) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.beginPath();
+            ctx.moveTo(0, y + rowH);
+            ctx.lineTo(w, y + rowH);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(`C${Math.floor(p / 12) - 1}`, gw - 5, y + rowH - 2);
+          }
         }
       }
+      ctx.restore();
 
       // time ruler + second gridlines
       ctx.fillStyle = 'rgba(255,255,255,0.03)';
       ctx.fillRect(rollX, 0, rollW, ROLL_RULER_H);
       const firstSec = Math.max(0, Math.floor(leftTime));
-      for (let s = firstSec; s <= leftTime + ROLL_WINDOW_SEC + 1; s += 1) {
+      for (let s = firstSec; s <= rightTime + 1; s += 1) {
         const x = rollX + (s - leftTime) * pxPerSec;
         if (x < rollX || x > w) continue;
         const major = s % 5 === 0;
@@ -247,33 +443,40 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
         }
       }
 
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(rollX, rollY, rollW, rollH);
+      ctx.clip();
+
       // ghost notes — other instruments, faint, under the selected one
-      const rightTime = leftTime + ROLL_WINDOW_SEC;
       (parsed.ghostNotes || []).forEach((n) => {
         if (n.time + n.duration < leftTime || n.time > rightTime) return;
         const x = rollX + (n.time - leftTime) * pxPerSec;
         const nw = Math.max(2, n.duration * pxPerSec - 1);
-        const y = rollY + (parsed.maxPitch - n.midi) * pitchH;
-        const nh = Math.max(3, pitchH - 1);
+        const y = yOf(n.midi);
+        const nh = Math.max(3, rowH - 1);
         ctx.fillStyle = n.color;
         ctx.globalAlpha = 0.09;
         ctx.fillRect(Math.max(rollX, x), y, nw - Math.max(0, rollX - x), nh);
         ctx.globalAlpha = 1;
       });
 
-      // notes
+      // notes. Drum hits are centred bars in their piece's row; pitched notes
+      // fill their semitone row.
+      const drumH = Math.max(3, Math.min(rowH - 6, 16));
       parsed.notes.forEach((n) => {
         if (n.time + n.duration < leftTime || n.time > rightTime) return;
         const x = rollX + (n.time - leftTime) * pxPerSec;
-        const nw = Math.max(2, n.duration * pxPerSec - 1);
-        const y = rollY + (parsed.maxPitch - n.midi) * pitchH;
-        const nh = Math.max(3, pitchH - 1);
+        const nw = Math.max(parsed.drums ? 4 : 2, n.duration * pxPerSec - 1);
+        const y = parsed.drums ? yOf(n.midi) + (rowH - drumH) / 2 : yOf(n.midi);
+        const nh = parsed.drums ? drumH : Math.max(3, rowH - 1);
         const isPast = n.time + n.duration < pos;
         ctx.fillStyle = n.color;
         ctx.globalAlpha = isPast ? 0.4 : 0.88;
         ctx.fillRect(Math.max(rollX, x), y, nw - Math.max(0, rollX - x), nh);
         ctx.globalAlpha = 1;
       });
+      ctx.restore();
 
       // playhead
       const phX = rollX + (pos - leftTime) * pxPerSec;
@@ -300,7 +503,7 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
     };
-  }, [midiBuffer, ghosts]);
+  }, [midiBuffer, ghosts, percussion]);
 
   const onClickSeek = useCallback((e) => {
     const t = transportRef.current;
@@ -309,13 +512,20 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
     if (!t || !parsed || !canvas) return;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    if (x < ROLL_GUTTER_W) return;
-    const rollW = rect.width - ROLL_GUTTER_W;
+    if (x < parsed.gutterW) return;
+    const rollW = rect.width - parsed.gutterW;
     const pos = t.getPosition();
     const leftTime = pos - ROLL_WINDOW_SEC * ROLL_PLAYHEAD_FRAC;
-    const target = leftTime + ((x - ROLL_GUTTER_W) / rollW) * ROLL_WINDOW_SEC;
+    const target = leftTime + ((x - parsed.gutterW) / rollW) * ROLL_WINDOW_SEC;
     t.seek(Math.max(0, target));
   }, []);
+
+  // Seek to a second before the first note so it scrolls in right after the
+  // playhead.
+  const jumpToFirstNote = useCallback(() => {
+    const t = transportRef.current;
+    if (t && laterStart != null) t.seek(Math.max(0, laterStart - 1));
+  }, [laterStart]);
 
   return (
     <div className="gs-pianoroll" style={{ position: 'relative' }}>
@@ -335,6 +545,16 @@ export function PianoRollView({ midiBuffer, transport, loading, error, ghosts })
           onClick={onClickSeek}
           style={{ display: 'block', width: '100%', height: 460, cursor: 'pointer' }}
         />
+      )}
+      {!loading && !error && midiBuffer && laterStart != null && (
+        <button
+          type="button"
+          className="gs-roll-later"
+          onClick={jumpToFirstNote}
+          title={tv('jumpToFirstNote')}
+        >
+          {tv('notesStartAt', { time: fmtClock(laterStart) })}
+        </button>
       )}
     </div>
   );

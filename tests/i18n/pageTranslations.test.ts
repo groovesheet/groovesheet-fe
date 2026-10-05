@@ -5,8 +5,8 @@ import zhCN from '@/messages/zh-CN.json';
 import zhTW from '@/messages/zh-TW.json';
 
 /**
- * /help, /pricing, /explore (with /explore/search), /stem-splitter and
- * /midi-converter in Chinese.
+ * /help, /pricing, /explore (with /explore/search), /stem-splitter,
+ * /midi-converter and /changelog in Chinese.
  *
  * These pages were served at /zh-CN and /zh-TW with self-canonicals and
  * English copy, so each was the English page declared as its own translation.
@@ -15,7 +15,7 @@ import zhTW from '@/messages/zh-TW.json';
  * stay apart, and every message formats with the values the pages pass.
  */
 const MESSAGES = { en, 'zh-CN': zhCN, 'zh-TW': zhTW } as const;
-const NAMESPACES = ['explore', 'help', 'pricingPage', 'tools'] as const;
+const NAMESPACES = ['changelogPage', 'explore', 'help', 'pricingPage', 'tools'] as const;
 
 type Leaf = [path: string, value: string];
 function leaves(node: unknown, path = ''): Leaf[] {
@@ -28,7 +28,8 @@ describe('translated marketing and library pages', () => {
   // else Latin in a Chinese message is an untranslated phrase.
   const ALLOWED = new Set([
     'GrooveSheet', 'MIDI', 'PDF', 'MusicXML', 'DAW', 'AI', 'QR', 'MB', 'MP', 'WAV', 'FLAC', 'OGG', 'mid',
-    'WhatsApp', 'Google', 'Apple', 'Facebook', 'Stripe', 'Lite', 'Pro', 'MyGO', 'YOASOBI',
+    'WhatsApp', 'Google', 'Apple', 'iPhone', 'Facebook', 'Stripe', 'Lite', 'Pro', 'MyGO', 'YOASOBI',
+    'Sibelius', 'MuseScore', 'Dorico',
     'count', 'plural', 'one', 'other',
   ]);
 

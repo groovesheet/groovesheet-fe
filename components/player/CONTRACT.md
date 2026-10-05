@@ -71,7 +71,7 @@ from `engine`). It loads the 3D piano from `/3d-piano-player/index.html`.
 | Export | Props type | Notes |
 |---|---|---|
 | `SheetMusicView` | `SheetMusicViewProps` | `osmdRef: RefObject<OSMDViewerHandle \| null>` receives the OSMD handle |
-| `PianoRollView` | `PianoRollViewProps` | `ghosts`: other instruments drawn faint |
+| `PianoRollView` | `PianoRollViewProps` | `ghosts`: other instruments drawn faint; `percussion`: kit-piece rows for a drum part |
 | `StemsView` | `StemsViewProps` | `stems: StemRow[]`, `stemState: StemStateMap` |
 | `SpectrogramView` | `SpectrogramViewProps` | needs the live `stemEngine` |
 | `DrumGridView` | `DrumGridViewProps` | |
