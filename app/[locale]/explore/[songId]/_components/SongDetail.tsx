@@ -1286,6 +1286,7 @@ export default function SongDetail({
                   loading={midiLoading}
                   error={midiError}
                   ghosts={ghosts}
+                  percussion={noteView === 'drums'}
                 />
               )}
               {view === 'notes' && hasMidi && noteView === 'drums' && (

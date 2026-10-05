@@ -117,7 +117,7 @@ describe('song pages in Chinese', () => {
       title: 'T', artist: 'A', subject: 'S', handle: 'h', creator: 'c', mode: 'off', status: 's',
       name: 'n', noun: 'n', adjective: 'a', sheet: 's', sheetHeading: 's', sheetTitle: 's', sub: 's',
       names: 'n', adjectives: 'a', scored: 's', notated: 'n', stems: 's', exports: '', stem: '', formats: 'f',
-      count: 2, loaded: 1, total: 2, percent: 50, value: 80, separator: 's',
+      count: 2, loaded: 1, total: 2, percent: 50, value: 80, separator: 's', time: '0:21',
     };
     for (const [path] of leaves(MESSAGES[locale].song)) t(path, values);
     expect(errors).toEqual([]);

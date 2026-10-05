@@ -507,7 +507,26 @@
       "adding": "正在添加图层… {percent}%",
       "spectrumUnavailable": "频谱不可用",
       "noStemAudio": "没有可分析的分轨音频",
-      "analyseError": "无法分析分轨"
+      "analyseError": "无法分析分轨",
+      "notesStartAt": "音符从 {time} 开始",
+      "jumpToFirstNote": "跳到第一个音符",
+      "drumPieces": {
+        "kick": "底鼓",
+        "snare": "军鼓",
+        "sideStick": "边击",
+        "clap": "拍手",
+        "closedHat": "闭镲",
+        "pedalHat": "踩镲",
+        "openHat": "开镲",
+        "tom": "通鼓",
+        "crash": "吊镲",
+        "ride": "叮叮镲",
+        "rideBell": "镲帽",
+        "china": "中国镲",
+        "splash": "水镲",
+        "tambourine": "铃鼓",
+        "cowbell": "牛铃"
+      }
     },
     "instruments": {
       "drums": {

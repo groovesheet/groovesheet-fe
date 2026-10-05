@@ -50,5 +50,5 @@ export default function FallingKeysView({ midiBuffer, transport, loading, error 
       />
     );
   }
-  return <VideoPianoRoll midiBuffer={midiBuffer} timeRef={timeRef} mode="piano" />;
+  return <VideoPianoRoll midiBuffer={midiBuffer} timeRef={timeRef} mode="piano" fitRange />;
 }

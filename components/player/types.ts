@@ -199,6 +199,8 @@ export interface PianoRollGhost {
 
 export interface PianoRollViewProps extends MidiViewerBaseProps {
   ghosts?: PianoRollGhost[] | null;
+  /** The part is a drum kit: rows are kit pieces (General MIDI) instead of pitches. */
+  percussion?: boolean;
 }
 
 export type DrumGridViewProps = MidiViewerBaseProps;

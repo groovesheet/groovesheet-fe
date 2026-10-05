@@ -507,7 +507,26 @@
       "adding": "正在加入圖層… {percent}%",
       "spectrumUnavailable": "頻譜無法使用",
       "noStemAudio": "沒有可分析的分軌音訊",
-      "analyseError": "無法分析分軌"
+      "analyseError": "無法分析分軌",
+      "notesStartAt": "音符從 {time} 開始",
+      "jumpToFirstNote": "跳到第一個音符",
+      "drumPieces": {
+        "kick": "大鼓",
+        "snare": "小鼓",
+        "sideStick": "邊擊",
+        "clap": "拍手",
+        "closedHat": "閉鈸",
+        "pedalHat": "踩鈸",
+        "openHat": "開鈸",
+        "tom": "筒鼓",
+        "crash": "碎音鈸",
+        "ride": "疊音鈸",
+        "rideBell": "鈸帽",
+        "china": "中國鈸",
+        "splash": "水鈸",
+        "tambourine": "鈴鼓",
+        "cowbell": "牛鈴"
+      }
     },
     "instruments": {
       "drums": {

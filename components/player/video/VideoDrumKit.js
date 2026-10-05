@@ -15,6 +15,14 @@ import React, { useEffect, useMemo, useRef } from 'react';
  * Time is driven externally by `timeRef` (seconds, looping, seekable); the
  * component runs its own rAF loop and writes overlay opacity directly to the
  * DOM so the parent never re-renders per frame.
+ *
+ * A hit flashes only when the clock moves forward across it. Sitting still
+ * (stopped at 0:00, paused, just seeked) lights nothing, even when the part has
+ * a hit at exactly the current time: most drum MIDI opens with a kick and a
+ * crash at 0.00, which used to leave both pieces solid blue before playback.
+ *
+ * `glow` (the song and transcription pages): hits read as a translucent,
+ * brightened glow over the pad instead of the video frame's solid disc.
  */
 
 const KIT = '/video-assets/drumkit';
@@ -26,6 +34,10 @@ const IMG_H = 562;
 const HOLD_SEC = 0.09; // overlay stays solid blue for this long after a hit
 const FLASH_SEC = 0.16; // total flash length (hold + fade-out)
 const MIN_ALPHA = 0.0; // overlays fully invisible at rest
+const REST_MS = 250; // clock unchanged this long (wall time) = stopped: clear any flash
+const SEEK_SEC = 0.5; // a forward step larger than this is a seek, not playback
+const GLOW_ALPHA = 0.6; // peak opacity of a `glow` flash
+const GLOW_FILTER = 'brightness(2.2) drop-shadow(0 0 6px rgba(96, 150, 255, 0.9))';
 
 // One entry per kit piece. GM channel-10 note numbers → piece, mirroring the
 // voice families in videoSynth.js but at per-piece granularity (three toms,
@@ -46,7 +58,7 @@ const MIDI_TO_PIECE = {};
 PIECES.forEach((p, i) => p.midis.forEach((m) => { MIDI_TO_PIECE[m] = i; }));
 const FALLBACK_PIECE = 1; // unknown percussion → snare, same default as the roll
 
-export default function VideoDrumKit({ notes, timeRef }) {
+export default function VideoDrumKit({ notes, timeRef, glow = false }) {
   const imgRefs = useRef([]); // one <img> per piece
   const rafRef = useRef(null);
 
@@ -62,37 +74,53 @@ export default function VideoDrumKit({ notes, timeRef }) {
   }, [notes]);
 
   useEffect(() => {
-    // Per-piece cursor into its hit array. The clock loops and is seekable, so
-    // on any backwards jump we re-seat the cursor with a binary search instead
-    // of assuming monotonic time.
+    // Per-piece cursor: index of the first hit the clock has not yet crossed.
+    // The clock loops and is seekable, so on any jump we re-seat the cursors
+    // with a binary search instead of assuming monotonic time.
     const cursors = hitsByPiece.map(() => 0);
-    let prevT = -1;
+    const fired = hitsByPiece.map(() => -Infinity); // time of the last hit that flashed
+    const peak = glow ? GLOW_ALPHA : 1;
+    let prevT = null;
+    let lastMoveAt = 0;
 
     const seat = (arr, t) => {
-      // first index with arr[i] > t
+      // first index with arr[i] >= t: a hit AT the new position is still ahead
       let lo = 0;
       let hi = arr.length;
       while (lo < hi) {
         const mid = (lo + hi) >> 1;
-        if (arr[mid] <= t) lo = mid + 1; else hi = mid;
+        if (arr[mid] < t) lo = mid + 1; else hi = mid;
       }
       return lo;
     };
 
     const loop = () => {
       const t = timeRef?.current ?? 0;
-      const jumpedBack = t < prevT - 0.05;
+      const now = performance.now();
+      const step = prevT == null ? NaN : t - prevT;
+      const playing = step > 0 && step <= SEEK_SEC;
+      if (step !== 0) lastMoveAt = now;
+      // First frame, seek or loop wrap: re-seat without flashing anything.
+      const jumped = !(step >= 0 && step <= SEEK_SEC);
+      const resting = now - lastMoveAt > REST_MS;
       for (let i = 0; i < hitsByPiece.length; i += 1) {
         const arr = hitsByPiece[i];
+        if (jumped) {
+          cursors[i] = seat(arr, t);
+          fired[i] = -Infinity;
+        } else if (playing) {
+          while (cursors[i] < arr.length && arr[cursors[i]] <= t) {
+            fired[i] = arr[cursors[i]];
+            cursors[i] += 1;
+          }
+        }
         const img = imgRefs.current[i];
         if (!img) continue;
-        if (jumpedBack) cursors[i] = seat(arr, t - FLASH_SEC);
-        while (cursors[i] < arr.length && arr[cursors[i]] <= t) cursors[i] += 1;
-        const lastHit = cursors[i] > 0 ? arr[cursors[i] - 1] : -Infinity;
-        const age = t - lastHit;
+        const age = t - fired[i];
         let a = MIN_ALPHA;
-        if (age < HOLD_SEC) a = 1;
-        else if (age < FLASH_SEC) a = 1 - ((age - HOLD_SEC) / (FLASH_SEC - HOLD_SEC)) * (1 - MIN_ALPHA);
+        if (resting) a = MIN_ALPHA;
+        else if (age < HOLD_SEC) a = peak;
+        else if (age < FLASH_SEC) a = peak - ((age - HOLD_SEC) / (FLASH_SEC - HOLD_SEC)) * (peak - MIN_ALPHA);
         img.style.opacity = String(a);
       }
       prevT = t;
@@ -100,10 +128,13 @@ export default function VideoDrumKit({ notes, timeRef }) {
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [hitsByPiece, timeRef]);
+  }, [hitsByPiece, timeRef, glow]);
 
   // The kit keeps its native aspect and is fit-scaled to whatever box the
-  // parent gives us; overlays share the photo's canvas so one wrapper scales all.
+  // parent gives us; overlays share the photo's canvas so one wrapper scales
+  // all. `object-fit: contain` keeps the photo undistorted when max-width
+  // narrows the box below the aspect ratio (phones), and since every layer is
+  // letterboxed the same way the overlays still land on their pieces.
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ position: 'relative', height: '92%', aspectRatio: `${IMG_W} / ${IMG_H}`, maxWidth: '96%' }}>
@@ -115,7 +146,7 @@ export default function VideoDrumKit({ notes, timeRef }) {
             src={p.src}
             alt=""
             draggable={false}
-            style={{ ...layerStyle, opacity: 0 }}
+            style={{ ...layerStyle, opacity: 0, filter: glow ? GLOW_FILTER : undefined }}
           />
         ))}
       </div>
@@ -128,6 +159,7 @@ const layerStyle = {
   inset: 0,
   width: '100%',
   height: '100%',
+  objectFit: 'contain',
   userSelect: 'none',
   pointerEvents: 'none',
 };
