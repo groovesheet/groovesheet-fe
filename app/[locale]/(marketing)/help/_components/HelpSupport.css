@@ -141,11 +141,17 @@
 
 .help-search-kbd {
   font-size: 12px;
+  line-height: normal;
+  white-space: nowrap;
   color: var(--color-muted-foreground);
   padding: 6px 9px;
   border: 1px solid var(--color-input-border);
   border-radius: 6px;
   font-family: var(--font-family-mono);
+}
+/* Hidden until the browser has said whether the key is Cmd or Ctrl. */
+.help-search-kbd[data-ready='false'] {
+  visibility: hidden;
 }
 /* ===================== FAQ ===================== */
 .help-faq {

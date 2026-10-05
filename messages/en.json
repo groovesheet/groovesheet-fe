@@ -332,8 +332,6 @@
   "login": {
     "welcome": "Welcome to GrooveSheet",
     "continueWith": "Continue with",
-    "subscribeLong": "Subscribe to GrooveSheet updates and never miss a beat!",
-    "subscribeShort": "Subscribe to GrooveSheet updates",
     "google": "Google",
     "facebook": "Facebook",
     "apple": "Apple",
@@ -1179,5 +1177,97 @@
     "seePlans": "See monthly plans",
     "haveAPlan": "I have a plan: sign in",
     "notNow": "Not now"
+  },
+  "changelogPage": {
+    "title": "Changelog",
+    "subtitle": "What's new in GrooveSheet.",
+    "subscribe": "Subscribe for updates",
+    "badges": {
+      "new": "New",
+      "improved": "Improved",
+      "fixed": "Fixed"
+    },
+    "entries": {
+      "v1_9": {
+        "title": "WeChat Pay, and a smoother road to the full song",
+        "items": {
+          "wechat": "Top-ups priced in yuan can now be paid with WeChat Pay as well as by card. Subscriptions are still card only.",
+          "keepPreview": "Your preview now waits for you while you sign in and pay. Pick a minute pack, sign in, check out, and the full song starts on its own.",
+          "phones": "Song pages, Explore and search work better on phones: the song title sits above the player, the controls fit on one row and the tabs scroll.",
+          "signIn": "Signing in from mainland China puts email first, and the code screen tells you where the code went and to check your spam folder.",
+          "downloads": "Fixed: finished previews no longer start downloads on their own, and a dropped file is no longer uploaded twice."
+        }
+      },
+      "v1_8": {
+        "title": "A page for every part, and more of the site in Chinese",
+        "items": {
+          "partPages": "Every transcribed part now has its own page, such as a song's drum score or its piano score, listing the downloads that part actually has.",
+          "chinese": "Song pages, Help, Pricing, Explore and the stem splitter and MIDI converter pages are now in Simplified and Traditional Chinese.",
+          "previewFirst": "Every upload starts with a free 10-second preview, signed in or not. Going on to the full song is a separate step that uses minutes.",
+          "outOfMinutes": "Running out of minutes now opens a short dialog where you can buy a top-up in one click, instead of jumping to the pricing table.",
+          "playback": "Fixed: clicking or seeking inside the score no longer stops playback."
+        }
+      },
+      "v1_7": {
+        "title": "Printable scores, library search and new ways to see a song",
+        "items": {
+          "pdf": "Download any score as a printable PDF with the song title and credits, from Explore and from Your Library.",
+          "search": "Explore has a full search page: filter, sort and page through every song in the library.",
+          "views": "Song pages have two new views: Falling keys shows where your hands go on piano parts, and Spectrum overlays every stem's spectrogram.",
+          "phone": "Upload phone recordings: M4A files from iPhone Voice Memos and most Android recorders now work, and so do OGG files.",
+          "codes": "Got a signup code from a club or event? Its link adds free minutes to your account when you sign up."
+        }
+      },
+      "v1_6": {
+        "title": "GrooveSheet in Chinese, with prices in yuan",
+        "items": {
+          "geo": "Visitors from mainland China now land on the Simplified Chinese site, and visitors from Taiwan, Hong Kong and Macau on the Traditional Chinese site. Choose English and it stays English.",
+          "yuan": "Visitors in mainland China see prices in yuan, the same on every plan card and in the comparison table.",
+          "scorePreviews": "Explore cards show the first page of the real score, so you can see the notation before you open a song.",
+          "credits": "Scores now carry the song title and a transcription credit on the page.",
+          "sync": "Fixed: the score cursor and the drum audio now stay in step during playback."
+        }
+      },
+      "v1_5": {
+        "title": "Drum transcription and a full-screen result view",
+        "items": {
+          "drums": "Drum transcription is here: choose Drums when you upload to get a drum score and MIDI, plus a drum kit view that lights up with every hit.",
+          "fullScreen": "A finished piano transcription opens full screen, with the sheet music, piano roll and stems on one shared player.",
+          "refunds": "If a transcription fails, the minutes it used go back to your account automatically.",
+          "noNotes": "Fixed: a song with no piano in it now shows a clear \"no notes found\" message instead of breaking the viewer."
+        }
+      },
+      "v1_4": {
+        "title": "Batch uploads and a faster drum model",
+        "items": {
+          "batch": "Upload up to 10 tracks at once. They queue and process in the background while you keep working.",
+          "model": "gs-drums-v3 runs about 40% faster and holds onto ghost notes through busy fills.",
+          "tempo": "The tempo map now follows gradual accelerandos instead of snapping to a single BPM."
+        },
+        "caption": "Batch queue: ten tracks transcribing at once, newest at the top."
+      },
+      "v1_3": {
+        "title": "Piano transcription leaves beta",
+        "items": {
+          "notation": "Full piano notation with separate treble and bass staves, plus pedal markings.",
+          "musicxml": "Export piano parts to MusicXML for Sibelius, MuseScore and Dorico."
+        }
+      },
+      "v1_2": {
+        "title": "Cleaner exports and kit mapping",
+        "items": {
+          "kit": "PDF scores now respect your saved kit-mapping preset on every export.",
+          "midi": "Fixed: MIDI files no longer drop the last bar on tracks that end mid-beat.",
+          "meter": "Fixed: time signatures other than 4/4 rendered with the wrong note grouping."
+        }
+      },
+      "v1_1": {
+        "title": "Stability fixes",
+        "items": {
+          "flac": "Large FLAC uploads over 20 MB occasionally timed out. Resolved.",
+          "progress": "The progress bar could stall at 99% after a job had already finished."
+        }
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import type { FaqCategory } from './helpData';
 
@@ -16,6 +16,22 @@ const SearchIcon = ({ size = 22, strokeWidth = 2 }: { size?: number; strokeWidth
     <path d="M21 21l-4.3-4.3" />
   </svg>
 );
+
+/** macOS and iOS put the shortcut on Command; everything else uses Control. */
+function isApplePlatform(): boolean {
+  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+  const platform = nav.userAgentData?.platform || nav.platform || nav.userAgent;
+  return /mac|iphone|ipad|ipod/i.test(platform);
+}
+
+// The platform never changes while the page is open, so there is nothing to subscribe to.
+const subscribeNever = () => () => {};
+
+/** A field the visitor may be typing in, where a shortcut must not steal focus. */
+function isOtherEditable(target: EventTarget | null, own: HTMLInputElement | null): boolean {
+  if (!(target instanceof HTMLElement) || target === own) return false;
+  return target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+}
 
 interface SearchResult {
   id: string;
@@ -35,6 +51,29 @@ export default function HelpSearchFaq({ heading, faq }: { heading: ReactNode; fa
   const t = useTranslations('help.search');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Unknown (null) on the server and while hydrating, which cannot know the
+  // platform, so the badge stays hidden instead of mismatching; read from the
+  // browser on the render right after hydration.
+  const apple = useSyncExternalStore<boolean | null>(subscribeNever, isApplePlatform, () => null);
+
+  // Cmd+K on Apple platforms, Ctrl+K elsewhere, focuses and selects the search
+  // box. Left alone while another field has focus, so it never interrupts
+  // typing somewhere else on the page.
+  useEffect(() => {
+    const mac = isApplePlatform();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing || e.altKey || e.shiftKey) return;
+      if (e.key.toLowerCase() !== 'k' || !(mac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey)) return;
+      const input = inputRef.current;
+      if (!input || isOtherEditable(e.target, input)) return;
+      e.preventDefault();
+      input.focus();
+      input.select();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const toggle = (id: string) => setOpen((s) => ({ ...s, [id]: !s[id] }));
 
@@ -73,12 +112,14 @@ export default function HelpSearchFaq({ heading, faq }: { heading: ReactNode; fa
             <SearchIcon />
           </span>
           <input
+            ref={inputRef}
             type="text"
             className="help-search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('placeholder')}
             aria-label={t('aria')}
+            aria-keyshortcuts={apple === null ? undefined : apple ? 'Meta+K' : 'Control+K'}
           />
           <div className="help-search-trailing">
             {searching && (
@@ -88,7 +129,9 @@ export default function HelpSearchFaq({ heading, faq }: { heading: ReactNode; fa
                 </svg>
               </button>
             )}
-            <span className="help-search-kbd">{'⌘'}K</span>
+            <kbd className="help-search-kbd" aria-hidden="true" data-ready={apple !== null}>
+              {apple === false ? 'Ctrl K' : '\u2318K'}
+            </kbd>
           </div>
         </div>
       </section>
