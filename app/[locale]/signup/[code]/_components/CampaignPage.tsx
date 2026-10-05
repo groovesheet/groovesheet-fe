@@ -29,7 +29,6 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
-  Check,
   CheckCircle,
   CreditCard,
   CrownSimple,
@@ -131,7 +130,6 @@ export default function CampaignPage({ code, initial }: CampaignPageProps) {
   const [step, setStep] = useState<Step>('choose');
   const [email, setEmail] = useState('');
   const [digits, setDigits] = useState<string[]>(EMPTY_DIGITS);
-  const [optIn, setOptIn] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState(0);
@@ -541,18 +539,6 @@ export default function CampaignPage({ code, initial }: CampaignPageProps) {
             )}
 
             {error && <StatusMessage variant="error">{error}</StatusMessage>}
-
-            <button
-              type="button"
-              className="cmp-optin"
-              onClick={() => setOptIn((v) => !v)}
-              aria-pressed={optIn}
-            >
-              <span className={`cmp-checkbox ${optIn ? 'is-on' : ''}`}>
-                {optIn && <Check size={14} weight="bold" />}
-              </span>
-              <span>{t('campaign.optIn')}</span>
-            </button>
 
             <p className="cmp-disclaimer">
               {t('campaign.disclaimerA')}

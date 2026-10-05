@@ -66,17 +66,6 @@ const RELEASES: ChangelogRelease[] = [
     tags: ['new', 'improved', 'fixed'],
     items: ['drums', 'fullScreen', 'refunds', 'noNotes'],
   },
-  {
-    id: 'v1_4',
-    datetime: '2026-06-24',
-    version: '1.4',
-    tags: ['new', 'improved'],
-    items: ['batch', 'model', 'tempo'],
-    caption: true,
-  },
-  { id: 'v1_3', datetime: '2026-05-30', version: '1.3', tags: ['new'], items: ['notation', 'musicxml'] },
-  { id: 'v1_2', datetime: '2026-05-12', version: '1.2', tags: ['improved', 'fixed'], items: ['kit', 'midi', 'meter'] },
-  { id: 'v1_1', datetime: '2026-04-28', version: '1.1', tags: ['fixed'], items: ['flac', 'progress'] },
 ];
 
 function CaptionArt() {
@@ -123,23 +112,6 @@ export default async function ChangelogPage(props: LocaleParams) {
             <h1 className="changelog-title">{t('title')}</h1>
             <p className="changelog-subtitle">{t('subtitle')}</p>
           </div>
-          <button type="button" className="changelog-subscribe">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M4 4h16v12H5.2L4 18.5z" />
-              <path d="M8 9h8M8 12h5" />
-            </svg>
-            {t('subscribe')}
-          </button>
         </div>
 
         <ol className="changelog-list">

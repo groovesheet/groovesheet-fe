@@ -372,7 +372,6 @@
     "confirm": "Confirm",
     "confirming": "Confirming…",
     "claiming": "Claiming…",
-    "optIn": "Subscribe to GrooveSheet updates and never miss a beat!",
     "disclaimerA": "By continuing you agree to our ",
     "disclaimerB": " and ",
     "terms": "Terms of Service",
@@ -1181,7 +1180,6 @@
   "changelogPage": {
     "title": "Changelog",
     "subtitle": "What's new in GrooveSheet.",
-    "subscribe": "Subscribe for updates",
     "badges": {
       "new": "New",
       "improved": "Improved",
@@ -1235,37 +1233,6 @@
           "fullScreen": "A finished piano transcription opens full screen, with the sheet music, piano roll and stems on one shared player.",
           "refunds": "If a transcription fails, the minutes it used go back to your account automatically.",
           "noNotes": "Fixed: a song with no piano in it now shows a clear \"no notes found\" message instead of breaking the viewer."
-        }
-      },
-      "v1_4": {
-        "title": "Batch uploads and a faster drum model",
-        "items": {
-          "batch": "Upload up to 10 tracks at once. They queue and process in the background while you keep working.",
-          "model": "gs-drums-v3 runs about 40% faster and holds onto ghost notes through busy fills.",
-          "tempo": "The tempo map now follows gradual accelerandos instead of snapping to a single BPM."
-        },
-        "caption": "Batch queue: ten tracks transcribing at once, newest at the top."
-      },
-      "v1_3": {
-        "title": "Piano transcription leaves beta",
-        "items": {
-          "notation": "Full piano notation with separate treble and bass staves, plus pedal markings.",
-          "musicxml": "Export piano parts to MusicXML for Sibelius, MuseScore and Dorico."
-        }
-      },
-      "v1_2": {
-        "title": "Cleaner exports and kit mapping",
-        "items": {
-          "kit": "PDF scores now respect your saved kit-mapping preset on every export.",
-          "midi": "Fixed: MIDI files no longer drop the last bar on tracks that end mid-beat.",
-          "meter": "Fixed: time signatures other than 4/4 rendered with the wrong note grouping."
-        }
-      },
-      "v1_1": {
-        "title": "Stability fixes",
-        "items": {
-          "flac": "Large FLAC uploads over 20 MB occasionally timed out. Resolved.",
-          "progress": "The progress bar could stall at 99% after a job had already finished."
         }
       }
     }

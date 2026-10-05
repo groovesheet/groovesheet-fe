@@ -431,37 +431,8 @@
 
 .campaign-page .cmp-digit:focus { border-color: #012fa7; }
 
-.campaign-page .cmp-optin {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 0;
-  border: none;
-  background: none;
-  text-align: left;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 300;
-  line-height: 1.45;
-  color: #f4f4f4;
-  cursor: pointer;
-  text-wrap: pretty;
-}
 
-.campaign-page .cmp-checkbox {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-}
 
-.campaign-page .cmp-checkbox.is-on { background: #5f5e60; }
 
 .campaign-page .cmp-disclaimer {
   font-size: 12px;
