@@ -65,9 +65,9 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
 
 export const config = {
   matcher: [
-    // `og` and `sitemaps` are locale-less route handlers (the share-card image
-    // and the sitemap children); without the exclusion the locale rewrite
+    // `og`, `sitemaps` and `email-domain` are locale-less route handlers (the
+    // share-card image, the sitemap children, the sign-in email check); without the exclusion the locale rewrite
     // would send them to /en/og and the catch-all 404.
-    '/((?!(?:api|ingest|blog|blog-media|internal|content-assets|og|sitemaps|_next|_vercel)(?:/|$)|.*\\..*).*)',
+    '/((?!(?:api|ingest|blog|blog-media|internal|content-assets|og|sitemaps|email-domain|_next|_vercel)(?:/|$)|.*\\..*).*)',
   ],
 };

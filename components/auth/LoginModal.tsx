@@ -27,6 +27,9 @@ import { useLocale, useTranslation } from '@/lib/i18n';
 import { Link } from '@/lib/navigation';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
 import { EVENTS, track } from '@/lib/analytics';
+import { suggestEmail } from '@/lib/emailTypo';
+import { emailDomainDeliverable } from '@/lib/emailDomainCheck';
+import StatusMessage from '@/components/ui/StatusMessage';
 import './LoginModal.css';
 
 export interface LoginModalProps {
@@ -103,6 +106,12 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState<string[]>(EMPTY_CODE);
   const [isSignUp, setIsSignUp] = useState(false);
+  // "Did you mean ...?" for a likely typo, and the address it was offered for.
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [keptAddress, setKeptAddress] = useState<string | null>(null);
+  // Domain that cannot receive mail at all (no such domain, no mail server).
+  const [undeliverable, setUndeliverable] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
   if (!isOpen || typeof document === 'undefined') return null;
 
@@ -132,11 +141,38 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     if (!returnTo) window.location.reload();
   };
 
-  const handleEmailConfirm = async () => {
-    if (!email) {
+  const handleEmailConfirm = async (address: string = email.trim(), keepTyped = false) => {
+    if (!address) {
       alert('Please enter your email address');
       return;
     }
+    if (checking) return;
+    const domain = emailDomain(address);
+
+    // A likely typo (gmial.com, kakacomc.com): ask first. The code would go
+    // to an inbox nobody reads and the visitor would just see no email.
+    if (!keepTyped && keptAddress !== address) {
+      const fix = suggestEmail(address);
+      if (fix) {
+        setSuggestion(fix);
+        track(EVENTS.LOGIN_EMAIL_CHECK, { action: 'shown', email_domain: domain, suggested_domain: emailDomain(fix) });
+        return;
+      }
+    }
+
+    // A domain with no mail server can never receive the code.
+    setChecking(true);
+    const deliverable = await emailDomainDeliverable(domain);
+    setChecking(false);
+    if (!deliverable) {
+      setUndeliverable(domain);
+      track(EVENTS.LOGIN_EMAIL_CHECK, { action: 'no_mail', email_domain: domain });
+      return;
+    }
+
+    setEmail(address);
+    setSuggestion(null);
+    setUndeliverable(null);
 
     // Show the code entry at once; the email is sent in the background.
     setIsSignUp(false);
@@ -145,13 +181,13 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
     try {
       try {
-        const signInResult = await signIn.create({ identifier: email });
+        const signInResult = await signIn.create({ identifier: address });
         await signIn.prepareFirstFactor({
           strategy: 'email_code',
           emailAddressId: signInResult.supportedFirstFactors.find((factor) => factor.strategy === 'email_code')
             ?.emailAddressId,
         });
-        track(EVENTS.LOGIN_CODE_SENT, { email_domain: emailDomain(email) });
+        track(EVENTS.LOGIN_CODE_SENT, { email_domain: emailDomain(address) });
         return;
       } catch (signInError) {
         // An unknown account (Clerk's 422) falls through to sign-up. Supabase
@@ -159,10 +195,10 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         // the flow objects that still report it.
         const e = asAuthError(signInError);
         if (e.status === 422 || e.errors?.[0]?.code === 'form_identifier_not_found') {
-          await signUp.create({ emailAddress: email });
+          await signUp.create({ emailAddress: address });
           await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
           setIsSignUp(true);
-          track(EVENTS.LOGIN_CODE_SENT, { email_domain: emailDomain(email), sign_up: true });
+          track(EVENTS.LOGIN_CODE_SENT, { email_domain: emailDomain(address), sign_up: true });
           return;
         }
         throw signInError;
@@ -170,7 +206,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     } catch (err) {
       console.error('Error during email confirmation:', err);
       const e = asAuthError(err);
-      track(EVENTS.LOGIN_CODE_ERROR, { stage: 'send', email_domain: emailDomain(email), message: (e.message || '').slice(0, 120) });
+      track(EVENTS.LOGIN_CODE_ERROR, { stage: 'send', email_domain: emailDomain(address), message: (e.message || '').slice(0, 120) });
       if (e.errors && e.errors.length > 0) {
         alert(`Error: ${e.errors[0].message}`);
       } else {
@@ -359,16 +395,56 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setSuggestion(null);
+                setUndeliverable(null);
+                setKeptAddress(null);
+              }}
               placeholder={t('login.emailPlaceholder')}
               autoComplete="email"
               className={`login-email-input${email ? ' is-filled' : ''}`}
             />
           </div>
-          <button type="submit" className="login-primary">
+          <button type="submit" className="login-primary" disabled={checking} aria-busy={checking}>
             <span className="login-primary-label">{t('login.confirm')}</span>
           </button>
         </form>
+
+        {suggestion && (
+          <StatusMessage variant="warning" className="login-email-check" title={t('login.typo.title', { email: suggestion })}>
+            <span className="login-email-check-actions">
+              <button
+                type="button"
+                className="login-email-check-btn login-email-check-btn--primary"
+                onClick={() => {
+                  track(EVENTS.LOGIN_EMAIL_CHECK, { action: 'accepted', email_domain: emailDomain(email), suggested_domain: emailDomain(suggestion) });
+                  void handleEmailConfirm(suggestion);
+                }}
+              >
+                {t('login.typo.use', { email: suggestion })}
+              </button>
+              <button
+                type="button"
+                className="login-email-check-btn"
+                onClick={() => {
+                  const typed = email.trim();
+                  track(EVENTS.LOGIN_EMAIL_CHECK, { action: 'kept', email_domain: emailDomain(typed), suggested_domain: emailDomain(suggestion) });
+                  setKeptAddress(typed);
+                  setSuggestion(null);
+                  void handleEmailConfirm(typed, true);
+                }}
+              >
+                {t('login.typo.keep')}
+              </button>
+            </span>
+          </StatusMessage>
+        )}
+        {undeliverable && !suggestion && (
+          <StatusMessage variant="error" className="login-email-check" title={t('login.noMail.title', { domain: undeliverable })}>
+            {t('login.noMail.body')}
+          </StatusMessage>
+        )}
       </div>
     );
   } else {

@@ -24,7 +24,7 @@
       "permanent": false
     },
     {
-      "source": "/:path((?!api/|ingest/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
+      "source": "/:path((?!api/|ingest/|email-domain|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
       "has": [
         {
           "type": "header",
@@ -68,7 +68,7 @@
       "permanent": false
     },
     {
-      "source": "/:path((?!api/|ingest/|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
+      "source": "/:path((?!api/|ingest/|email-domain|blog|blog-media|internal|zh-CN|zh-TW|static/|.*\\.).*)",
       "has": [
         {
           "type": "header",

@@ -345,7 +345,16 @@
     "codePrompt": "请输入 6 位验证码：",
     "closeAria": "关闭弹窗",
     "mainlandHint": "在中国大陆？Google 和 Facebook 可能无法打开，请用邮箱或 Apple 登录。",
-    "codeHint": "验证码已发送至 {email}，可能需要一分钟。如果收件箱里没有，请查看垃圾邮件。"
+    "codeHint": "验证码已发送至 {email}，可能需要一分钟。如果收件箱里没有，请查看垃圾邮件。",
+    "typo": {
+      "title": "您是不是想输入 {email}？",
+      "use": "使用 {email}",
+      "keep": "不用，保留我输入的"
+    },
+    "noMail": {
+      "title": "{domain} 无法接收邮件",
+      "body": "这个域名不存在或没有邮件服务器，验证码无法送达。请检查 @ 后面的拼写。"
+    }
   },
   "campaign": {
     "fallbackGroup": "你的社团",
