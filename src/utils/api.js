@@ -322,6 +322,7 @@ const INSTRUMENT_BY_WORKFLOW = {
   separate_to_jazz_bass_score: 'jazz_bass',
   separate_to_jazz_bass_score_full: 'jazz_bass',
   separate_to_guitar_stem: 'guitar',
+  separate_to_sax_stem: 'saxophone',
 };
 
 const INSTRUMENT_DISPLAY = {
@@ -331,6 +332,7 @@ const INSTRUMENT_DISPLAY = {
   jazz_bass: 'Jazz bass',
   vocals: 'Vocals',
   guitar: 'Guitar',
+  saxophone: 'Saxophone',
   other: 'Other',
 };
 
@@ -348,7 +350,7 @@ export function resolveInstrument(workflow) {
 /** "Piano transcription" / "Stem separation" — what the job produces. */
 export function resolveWorkflowKind(workflow) {
   const name = workflow?.workflow_name || '';
-  if (['bs_roformer_separate', 'demucs_separate', 'separate_to_guitar_stem'].includes(name)) {
+  if (['bs_roformer_separate', 'demucs_separate', 'separate_to_guitar_stem', 'separate_to_sax_stem'].includes(name)) {
     return 'Stem separation';
   }
   if (name === 'midi2score_quantize') return 'Score from MIDI';
@@ -359,6 +361,7 @@ const STEM_ONLY_WORKFLOWS = [
   'bs_roformer_separate',
   'demucs_separate',
   'separate_to_guitar_stem',
+  'separate_to_sax_stem',
   'compress_stems',
 ];
 
@@ -508,6 +511,7 @@ const STEM_KEYS = {
   jazz_bass: 'bs_roformer_bass_stem',
   vocals: 'bs_roformer_vocals_stem',
   guitar: 'bs_roformer_guitar_stem',
+  saxophone: 'bsr_mega_saxophone_stem',
   other: 'bs_roformer_other_stem',
 };
 

@@ -66,7 +66,8 @@
       "drums": "Drums",
       "piano": "Piano",
       "guitar": "Guitar",
-      "bass": "Bass"
+      "bass": "Bass",
+      "saxophone": "Saxophone"
     },
     "errors": {
       "fileFormat": "That format isn't supported — we accept MP3, WAV, FLAC, OGG and M4A.",
