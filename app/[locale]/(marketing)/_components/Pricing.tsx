@@ -9,6 +9,7 @@ import { startProviderCheckout } from '@/lib/airwallex';
 import { PRICING_SECTION_ID, PRICING_TAB_EVENT } from '@/lib/scrollToPricing';
 import { MAX_UPLOAD_MB } from '@/lib/constants';
 import { getClickIds } from '@/lib/attribution';
+import { saveCheckoutIntent, takeCheckoutIntent } from '@/lib/checkoutIntent';
 import { FUNNEL, trackFunnel } from '@/lib/analytics';
 import type { BillingPlan, BillingTopup } from '@/lib/types';
 import { useLoginModal } from '@/components/chrome/LoginModalProvider';
@@ -95,7 +96,7 @@ interface PricingProps {
 
 export default function Pricing({ onLoginClick, variant = 'notation' }: PricingProps) {
   const isStems = variant === 'stems';
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { openLoginModal } = useLoginModal();
   const router = useRouter();
@@ -183,6 +184,9 @@ export default function Pricing({ onLoginClick, variant = 'notation' }: PricingP
     }
 
     if (!isSignedIn) {
+      // Remember the pick: signing in reloads the page, and the visitor
+      // should land in Checkout afterwards, not back on these cards.
+      if (plan !== 'free') saveCheckoutIntent(resolvePlanKey(plan), currency);
       (onLoginClick ?? openLoginModal)();
       return;
     }
@@ -198,24 +202,41 @@ export default function Pricing({ onLoginClick, variant = 'notation' }: PricingP
       return;
     }
 
-    setLoading(plan);
+    await startCheckout(plan, resolvePlanKey(plan), currency, 'pricing');
+  };
+
+  const startCheckout = async (slug: PlanSlug, planKey: string, quoted: string, source: string) => {
+    setLoading(slug);
     try {
-      const planKey = resolvePlanKey(plan);
       // Send back the currency the user was actually quoted, so the price at
       // checkout can't differ from the price on the card they clicked.
-      const data = await createCheckoutSession('/api', planKey, getToken, null, currency, getClickIds());
+      const data = await createCheckoutSession('/api', planKey, getToken, null, quoted, getClickIds());
 
       // Hand off to the provider's hosted checkout (Stripe URL or Airwallex SDK).
       await startProviderCheckout(data);
     } catch (err) {
       console.error('Error creating checkout session:', err);
       const message = errorMessage(err, 'Unexpected error starting checkout');
-      trackFunnel(FUNNEL.CHECKOUT_ERROR, { plan: resolvePlanKey(plan), source: 'pricing', message });
+      trackFunnel(FUNNEL.CHECKOUT_ERROR, { plan: planKey, source, message });
       setError(message);
     } finally {
       setLoading(null);
     }
   };
+
+  // Back from signing in with a card already picked: go straight on to
+  // Checkout. Taking the intent clears it, so a second pricing section on the
+  // same page (or a re-render) cannot open Checkout twice.
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    const intent = takeCheckoutIntent();
+    if (!intent) return;
+    const slug = intent.plan.replace(/_annual$/, '') as PlanSlug;
+    trackFunnel(FUNNEL.BEGIN_CHECKOUT, { plan: intent.plan, source: 'after_signin', signed_in: true });
+    void startCheckout(slug, intent.plan, intent.currency || currency, 'after_signin');
+    // Runs once per sign-in; startCheckout and currency are read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isSignedIn]);
 
   // Seeing the prices is a funnel step of its own: once per page, when at
   // least a third of the section is on screen.
