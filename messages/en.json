@@ -345,7 +345,16 @@
     "codePrompt": "Please enter your 6-digit verification code:",
     "closeAria": "Close modal",
     "mainlandHint": "In mainland China? Google and Facebook may not open there. Email or Apple works.",
-    "codeHint": "Sent to {email}. It can take a minute; check spam or promotions if it is not in your inbox."
+    "codeHint": "Sent to {email}. It can take a minute; check spam or promotions if it is not in your inbox.",
+    "typo": {
+      "title": "Did you mean {email}?",
+      "use": "Use {email}",
+      "keep": "No, keep what I typed"
+    },
+    "noMail": {
+      "title": "{domain} can't receive email",
+      "body": "That domain doesn't exist or has no mail server, so the code could never arrive. Check the spelling after the @."
+    }
   },
   "campaign": {
     "fallbackGroup": "your group",

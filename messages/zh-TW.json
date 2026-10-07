@@ -345,7 +345,16 @@
     "codePrompt": "請輸入 6 位數驗證碼：",
     "closeAria": "關閉視窗",
     "mainlandHint": "在中國大陸？Google 和 Facebook 可能無法開啟，請用電子郵件或 Apple 登入。",
-    "codeHint": "驗證碼已寄至 {email}，可能需要一分鐘。如果收件匣裡沒有，請查看垃圾郵件。"
+    "codeHint": "驗證碼已寄至 {email}，可能需要一分鐘。如果收件匣裡沒有，請查看垃圾郵件。",
+    "typo": {
+      "title": "您是不是要輸入 {email}？",
+      "use": "使用 {email}",
+      "keep": "不用，保留我輸入的"
+    },
+    "noMail": {
+      "title": "{domain} 無法接收電子郵件",
+      "body": "這個網域不存在或沒有郵件伺服器，驗證碼無法送達。請檢查 @ 後面的拼字。"
+    }
   },
   "campaign": {
     "fallbackGroup": "你的社團",

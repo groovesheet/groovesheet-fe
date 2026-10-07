@@ -56,6 +56,8 @@ export const EVENTS = {
   LOGIN_CODE_SENT: 'login_code_sent',
   LOGIN_CODE_ERROR: 'login_code_error',
   LOGIN_CODE_VERIFIED: 'login_code_verified',
+  /** Email sign-in: a likely typo was flagged (action shown / accepted / kept) or the domain takes no mail (no_mail). */
+  LOGIN_EMAIL_CHECK: 'login_email_check',
   /** What a visitor chose on the failed-preview card. */
   PREVIEW_FAILED_NEXT_STEP: 'preview_failed_next_step',
 } as const;
