@@ -7,7 +7,7 @@ import { Piano } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useRouter } from '@/lib/navigation';
 import { useUser, useAuth } from '@/lib/auth';
-import { authenticatedFetch, apiPrefixForId, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
+import { authenticatedFetch, apiPrefixForId, downloadScorePdf, downloadScoreGp5, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
 import { queueSummary } from '@/lib/queue';
 import { saveActiveJob, loadActiveJob, clearActiveJob } from '@/lib/activeJob';
 import { FUNNEL, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
@@ -234,6 +234,21 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
       console.warn('Score PDF download failed:', err);
+    }
+  };
+
+  // The score as Guitar Pro 5, on request only (it does not auto-download
+  // like the PDF). Full transcriptions only; previews have no Guitar Pro export.
+  const downloadScoreGp5File = async (id: string | null) => {
+    if (!id || id.startsWith('PRV')) return;
+    try {
+      const result = await downloadScoreGp5(API_BASE_URL, id, getToken);
+      if (!result?.blob) return;
+      const objectUrl = URL.createObjectURL(result.blob);
+      triggerDownload(objectUrl, result.filename || `${selectedInstrument}_score_groovesheet.gp5`);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.warn('Guitar Pro download failed:', err);
     }
   };
 
@@ -804,6 +819,7 @@ export default function MidiConverterUploader({ intro, mobileDisclaimer }: MidiC
               onDownloadStem={handleDownloadStem}
               onDownloadMidi={handleDownloadMidi}
               onDownloadPdf={() => downloadScorePdfFile(jobId)}
+              onDownloadGp5={jobId && !jobId.startsWith('PRV') ? () => downloadScoreGp5File(jobId) : undefined}
               onReset={resetUpload}
               downloadError={error}
               isSignedIn={isSignedIn}

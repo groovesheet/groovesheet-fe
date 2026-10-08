@@ -57,6 +57,7 @@ function songDownloads(t: SongT): DownloadRow[] {
   return [
     { test: (x) => x.has('musicxml'), label: 'MusicXML', note: t('facts.downloads.musicxml') },
     { test: (x) => x.has('musicxml'), label: 'PDF', note: t('facts.downloads.pdf') },
+    { test: (x) => x.has('musicxml'), label: 'Guitar Pro', note: t('facts.downloads.gp5') },
     { test: (x) => x.has('midi'), label: 'MIDI', note: t('facts.downloads.midi') },
     { test: (x) => x.has('stem'), label: t('facts.downloads.stemsLabel'), note: t('facts.downloads.stems') },
   ];
@@ -67,6 +68,7 @@ function partDownloads(t: SongT, vars: Record<string, string>): DownloadRow[] {
   return [
     { test: (x) => x.has('musicxml'), label: 'MusicXML', note: t('facts.downloads.partMusicxml', vars) },
     { test: (x) => x.has('musicxml'), label: 'PDF', note: t('facts.downloads.partPdf', vars) },
+    { test: (x) => x.has('musicxml'), label: 'Guitar Pro', note: t('facts.downloads.partGp5', vars) },
     { test: (x) => x.has('midi'), label: 'MIDI', note: t('facts.downloads.partMidi', vars) },
     { test: (x) => x.has('stem'), label: t('facts.downloads.partStemLabel'), note: t('facts.downloads.partStem', vars) },
   ];

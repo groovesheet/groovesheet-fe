@@ -18,6 +18,7 @@ import { TranscriptionResultView } from '@/components/player';
 import { useLocalizedNavigate } from '@/lib/navigation-client';
 import {
   downloadScorePdf,
+  downloadScoreGp5,
   downloadWorkflowFile,
   fetchWorkflowStatus,
   resolveAvailableOutputs,
@@ -161,6 +162,21 @@ export default function TranscriptionDetail({ workflowId }: { workflowId: string
     }
   }, [workflowId, getToken]);
 
+  // The score as Guitar Pro 5, converted on demand from the score MusicXML.
+  const downloadGp5 = useCallback(async () => {
+    setDownloadError(null);
+    try {
+      const result = await downloadScoreGp5(config.apiBaseUrl, workflowId, getToken);
+      if (!result?.blob) {
+        setDownloadError('This transcription has no score to export.');
+        return;
+      }
+      saveBlob(result.blob, result.filename || 'score_groovesheet.gp5');
+    } catch (err) {
+      setDownloadError(errorMessage(err) || 'Could not convert the score to Guitar Pro.');
+    }
+  }, [workflowId, getToken]);
+
   const safeBase = title.replace(/\.[^.]+$/, '').replace(/[\\/:*?"<>|]/g, ' ').trim() || 'transcription';
   const fallback = (kind: string, ext: string) => [safeBase, instrument, kind, 'groovesheet'].filter(Boolean).join('_') + ext;
 
@@ -227,6 +243,7 @@ export default function TranscriptionDetail({ workflowId }: { workflowId: string
           onDownloadTranscription={() => download(scoreKey, fallback('score', '.musicxml'))}
           onDownloadMidi={() => download(outputs?.midi?.fileKey, fallback('midi', '.mid'))}
           onDownloadPdf={downloadPdf}
+          onDownloadGp5={downloadGp5}
           onDownloadStem={() => download(outputs?.instrument?.fileKey, fallback('stem', '.wav'))}
           onReset={null}
           downloadError={downloadError}

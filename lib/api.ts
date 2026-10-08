@@ -327,6 +327,28 @@ export async function downloadScorePdf(
 }
 
 /**
+ * Fetch the transcription's score as a Guitar Pro 5 file (.gp5).
+ *
+ * Drummers, bassists and guitarists read tab in Guitar Pro, TuxGuitar or
+ * MuseScore, all of which open .gp5. The server converts the same MusicXML the
+ * PDF is engraved from. Full transcriptions only: previews have no Guitar Pro
+ * export. Returns null when this job has no score.
+ */
+export async function downloadScoreGp5(
+  baseUrl: string,
+  workflowId: string,
+  getToken: GetToken
+): Promise<DownloadedFile | null> {
+  const res = await authenticatedFetch(`${baseUrl}/workflow/score-gp5/${workflowId}`, {}, getToken);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Guitar Pro export failed: ${res.status}`);
+  }
+  const blob = await res.blob();
+  return { blob, filename: filenameFromDisposition(res) };
+}
+
+/**
  * Fetch a workflow output as text (e.g. MusicXML).
  * Returns null on 404.
  */

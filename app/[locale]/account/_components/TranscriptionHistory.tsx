@@ -18,6 +18,7 @@ import {
   fetchWorkflowList,
   fetchWorkflowStatus,
   downloadScorePdf,
+  downloadScoreGp5,
   resolveDisplayName,
   resolveDescription,
   resolveAvailableOutputs,
@@ -419,6 +420,21 @@ export default function TranscriptionHistory() {
     }
   };
 
+  // The score as Guitar Pro 5, converted server-side from the score MusicXML.
+  const handleDownloadGp5 = async (workflowId: string, filename: string) => {
+    try {
+      const result = await downloadScoreGp5(config.apiBaseUrl, workflowId, getToken);
+      if (!result?.blob) {
+        notify('This transcription has no score to export');
+        return;
+      }
+      saveBlob(result.blob, result.filename || filename);
+      setMenuFor(null);
+    } catch {
+      notify('Failed to convert the score to Guitar Pro');
+    }
+  };
+
   const setVisibility = async (workflowId: string, visibility: WorkflowVisibility) => {
     setPopFor(null);
     setMenuFor(null);
@@ -614,6 +630,8 @@ export default function TranscriptionHistory() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '0 6px 4px' }}>
           {hasScore && <button className="gs-dl" style={dl} disabled={pdfFor === id} onClick={() => handleDownloadPdf(id, downloadName(w, 'score', '.pdf'))}>{pdfFor === id ? 'Rendering…' : 'PDF'}</button>}
           {hasScore && <button className="gs-dl" style={dl} onClick={() => handleDownload(id, (avail.score.available ? avail.score.fileKey : avail.transcription.fileKey), downloadName(w, 'score', '.musicxml'))}>MusicXML</button>}
+          {/* Previews have no Guitar Pro export. */}
+          {hasScore && !w.is_preview && <button className="gs-dl" style={dl} onClick={() => handleDownloadGp5(id, downloadName(w, 'score', '.gp5'))}>Guitar Pro</button>}
           {avail.midi.available && <button className="gs-dl" style={dl} onClick={() => handleDownload(id, avail.midi.fileKey, downloadName(w, 'midi', '.mid'))}>MIDI</button>}
           {avail.instrument.available && <button className="gs-dl" style={dl} onClick={() => handleDownload(id, avail.instrument.fileKey, downloadName(w, 'stem', '.wav'))}>Stems</button>}
           {!hasScore && !avail.midi.available && !avail.instrument.available && <span style={{ gridColumn: '1 / -1', fontSize: 12, color: 'var(--color-muted-foreground)', padding: '4px 4px 6px' }}>Nothing to download yet.</span>}
