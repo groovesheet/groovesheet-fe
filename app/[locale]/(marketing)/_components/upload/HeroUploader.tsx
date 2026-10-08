@@ -9,7 +9,7 @@ import { useTranslation } from '@/lib/i18n';
 import { Link, useRouter } from '@/lib/navigation';
 import { useUser, useAuth } from '@/lib/auth';
 import { queueSummary } from '@/lib/queue';
-import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
+import { authenticatedFetch, scoreKeysFor, downloadScorePdf, downloadScoreGp5, downloadWorkflowFile, SCORE_INSTRUMENTS } from '@/lib/api';
 import { EVENTS, FUNNEL, track, trackFunnel, trackWorkflowStarted } from '@/lib/analytics';
 import { phLog } from '@/lib/observability';
 import { previewFetch, startPreview, setPendingPreviewId, upgradeToFull } from '@/lib/previewApi';
@@ -295,6 +295,21 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
       console.warn('Score PDF download failed:', err);
+    }
+  };
+
+  // The score as Guitar Pro 5, on request only (it does not auto-download
+  // like the PDF). Full transcriptions only; previews have no Guitar Pro export.
+  const downloadScoreGp5File = async (id: string | null) => {
+    if (!id || id.startsWith('PRV')) return;
+    try {
+      const result = await downloadScoreGp5(API_BASE_URL, id, getToken);
+      if (!result?.blob) return;
+      const objectUrl = URL.createObjectURL(result.blob);
+      triggerDownload(objectUrl, result.filename || `${selectedInstrument}_score_groovesheet.gp5`);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.warn('Guitar Pro download failed:', err);
     }
   };
 
@@ -1021,6 +1036,7 @@ export default function HeroUploader({ intro, mobileDisclaimer }: HeroUploaderPr
               onDownloadStem={handleDownloadStem}
               onDownloadMidi={handleDownloadMidi}
               onDownloadPdf={() => downloadScorePdfFile(jobId)}
+              onDownloadGp5={jobId && !jobId.startsWith('PRV') ? () => downloadScoreGp5File(jobId) : undefined}
               onReset={resetUpload}
               downloadError={downloadError}
               isSignedIn={isSignedIn}

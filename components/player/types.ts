@@ -318,6 +318,8 @@ export interface TranscriptionResultViewProps {
   onDownloadStem?: (() => void) | null;
   onDownloadMidi?: (() => void) | null;
   onDownloadPdf?: (() => void) | null;
+  /** The score as a Guitar Pro 5 file; full transcriptions only. */
+  onDownloadGp5?: (() => void) | null;
   /** Shows the "new file" button when set; pass null on the history page. */
   onReset?: (() => void) | null;
   downloadError?: string | null;

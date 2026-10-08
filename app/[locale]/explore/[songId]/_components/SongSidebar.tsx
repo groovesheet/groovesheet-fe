@@ -5,7 +5,7 @@
 // the real plays/downloads counters.
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { DownloadSimple, Printer, BookmarkSimple, Share, Flag, Play } from '@phosphor-icons/react';
+import { DownloadSimple, Printer, Guitar, BookmarkSimple, Share, Flag, Play } from '@phosphor-icons/react';
 import { creatorHandleForTrack } from '@/lib/creatorApi';
 import { trackExploreUploadCta } from '@/lib/analytics';
 import { Link } from '@/lib/navigation';
@@ -131,10 +131,13 @@ export default function SongSidebar({
   // MusicXML on the track so the mobile drawer still offers one.
   const pdfAsset = scoreAsset || assets.find((a) => a.asset_type === 'musicxml' && a.id) || null;
   const pdfUrl = pdfAsset && pdfAsset.id ? `/api/library/assets/${pdfAsset.id}/pdf` : null;
+  // The same score as Guitar Pro 5, converted and cached by the API.
+  const gp5Url = pdfAsset && pdfAsset.id ? `/api/library/assets/${pdfAsset.id}/gp5` : null;
 
   const formatList: string[] = [];
   if (hasXml) formatList.push('PDF');
   if (hasXml) formatList.push('MusicXML');
+  if (hasXml) formatList.push('Guitar Pro');
   if (hasMidi) formatList.push('MIDI');
   if (formats.has('flac')) formatList.push('FLAC');
   if (formats.has('opus')) formatList.push('Opus');
@@ -348,6 +351,18 @@ export default function SongSidebar({
           >
             <Printer size={14} />
             PDF
+          </button>
+          {/* A download, not a tab: the browser cannot show a .gp5. */}
+          <button
+            type="button"
+            disabled={!gp5Url}
+            title={gp5Url ? t('gp5Title') : t('gp5None')}
+            onClick={() => {
+              if (gp5Url) window.location.href = gp5Url;
+            }}
+          >
+            <Guitar size={14} />
+            Guitar Pro
           </button>
           <button type="button">
             <BookmarkSimple size={14} />

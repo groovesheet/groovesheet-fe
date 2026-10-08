@@ -856,6 +856,10 @@
   cursor: pointer;
   transition: all 0.15s ease;
 }
+/* An odd button out (five actions in two columns) takes the whole row. */
+.gs-song-page .gs-quad > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
 .gs-song-page .gs-quad button:hover {
   background: var(--color-surface-lighter);
   border-color: var(--color-border-lighter);

@@ -134,6 +134,7 @@ export default function TranscriptionResultView({
   onDownloadStem,
   onDownloadMidi,
   onDownloadPdf,
+  onDownloadGp5,
   onReset,
   downloadError,
   isSignedIn,
@@ -870,6 +871,14 @@ export default function TranscriptionResultView({
             <button className="tr-btn" onClick={onDownloadPdf}>
               <DownloadSimple size={18} weight="bold" />
               <span>PDF</span>
+            </button>
+          )}
+          {/* The same score for Guitar Pro, TuxGuitar or MuseScore. */}
+          {onDownloadGp5 && (musicXmlKey || musicXmlText) && (
+            <button className="tr-btn" onClick={onDownloadGp5}>
+              <DownloadSimple size={18} weight="bold" />
+              <span className="tr-btn-long">Guitar Pro</span>
+              <span className="tr-btn-short">GP5</span>
             </button>
           )}
           {midiKey && onDownloadMidi && (

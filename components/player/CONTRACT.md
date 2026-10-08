@@ -53,7 +53,7 @@ Props are the interfaces in `types.ts`; the tables name the required ones.
 
 `TranscriptionResultView` in the CRA call sites: the upload surfaces pass
 `workflowId, fileName, selectedInstrument, prefetchedFiles, files,
-onDownloadTranscription, onDownloadStem, onDownloadMidi, onDownloadPdf,
+onDownloadTranscription, onDownloadStem, onDownloadMidi, onDownloadPdf, onDownloadGp5,
 onReset, downloadError, isSignedIn, onUpgradeToFull, onSignUpToUnlock,
 title` (MidiConverter adds `defaultView="midi"` and `statusLabel`); the
 history page passes `variant="page"`, `title`, `subtitle`, `durationHint`,

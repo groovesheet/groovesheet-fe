@@ -81,6 +81,7 @@ describe('song pages in Chinese', () => {
   it.each(['zh-CN', 'zh-TW'] as const)('%s song copy has no English left in it', (locale) => {
     const ALLOWED = new Set([
       'GrooveSheet', 'MIDI', 'PDF', 'MusicXML', 'DAW', 'ZIP', 'MuseScore', 'Sibelius', 'Dorico', 'Finale',
+      'Guitar', 'Pro', 'TuxGuitar', 'gp',
       'DMCA', 'OSMD', 'AI', 'count', 'plural', 'other', 'one',
     ]);
     const offenders = leaves(MESSAGES[locale].song).flatMap(([path, value]) => {

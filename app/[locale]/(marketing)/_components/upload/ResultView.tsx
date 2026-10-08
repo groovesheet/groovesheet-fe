@@ -22,6 +22,7 @@ export interface ResultViewProps {
   onDownloadStem: () => void;
   onDownloadMidi?: () => void;
   onDownloadPdf?: () => void;
+  onDownloadGp5?: () => void;
   onReset: () => void;
   downloadError: string | null;
   isSignedIn: boolean;
